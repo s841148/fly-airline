@@ -1,0 +1,30 @@
+Copyright (c) 2026 麥麥的遊戲工廠 (MaiMai's Game Factory). All rights reserved.
+
+「飛吧！航空大亨」（Fly! Airline Tycoon）的遊戲設計、規則、文字、畫面與程式碼，
+著作權均屬麥麥的遊戲工廠所有，保留一切權利。
+
+本專案「不是」開放原始碼。程式碼公開在 GitHub 上，只是為了讓遊戲能透過 GitHub Pages
+在網路上遊玩，並不代表授權任何人使用。
+
+允許：
+- 在正版網址 https://s841148.github.io/fly-airline/ 免費遊玩。
+- 分享正版網址給他人。
+- 下載、備份、分享自己的遊戲存檔檔案（.json）。
+
+未經麥麥的遊戲工廠事先書面同意，禁止：
+- 複製、修改、改編、翻譯本遊戲或其任何部分（包括程式碼、文字、規則與設計）。
+- 轉載、重新發布、鏡像，或把本遊戲放到其他網站、App 或平台。
+- 將本遊戲或其內容用於任何商業用途。
+- 移除或修改本遊戲中的著作權標示。
+
+遊戲中的航空公司、人物與事件均為虛構。機型與城市名稱僅作描述用途，
+與相關公司沒有任何合作、贊助或背書關係。
+
+地圖海岸線資料取自 Natural Earth（公有領域）。
+
+---
+
+Copyright (c) 2026 MaiMai's Game Factory. All rights reserved.
+This repository is NOT open source. The code is public only so the game can be
+served via GitHub Pages. No license is granted to copy, modify, redistribute,
+mirror, or use any part of this work commercially without prior written permission.
