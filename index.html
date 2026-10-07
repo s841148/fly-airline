@@ -200,6 +200,21 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
 .slots .meta b{font-family:var(--f-ui);font-size:15px}
 .slots .meta small{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
 .slots .row{gap:6px}
+.seatmap,.livprev{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--ink);overflow:hidden}
+.seatmap{height:120px}.livprev{height:170px}
+.seatmap canvas,.livprev canvas{position:absolute;inset:0;width:100%;height:100%}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.swatches button{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);padding:0}
+.swatches button[aria-pressed="true"]{border-color:var(--fg);box-shadow:0 0 0 2px var(--ink),0 0 0 4px var(--fg)}
+.livcard{flex-direction:row;align-items:center;gap:12px}
+.livcard .mini{position:relative;flex:1;min-width:0;height:74px}
+.livcard .mini canvas{position:absolute;inset:0;width:100%;height:100%}
+.capmodal{max-width:760px}
+.capwrap{position:relative;height:300px;border-radius:8px;overflow:hidden;border:1px solid var(--line);touch-action:none}
+.capwrap canvas{position:absolute;inset:0;width:100%;height:100%}
+.capctl{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:8px}
+.capctl .btn{min-height:52px;font-size:16px;user-select:none;-webkit-user-select:none;touch-action:none}
+@media (max-width:440px){.capwrap{height:230px}}
 .chat{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto;padding:2px}
 .msg{padding:8px 11px;border-radius:10px;background:var(--raise);font-size:14px;max-width:88%;align-self:flex-start}
 .msg b{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-bottom:2px}
@@ -314,11 +329,55 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
       <li><b>排班與訂價</b>：決定每週飛幾班，經濟艙、商務艙票價分開訂。班次越多、價格越好、聲望越高，搶到的客人越多。</li>
       <li><b>人員</b>：每架飛機要 12～22 位機師和 30～75 位空服員。新機師要訓練 4 個月，人不夠班機就會取消（可以在「營運」開啟自動招募）。</li>
       <li><b>維修</b>：飛機每飛 600 小時要做 A 檢（停 1 天），每 2 年要做 C 檢（停 3～4 週）。</li>
+      <li><b>擴張</b>：在「航線」可以開設高雄、台中、松山甚至曼谷、東京基地；在「營運」可以加入航空聯盟；每條航線可以和外國航空談代碼共享。</li>
+      <li><b>好玩的</b>：在「機隊」設計公司塗裝和每架飛機的客艙；在航線裡按「親自當機長」可以自己開飛機！</li>
       <li><b>現實的錢</b>：油錢、機場費、薪水、租金、利息、20% 營所稅都要付。航空業利潤很薄，賺錢要靠精打細算。現金連續 60 天是負的就破產。</li>
     </ol>
     <p class="hint">1× 速度大約 2.4 秒過一天。地圖上的飛機會照班表時間起飛、降落。可以拖曳地圖、縮放、點城市。</p>
     <p class="copy">© 2026 麥麥的遊戲工廠 版權所有　<button class="linkbtn" data-terms>使用條款</button></p>
     <button class="btn" id="helpClose">開始</button>
+  </div>
+</div>
+
+<div class="overlay" id="cabOv" hidden>
+  <div class="modal">
+    <div class="board">CABIN LAYOUT</div>
+    <h2 id="cbTitle">客艙設計</h2>
+    <p class="hint" id="cbDesc"></p>
+    <div class="seatmap"><canvas id="cbMap"></canvas></div>
+    <div class="slider"><label for="cbC"><span>商務艙（可平躺，很佔空間）</span><b class="mono amber" id="cbCv"></b></label><input type="range" id="cbC" min="0" max="40" step="1"></div>
+    <div class="slider"><label for="cbW"><span>豪華經濟艙（座位較寬，票價約經濟艙 1.65 倍）</span><b class="mono sky" id="cbWv"></b></label><input type="range" id="cbW" min="0" max="40" step="1"></div>
+    <div class="kv"><div><span>經濟艙</span><b id="cbY"></b></div><div><span>總座位</span><b id="cbT"></b></div></div>
+    <p class="hint" id="cbTip"></p>
+    <div class="row" id="cbBtns"></div>
+  </div>
+</div>
+
+<div class="overlay" id="livOv" hidden>
+  <div class="modal">
+    <div class="board">LIVERY DESIGN</div>
+    <h2>設計公司塗裝</h2>
+    <div class="livprev"><canvas id="lvCanvas"></canvas></div>
+    <div class="field"><label>主色（機身線條、尾翼）</label><div class="swatches" id="lvC1"></div></div>
+    <div class="field"><label>配色（尾翼圖案、引擎）</label><div class="swatches" id="lvC2"></div></div>
+    <div class="field"><label>尾翼圖案</label><div class="filters" id="lvPat"></div></div>
+    <p class="hint" id="lvTip"></p>
+    <div class="row" id="lvBtns"></div>
+  </div>
+</div>
+
+<div class="overlay" id="capOv" hidden>
+  <div class="modal capmodal">
+    <div class="board" id="cpBoard">FLIGHT DECK</div>
+    <h2 id="cpTitle">機長任務</h2>
+    <div class="capwrap"><canvas id="cpCanvas"></canvas></div>
+    <p class="hint" id="cpHint"></p>
+    <div class="capctl" id="cpCtl">
+      <button class="btn ghost" id="cpUp" aria-label="爬升">▲ 爬升</button>
+      <button class="btn" id="cpAct">拉起機頭</button>
+      <button class="btn ghost" id="cpDown" aria-label="下降">▼ 下降</button>
+    </div>
+    <div class="row" id="cpBtns"></div>
   </div>
 </div>
 
@@ -440,10 +499,27 @@ const RAW=[
  ['YVR','溫哥華',-123.18,49.19,3500,.07,15000,7,'na'],['JFK','紐約',-73.78,40.64,3000,.12,21500,7,'na'],
  ['DXB','杜拜',55.36,25.25,2000,.08,14500,7,'me'],['LHR','倫敦',-0.45,51.47,2500,.13,21500,7,'eu'],
  ['CDG','巴黎',2.55,49.01,1800,.10,20500,7,'eu'],['FRA','法蘭克福',8.56,50.04,1500,.12,19500,7,'eu'],
- ['AMS','阿姆斯特丹',4.76,52.31,1500,.09,19500,7,'eu']
+ ['AMS','阿姆斯特丹',4.76,52.31,1500,.09,19500,7,'eu'],
+ ['GMP','首爾金浦',126.79,37.56,3000,.12,7000,7,'kr'],['SHA','上海虹橋',121.34,31.20,3500,.2,6200,7,'cn'],
+ ['CAN','廣州',113.30,23.39,3000,.12,5200,7,'cn'],['DAD','峴港',108.20,16.04,2500,.03,6000,7,'sea'],
+ ['CEB','宿霧',123.98,10.31,2200,.03,5800,7,'sea'],['HKT','普吉島',98.32,8.11,2000,.03,8500,7,'sea'],
+ ['PNH','金邊',104.84,11.55,2000,.06,6800,7,'sea'],['DEL','新德里',77.10,28.56,1500,.1,13000,7,'sa'],
+ ['MEL','墨爾本',144.84,-37.67,2000,.07,17000,7,'oc'],['AKL','奧克蘭',174.79,-37.01,1000,.06,18000,7,'oc'],
+ ['GUM','關島',144.80,13.48,1500,.03,10000,7,'oc'],['ORD','芝加哥',-87.90,41.98,1200,.14,21000,7,'na'],
+ ['YYZ','多倫多',-79.63,43.68,1500,.09,20000,7,'na'],['IAH','休士頓',-95.34,29.98,800,.12,20500,7,'na'],
+ ['MUC','慕尼黑',11.79,48.35,900,.12,20000,7,'eu'],['PRG','布拉格',14.26,50.10,800,.06,19500,7,'eu'],
+ ['FCO','羅馬',12.25,41.80,1000,.08,20000,7,'eu'],['IST','伊斯坦堡',28.81,41.26,1000,.08,16000,7,'me']
 ];
-const REGION={cn:'港澳中國',jp:'日本',kr:'韓國',sea:'東南亞',oc:'澳洲',na:'北美',me:'中東',eu:'歐洲'};
+const REGION={cn:'港澳中國',jp:'日本',kr:'韓國',sea:'東南亞',sa:'南亞',oc:'大洋洲',na:'北美',me:'中東',eu:'歐洲'};
 const HUB={code:'TPE',lon:121.23,lat:25.08};
+const BASES={
+  TPE:{code:'TPE',name:'台北桃園',short:'台北',lon:121.23,lat:25.08,f:1,tw:true,cost:0,hq:0,desc:'總部所在地'},
+  KHH:{code:'KHH',name:'高雄小港',short:'高雄',lon:120.35,lat:22.57,f:.28,tw:true,cost:1.2e9,hq:1.5e7,maxD:7500,desc:'南台灣的大門，可以飛日韓、東南亞，甚至澳洲。'},
+  RMQ:{code:'RMQ',name:'台中清泉崗',short:'台中',lon:120.62,lat:24.26,f:.16,tw:true,cost:8e8,hq:1e7,maxD:3500,desc:'中台灣的旅客。跑道比較短，只能飛亞洲短程。'},
+  TSA:{code:'TSA',name:'台北松山',short:'松山',lon:121.55,lat:25.07,f:.3,tw:true,cost:1e9,hq:1.2e7,maxD:2600,desc:'市區機場，商務客多，只能飛近距離（東京、首爾、上海）。'},
+  BKK:{code:'BKK',name:'曼谷素萬那普',short:'曼谷',lon:100.75,lat:13.69,f:.22,tw:false,cost:2.5e9,hq:3e7,excl:['BKK','HKT'],desc:'第五航權基地：從曼谷飛東南亞、南亞、中東和歐洲。'},
+  NRT:{code:'NRT',name:'東京成田',short:'東京',lon:140.39,lat:35.77,f:.22,tw:false,cost:2.5e9,hq:3e7,exclReg:'jp',desc:'第五航權基地：從東京飛北美、東南亞（不能飛日本國內）。'}
+};
 const SEASON=[1.0,1.1,.9,1.0,.95,.95,1.15,1.15,.9,1.05,.95,1.05];
 const SEASON_NAME={1:'春節旺季',6:'暑假旺季',7:'暑假旺季',2:'淡季',8:'淡季'};
 const DOW=[1.1,.95,.85,.9,1.0,1.15,1.05]; // 日一二三四五六
@@ -465,6 +541,12 @@ const UPG={
   sim:{name:'模擬機訓練中心',price:1.2e9,desc:'機師訓練 120→75 天，訓練費減半'},
   hangar:{name:'自建維修棚廠',price:2.5e9,desc:'維修費 -15%，C 檢費用 -30%、天數 -30%'}
 };
+const ALLIANCES={
+  sky:{name:'天際聯盟 SkyLink',regs:['na','eu','jp'],fee:6e8,yearly:1.5e8,member:'b',desc:'北美、歐洲、日本的大型航空公司都在這裡，長程轉機旅客最多。'},
+  orbis:{name:'環宇聯盟 Orbis',regs:['jp','kr','sea','oc'],fee:4e8,yearly:1e8,member:'c',desc:'亞洲和大洋洲的航空公司，適合飛日韓、東南亞、澳洲。'},
+  gull:{name:'海鷗聯盟 Gull',regs:['me','eu','sa','sea'],fee:3e8,yearly:8e7,member:null,desc:'中東和歐洲的航空公司，飛歐洲、南亞、中東很有幫助。'}
+};
+const PARTNERS={cn:'東方珍珠航空',jp:'櫻花航空',kr:'韓星航空',sea:'南洋航空',sa:'恆河航空',oc:'南十字星航空',na:'自由鷹航空',me:'沙漠玫瑰航空',eu:'歐羅巴航空'};
 const RAD=Math.PI/180;
 function gc(l1,p1,l2,p2){
   const dl=(l2-l1)*RAD,a=Math.sin((p2-p1)*RAD/2)**2+Math.cos(p1*RAD)*Math.cos(p2*RAD)*Math.sin(dl/2)**2;
@@ -483,10 +565,30 @@ function arcPts(l1,p1,l2,p2,n){ // 大圓路徑點（經度連續）
 const CITIES=RAW.map(([code,name,lon,lat,M,biz,fare,slots,reg],i)=>{
   const d=gc(HUB.lon,HUB.lat,lon,lat);
   const arc=arcPts(HUB.lon,HUB.lat,lon,lat,Math.max(12,Math.round(d/250)));
-  return {code,name,lon,lat,M,biz,fare,slots,reg,d,arc,lonC:arc[arc.length-1][0],idx:i};
+  return {code,name,lon,lat,M,biz,fare,slots,reg,d,arc,lonC:arc[arc.length-1][0],idx:i,base:'TPE',dest:code,pair:`台北 ⇄ ${name}`,tw:true};
 }).sort((a,b)=>a.d-b.d);
 const CITY=Object.fromEntries(CITIES.map(c=>[c.code,c]));
+const LEGC={};
+function LEG(k){
+  if(CITY[k])return CITY[k];
+  if(typeof k!=='string'||!k.includes('>'))return undefined;
+  if(LEGC[k])return LEGC[k];
+  const [b,dc]=k.split('>'),B=BASES[b],C=CITY[dc];if(!B||!C)return undefined;
+  const d=gc(B.lon,B.lat,C.lon,C.lat),arc=arcPts(B.lon,B.lat,C.lon,C.lat,Math.max(12,Math.round(d/250)));
+  const fare=Math.round(C.fare*(3500+1.3*d)/(3500+1.3*C.d)/10)*10;
+  return LEGC[k]={code:k,base:b,dest:dc,name:C.name,pair:`${B.short} ⇄ ${C.name}`,lon:C.lon,lat:C.lat,M:Math.round(C.M*B.f),biz:Math.min(.3,C.biz*(b==='TSA'?1.5:1)),fare,slots:Math.max(7,Math.round(C.slots*.5)),reg:C.reg,d,arc,lonC:arc[arc.length-1][0],tw:B.tw};
+}
+function legsFor(b){
+  if(b==='TPE')return CITIES;
+  const B=BASES[b];
+  return CITIES.filter(c=>c.code!==b&&!(B.excl||[]).includes(c.code)&&!(B.exclReg&&c.reg===B.exclReg)).map(c=>LEG(b+'>'+c.code)).filter(l=>l.d>=250&&(!B.maxD||l.d<=B.maxD)).sort((a,b)=>a.d-b.d);
+}
 const bizFare=c=>Math.round(c.fare*(2.6+c.d/6000)/10)*10;
+const pyFare=c=>Math.round(c.fare*1.65/10)*10;       // 豪華經濟艙
+const CF={narrow:{c:2,w:1.3,cMax:20,wMax:30},wide:{c:3.2,w:1.4,cMax:60,wMax:70}};
+function cabinUnits(t){const T=PLANES[t];if(T.cls==='cargo')return 0;return Math.round(T.C*CF[T.cls].c+T.Y);}
+function cfgY(t,C,W){const T=PLANES[t],k=CF[T.cls];return Math.max(0,Math.floor(cabinUnits(t)-C*k.c-W*k.w));}
+function seatsOf(p){const T=PLANES[p.type];return p.cfg||{C:T.C,W:0,Y:T.Y};}
 const cargoRate=c=>6000+8.5*c.d;          // 每噸
 const block=(c,t)=>c.d/PLANES[t].speed+0.75;  // 飛行時間（含滑行）
 const turn=t=>PLANES[t].cls==='narrow'?0.75:1.6;
@@ -513,38 +615,39 @@ function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i)
 
 /* ===================== 狀態 ===================== */
 let S=null;
-const UI={tab:'routes',sel:'HKG',speed:1,sellConfirm:null,renaming:null,diffPick:'normal',sound:true,acq:'new',rfilter:'all'};
+const UI={base:'TPE',tab:'routes',sel:'HKG',speed:1,sellConfirm:null,renaming:null,diffPick:'normal',sound:true,acq:'new',rfilter:'all'};
 UI.music=true;
 try{const p=JSON.parse(localStorage.getItem(PREF_KEY)||'{}');if(p.sound===false)UI.sound=false;if(p.music===false)UI.music=false;}catch(e){}
 function savePref(){try{localStorage.setItem(PREF_KEY,JSON.stringify({sound:UI.sound,music:UI.music}));}catch(e){}}
 
 function newGame(name,code,diff){
   S={v:1,name,code,diff,day:0,cash:DIFF[diff].cash,loan:0,rep:55,service:1,fuel:FUEL_BASE,
-    routes:{},planes:[],reg:1,fno:101,
+    routes:{},planes:[],reg:1,fno:101,bases:['TPE'],
     crew:{p:60,c:180,pT:[],cT:[]},autoHire:true,salMult:1,
     upg:{},mods:[],cancel:[],perm:{},ads:{},hedge:null,strike:0,
     comp:{},rivals:RIVALS.map(r=>({id:r.id,name:r.name,col:r.col,q:r.q,nw:r.nw})),
     M:newLedger(),last:null,months:[],yr:newYear(DIFF[diff].cash),
     used:[],ms:{},neg:0,won:false,over:false,nextChoice:60,news:[],stats:{paxTotal:0}};
-  initComp();refreshUsed();
+  migrate(S);initComp();refreshUsed();
   news(`${name}（${code}）在桃園機場成立！資本 ${money(S.cash)}。先到「機隊」取得飛機，再到「航線」申請航權。`,'info');
   UI.sel='HKG';UI.tab='routes';setSpeed(1);
 }
 function newLedger(){return {rev:0,crev:0,fuel:0,fees:0,maint:0,crewv:0,cat:0,dist:0,sal:0,lease:0,dep:0,hq:0,ins:0,int:0,other:0,checks:0,pax:0,cargo:0,flights:0,cxl:0};}
 function newYear(nw){return {rev:0,profit:0,pax:0,cargo:0,startNW:nw,tax:0};}
-function initComp(){
-  for(const c of CITIES){
-    const seat=c.d>5000?300:210, T=c.M/(seat*0.85);
-    const o={f:0,fare:{},war:{}};
-    for(const r of RIVALS){
-      if(r.net&&!r.net.includes(c.code)) {o[r.id]=0;continue;}
-      if(r.id==='b'&&['DPS','BNE','CGK'].includes(c.code)){o[r.id]=0;continue;}
-      o[r.id]=Math.max(3,Math.round(T*r.frac));o.fare[r.id]=.95+Math.random()*.12;
-    }
-    o.f=Math.max(2,Math.round(T-RIVALS.reduce((s,r)=>s+(o[r.id]||0),0)));o.fare.f=.92+Math.random()*.1;
-    S.comp[c.code]=o;
+function mkComp(c){
+  const seat=c.d>5000?300:210, T=c.M/(seat*0.85),side=c.base!=='TPE';
+  const o={f:0,fare:{},war:{}};
+  for(const r of RIVALS){
+    if(r.net&&!r.net.includes(c.dest)) {o[r.id]=0;continue;}
+    if(r.id==='b'&&['DPS','BNE','CGK'].includes(c.dest)){o[r.id]=0;continue;}
+    if(side&&hash(c.code+r.id)<.5){o[r.id]=0;continue;}
+    o[r.id]=Math.max(3,Math.round(T*r.frac*(side?.6:1)));o.fare[r.id]=.95+Math.random()*.12;
   }
+  o.f=Math.max(2,Math.round(T-RIVALS.reduce((s,r)=>s+(o[r.id]||0),0)));o.fare.f=.92+Math.random()*.1;
+  return o;
 }
+function initComp(){for(const c of CITIES)S.comp[c.code]=mkComp(c);}
+function comp(c){return S.comp[c.code]||(S.comp[c.code]=mkComp(c));}
 const D=()=>DIFF[S.diff];
 const has=k=>!!S.upg[k];
 const ownedValue=()=>S.planes.reduce((s,p)=>s+(p.own==='own'&&p.st!=='order'?p.value:0),0);
@@ -554,12 +657,20 @@ const maxLoan=()=>Math.max(0,ownedValue()*0.75+5e9);
 const active=p=>p.st==='active';
 const flying=p=>p.st==='active'&&p.down<=0&&p.route;
 const pname=p=>p.nick?`${p.nick}（${p.reg}）`:p.reg;
-const openCities=()=>CITIES.filter(c=>S.routes[c.code]?.st==='open');
+const openCities=()=>Object.keys(S.routes).filter(k=>S.routes[k].st==='open').map(LEG).filter(Boolean);
+const routeLegs=()=>Object.keys(S.routes).map(LEG).filter(Boolean);
 function news(t,kind){S.news.unshift({d:S.day,t,kind});if(S.news.length>150)S.news.pop();}
 let toastT=null;
 function toast(t,kind){const el=$('#toast');el.textContent=t;el.className='toast '+(kind||'');el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,4500);}
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}}
-function load(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');return s&&s.v===1&&!s.over?s:null;}catch(e){return null;}}
+function migrate(s){
+  if(!s)return s;
+  s.bases=s.bases||['TPE'];s.cs=s.cs||{};s.alliance=s.alliance||null;s.capCD=s.capCD||0;s.capBest=s.capBest||0;
+  if(!s.livery)s.livery={c1:'#F2B53A',c2:'#7CCBE0',pat:'stripe'};
+  for(const p of s.planes)if(!p.cfg){const T=PLANES[p.type];p.cfg={C:T.C,W:0,Y:T.Y};}
+  return s;
+}
+function load(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');return s&&s.v===1&&!s.over?migrate(s):null;}catch(e){return null;}}
 function clearSave(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
 
 /* ===================== 音效 ===================== */
@@ -616,13 +727,14 @@ const Music=(()=>{
 function musLabel(){$('#musBtn').textContent='音樂：'+(UI.music?'開':'關');}
 
 /* ===================== 需求模型 ===================== */
+function allianceBonus(c){const A=S.alliance&&ALLIANCES[S.alliance];return A&&A.regs.includes(c.reg)?0.05:0;}
 function seasonM(day){return SEASON[dateOf(day).getUTCMonth()];}
 function modMult(c){
   let m=1;
-  for(const x of S.mods){if(x.scope==='all'||x.scope===c.reg||x.scope===c.code)m*=x.m;}
+  for(const x of S.mods){if(x.scope==='all'||x.scope===c.reg||x.scope===c.dest)m*=x.m;}
   return m*(S.perm[c.reg]||1)*(S.ads[c.code]?1.12:1);
 }
-function cancelled(c){return S.strike>0||S.cancel.some(x=>x.scope==='TPE'||x.scope===c.reg||x.scope===c.code);}
+function cancelled(c){return S.strike>0||S.cancel.some(x=>(x.scope==='TPE'&&c.tw)||x.scope===c.reg||x.scope===c.dest||(x.scope===c.base));}
 function crewNeed(){let p=0,c=0;for(const pl of S.planes)if(active(pl)&&pl.route){p+=PLANES[pl.type].pilots;c+=PLANES[pl.type].cabin;}return {p,c};}
 function crewRatio(){const n=crewNeed();return Math.min(1,n.p?S.crew.p/n.p:1,n.c?S.crew.c/n.c:1);}
 // 某航線的可用運能
@@ -634,30 +746,30 @@ function routeCap(c){
   const want=r?r.freq:0, slots=c.slots+(S.perm['slot_'+c.code]||0);
   const F=Math.min(want,Math.floor(mxP+1e-6),slots);           // 客運班次
   const FC=Math.min(r?r.cfreq||0:0,Math.floor(mxC+1e-6));      // 貨機班次
-  let Y=0,C=0,belly=0,w=0;for(const p of pax){const k=maxWeekly(c,p.type);Y+=PLANES[p.type].Y*k;C+=PLANES[p.type].C*k;belly+=PLANES[p.type].belly*k;w+=k;}
-  const avgY=w?Y/w:0,avgC=w?C/w:0,avgB=w?belly/w:0;
+  let Y=0,C=0,Wp=0,belly=0,w=0;for(const p of pax){const k=maxWeekly(c,p.type),st=seatsOf(p);Y+=st.Y*k;C+=st.C*k;Wp+=st.W*k;belly+=PLANES[p.type].belly*k;w+=k;}
+  const avgY=w?Y/w:0,avgC=w?C/w:0,avgW=w?Wp/w:0,avgB=w?belly/w:0;
   let wide=0;for(const p of pax)if(PLANES[p.type].cls==='wide')wide+=maxWeekly(c,p.type);
-  return {ps,pax,cg,F,FC,mxP:Math.floor(mxP+1e-6),mxC:Math.floor(mxC+1e-6),slots,avgY,avgC,avgB,wideShare:w?wide/w:0,want};
+  return {ps,pax,cg,F,FC,mxP:Math.floor(mxP+1e-6),mxC:Math.floor(mxC+1e-6),slots,avgY,avgC,avgW,avgB,wideShare:w?wide/w:0,want};
 }
 function playerQ(c,cap,biz){
-  let q=(0.75+S.rep/200)*SERVICE[S.service].q*(has('ffp')?1.05:1);
+  let q=(0.75+S.rep/200)*SERVICE[S.service].q*(has('ffp')?1.05:1)*(S.alliance?1.03:1);
   const longHaul=c.d>4500;
   if(biz) q*=cap.wideShare*1.12+(1-cap.wideShare)*(longHaul?.6:.82)*(1)+(has('lounge')?.12:0);
   else q*=longHaul?(cap.wideShare+(1-cap.wideShare)*.85):1;
   return q;
 }
 function shares(c,F,fY,fC,cap){
-  const o=S.comp[c.code];
+  const o=comp(c);
   const w=(f,fare,q)=>f>0?Math.pow(f,0.9)*Math.pow(fare,-1.6)*q:0;
   let rY=0,rC=0,parts=[];
   for(const r of S.rivals){const f=o[r.id]||0;if(!f)continue;const fare=o.war[r.id]>S.day?.85:o.fare[r.id];const x=w(f,fare,r.q);rY+=x;rC+=x;parts.push({col:r.col,w:x,name:r.name,f,fare});}
-  const xf=w(o.f,o.fare.f,.95);rY+=xf;rC+=xf;parts.push({col:'r4',w:xf,name:'外國航空公司',f:o.f,fare:o.fare.f});
+  const xf=w(o.f,o.fare.f,.95)*(S.cs&&S.cs[c.code]?.55:1);rY+=xf;rC+=xf;parts.push({col:'r4',w:xf,name:'外國航空公司',f:o.f,fare:o.fare.f});
   const pY=w(F,fY,playerQ(c,cap,false)),pC=w(F,fC,playerQ(c,cap,true));
   return {sY:pY/(pY+rY||1),sC:pC/(pC+rC||1),parts,pY,rY,rTotF:parts.reduce((s,p)=>s+p.f,0)};
 }
 function weeklyDemand(c,F,fY,fC,cap,day){
   const sh=shares(c,F,fY,fC,cap);
-  const M=c.M*1.25*seasonM(day)*modMult(c)*(1+0.3*F/(F+sh.rTotF||1));
+  const M=c.M*1.25*seasonM(day)*modMult(c)*(S.cs&&S.cs[c.code]?1.05:1)*(allianceBonus(c)?1.06:1)*(1+0.3*F/(F+sh.rTotF||1));
   return {Y:M*(1-c.biz)*sh.sY,C:M*c.biz*sh.sC,sh,M};
 }
 function cargoDemand(c,capT){
@@ -679,7 +791,7 @@ function dayTick(){
     }
   }
   // 航權核准
-  for(const k in S.routes){const r=S.routes[k];if(r.st==='pending'&&S.day>=r.ready){r.st='open';news(`台北 ⇄ ${CITY[k].name} 航權核准，可以開始飛了！`,'good');toast(`${CITY[k].name} 航權核准`,'good');sfx('good');}}
+  for(const k in S.routes){const r=S.routes[k];if(r.st==='pending'&&S.day>=r.ready){r.st='open';news(`${LEG(k).pair} 航權核准，可以開始飛了！`,'good');toast(`${LEG(k).pair} 航權核准`,'good');sfx('good');}}
   // 人員訓練完成
   for(const k of ['p','c']){const q=S.crew[k+'T'];while(q.length&&q[0].d<=S.day){const x=q.shift();S.crew[k]+=x.n;news(`${x.n} 位${k==='p'?'機師':'空服員'}訓練結業，加入排班。`,'info');}}
   events();
@@ -696,12 +808,15 @@ function dayTick(){
     const runP=cx?0:nP*cr, runC=cx?0:nC*cr;
     const dm=weeklyDemand(c,cap.F,r.fY,r.fC,cap,S.day);
     const df=DOW[dow]/7;
-    const seatsY=runP*cap.avgY,seatsC=runP*cap.avgC;
-    const paxY=Math.min(seatsY,dm.Y*df),paxC=Math.min(seatsC,dm.C*df);
+    const seatsY=runP*cap.avgY,seatsC=runP*cap.avgC,seatsW=runP*cap.avgW;
+    const dW=seatsW>0?dm.Y*df*0.14:0;
+    const paxW=Math.min(seatsW,dW);
+    const paxY=Math.min(seatsY,dm.Y*df-dW+Math.max(0,dW-seatsW)*0.6),paxC=Math.min(seatsC,dm.C*df);
     const capT=(runP*cap.avgB+runC*102)*7;
     const tons=Math.min((runP*cap.avgB+runC*102),cargoDemand(c,capT)/7);
     const fY=c.fare*r.fY,fC=bizFare(c)*r.fC;
-    const rev=2*(paxY*fY+paxC*fC)*(has('rms')?1.04:1), crev=2*tons*cargoRate(c);
+    const fW=pyFare(c)*r.fY;
+    const rev=2*(paxY*fY+paxW*fW+paxC*fC)*(has('rms')?1.04:1)*(1+allianceBonus(c)), crev=2*tons*cargoRate(c);
     // 成本：依實際機型
     let fuel=0,fees=0,maint=0,crewv=0;
     const all=[...cap.pax.map(p=>[p,runP/(cap.pax.length||1)]),...cap.cg.map(p=>[p,runC/(cap.cg.length||1)])];
@@ -712,12 +827,13 @@ function dayTick(){
       crewv+=fl*b*(wide?20000:8000);
       p.fh=(p.fh||0)+fl*b;flown[p.id]=1;}
     const long=c.d>6000?2:c.d>2500?1:0;
-    const cat=2*(paxY*[250,500,900][long]+paxC*[1200,2500,4500][long])*SERVICE[S.service].cat;
+    const cat=2*((paxY+paxW*1.8)*[250,500,900][long]+paxC*[1200,2500,4500][long])*SERVICE[S.service].cat;
     const dist=0.05*rev;
     L.rev+=rev;L.crev+=crev;L.fuel+=fuel;L.fees+=fees;L.maint+=maint;L.crewv+=crewv;L.cat+=cat;L.dist+=dist;
-    L.pax+=2*(paxY+paxC);L.cargo+=2*tons;L.flights+=2*(runP+runC);L.cxl+=2*((nP+nC)-(runP+runC));
-    const profit=rev+crev-fuel-fees-maint-crewv-cat-dist;
-    const day={paxY,paxC,seatsY,seatsC,tons,capT:runP*cap.avgB+runC*102,rev,crev,profit,flights:runP+runC,dY:dm.Y*df,dC:dm.C*df};
+    L.pax+=2*(paxY+paxW+paxC);L.cargo+=2*tons;L.flights+=2*(runP+runC);L.cxl+=2*((nP+nC)-(runP+runC));
+    let csrev=0;if(S.cs&&S.cs[c.code]&&!cx){const o=comp(c);csrev=o.f/7*DOW[dow]*2*10*c.fare*0.1;L.csrev=(L.csrev||0)+csrev;}
+    const profit=rev+crev+csrev-fuel-fees-maint-crewv-cat-dist;
+    const day={paxY,paxC,paxW,seatsW,seatsY,seatsC,tons,capT:runP*cap.avgB+runC*102,rev,crev,profit,flights:runP+runC,dY:dm.Y*df,dC:dm.C*df};
     r.h=(r.h||[]);r.h.push(day);if(r.h.length>7)r.h.shift();
   }
   // 飛機：機齡、A 檢、C 檢
@@ -766,16 +882,17 @@ function monthEnd(){
     if(p.own==='lease'&&p.st==='active')ins+=PLANES[p.type].price*.0015/12;
   }
   const nAct=S.planes.filter(active).length;
-  const hq=1.5e7+nAct*1.5e6+Object.keys(S.upg).reduce((s,k)=>s+UPG[k].price*.003,0);
+  const hq=1.5e7+nAct*1.5e6+(S.bases||['TPE']).reduce((s,b)=>s+BASES[b].hq,0)+Object.keys(S.upg).reduce((s,k)=>s+UPG[k].price*.003,0);
   const int=S.loan*RATE/12, intInc=Math.max(0,S.cash)*0.012/12;
   L.intInc=intInc;L.sal=sal;L.lease=lease;L.dep=dep;L.ins=ins;L.hq=hq;L.int=int;
-  const cashOut=sal+lease+ins+hq+int+L.checks;
+  const allyFee=S.alliance?ALLIANCES[S.alliance].yearly/12:0;L.ally=allyFee;
+  const cashOut=sal+lease+ins+hq+int+L.checks+allyFee;
   const varCost=L.fuel+L.fees+L.maint+L.crewv+L.cat+L.dist;
-  S.cash+=L.rev+L.crev+intInc-varCost-cashOut-L.other;
-  L.profit=L.rev+L.crev+intInc-varCost-cashOut-dep-L.other;
+  S.cash+=L.rev+L.crev+(L.csrev||0)+intInc-varCost-cashOut-L.other;
+  L.profit=L.rev+L.crev+(L.csrev||0)+intInc-varCost-cashOut-dep-L.other;
   L.label=`${dateOf(S.day).getUTCFullYear()}/${dateOf(S.day).getUTCMonth()+1}`;
   S.last=L;S.months.push({l:L.label,p:L.profit});if(S.months.length>36)S.months.shift();
-  S.yr.rev+=L.rev+L.crev;S.yr.profit+=L.profit;S.yr.pax+=L.pax;S.yr.cargo+=L.cargo;S.stats.paxTotal+=L.pax;
+  S.yr.rev+=L.rev+L.crev+(L.csrev||0);S.yr.profit+=L.profit;S.yr.pax+=L.pax;S.yr.cargo+=L.cargo;S.stats.paxTotal+=L.pax;
   S.M=newLedger();
   rivalsMonth();refreshUsed();
   updateRep(L);
@@ -801,7 +918,7 @@ function rivalsMonth(){
   }
   // 對手反擊
   for(const c of openCities()){
-    const o=S.comp[c.code],h=S.routes[c.code].h||[];if(!h.length)continue;
+    const o=comp(c),h=S.routes[c.code].h||[];if(!h.length)continue;
     const cap=routeCap(c),sh=shares(c,cap.F,S.routes[c.code].fY,S.routes[c.code].fC,cap);
     for(const r of S.rivals){
       if(!o[r.id])continue;
@@ -811,8 +928,8 @@ function rivalsMonth(){
     }
   }
   // 對手開新航線
-  if(Math.random()<.07){const r=rnd(S.rivals),c=rnd(CITIES.filter(c=>!S.comp[c.code][r.id]));
-    if(c){S.comp[c.code][r.id]=7;S.comp[c.code].fare[r.id]=1;news(`${r.name}開了新航線：台北 ⇄ ${c.name}（每週 7 班）。`,'rival');}}
+  if(Math.random()<.07){const r=rnd(S.rivals),c=rnd(CITIES.filter(c=>!comp(c)[r.id]));
+    if(c){comp(c)[r.id]=7;comp(c).fare[r.id]=1;news(`${r.name}開了新航線：台北 ⇄ ${c.name}（每週 7 班）。`,'rival');}}
 }
 
 /* ===================== 事件 ===================== */
@@ -823,7 +940,7 @@ function events(){
   if(Math.random()<(typhoonSeason?.006:.001)){
     const sc=rnd(['TPE','jp','jp','cn','sea','TPE']);const days=1+Math.floor(Math.random()*2);
     S.cancel.push({scope:sc,until:S.day+days});
-    const t=sc==='TPE'?`颱風直撲台灣！桃園機場所有航班停飛 ${days} 天。`:`颱風影響${REGION[sc]}，飛${REGION[sc]}的航班停飛 ${days} 天。`;
+    const t=sc==='TPE'?`颱風直撲台灣！台灣各機場所有航班停飛 ${days} 天。`:`颱風影響${REGION[sc]}，飛${REGION[sc]}的航班停飛 ${days} 天。`;
     news(t,'bad');toast(t,'bad');sfx('bad');
   }
   const r=Math.random();
@@ -868,8 +985,8 @@ const CHOICES=[
   {ok:()=>openCities().length>=3,make(){
     const c=rnd(openCities()),r=rnd(S.rivals);const h=S.routes[c.code].h||[];const wk=h.reduce((s,x)=>s+x.profit,0);
     const offer=Math.max(3e8,wk*52*2.5);
-    return {board:'BUYOUT OFFER',title:`${r.name}想買你的航線`,text:`${r.name}想用 ${money(offer)} 買下你的台北 ⇄ ${c.name}航權和時段。賣掉後這條航線關閉，飛機回到機庫，${r.name}會接手飛。`,
-      opts:[{t:`賣掉（+${money(offer)}）`,run(){S.cash+=offer;closeRoute(c.code,true);S.comp[c.code][r.id]=(S.comp[c.code][r.id]||0)+7;news(`把${c.name}航線賣給${r.name}，收入 ${money(offer)}。`,'rival');sfx('coin');}},{t:'不賣',run(){}}]};}}
+    return {board:'BUYOUT OFFER',title:`${r.name}想買你的航線`,text:`${r.name}想用 ${money(offer)} 買下你的${c.pair}航權和時段。賣掉後這條航線關閉，飛機回到機庫，${r.name}會接手飛。`,
+      opts:[{t:`賣掉（+${money(offer)}）`,run(){S.cash+=offer;closeRoute(c.code,true);comp(c)[r.id]=(comp(c)[r.id]||0)+7;news(`把${c.name}航線賣給${r.name}，收入 ${money(offer)}。`,'rival');sfx('coin');}},{t:'不賣',run(){}}]};}}
 ];
 function maybeChoice(){
   const pool=CHOICES.filter(c=>c.ok());if(!pool.length)return;
@@ -885,8 +1002,11 @@ function maybeChoice(){
 const MS=[
   ['first','首航',()=>openCities().some(c=>S.planes.some(p=>flying(p)&&p.route===c.code))],
   ['wide','第一架廣體客機',()=>S.planes.some(p=>active(p)&&PLANES[p.type].cls==='wide')],
-  ['pac','飛越太平洋（北美航線）',()=>S.planes.some(p=>flying(p)&&CITY[p.route].reg==='na')],
-  ['eu','直飛歐洲',()=>S.planes.some(p=>flying(p)&&CITY[p.route].reg==='eu')],
+  ['pac','飛越太平洋（北美航線）',()=>S.planes.some(p=>flying(p)&&LEG(p.route)?.reg==='na')],
+  ['eu','直飛歐洲',()=>S.planes.some(p=>flying(p)&&LEG(p.route)?.reg==='eu')],
+  ['base2','開設第二個基地',()=>(S.bases||[]).length>=2],
+  ['ally','加入航空聯盟',()=>!!S.alliance],
+  ['ace','機長任務拿到 90 分',()=>(S.capBest||0)>=90],
   ['cargo','第一架全貨機',()=>S.planes.some(p=>active(p)&&PLANES[p.type].cls==='cargo')],
   ['f10','機隊 10 架',()=>S.planes.filter(active).length>=10],
   ['f30','機隊 30 架',()=>S.planes.filter(active).length>=30],
@@ -910,7 +1030,7 @@ function orderNew(t,price,lead){
 }
 function closeRoute(code,silent){
   delete S.routes[code];for(const p of S.planes)if(p.route===code)p.route=null;delete S.ads[code];
-  if(!silent)news(`停飛台北 ⇄ ${CITY[code].name}，飛機回到機庫。`,'info');
+  if(!silent)news(`停飛${LEG(code).pair}，飛機回到機庫。`,'info');
 }
 function refreshUsed(){
   const list=[];const types=['a321','a321','a321','a339','b789','a359','b77f'];
@@ -920,22 +1040,38 @@ function refreshUsed(){
 }
 function act(a,arg,arg2,quiet,P){
   if(!S||S.over) return;
-  const c=CITY[arg];
+  const c=LEG(arg);
   switch(a){
     case 'sel': UI.sel=UI.sel===arg?null:arg; break;
     case 'rf': UI.rfilter=arg;break;
+    case 'base': UI.base=arg;UI.sel=null;break;
+    case 'cabin': openCabin(arg);return;
+    case 'captain': Cap.open(arg);return;
+    case 'ally':{const a=ALLIANCES[arg],cost=P??a.fee;if(S.cash<cost||S.alliance)return;S.cash-=cost;S.alliance=arg;
+      news(`正式加入${a.name}！聯盟夥伴開始把轉機旅客送到你的航線。`,'good');toast(`加入${a.name}`,'gold');sfx('win');break;}
+    case 'leaveally':{if(!S.alliance)return;news(`退出${ALLIANCES[S.alliance].name}。`,'info');S.alliance=null;break;}
+    case 'cs':{const cost=P??csCost(c);if(S.cash<cost)return;S.cash-=cost;S.cs=S.cs||{};S.cs[c.code]={since:S.day};
+      news(`和${PARTNERS[c.reg]}簽訂${c.pair}代碼共享協議（${money(cost)}）。`,'good');sfx('coin');break;}
+    case 'endcs':{if(S.cs)delete S.cs[arg];news(`終止${LEG(arg).pair}的代碼共享。`,'info');break;}
+    case 'liv': openLivery();return;
+    case 'refit':{const p=S.planes.find(x=>x.id===arg);if(!p)return;const [C,W]=String(arg2).split(',').map(Number);const cost=P||0;if(S.cash<cost)return;S.cash-=cost;
+      p.cfg={C,W,Y:cfgY(p.type,C,W)};if(active(p)&&cost>0){p.down=Math.max(p.down,14);p.why='客艙改裝';}
+      news(`${pname(p)} 客艙${cost?'改裝':'設定'}為商務 ${C}／豪華經濟 ${W}／經濟 ${p.cfg.Y} 座${cost?`（${money(cost)}）`:''}。`,'info');sfx('buy');break;}
+    case 'livery':{const cost=P||0;if(S.cash<cost)return;S.cash-=cost;S.livery={...UI.liv};S.liveryDone=true;news(`公司換上新塗裝${cost?`（${money(cost)}）`:''}！`,'good');toast('新塗裝完成','gold');sfx('win');legend();break;}
+    case 'openbase':{const B=BASES[arg],cost=P??B.cost;S.bases=S.bases||['TPE'];if(S.cash<cost||S.bases.includes(arg))return;S.cash-=cost;S.bases.push(arg);UI.base=arg;UI.tab='routes';
+      news(`在${B.name}開設新基地（${money(cost)}）！現在可以從${B.short}直接開航線。`,'good');toast(`${B.name}基地開設完成`,'gold');sfx('win');break;}
     case 'apply':{
       const fee=P??2e7+c.M*2e3;if(S.cash<fee){toast('現金不夠','bad');return;}if(S.routes[c.code])return;
       S.cash-=fee;const days=15+Math.floor(Math.random()*(c.reg==='na'||c.reg==='eu'?35:20));
       S.routes[c.code]={st:'pending',ready:S.day+days,freq:7,cfreq:0,fY:1,fC:1,fno:S.fno,h:[]};S.fno+=2;
-      news(`向民航局申請台北 ⇄ ${c.name}航權（規費與開航行銷 ${money(fee)}），預計 ${dstr(S.day+days,1)} 核准。`,'info');sfx('coin');break;}
+      news(`向民航局申請${c.pair}航權（規費與開航行銷 ${money(fee)}），預計 ${dstr(S.day+days,1)} 核准。`,'info');sfx('coin');break;}
     case 'close': closeRoute(arg);break;
     case 'freq':{const r=S.routes[arg];r.freq=Math.max(0,Math.min(70,r.freq+ +arg2));break;}
     case 'cfreq':{const r=S.routes[arg];r.cfreq=Math.max(0,Math.min(28,(r.cfreq||0)+ +arg2));break;}
     case 'ad':{const cost=P??1e7+c.M*1500;if(S.cash<cost||S.ads[c.code])return;S.cash-=cost;S.ads[c.code]=S.day+30;sfx('coin');
       news(`在${c.name}投放廣告 30 天（${money(cost)}），旅客 +12%。`,'info');break;}
     case 'assign':{const p=S.planes.find(p=>p.id===arg2);if(!p)return;p.route=arg||null;
-      if(arg){const r=S.routes[arg],cap=routeCap(CITY[arg]);if(PLANES[p.type].cls==='cargo'){if(!r.cfreq)r.cfreq=Math.max(1,cap.mxC);}else if(r.freq<1)r.freq=Math.min(cap.mxP,7);sfx('buy');}
+      if(arg){const r=S.routes[arg],cap=routeCap(LEG(arg));if(PLANES[p.type].cls==='cargo'){if(!r.cfreq)r.cfreq=Math.max(1,cap.mxC);}else if(r.freq<1)r.freq=Math.min(cap.mxP,7);sfx('buy');}
       break;}
     case 'acq': UI.acq=arg;break;
     case 'neg': negOpen(arg,arg2);return;
@@ -1014,7 +1150,7 @@ function validSave(o){return o&&o.v===1&&Array.isArray(o.planes)&&o.routes&&type
 function applyLoad(obj){
   let st;try{st=typeof obj.json==='string'?JSON.parse(obj.json):obj;}catch(e){st=null;}
   if(!validSave(st)){toast('這個存檔壞掉了，讀不出來','bad');return false;}
-  S=st;S.over=false;acc=0;UI.sel=null;UI.tab='routes';UI.sellConfirm=null;UI.renaming=null;N=null;
+  S=migrate(st);S.over=false;acc=0;UI.sel=null;UI.tab='routes';UI.sellConfirm=null;UI.renaming=null;N=null;
   document.querySelectorAll('.overlay').forEach(o=>o.hidden=true);
   setSpeed(0);legend();updateHUD();renderPanel(true);save();
   if(UI.music)Music.start();
@@ -1061,15 +1197,214 @@ $('#impFile').addEventListener('change',async e=>{
   try{const t=await f.text();const o=JSON.parse(t);applyLoad(o.json?o:{json:t});}catch(err){toast('這不是飛吧航空大亨的存檔檔案','bad');}
 });
 
+/* ===================== 客艙設計 ===================== */
+function openCabin(id){
+  const p=S.planes.find(x=>x.id===id);if(!p||PLANES[p.type].cls==='cargo')return;
+  const st=seatsOf(p);UI.cab={id,C:st.C,W:st.W};
+  const k=CF[PLANES[p.type].cls];$('#cbC').max=k.cMax;$('#cbW').max=k.wMax;$('#cbC').value=st.C;$('#cbW').value=st.W;
+  $('#cabOv').hidden=false;renderCabin();
+}
+function cabinCost(p){return active(p)?(PLANES[p.type].cls==='narrow'?8e7:2e8):0;}
+function renderCabin(){
+  const p=S.planes.find(x=>x.id===UI.cab.id),T=PLANES[p.type];
+  UI.cab.C=+$('#cbC').value;UI.cab.W=+$('#cbW').value;
+  const Y=cfgY(p.type,UI.cab.C,UI.cab.W),tot=UI.cab.C+UI.cab.W+Y;
+  $('#cbTitle').textContent=`客艙設計：${pname(p)}`;
+  $('#cbDesc').textContent=`${T.name}。商務艙一個位子大約佔 ${CF[T.cls].c} 個經濟艙座位的空間，豪華經濟艙佔 ${CF[T.cls].w} 個。`;
+  $('#cbCv').textContent=UI.cab.C+' 座';$('#cbWv').textContent=UI.cab.W+' 座';$('#cbY').textContent=Y+' 座';$('#cbT').textContent=tot+' 座';
+  $('#cbTip').textContent=T.cls==='narrow'?'窄體機適合短程：經濟艙多一點比較好賣。':'長程航線商務客願意付很多錢，多放商務艙；熱門觀光航線則多放經濟艙。';
+  drawSeatMap($('#cbMap'),T.cls,UI.cab.C,UI.cab.W,Y);
+  const cost=cabinCost(p),same=UI.cab.C===seatsOf(p).C&&UI.cab.W===seatsOf(p).W;
+  const b=$('#cbBtns');b.innerHTML='';
+  const mk=(t,cls,fn,dis)=>{const x=document.createElement('button');x.className='btn '+cls;x.textContent=t;x.disabled=!!dis;x.onclick=fn;b.appendChild(x);};
+  if(cost>0)mk(`改裝（約 ${money(cost)}，停飛 14 天，可議價）`,'',()=>{$('#cabOv').hidden=true;negOpen('refit',p.id);},same||Y<20);
+  else mk('確定（交機時直接裝好，免費）','',()=>{act('refit',p.id,`${UI.cab.C},${UI.cab.W}`,false,0);$('#cabOv').hidden=true;},same||Y<20);
+  mk('取消','ghost',()=>{$('#cabOv').hidden=true;});
+}
+function drawSeatMap(cv,cls,C,W,Y){
+  const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;cv.width=w*dpr;cv.height=h*dpr;const g=cv.getContext('2d');g.scale(dpr,dpr);
+  const across=cls==='narrow'?6:9,cAcross=cls==='narrow'?4:4,wAcross=cls==='narrow'?6:8;
+  const rows=[...Array(Math.ceil(C/cAcross)).fill('C'),...Array(Math.ceil(W/wAcross)).fill('W'),...Array(Math.ceil(Y/across)).fill('Y')];
+  const pad=10,cw=(w-pad*2)/Math.max(rows.length,1),ch=h-pad*2;
+  g.fillStyle=COL.raise;g.beginPath();g.roundRect?g.roundRect(4,4,w-8,h-8,40):g.rect(4,4,w-8,h-8);g.fill();
+  rows.forEach((r,i)=>{const n=r==='C'?cAcross:r==='W'?wAcross:across;const col=r==='C'?COL.amber:r==='W'?COL.sky:alpha(COL.fg,.55);
+    const x=pad+i*cw,sh=(ch-10)/n;for(let j=0;j<n;j++){g.fillStyle=col;g.fillRect(x+cw*.15,pad+5+j*sh+sh*.15,cw*.7,sh*.7);}});
+}
+
+/* ===================== 塗裝 ===================== */
+const LIV_COLS=['#F2B53A','#E4572E','#2E86AB','#1B998B','#8E44AD','#C0392B','#0B3954','#F5F1E6','#7CCBE0','#2D3142'];
+const LIV_PATS=[['stripe','斜紋'],['wave','波浪'],['sun','圓日'],['chevron','箭羽'],['solid','單色']];
+function openLivery(){UI.liv={...S.livery};$('#livOv').hidden=false;renderLivery();}
+function liveryCost(){return S.liveryDone?S.planes.filter(active).length*3e6:0;}
+function renderLivery(){
+  const L=UI.liv;
+  $('#lvC1').innerHTML=LIV_COLS.map(c=>`<button style="background:${c}" data-lv="c1" data-c="${c}" aria-pressed="${L.c1===c}" aria-label="主色 ${c}"></button>`).join('');
+  $('#lvC2').innerHTML=LIV_COLS.map(c=>`<button style="background:${c}" data-lv="c2" data-c="${c}" aria-pressed="${L.c2===c}" aria-label="配色 ${c}"></button>`).join('');
+  $('#lvPat').innerHTML=LIV_PATS.map(([k,n])=>`<button data-lv="pat" data-c="${k}" aria-pressed="${L.pat===k}">${n}</button>`).join('');
+  drawLivery($('#lvCanvas'),L,S.name,S.code);
+  const cost=liveryCost();
+  $('#lvTip').textContent=cost?`重新塗裝 ${S.planes.filter(active).length} 架飛機，每架約 300萬（可以跟塗裝廠議價）。`:'第一次設計免費，所有飛機都會換上新塗裝。地圖上的飛機也會變成你的顏色。';
+  const b=$('#lvBtns');b.innerHTML='';
+  const mk=(t,cls,fn)=>{const x=document.createElement('button');x.className='btn '+cls;x.textContent=t;x.onclick=fn;b.appendChild(x);};
+  mk(cost?`重新塗裝（約 ${money(cost)}）`:'使用這個塗裝','',()=>{$('#livOv').hidden=true;if(cost)negOpen('repaint','x');else act('livery',null,null,false,0);});
+  mk('取消','ghost',()=>{$('#livOv').hidden=true;});
+}
+$('#livOv').addEventListener('click',e=>{const b=e.target.closest('[data-lv]');if(!b)return;UI.liv[b.dataset.lv]=b.dataset.c;renderLivery();});
+function drawLivery(cv,L,name,code){
+  const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;if(!w)return;cv.width=w*dpr;cv.height=h*dpr;const g=cv.getContext('2d');g.scale(dpr,dpr);
+  const sky=g.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#1d3550');sky.addColorStop(1,'#0e1a2a');g.fillStyle=sky;g.fillRect(0,0,w,h);
+  const x0=w*.05,x1=w*.95,cy=h*.58,fh=h*.2,top=cy-fh/2,bot=cy+fh/2;
+  // 機翼（遠側）
+  g.fillStyle='#8a94a3';g.beginPath();g.moveTo(w*.42,cy);g.lineTo(w*.52,cy-fh*.9);g.lineTo(w*.56,cy-fh*.9);g.lineTo(w*.52,cy);g.closePath();g.fill();
+  // 機身
+  g.fillStyle='#F4F4F0';g.beginPath();g.moveTo(x0+w*.04,top);g.lineTo(x1-fh*.9,top);g.quadraticCurveTo(x1,top+fh*.1,x1,cy+fh*.15);g.quadraticCurveTo(x1-fh*.2,bot,x1-fh*1.2,bot);
+  g.lineTo(x0+w*.1,bot);g.quadraticCurveTo(x0,bot-fh*.2,x0,top+fh*.3);g.quadraticCurveTo(x0+w*.01,top,x0+w*.04,top);g.closePath();g.fill();
+  // 腰線
+  g.save();g.clip();g.fillStyle=L.c1;g.fillRect(x0,cy+fh*.12,x1-x0,fh*.22);g.fillStyle=L.c2;g.fillRect(x0,cy+fh*.06,x1-x0,fh*.05);g.restore();
+  // 窗戶
+  g.fillStyle='#2b3a4f';for(let x=x0+w*.13;x<x1-fh*1.4;x+=w*.022){g.beginPath();g.arc(x,cy-fh*.12,fh*.07,0,Math.PI*2);g.fill();}
+  g.beginPath();g.moveTo(x1-fh*.85,top+fh*.2);g.lineTo(x1-fh*.35,top+fh*.22);g.lineTo(x1-fh*.3,top+fh*.4);g.lineTo(x1-fh*.85,top+fh*.4);g.closePath();g.fill();
+  // 名字
+  g.fillStyle=L.c1==='#F5F1E6'?L.c2:L.c1;g.font=`900 ${Math.max(9,fh*.26)}px ${COL.ui}`;g.textAlign='left';g.textBaseline='alphabetic';g.fillText(name||'',x0+w*.2,top+fh*.28);
+  // 尾翼
+  const fin=[[x0+w*.035,top+1],[x0,h*.06],[x0+w*.09,h*.06],[x0+w*.2,top+1]];
+  g.save();g.beginPath();fin.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fillStyle=L.c1;g.fill();g.clip();
+  g.fillStyle=L.c2;const fx=x0,fy=h*.06,fw=w*.2,fhh=top-h*.06;
+  if(L.pat==='stripe'){for(let i=-2;i<6;i++){g.beginPath();g.moveTo(fx+i*fw*.22,fy+fhh);g.lineTo(fx+i*fw*.22+fw*.09,fy+fhh);g.lineTo(fx+i*fw*.22+fw*.5,fy);g.lineTo(fx+i*fw*.22+fw*.41,fy);g.closePath();g.fill();}}
+  else if(L.pat==='wave'){g.beginPath();g.moveTo(fx,fy+fhh*.55);for(let x=0;x<=fw;x+=2)g.lineTo(fx+x,fy+fhh*.55+Math.sin(x/fw*Math.PI*3)*fhh*.12);g.lineTo(fx+fw,fy+fhh);g.lineTo(fx,fy+fhh);g.closePath();g.fill();}
+  else if(L.pat==='sun'){g.beginPath();g.arc(fx+fw*.45,fy+fhh*.45,fhh*.28,0,Math.PI*2);g.fill();}
+  else if(L.pat==='chevron'){for(let i=0;i<3;i++){const yy=fy+fhh*(.25+i*.24);g.beginPath();g.moveTo(fx,yy);g.lineTo(fx+fw*.5,yy-fhh*.12);g.lineTo(fx+fw,yy);g.lineTo(fx+fw,yy+fhh*.08);g.lineTo(fx+fw*.5,yy-fhh*.04);g.lineTo(fx,yy+fhh*.08);g.closePath();g.fill();}}
+  g.restore();
+  g.fillStyle=L.pat==='solid'?L.c2:'#F4F4F0';g.font=`700 ${Math.max(10,fh*.42)}px ${COL.mono}`;g.textAlign='center';g.fillText(code||'',x0+w*.075,h*.06+(top-h*.06)*.75);
+  // 機翼（近側）與引擎
+  g.fillStyle='#b9c1cc';g.beginPath();g.moveTo(w*.4,cy+fh*.15);g.lineTo(w*.5,h*.97);g.lineTo(w*.56,h*.97);g.lineTo(w*.54,cy+fh*.15);g.closePath();g.fill();
+  g.fillStyle=L.c2;g.beginPath();g.ellipse(w*.52,cy+fh*.95,w*.045,fh*.28,0,0,Math.PI*2);g.fill();
+  g.fillStyle='#1d2633';g.beginPath();g.ellipse(w*.565,cy+fh*.95,w*.008,fh*.22,0,0,Math.PI*2);g.fill();
+  // 水平尾翼
+  g.fillStyle=L.c1;g.beginPath();g.moveTo(x0+w*.05,cy-fh*.05);g.lineTo(x0+w*.005,cy+fh*.25);g.lineTo(x0+w*.05,cy+fh*.25);g.lineTo(x0+w*.12,cy);g.closePath();g.fill();
+}
+
+/* ===================== 機長任務小遊戲 ===================== */
+const Cap=(()=>{
+  let st=null,raf=0,last=0;
+  const keys={up:false,down:false};
+  function open(code){
+    const c=LEG(code);const p=S.planes.find(x=>flying(x)&&x.route===code&&PLANES[x.type].cls!=='cargo');if(!c||!p)return;
+    st={c,p,phase:'brief',t:0,score:{to:0,cr:0,ld:0},msg:'',spd:0,y:0,vy:0,x:0,clouds:[],rings:[],spawn:0,comfort:40,shake:0,err:0,errN:0,gy:0,ldStartY:0};
+    $('#cpTitle').textContent=`機長任務：${S.code}${S.routes[code].fno} ${c.pair}`;
+    $('#cpBoard').textContent=`FLIGHT DECK · ${PLANES[p.type].name} ${p.reg}`;
+    $('#capOv').hidden=false;setPhase('brief');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
+  }
+  function setPhase(ph){
+    st.phase=ph;st.t=0;const H=$('#cpHint'),B=$('#cpBtns'),A=$('#cpAct');B.innerHTML='';
+    const mk=(t,cls,fn)=>{const x=document.createElement('button');x.className='btn '+cls;x.textContent=t;x.onclick=fn;B.appendChild(x);};
+    $('#cpCtl').hidden=ph==='brief'||ph==='result';
+    if(ph==='brief'){H.textContent='今天由你親自駕駛！三個關卡：①起飛時，速度指針到綠色區域按「拉起機頭」；②巡航時用 ▲▼ 避開黑色亂流雲、吃金色平穩氣流；③降落時沿著虛線下滑，輕輕著陸。電腦可以用方向鍵和空白鍵。';mk('開始','',()=>setPhase('takeoff'));mk('下次再說','ghost',close);}
+    if(ph==='takeoff'){H.textContent='加速中⋯⋯速度到綠色區域時按「拉起機頭」（空白鍵）！';A.textContent='拉起機頭';A.disabled=false;st.spd=0;}
+    if(ph==='cruise'){H.textContent='巡航：按住 ▲▼ 避開亂流雲，穿過金色光圈讓旅客更舒服。';A.textContent='—';A.disabled=true;st.y=.5;st.vy=0;st.clouds=[];st.rings=[];st.spawn=0;st.comfort=40;}
+    if(ph==='landing'){H.textContent='降落：沿著虛線下滑。按住 ▲ 減慢下降，▼ 加快下降。著陸越輕越好！';A.textContent='—';A.disabled=true;st.x=0;st.y=.3;st.vy=.02;st.err=0;st.errN=0;st.ldStartY=.3;}
+    if(ph==='result')result();
+  }
+  function act(){if(!st)return;if(st.phase==='takeoff'){const v=st.spd;
+    if(v<138){st.score.to=6;st.msg='速度不夠就拉起，機尾差點擦地！';}
+    else if(v<=162){st.score.to=Math.round(30-Math.abs(v-150)*.9);st.msg=`漂亮的起飛！（${Math.round(v)} 節）`;}
+    else{st.score.to=Math.max(8,Math.round(30-(v-150)*.9));st.msg='有點晚才拉起，跑道快用完了！';}
+    sfx(st.score.to>=24?'good':'ping');setPhase('cruise');}}
+  function result(){
+    const sc=Math.max(0,Math.min(100,st.score.to+st.score.cr+st.score.ld)),stars='★'.repeat(Math.round(sc/20))+'☆'.repeat(5-Math.round(sc/20));
+    const dRep=sc>=85?3:sc>=65?2:sc>=45?1:-1;
+    S.rep=Math.max(5,Math.min(100,S.rep+dRep));S.capCD=S.day+30;S.capBest=Math.max(S.capBest||0,sc);
+    news(`機長親自駕駛 ${st.c.pair}：${sc} 分 ${stars}，聲望 ${dRep>0?'+':''}${dRep}。`,dRep>0?'good':'bad');
+    $('#cpHint').innerHTML=`<b>${stars}　${sc} 分</b>　起飛 ${st.score.to}／30 · 巡航 ${st.score.cr}／40 · 降落 ${st.score.ld}／30<br>${sc>=85?'旅客全體鼓掌！新聞報導「最會飛的老闆」。':sc>=65?'旅客很滿意，飛得很穩。':sc>=45?'還可以，有幾位旅客暈機。':'旅客嚇壞了，下次加油！'}聲望 ${dRep>0?'+':''}${dRep}。30 天後可以再飛。`;
+    const B=$('#cpBtns');const x=document.createElement('button');x.className='btn';x.textContent='完成';x.onclick=close;B.appendChild(x);
+    sfx(sc>=65?'win':'ping');save();updateHUD();renderPanel(true);
+  }
+  function close(){cancelAnimationFrame(raf);st=null;$('#capOv').hidden=true;keys.up=keys.down=false;}
+  function loop(now){
+    if(!st)return;const dt=Math.min(.05,(now-last)/1000);last=now;st.t+=dt;
+    const cv=$('#cpCanvas'),dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;
+    if(cv.width!==Math.round(w*dpr)){cv.width=w*dpr;cv.height=h*dpr;}
+    const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
+    update(dt,w,h);render(g,w,h);
+    raf=requestAnimationFrame(loop);
+  }
+  function update(dt,w,h){
+    if(st.phase==='takeoff'){st.spd+=dt*(st.spd<120?42:26);if(st.spd>=185){st.score.to=6;st.msg='跑道快用完才離地，好險！';sfx('bad');setPhase('cruise');}}
+    else if(st.phase==='cruise'){
+      const acc=(keys.up?-1:0)+(keys.down?1:0);st.vy+=acc*dt*2.6;st.vy*=Math.pow(.05,dt);st.y=Math.max(.08,Math.min(.92,st.y+st.vy*dt));
+      st.spawn-=dt;if(st.spawn<=0){st.spawn=.55+Math.random()*.45;
+        if(Math.random()<.72)st.clouds.push({x:w+40,y:.1+Math.random()*.8,r:22+Math.random()*20,hit:false});else st.rings.push({x:w+30,y:.12+Math.random()*.76,got:false});}
+      const sp=230,px_=w*.22,py=st.y*h;
+      for(const c of st.clouds){c.x-=sp*dt;if(!c.hit&&Math.hypot(c.x-px_,c.y*h-py)<c.r+10){c.hit=true;st.comfort=Math.max(0,st.comfort-6);st.shake=.35;sfx('bad');}}
+      for(const r of st.rings){r.x-=sp*dt;if(!r.got&&Math.hypot(r.x-px_,r.y*h-py)<20){r.got=true;st.comfort=Math.min(40,st.comfort+2);sfx('good');}}
+      st.clouds=st.clouds.filter(c=>c.x>-60);st.rings=st.rings.filter(r=>r.x>-40);st.shake=Math.max(0,st.shake-dt);
+      if(st.t>=16){st.score.cr=Math.round(st.comfort);setPhase('landing');}
+    } else if(st.phase==='landing'){
+      const dur=10;st.x=Math.min(1,st.t/dur);
+      const acc=(keys.up?-1:0)+(keys.down?1:0);st.vy+=(acc*.12+.018)*dt;st.vy=Math.max(-.05,Math.min(.16,st.vy));st.y+=st.vy*dt;
+      const ground=.82,gy=st.ldStartY+(ground-st.ldStartY)*st.x;st.gy=gy;st.err+=Math.abs(st.y-gy);st.errN++;
+      if(st.y>=ground||st.x>=1){
+        const avg=st.err/Math.max(1,st.errN),vs=st.vy;
+        const path=Math.max(0,Math.round(15-avg*120)),touch=st.y<ground-.04?4:vs<.035?15:vs<.06?11:vs<.09?6:2;
+        st.score.ld=path+touch;st.msg=touch>=15?'奶油般的著陸！':touch>=11?'平穩著陸。':touch>=6?'有點重的著陸。':'砰！好重的著陸。';
+        setPhase('result');}
+    }
+  }
+  function plane(g,x,y,s,ang){const L=S.livery||{c1:'#F2B53A',c2:'#7CCBE0'};g.save();g.translate(x,y);g.rotate(ang||0);g.scale(s,s);
+    g.fillStyle='#F4F4F0';g.beginPath();g.ellipse(0,0,34,7,0,0,Math.PI*2);g.fill();
+    g.fillStyle=L.c1;g.beginPath();g.moveTo(-30,-3);g.lineTo(-38,-20);g.lineTo(-28,-20);g.lineTo(-18,-4);g.closePath();g.fill();
+    g.fillRect(-32,1,60,3);g.fillStyle='#9aa3b0';g.beginPath();g.moveTo(-4,2);g.lineTo(8,14);g.lineTo(14,14);g.lineTo(8,2);g.closePath();g.fill();
+    g.fillStyle=L.c2;g.beginPath();g.ellipse(8,9,6,3,0,0,Math.PI*2);g.fill();g.fillStyle='#2b3a4f';g.fillRect(24,-3,6,2.5);g.restore();}
+  function render(g,w,h){
+    const sk=g.createLinearGradient(0,0,0,h);
+    if(st.phase==='cruise'){sk.addColorStop(0,'#0f2a4a');sk.addColorStop(1,'#3f6f9c');}else{sk.addColorStop(0,'#3f6f9c');sk.addColorStop(1,'#b8d0e0');}
+    g.fillStyle=sk;g.fillRect(0,0,w,h);
+    const sh=st.shake>0?(Math.random()-.5)*8:0;g.save();g.translate(0,sh);
+    if(st.phase==='brief'){plane(g,w*.5,h*.5,2.2,0);}
+    if(st.phase==='takeoff'){
+      g.fillStyle='#3d5a3a';g.fillRect(0,h*.78,w,h*.22);g.fillStyle='#2f3338';g.fillRect(0,h*.8,w,h*.1);
+      const off=(st.spd*st.t*2)%60;g.fillStyle='#e8e8e0';for(let x=-off;x<w;x+=60)g.fillRect(x,h*.845,30,4);
+      plane(g,w*.35,h*.77,1.6,0);
+      const gw=Math.min(w-20,Math.max(w*.36,230)),gx=w-gw-10,gy=h*.08,gh=18;g.fillStyle='rgba(0,0,0,.45)';g.fillRect(gx,gy,gw,gh+22);
+      const sx=v=>gx+8+(gw-16)*v/190;g.fillStyle='#3d8f4f';g.fillRect(sx(140),gy+4,sx(160)-sx(140),gh-8);
+      g.fillStyle='#F2B53A';g.fillRect(sx(st.spd)-2,gy+2,4,gh-4);
+      g.fillStyle='#fff';g.font='12px '+COL.mono;g.textAlign='left';g.fillText(`空速 ${Math.round(st.spd)} 節（綠色＝起飛速度）`,gx+8,gy+gh+16);
+    }
+    if(st.phase==='cruise'){
+      for(const r of st.rings){if(r.got)continue;g.strokeStyle='#F2B53A';g.lineWidth=4;g.beginPath();g.arc(r.x,r.y*h,14,0,Math.PI*2);g.stroke();}
+      for(const c of st.clouds){g.fillStyle=c.hit?'rgba(60,64,80,.35)':'#3a3f52';for(const [dx,dy,k] of [[0,0,1],[-.7,.2,.7],[.7,.15,.75],[.2,-.4,.65]]){g.beginPath();g.arc(c.x+dx*c.r,c.y*h+dy*c.r,c.r*k,0,Math.PI*2);g.fill();}
+        if(!c.hit){g.fillStyle='#F2E25A';g.beginPath();g.moveTo(c.x,c.y*h-6);g.lineTo(c.x-5,c.y*h+4);g.lineTo(c.x,c.y*h+3);g.lineTo(c.x-3,c.y*h+12);g.lineTo(c.x+6,c.y*h-1);g.lineTo(c.x+1,c.y*h);g.closePath();g.fill();}}
+      plane(g,w*.22,st.y*h,1.1,st.vy*.25);
+      g.fillStyle='rgba(0,0,0,.45)';g.fillRect(10,10,190,26);g.fillStyle='#fff';g.font='12px '+COL.mono;g.textAlign='left';g.fillText(`旅客舒適度 ${Math.round(st.comfort)}/40  剩 ${Math.max(0,16-st.t).toFixed(0)} 秒`,18,28);
+    }
+    if(st.phase==='landing'||st.phase==='result'){
+      const ground=.82;g.fillStyle='#3d5a3a';g.fillRect(0,h*ground,w,h*(1-ground));g.fillStyle='#2f3338';g.fillRect(w*.55,h*ground,w*.45,h*.06);
+      g.fillStyle='#e8e8e0';for(let x=w*.58;x<w;x+=40)g.fillRect(x,h*(ground+.025),20,3);
+      const X=t=>w*.08+w*.55*t;g.setLineDash([6,6]);g.strokeStyle='#F2B53A';g.lineWidth=2;g.beginPath();g.moveTo(X(0),h*st.ldStartY);g.lineTo(X(1),h*ground);g.stroke();g.setLineDash([]);
+      plane(g,X(st.x),Math.min(st.y,ground)*h-5,1.1,st.vy*2.5);
+      if(st.phase==='landing'){g.fillStyle='rgba(0,0,0,.45)';g.fillRect(10,10,220,26);g.fillStyle='#fff';g.font='12px '+COL.mono;g.textAlign='left';g.fillText(`下降率 ${Math.round(st.vy*12000)} 呎/分 ${st.vy<.035?'（輕）':st.vy<.06?'（好）':'（太快）'}`,18,28);}
+    }
+    g.restore();
+    if(st.msg&&st.phase!=='brief'&&st.t<2.5){g.fillStyle='rgba(0,0,0,.55)';g.fillRect(w/2-150,h-44,300,30);g.fillStyle='#fff';g.font='14px '+COL.ui;g.textAlign='center';g.fillText(st.msg,w/2,h-24);}
+  }
+  const hold=(id,k)=>{const el=$(id);const on=e=>{e.preventDefault();keys[k]=true;},off=()=>{keys[k]=false;};
+    el.addEventListener('pointerdown',on);el.addEventListener('pointerup',off);el.addEventListener('pointerleave',off);el.addEventListener('pointercancel',off);};
+  hold('#cpUp','up');hold('#cpDown','down');
+  $('#cpAct').addEventListener('click',act);
+  window.addEventListener('keydown',e=>{if(!st||$('#capOv').hidden)return;if(e.key==='ArrowUp'||e.key==='w'){keys.up=true;e.preventDefault();}if(e.key==='ArrowDown'||e.key==='s'){keys.down=true;e.preventDefault();}if(e.key===' '){act();e.preventDefault();}});
+  window.addEventListener('keyup',e=>{if(e.key==='ArrowUp'||e.key==='w')keys.up=false;if(e.key==='ArrowDown'||e.key==='s')keys.down=false;});
+  return {open,get st(){return st;}};
+})();
+
 /* ===================== 殺價 ===================== */
 const SELLERS={
   airbus:{n:'空中巴士業務 艾蜜莉'},boeing:{n:'波音業務 麥克'},lessor:{n:'飛機租賃公司 陳經理'},used:{n:'二手飛機仲介 林先生'},
-  airport:{n:'機場航線開發部 王科長'},media:{n:'廣告代理商 Amy'},school:{n:'航空訓練學院 張主任'},builder:{n:'工程顧問公司 黃總'},bank:{n:'銀行交易員 吳小姐'}
+  airport:{n:'機場航線開發部 王科長'},media:{n:'廣告代理商 Amy'},school:{n:'航空訓練學院 張主任'},builder:{n:'工程顧問公司 黃總'},bank:{n:'銀行交易員 吳小姐'},mro:{n:'飛機改裝廠 劉廠長'},ally:{n:'聯盟秘書長 Ms. Grant'},partner:{n:'外國航空 合作部經理'},paint:{n:'塗裝廠 小許'}
 };
 const zhe=d=>d<=0.0001?'不打折':`打 ${((1-d)*10).toFixed(1).replace(/\.0$/,'')} 折`;
 let N=null;
 function negCfg(kind,key){
-  const T=PLANES[key],c=CITY[key];
+  const T=PLANES[key],c=LEG(key);
   switch(kind){
     case 'buynew': return {seller:['b789','b77f'].includes(key)?'boeing':'airbus',title:`訂購 ${T.name}`,desc:`新飛機定價，每架先付 20% 訂金，大約 ${Math.round(T.lead*.6/30)} 個月後交機。真實的航空公司下大訂單常常能談到很大的折扣。`,list:T.price,unit:'每架',qtyMax:6,base:.05,rnd:.07,bulk:.025,
       ok:(u,q)=>S.cash>=u*.2*q,need:(u,q)=>`訂金 ${money(u*.2*q)}`,deal:(u,q)=>{for(let i=0;i<q;i++)act('buynew',key,null,true,u);}};
@@ -1077,10 +1412,15 @@ function negCfg(kind,key){
       ok:(u,q)=>S.cash>=u*2*q,need:(u,q)=>`押金 ${money(u*2*q)}`,deal:(u,q)=>{for(let i=0;i<q;i++)act('lease',key,null,true,u);}};
     case 'buyused':{const u=S.used.find(x=>x.id===key);if(!u)return null;const TT=PLANES[u.type];
       return {seller:'used',title:`二手 ${TT.name}（${u.age} 年）`,desc:'二手飛機的賣家通常急著脫手，殺價空間比較大。',list:u.price,unit:'',base:.07,rnd:.12,ok:(p)=>S.cash>=p,need:p=>money(p),deal:(p)=>act('buyused',key,null,true,p),lost:()=>{S.used=S.used.filter(x=>x!==u);}};}
-    case 'apply': return {seller:'airport',title:`開航 台北 ⇄ ${c.name}`,desc:'航權規費加上開航行銷費用。機場為了吸引新航線，常常願意給補貼。',list:2e7+c.M*2e3,unit:'',base:.04,rnd:.14,ok:p=>S.cash>=p,need:p=>money(p),deal:p=>act('apply',key,null,true,p)};
+    case 'apply': return {seller:'airport',title:`開航 ${c.pair}`,desc:'航權規費加上開航行銷費用。機場為了吸引新航線，常常願意給補貼。',list:2e7+c.M*2e3,unit:'',base:.04,rnd:.14,ok:p=>S.cash>=p,need:p=>money(p),deal:p=>act('apply',key,null,true,p)};
     case 'ad': return {seller:'media',title:`${c.name} 廣告 30 天`,desc:'電視、網路和捷運廣告，旅客 +12%。',list:1e7+c.M*1500,unit:'',base:.08,rnd:.15,ok:p=>S.cash>=p,need:p=>money(p),deal:p=>act('ad',key,null,true,p)};
     case 'hire':{const pil=key==='p';return {seller:'school',title:pil?'招募並訓練 10 位機師':'招募並訓練 30 位空服員',desc:'訓練費用。',list:pil?10*(has('sim')?5e5:1e6):3e6,unit:'',base:.04,rnd:.1,ok:p=>S.cash>=p,need:p=>money(p),deal:p=>act('hire',key,null,true,p)};}
     case 'upg':{const u=UPG[key];return {seller:'builder',title:u.name,desc:u.desc,list:u.price,unit:'',base:.04,rnd:.12,ok:p=>S.cash>=p,need:p=>money(p),deal:p=>act('upg',key,null,true,p)};}
+    case 'openbase':{const B=BASES[key];return {seller:'airport',title:`開設${B.name}基地`,desc:'包含基地辦公室、地勤合約、機組員宿舍與機場櫃檯。機場很歡迎新航空公司進駐，通常願意給優惠。',list:B.cost,unit:'',base:.04,rnd:.12,ok:p=>S.cash>=p,need:p=>money(p),deal:p=>act('openbase',key,null,true,p)};}
+    case 'refit':{const p=S.planes.find(x=>x.id===key);if(!p)return null;const pend=`${UI.cab.C},${UI.cab.W}`;return {seller:'mro',title:`改裝 ${pname(p)} 客艙`,desc:`改成商務 ${UI.cab.C}、豪華經濟 ${UI.cab.W}、經濟 ${cfgY(p.type,UI.cab.C,UI.cab.W)} 座。改裝期間停飛 14 天。`,list:cabinCost(p),unit:'',base:.05,rnd:.12,ok:x=>S.cash>=x,need:x=>money(x),deal:x=>act('refit',key,pend,true,x)};}
+    case 'repaint':{const liv={...UI.liv};return {seller:'paint',title:'全機隊重新塗裝',desc:`把 ${S.planes.filter(active).length} 架飛機換成新塗裝。`,list:liveryCost(),unit:'',base:.06,rnd:.14,ok:x=>S.cash>=x,need:x=>money(x),deal:x=>{UI.liv=liv;act('livery',null,null,true,x);}};}
+    case 'ally':{const a=ALLIANCES[key];return {seller:'ally',title:`加入${a.name}`,desc:`入會費（之後每年還要付年費 ${money(a.yearly)}）。聯盟想吸收有潛力的新會員，入會費可以談。`,list:a.fee,unit:'',base:.03,rnd:.12,ok:x=>S.cash>=x,need:x=>money(x),deal:x=>act('ally',key,null,true,x)};}
+    case 'cs':{const pn=PARTNERS[c.reg];return {seller:'partner',title:`${c.pair} 代碼共享`,desc:`和${pn}簽約的一次性費用（系統整合、行銷）。合作後他們會幫你賣票、不再跟你削價競爭。`,list:csCost(c),unit:'',base:.05,rnd:.15,ok:x=>S.cash>=x,need:x=>money(x),deal:x=>act('cs',key,null,true,x)};}
     case 'hedge': return {seller:'bank',title:'180 天燃油避險合約',desc:`把油價上限鎖在 ${nt(S.fuel*1.02)}/公斤。談的是權利金。`,list:S.fuel*2.5e6,unit:'',base:.04,rnd:.1,ok:p=>S.cash>=p,need:p=>money(p),deal:p=>act('hedge',null,null,true,p)};
   }
 }
@@ -1142,6 +1482,7 @@ function negRender(){
   mk('不買了','ghost',()=>{$('#negOv').hidden=true;N=null;});
 }
 $('#ngSl').addEventListener('input',negRender);
+$('#cbC').addEventListener('input',()=>renderCabin());$('#cbW').addEventListener('input',()=>renderCabin());
 $('#ngMinus').onclick=()=>{if(N&&N.qty>1){N.qty--;negRender();}};
 $('#ngPlus').onclick=()=>{if(N&&N.qty<N.qtyMax){N.qty++;negRender();}};
 
@@ -1171,7 +1512,7 @@ function schedule(c,day){
 /* ===================== HUD ===================== */
 function setSpeed(s){UI.speed=s;document.querySelectorAll('[data-speed]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.speed===s)));}
 function ranking(){return [{name:S.name,nw:netWorth(),me:true,col:'amber'},...S.rivals.map(r=>({name:r.name,nw:r.nw,col:r.col}))].sort((a,b)=>b.nw-a.nw);}
-function mtd(){const L=S.M;return L.rev+L.crev-L.fuel-L.fees-L.maint-L.crewv-L.cat-L.dist-L.checks-L.other;}
+function mtd(){const L=S.M;return L.rev+L.crev+(L.csrev||0)-L.fuel-L.fees-L.maint-L.crewv-L.cat-L.dist-L.checks-L.other;}
 function updateHUD(){
   if(!S) return;
   $('#hName').textContent=S.name;$('#hSub').textContent=`${S.code} · HUB TPE 台灣桃園國際機場`;
@@ -1182,7 +1523,7 @@ function updateHUD(){
   const rk=ranking().findIndex(x=>x.me)+1;$('#hRank').textContent=`第 ${rk} / 4`;
   $('#hRep').textContent=Math.round(S.rep);
   const tags=[];const mo=dateOf(S.day).getUTCMonth();if(SEASON_NAME[mo])tags.push(`<span class="${SEASON[mo]<1?'bad':''}">${SEASON_NAME[mo]}</span>`);
-  if(S.cancel.some(x=>x.scope==='TPE'))tags.push('<span class="bad">颱風：桃園停飛</span>');
+  if(S.cancel.some(x=>x.scope==='TPE'))tags.push('<span class="bad">颱風：台灣停飛</span>');
   if(S.strike>0)tags.push('<span class="bad">機師罷工</span>');
   const cr=crewRatio();if(cr<1)tags.push(`<span class="bad">人手不足：${Math.round((1-cr)*100)}% 班機取消</span>`);
   if(S.fuel>FUEL_BASE*1.12)tags.push('<span class="bad">油價偏高</span>');
@@ -1207,17 +1548,21 @@ function renderPanel(force){
   content.scrollTop=st;
   if(fid){const el=document.getElementById(fid);if(el)el.focus({preventScroll:true});}
   if(UI.tab==='money') drawChart();
+  if(UI.tab==='fleet'){const m=document.getElementById('livMini');if(m)drawLivery(m,S.livery,S.name,S.code);}
   const idle=S.planes.some(p=>active(p)&&!p.route);
   document.querySelector('[data-tab="fleet"]').innerHTML='機隊'+(idle?'<span class="dot" title="有閒置飛機"></span>':'');
   document.querySelector('[data-tab="ops"]').innerHTML='營運'+(crewRatio()<1?'<span class="dot" title="人手不足"></span>':'');
 }
 function sum7(r,k){return (r.h||[]).reduce((s,x)=>s+x[k],0);}
-function compDots(code){const o=S.comp[code];return S.rivals.filter(r=>o[r.id]).map(r=>`<span class="rd" style="background:var(--${r.col})" title="${r.name}"></span>`).join('');}
+function compDots(c){const o=comp(c);return S.rivals.filter(r=>o[r.id]).map(r=>`<span class="rd" style="background:var(--${r.col})" title="${r.name}"></span>`).join('');}
 function vRoutes(){
+  const bases=S.bases||['TPE'];if(UI.base!=='+'&&!bases.includes(UI.base))UI.base='TPE';
+  let h=`<div class="filters" aria-label="基地">${bases.map(b=>`<button data-act="base" data-arg="${b}" aria-pressed="${UI.base===b}">${BASES[b].short}基地</button>`).join('')}<button data-act="base" data-arg="+" aria-pressed="${UI.base==='+'}">＋ 開設基地</button></div>`;
+  if(UI.base==='+')return h+vBases();
   const f=UI.rfilter;
-  let h=`<div class="filters">${[['all','全部'],['mine','我的航線'],['cn','港澳中'],['jp','日韓'],['sea','東南亞'],['long','長程']].map(([k,n])=>`<button data-act="rf" data-arg="${k}" aria-pressed="${f===k}">${n}</button>`).join('')}</div>`;
-  h+=`<p class="hint">${S.rivals.map(r=>`<span class="rd" style="background:var(--${r.col})"></span>${r.name}`).join('　')}　表示對手也在飛。</p><div class="rlist">`;
-  const list=CITIES.filter(c=>f==='all'||(f==='mine'&&S.routes[c.code])||(f==='jp'&&(c.reg==='jp'||c.reg==='kr'))||(f===c.reg)||(f==='long'&&c.d>5000));
+  h+=`<div class="filters">${[['all','全部'],['mine','我的航線'],['cn','港澳中'],['jp','日韓'],['sea','東南亞'],['long','長程']].map(([k,n])=>`<button data-act="rf" data-arg="${k}" aria-pressed="${f===k}">${n}</button>`).join('')}</div>`;
+  h+=`<p class="hint">從<b>${BASES[UI.base].name}</b>出發。${S.rivals.map(r=>`<span class="rd" style="background:var(--${r.col})"></span>${r.name}`).join('　')}　表示對手也在飛。</p><div class="rlist">`;
+  const list=legsFor(UI.base).filter(c=>f==='all'||(f==='mine'&&S.routes[c.code])||(f==='jp'&&(c.reg==='jp'||c.reg==='kr'))||(f===c.reg)||(f==='long'&&c.d>4000));
   if(!list.length) h+='<p class="hint">這裡還沒有航線。</p>';
   for(const c of list){
     const r=S.routes[c.code],sel=UI.sel===c.code;
@@ -1225,14 +1570,25 @@ function vRoutes(){
     if(r?.st==='pending')chip=`<span class="chip wait">審核中</span>`;
     if(r?.st==='open'){const cap=routeCap(c);chip=cancelled(c)?'<span class="chip storm">停飛</span>':`<span class="chip on">${cap.F+cap.FC} 班/週</span>`;}
     h+=`<div class="rrow${sel?' sel':''}" id="row-${c.code}"><button class="rhead" data-act="sel" data-arg="${c.code}" aria-expanded="${sel}">
-      <span class="code">${c.code}</span><span class="nm"><b>${c.name} ${compDots(c.code)}</b><small>${c.d.toLocaleString()} km · ${REGION[c.reg]}</small></span>${chip}</button>`;
+      <span class="code">${c.dest}</span><span class="nm"><b>${c.name} ${compDots(c)}${S.cs&&S.cs[c.code]?' <span class="sky" style="font-size:12px">代碼共享</span>':''}</b><small>${c.d.toLocaleString()} km · ${REGION[c.reg]}</small></span>${chip}</button>`;
     if(sel) h+=`<div class="rbody">${r?.st==='open'?vOpen(c,r):r?.st==='pending'?vPending(c,r):vNew(c)}</div>`;
     h+='</div>';
   }
   return h+'</div>';
 }
+function vBases(){
+  const own=S.bases||['TPE'];
+  let h=`<p class="hint">開設新基地後，就能從那個機場直接開航線。每個基地每月有固定的人事和租金成本。台灣以外的基地要靠「第五航權」，旅客比較少，但能飛到從台灣飛不到的地方。</p><div class="shop">`;
+  for(const B of Object.values(BASES)){
+    if(B.code==='TPE')continue;const has_=own.includes(B.code);
+    h+=`<div class="card${has_?' owned':''}"><b style="font-family:var(--f-ui)">${B.name}（${B.code}）</b><p>${B.desc}</p>
+      <ul><li>可飛 ${legsFor(B.code).length} 個城市${B.maxD?`（${B.maxD.toLocaleString()} km 以內）`:''}</li><li>旅客市場約台北的 ${Math.round(B.f*100)}%</li><li>每月基地費用 ${money(B.hq)}</li></ul>
+      <div class="row spread"><span class="price">${has_?'已開設':money(B.cost)}</span>${has_?`<button class="btn sm ghost" data-act="base" data-arg="${B.code}">看航線</button>`:`<button class="btn sm" data-act="neg" data-arg="openbase" data-arg2="${B.code}" ${S.cash<B.cost*.7?'disabled':''}>談價格</button>`}</div></div>`;
+  }
+  return h+'</div>';
+}
 function marketBlock(c){
-  const o=S.comp[c.code];
+  const o=comp(c);
   return `<div class="kv">
     <div><span>距離／飛行時間</span><b>${c.d.toLocaleString()} km · ${fmtH(c.d/850+.75)}</b></div>
     <div><span>每週單程旅客市場</span><b>${Math.round(c.M*seasonM(S.day)*modMult(c)).toLocaleString()} 人</b></div>
@@ -1252,6 +1608,8 @@ function vPending(c,r){
   return marketBlock(c)+`<div class="tip">航權審核中，預計 <b>${dstr(r.ready,1)}</b> 核准（還有 ${r.ready-S.day} 天）。可以先把飛機準備好。</div>
     <div class="row"><button class="btn ghost sm" data-act="close" data-arg="${c.code}">撤回申請</button></div>`;
 }
+let o_cs='';
+const csCost=c=>2e7+c.M*1000;
 function vOpen(c,r){
   const cap=routeCap(c),dm=weeklyDemand(c,cap.F,r.fY,r.fC,cap,S.day),sh=dm.sh,cr=crewRatio();
   const h=r.h||[],days=h.length||1;
@@ -1273,6 +1631,7 @@ function vOpen(c,r){
     o+=`<h3>最近 ${h.length} 天</h3><div class="kv">
       <div><span>經濟艙載客率</span><b>${sY?Math.round(pY/sY*100):0}%</b></div>
       <div><span>商務艙載客率</span><b>${sC?Math.round(pC/sC*100):0}%</b></div>
+      ${sum7(r,'seatsW')?`<div><span>豪華經濟艙載客率</span><b>${Math.round(sum7(r,'paxW')/sum7(r,'seatsW')*100)}%</b></div><div><span>豪華經濟艙票價</span><b>${nt(pyFare(c)*r.fY)}</b></div>`:''}
       <div><span>週載客（雙向）</span><b>${Math.round(wk(2*(pY+pC))).toLocaleString()} 人</b></div>
       <div><span>貨運裝載率</span><b>${capT?Math.round(tons/capT*100):0}%（${Math.round(wk(2*tons))} 噸/週）</b></div>
       <div><span>週營收</span><b>${money(wk(rev))}</b></div>
@@ -1287,6 +1646,12 @@ function vOpen(c,r){
   const idle=S.planes.filter(p=>active(p)&&!p.route&&PLANES[p.type].range>=c.d);
   if(idle.length) o+=`<h3>可以派過來的閒置飛機</h3><div class="row">`+idle.map(p=>`<button class="btn sm" data-act="assign" data-arg="${c.code}" data-arg2="${p.id}">派 ${esc(pname(p))}（${PLANES[p.type].name}）</button>`).join('')+'</div>';
   else if(!mine.length) o+=`<div class="row"><button class="btn ghost sm" data-act="go" data-arg="fleet">去取得飛機</button><span class="hint">沒有能飛到這裡的閒置飛機</span></div>`;
+  {const oc=comp(c),pn=PARTNERS[c.reg],cs=S.cs&&S.cs[c.code];
+   if(cs)o_cs=`<div class="row"><span class="hint">已和 <b class="sky">${pn}</b> 代碼共享：他們不再跟你搶客人，還會幫你賣票（每週佣金約 ${money(oc.f*2*10*c.fare*.1)}）。</span><button class="btn ghost sm" data-act="endcs" data-arg="${c.code}">終止合作</button></div>`;
+   else if(oc.f>0)o_cs=`<div class="row"><button class="btn ghost sm" data-act="neg" data-arg="cs" data-arg2="${c.code}" ${S.cash<csCost(c)*.7?'disabled':''}>和${pn}談代碼共享</button><span class="hint">外國航空公司每週飛 ${oc.f} 班，合作後變成夥伴</span></div>`;
+   else o_cs='';
+   o+=o_cs;}
+  if(mine.some(p=>flying(p)&&PLANES[p.type].cls!=='cargo')){const cd=(S.capCD||0)-S.day;o+=`<div class="row"><button class="btn sm" data-act="captain" data-arg="${c.code}" ${cd>0?'disabled':''}>✈ 親自當機長飛一趟</button><span class="hint">${cd>0?`${cd} 天後可以再飛`:'飛得好可以提高聲望'}</span></div>`;}
   const ac=1e7+c.M*1500;
   o+=`<div class="row">${S.ads[c.code]?`<span class="hint">廣告中（到 ${dstr(S.ads[c.code],1)}）</span>`:`<button class="btn ghost sm" data-act="neg" data-arg="ad" data-arg2="${c.code}" ${S.cash<ac?'disabled':''}>廣告 30 天（${money(ac)}）</button>`}<button class="btn ghost sm" data-act="close" data-arg="${c.code}">停飛這條航線</button></div>`;
   o+=marketBlock(c);
@@ -1311,12 +1676,12 @@ function vBoard(){
     else if(now>f.dep+delay/60-.6){st='<span class="sky">登機中</span>';}
     else if(delay){st=`<span class="bad">延誤 ${hhmm(f.dep+delay/60)}</span>`;}
     else st='<span class="muted">準時</span>';
-    h+=`<div class="br ${cls}"><span>${hhmm(f.dep)}</span><span>${S.code}${f.fno}</span><span class="dst">${f.c.name} ${f.c.code}${f.cargo?' 貨':''}</span><span class="st">${st}</span></div>`;
+    h+=`<div class="br ${cls}"><span>${hhmm(f.dep)}</span><span>${S.code}${f.fno}</span><span class="dst">${f.c.base==='TPE'?'':BASES[f.c.base].short+'→'}${f.c.name} ${f.c.dest}${f.cargo?' 貨':''}</span><span class="st">${st}</span></div>`;
   }
   return h+'</div><p class="hint">時間都是台北時間。延誤與取消來自天氣、故障、人手不足或颱風。</p>';
 }
 function vFleet(){
-  let h=`<div class="filters">${[['new','訂購新機'],['lease','租賃'],['used','二手市場']].map(([k,n])=>`<button data-act="acq" data-arg="${k}" aria-pressed="${UI.acq===k}">${n}</button>`).join('')}</div>`;
+  let h=`<div class="card livcard"><div class="mini"><canvas id="livMini"></canvas></div><div style="display:flex;flex-direction:column;gap:6px"><b style="font-family:var(--f-ui)">公司塗裝</b><button class="btn sm" data-act="liv">設計塗裝</button></div></div><div class="filters">${[['new','訂購新機'],['lease','租賃'],['used','二手市場']].map(([k,n])=>`<button data-act="acq" data-arg="${k}" aria-pressed="${UI.acq===k}">${n}</button>`).join('')}</div>`;
   if(UI.acq==='new'){
     h+=`<p class="hint">向製造商下訂，先付 20% 訂金，交機時付清尾款（現金不夠會自動用飛機抵押貸款）。新飛機要排隊。</p><div class="shop">`;
     for(const [k,T] of Object.entries(PLANES)){
@@ -1346,17 +1711,18 @@ function vFleet(){
   h+='<div class="fleet">';
   for(const p of [...S.planes].sort((a,b)=>(active(b)-active(a)))){
     const T=PLANES[p.type],isAct=active(p);
-    const opts=CITIES.filter(c=>S.routes[c.code]).map(c=>`<option value="${c.code}" ${p.route===c.code?'selected':''} ${T.range<c.d?'disabled':''}>${c.name} ${c.code}${T.range<c.d?'（太遠）':S.routes[c.code].st==='pending'?'（審核中）':''}</option>`).join('');
+    const opts=routeLegs().map(c=>`<option value="${c.code}" ${p.route===c.code?'selected':''} ${T.range<c.d?'disabled':''}>${c.pair} ${c.dest}${T.range<c.d?'（太遠）':S.routes[c.code].st==='pending'?'（審核中）':''}</option>`).join('');
     let status;
     if(p.st==='order')status=`新機訂單 · 預計 ${dstr(p.deliver,1)} 交機`;
     else if(p.st==='lease')status=`租賃 · 預計 ${dstr(p.deliver,1)} 交機`;
     else if(p.st==='used')status=`二手整備中 · ${dstr(p.deliver,1)} 交機`;
     else status=`${p.own==='lease'?'租賃':'自有'} · 機齡 ${(p.age/365).toFixed(1)} 年 · ${p.down>0?`${p.why}中（剩 ${p.down} 天）`:`C 檢倒數 ${p.cdue} 天`}${p.own==='own'?` · 價值 ${money(p.value)}`:''}`;
+    if(T.cls!=='cargo'){const st=seatsOf(p);status+=` · 商務 ${st.C}／豪經 ${st.W}／經濟 ${st.Y}`;}
     const confirm=UI.sellConfirm===p.id;
     const sellLbl=p.own==='lease'?(p.st==='lease'?'取消租約':'退租'):p.st==='order'?'取消訂單':'賣出';
     const sellConf=p.own==='lease'?`確定${sellLbl}（賠 ${money((p.rent||T.lease)*3)}）`:p.st==='order'?`確定取消（訂金 ${money(p.dep)} 拿不回來）`:`確定賣 ${money(p.value*.9)}`;
     h+=`<div class="fitem${p.down>0?' down':''}${isAct?'':' wait'}"><div>${p.nick?`<span class="nick">${esc(p.nick)}</span> `:''}<span class="reg">${p.reg}</span> <span class="muted">${T.name}</span><small>${status}</small></div>
-      <div class="row">${confirm?`<button class="btn warn sm" data-act="sell" data-arg="${p.id}">${sellConf}</button><button class="btn ghost sm" data-act="unsell">取消</button>`:`<button class="btn ghost sm" data-act="rename" data-arg="${p.id}">取名</button><button class="btn ghost sm" data-act="sell" data-arg="${p.id}">${sellLbl}</button>`}</div>
+      <div class="row">${confirm?`<button class="btn warn sm" data-act="sell" data-arg="${p.id}">${sellConf}</button><button class="btn ghost sm" data-act="unsell">取消</button>`:`${T.cls!=='cargo'?`<button class="btn ghost sm" data-act="cabin" data-arg="${p.id}">客艙</button>`:''}<button class="btn ghost sm" data-act="rename" data-arg="${p.id}">取名</button><button class="btn ghost sm" data-act="sell" data-arg="${p.id}">${sellLbl}</button>`}</div>
       ${UI.renaming===p.id?`<input type="text" id="nm-${p.id}" data-nick="${p.id}" maxlength="10" placeholder="幫飛機取名字，按 Enter 完成" value="${esc(p.nick)}" aria-label="${p.reg} 的名字">`:''}
       ${isAct?`<select id="as-${p.id}" data-assign="${p.id}" aria-label="${p.reg} 的航線"><option value="" ${!p.route?'selected':''}>— 閒置（停在機庫）—</option>${opts}</select>`:''}</div>`;
   }
@@ -1376,6 +1742,12 @@ function vOps(){
     <div class="row"><button class="btn ghost sm" data-act="fire" data-arg="p">資遣 10 位機師</button><button class="btn ghost sm" data-act="fire" data-arg="c">資遣 30 位空服員</button></div>
     <p class="hint">機師平均月薪 30萬、空服員 6.5萬。窄體機每架約需 12 位機師，長程廣體機需要更多（要輪班休息）。</p>`;
   h+=`<h3>機上服務</h3><div class="svc">`+SERVICE.map((s,i)=>`<button data-act="svc" data-arg="${i}" aria-pressed="${S.service===i}"><b>${s.name}</b><small>${s.desc}</small><small>餐飲成本 ×${s.cat}</small></button>`).join('')+`</div>`;
+  {const A=S.alliance;const nOpen=openCities().length;const ok=S.rep>=60&&nOpen>=6;
+  h+=`<h3>航空聯盟</h3><p class="hint">加入聯盟後，聯盟夥伴會把轉機旅客送到你的航線：聯盟擅長地區的航線旅客 +6%、收入 +5%，常客也更喜歡你。加入條件：聲望 60 以上、至少 6 條航線（目前聲望 ${Math.round(S.rep)}、${nOpen} 條）。</p><div class="shop">`;
+  for(const [k,a] of Object.entries(ALLIANCES)){const me=A===k,rv=a.member?S.rivals.find(r=>r.id===a.member):null;
+    h+=`<div class="card${me?' owned':''}"><b style="font-family:var(--f-ui)">${a.name}</b><p>${a.desc}</p><ul><li>擅長：${a.regs.map(r=>REGION[r]).join('、')}</li><li>入會費 ${money(a.fee)}・年費 ${money(a.yearly)}</li>${rv?`<li>成員：${rv.name}</li>`:''}</ul>
+    <div class="row spread"><span class="price">${me?'已加入':''}</span>${me?`<button class="btn ghost sm" data-act="leaveally">退出聯盟</button>`:A?'':`<button class="btn sm" data-act="neg" data-arg="ally" data-arg2="${k}" ${ok&&S.cash>=a.fee*.7?'':'disabled'}>申請加入</button>`}</div></div>`;}
+  h+='</div>';}
   h+=`<h3>公司投資</h3><div class="shop">`;
   for(const [k,u] of Object.entries(UPG)){const own=has(k);
     h+=`<div class="card${own?' owned':''}"><b style="font-family:var(--f-ui)">${u.name}</b><p>${u.desc}</p><div class="row spread"><span class="price">${own?'已完成':money(u.price)}</span>${own?'':`<button class="btn sm" data-act="neg" data-arg="upg" data-arg2="${k}" ${S.cash<u.price?'disabled':''}>談價格</button>`}</div></div>`;}
@@ -1385,8 +1757,8 @@ function vOps(){
   return h;
 }
 function ledgerRows(L,full){
-  const rows=[['客運收入',L.rev],['貨運收入',L.crev],['燃油',-L.fuel],['機場、地勤、航管費',-L.fees],['維修（每飛行小時）',-L.maint],['機組外站津貼',-L.crewv],['機上餐飲',-L.cat],['訂位與售票佣金',-L.dist],['A檢/C檢',-L.checks],['故障與其他',-L.other]];
-  if(full)rows.push(['機組員薪資',-L.sal],['飛機租金',-L.lease],['折舊',-L.dep],['保險',-L.ins],['總部與地勤人事',-L.hq],['借款利息',-L.int],['存款利息收入',L.intInc||0]);
+  const rows=[['客運收入',L.rev],['貨運收入',L.crev],['代碼共享佣金',L.csrev||0],['燃油',-L.fuel],['機場、地勤、航管費',-L.fees],['維修（每飛行小時）',-L.maint],['機組外站津貼',-L.crewv],['機上餐飲',-L.cat],['訂位與售票佣金',-L.dist],['A檢/C檢',-L.checks],['故障與其他',-L.other]];
+  if(full)rows.push(['機組員薪資',-L.sal],['飛機租金',-L.lease],['折舊',-L.dep],['保險',-L.ins],['總部與地勤人事',-L.hq],['借款利息',-L.int],['聯盟年費',-(L.ally||0)],['存款利息收入',L.intInc||0]);
   return rows.filter(([k,v])=>Math.abs(v)>=1).map(([k,v])=>`<div><span>${k}</span><b class="${v>0?'good':''}">${v>0?'+':''}${money(v)}</b></div>`).join('');
 }
 function vMoney(){
@@ -1479,6 +1851,7 @@ function drawLand(){
   }
   landDirty=false;
 }
+function liveryCol(){const L=S&&S.livery;return {c1:L?.c1||COL.fg,c2:L?.c2||COL.amber};}
 function arcPos(c,t){ // t: 0=桃園 → 1=目的地
   const a=c.arc,f=t*(a.length-1),i=Math.min(a.length-2,Math.floor(f)),u=f-i;
   const lon=a[i][0]+(a[i+1][0]-a[i][0])*u,lat=a[i][1]+(a[i+1][1]-a[i][1])*u;
@@ -1494,25 +1867,34 @@ function draw(){
   const g=ctx;g.setTransform(1,0,0,1,0,0);g.drawImage(landC,0,0);g.setTransform(dpr,0,0,dpr,0,0);
   if(!S){return;}
   const hubOff=wrapLon(HUB.lon)-HUB.lon;
+  const offOf=c=>{const B=BASES[c.base];return wrapLon(B.lon)-B.lon;};
+  const LC=liveryCol();
   // 航線
-  for(const c of CITIES){
-    const r=S.routes[c.code];if(!r)continue;
+  const dstate={};
+  for(const c of routeLegs()){
+    const r=S.routes[c.code];
+    const ds=dstate[c.dest]=dstate[c.dest]||{open:false,any:true,ad:false};if(r.st==='open')ds.open=true;if(S.ads[c.code])ds.ad=true;
     const live=r.st==='open'&&S.planes.some(p=>flying(p)&&p.route===c.code);
-    g.strokeStyle=alpha(COL.amber,live?.6:.3);g.lineWidth=live?1.6:1;g.setLineDash(r.st==='open'&&live?[]:[4,4]);
-    g.beginPath();c.arc.forEach(([lo,la],i)=>{const [x,y]=px(lo+hubOff,la);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
+    g.strokeStyle=alpha(LC.c1,live?.65:.3);g.lineWidth=live?1.6:1;g.setLineDash(r.st==='open'&&live?[]:[4,4]);
+    const off=offOf(c);
+    g.beginPath();c.arc.forEach(([lo,la],i)=>{const [x,y]=px(lo+off,la);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
   }
   g.setLineDash([]);
   // 城市
   const boxes=[];const H0=px(HUB.lon+hubOff,HUB.lat);boxes.push([H0[0]-30,H0[1]-26,60,20]);
-  const order=[...CITIES].sort((a,b)=>(S.routes[b.code]?1e6:0)+b.M-((S.routes[a.code]?1e6:0)+a.M));
+  const myBases=(S.bases||['TPE']).filter(b=>b!=='TPE');
+  for(const b of myBases){const B=BASES[b];const [bx,by]=px(wrapLon(B.lon),B.lat);boxes.push([bx-24,by-24,48,18]);}
+  const selDest=UI.sel?LEG(UI.sel)?.dest:null;
+  const order=[...CITIES].sort((a,b)=>(dstate[b.code]?1e6:0)+b.M-((dstate[a.code]?1e6:0)+a.M));
   for(const c of order){
+    if(myBases.includes(c.code))continue;
     const {x,y}=cityXY(c);if(x<-20||x>W+20||y<-20||y>H+20)continue;
-    const r=S.routes[c.code],open=r?.st==='open',sel=UI.sel===c.code;
-    if(S.ads[c.code]){g.strokeStyle=alpha(COL.amber,.6);g.setLineDash([2,3]);g.beginPath();g.arc(x,y,12,0,Math.PI*2);g.stroke();g.setLineDash([]);}
+    const ds=dstate[c.code],r=ds,open=ds?.open,sel=selDest===c.code;
+    if(ds?.ad){g.strokeStyle=alpha(COL.amber,.6);g.setLineDash([2,3]);g.beginPath();g.arc(x,y,12,0,Math.PI*2);g.stroke();g.setLineDash([]);}
     if(sel){g.strokeStyle=COL.sky;g.lineWidth=2;g.beginPath();g.arc(x,y,9,0,Math.PI*2);g.stroke();}
     g.beginPath();g.arc(x,y,open?4.5:3.5,0,Math.PI*2);
     if(open){g.fillStyle=COL.amber;g.fill();}else{g.fillStyle=r?COL.sky:COL.ink;g.fill();g.strokeStyle=r?COL.sky:COL.muted;g.lineWidth=1.2;g.stroke();}
-    if(open&&cancelled(c)&&!S.strike&&!S.cancel.some(x=>x.scope==='TPE')){g.fillStyle=COL.bad;g.font='700 11px '+COL.ui;g.textAlign='center';g.fillText('停飛',x,y-9);}
+    if(open&&openCities().some(l=>l.dest===c.code&&cancelled(l))&&!S.strike&&!S.cancel.some(x=>x.scope==='TPE')){g.fillStyle=COL.bad;g.font='700 11px '+COL.ui;g.textAlign='center';g.fillText('停飛',x,y-9);}
     // 標籤（避免重疊）
     g.font='600 11px '+COL.mono;const label=c.code,w1=g.measureText(label).width;
     g.font='12px '+COL.ui;const w2=(sel||open||V.z>7)?g.measureText(c.name).width+5:0;
@@ -1523,7 +1905,7 @@ function draw(){
         boxes.push([bx,by,bw,bh]);
         g.textAlign='left';g.font='600 11px '+COL.mono;g.fillStyle=open?COL.amber:r?COL.sky:COL.muted;g.fillText(label,bx,by+11);
         if(w2){g.font='12px '+COL.ui;g.fillStyle=sel?COL.fg:alpha(COL.fg,.7);g.fillText(c.name,bx+w1+5,by+11);}
-        const o=S.comp[c.code];let k=0;for(const rv of S.rivals)if(o[rv.id]){g.fillStyle=COL[rv.col];g.beginPath();g.arc(bx+3+k*6,by+16,2.3,0,Math.PI*2);g.fill();k++;}
+        const o=comp(c);let k=0;for(const rv of S.rivals)if(o[rv.id]){g.fillStyle=COL[rv.col];g.beginPath();g.arc(bx+3+k*6,by+16,2.3,0,Math.PI*2);g.fill();k++;}
         placed=true;break;}
     }
     if(!placed&&sel){g.textAlign='left';g.font='12px '+COL.ui;g.fillStyle=COL.fg;g.fillText(c.name,x+8,y-6);}
@@ -1540,10 +1922,10 @@ function draw(){
         if(now>=t0&&now<=tArr)tt=(now-t0)/f.b;
         else if(now>=tBack&&now<=tEnd){tt=1-(now-tBack)/f.b;out=false;}
         if(tt===null)continue;
-        const ap=arcPos(c,tt);const [x,y]=px(ap.lon+hubOff,ap.lat);
+        const ap=arcPos(c,tt);const [x,y]=px(ap.lon+offOf(c),ap.lat);
         if(x<-10||x>W+10||y<-10||y>H+10)continue;
         g.save();g.translate(x,y);g.rotate(out?ap.ang:ap.ang+Math.PI);
-        g.fillStyle=f.cargo?COL.amber:out?COL.fg:COL.sky;
+        g.fillStyle=f.cargo?LC.c2:out?LC.c1:alpha(LC.c1,.55);
         const s=PLANES[f.p.type].cls==='narrow'?.85:1.15;g.scale(s,s);
         g.beginPath();g.moveTo(7,0);g.lineTo(-1,-1.5);g.lineTo(-3,-6);g.lineTo(-5,-6);g.lineTo(-3.5,-1.5);g.lineTo(-6,-1.2);g.lineTo(-7,-3);g.lineTo(-8,-3);g.lineTo(-7.2,0);g.lineTo(-8,3);g.lineTo(-7,3);g.lineTo(-6,1.2);g.lineTo(-3.5,1.5);g.lineTo(-5,6);g.lineTo(-3,6);g.lineTo(-1,1.5);g.closePath();g.fill();
         g.restore();
@@ -1551,6 +1933,9 @@ function draw(){
     }
   }
   // 樞紐
+  for(const b of myBases){const B=BASES[b];const [bx,by]=px(wrapLon(B.lon),B.lat);
+    g.beginPath();g.arc(bx,by,5,0,Math.PI*2);g.fillStyle=COL.amber;g.fill();g.strokeStyle=alpha(COL.amber,.4);g.lineWidth=3;g.beginPath();g.arc(bx,by,8.5,0,Math.PI*2);g.stroke();
+    g.font='600 11px '+COL.mono;g.fillStyle=COL.fg;g.textAlign='center';g.fillText(b,bx,by-12);}
   const [hx,hy]=H0;
   g.beginPath();g.arc(hx,hy,6,0,Math.PI*2);g.fillStyle=COL.amber;g.fill();
   g.strokeStyle=alpha(COL.amber,.4);g.lineWidth=4;g.beginPath();g.arc(hx,hy,10,0,Math.PI*2);g.stroke();
@@ -1578,8 +1963,8 @@ $('#vAsia').onclick=viewAsia;$('#vWorld').onclick=viewWorld;
 function clickMap(e){
   const b=cv.getBoundingClientRect(),x=e.clientX-b.left,y=e.clientY-b.top;
   let best=null,bd=22;for(const c of CITIES){const p=cityXY(c),d=Math.hypot(p.x-x,p.y-y);if(d<bd){bd=d;best=c;}}
-  if(!best)return;UI.sel=best.code;UI.tab='routes';if(UI.rfilter!=='all'&&!(UI.rfilter==='mine'&&S.routes[best.code]))UI.rfilter='all';renderPanel(true);
-  const row=document.getElementById('row-'+best.code);if(row&&window.innerWidth>900)row.scrollIntoView({block:'nearest'});
+  if(!best)return;{const b=UI.base&&UI.base!=='+'?UI.base:'TPE',k=b==='TPE'?best.code:b+'>'+best.code;if(legsFor(b).some(l=>l.code===k)){UI.sel=k;UI.base=b;}else{UI.sel=best.code;UI.base='TPE';}}UI.tab='routes';if(UI.rfilter!=='all'&&!(UI.rfilter==='mine'&&S.routes[best.code]))UI.rfilter='all';renderPanel(true);
+  const row=document.getElementById('row-'+UI.sel);if(row&&window.innerWidth>900)row.scrollIntoView({block:'nearest'});
 }
 function legend(){if(!S){$('#legend').innerHTML='<span class="copyr">© 麥麥的遊戲工廠</span>';return;}$('#legend').innerHTML=`<span><span class="rd" style="background:var(--fg)"></span>去程</span><span><span class="rd" style="background:var(--sky)"></span>回程</span><span><span class="rd" style="background:var(--amber)"></span>貨機／你的航線</span>`+S.rivals.map(r=>`<span><span class="rd" style="background:var(--${r.col})"></span>${r.name}</span>`).join('')+'<span class="copyr">© 麥麥的遊戲工廠</span>';}
 
@@ -1601,7 +1986,7 @@ function frame(now){
 content.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;act(b.dataset.act,b.dataset.arg,b.dataset.arg2);});
 document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)act('tab',b.dataset.tab);});
 content.addEventListener('input',e=>{
-  const el=e.target;if(!el.dataset.fare)return;const c=CITY[el.dataset.code],r=S.routes[c.code],k=el.dataset.fare;
+  const el=e.target;if(!el.dataset.fare)return;const c=LEG(el.dataset.code),r=S.routes[c.code],k=el.dataset.fare;
   r['f'+k]=el.value/100;
   if(k==='Y')$('#fyv-'+c.code).textContent=`${nt(c.fare*r.fY)} · ${el.value}%`;else $('#fcv-'+c.code).textContent=`${nt(bizFare(c)*r.fC)} · ${el.value}%`;
   const cap=routeCap(c),dm=weeklyDemand(c,cap.F,r.fY,r.fC,cap,S.day);
@@ -1636,7 +2021,7 @@ $('#contBtn').onclick=()=>{const s=load();if(s){S=s;if(UI.music)Music.start();$(
 
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&S&&!S.over){save();writeSlot('auto',true);}});
 function start(data){
-  if(data&&data.S){S=data.S;Object.assign(UI,data.UI||{});acc=data.acc||0;$('#startOv').hidden=true;legend();updateHUD();renderPanel(true);setSpeed(UI.speed);}
+  if(data&&data.S){S=migrate(data.S);Object.assign(UI,data.UI||{});acc=data.acc||0;$('#startOv').hidden=true;legend();updateHUD();renderPanel(true);setSpeed(UI.speed);}
   else if(load()) $('#contBtn').hidden=false;
   requestAnimationFrame(frame);
 }
