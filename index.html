@@ -246,6 +246,68 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
 .apact{position:absolute;right:20px;bottom:calc(80px + env(safe-area-inset-bottom,0px));min-width:84px;min-height:56px;display:none}
 .apinfo{position:absolute;right:16px;top:70px;width:min(360px,calc(100% - 32px));max-height:calc(100% - 160px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;font-size:14px}
 .apinfo h4{margin:0;font-size:16px}
+.flyov{position:fixed;inset:0;z-index:45;background:#000;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;--ph:min(30vh,250px)}
+#flyCanvas{position:absolute;left:0;top:0;width:100%;height:calc(100% - var(--ph));display:block}
+.flypanel{position:absolute;left:0;bottom:0;width:100%;height:var(--ph);display:block;border-top:2px solid #262c35}
+.flycloud{position:absolute;left:0;top:0;right:0;height:calc(100% - var(--ph));background:#e9edf2;opacity:0;pointer-events:none}
+.flytop{position:absolute;left:0;right:0;top:0;display:flex;gap:8px 14px;align-items:center;flex-wrap:wrap;padding:calc(8px + env(safe-area-inset-top,0px)) 12px 14px;background:linear-gradient(rgba(5,10,18,.85),rgba(5,10,18,0))}
+.fltitle{display:flex;flex-direction:column;line-height:1.2}.fltitle span{font-size:12px;color:var(--muted)}
+.flprog{display:flex;align-items:center;gap:8px;flex:1;min-width:240px;font-size:13px}
+.flbar{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.18);position:relative;min-width:80px}
+.flbar i{position:absolute;left:0;top:0;bottom:0;width:var(--p,0%);background:var(--amber);border-radius:3px}
+.flbar i::after{content:"✈";position:absolute;right:-8px;top:-9px;font-size:14px;color:var(--amber)}
+.flinfo{white-space:nowrap}.flinfo b{color:var(--amber)}
+.flwarp{display:flex;align-items:center;gap:8px}.flwh{font-size:12px;color:var(--muted);max-width:220px}
+.flyatc{position:absolute;right:10px;top:72px;width:min(360px,calc(100% - 20px));max-height:calc(100% - var(--ph) - 150px);display:flex;flex-direction:column;background:rgba(8,14,22,.88);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.atchead{display:flex;gap:8px;align-items:center;padding:8px 10px;background:transparent;border:0;color:var(--fg);text-align:left;font-weight:700;min-height:38px}
+.atclast{display:none;font-weight:400;font-size:13px;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.atcbody{display:flex;flex-direction:column;min-height:0;flex:1}
+.flyatc.closed .atclog,.flyatc.closed .atcin,.flyatc.closed .atcthink{display:none}.flyatc.closed .atclast{display:block}
+.atclog{overflow-y:auto;padding:4px 10px;display:flex;flex-direction:column;gap:6px;min-height:60px;flex:1}
+.am{font-size:13px;line-height:1.45}.am b{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.am.atc .en{display:block;color:var(--sky);font-family:"IBM Plex Mono",monospace;font-size:12px}.am.atc .zh{display:block}
+.am.me{align-self:flex-end;background:var(--raise);padding:4px 8px;border-radius:8px;max-width:90%;font-family:"IBM Plex Mono",monospace;font-size:12px}
+.am.sys{color:var(--amber);font-size:12px}
+.atcthink{font-size:12px;color:var(--muted);padding:0 10px}
+.atcquick{display:flex;flex-wrap:wrap;gap:6px;padding:6px 10px}
+.atcquick .btn{display:flex;flex-direction:column;align-items:flex-start;text-align:left;line-height:1.2}
+.atcquick .btn small{font-weight:400;font-size:10px;opacity:.75;font-family:"IBM Plex Mono",monospace}
+.atcin{display:flex;gap:6px;padding:6px 10px 10px}.atcin input{flex:1;min-width:0;background:var(--ink);border:1px solid var(--line);border-radius:6px;color:var(--fg);padding:6px 8px;font-size:14px}
+.flybtns{position:absolute;left:10px;bottom:calc(var(--ph) + 10px);display:flex;flex-wrap:wrap;gap:6px;max-width:min(560px,calc(100% - 400px))}
+.flybtns .btn{background:rgba(8,14,22,.82);color:var(--fg);border:1px solid var(--line)}
+.flybtns .btn[aria-pressed="true"]{background:var(--amber);color:var(--ink);border-color:var(--amber)}
+.flythr{position:absolute;right:378px;bottom:calc(var(--ph) + 10px);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--muted);background:rgba(8,14,22,.7);border-radius:8px;padding:6px}
+.flythr input{writing-mode:vertical-lr;direction:rtl;width:34px;height:130px;accent-color:var(--amber)}
+.flyjoy{bottom:calc(var(--ph) + 58px)}
+.flycue{position:absolute;left:50%;top:26%;transform:translateX(-50%);font-size:clamp(18px,3vw,28px);font-weight:900;color:#fff;text-shadow:0 2px 8px #000;background:rgba(5,10,18,.45);padding:6px 18px;border-radius:10px;pointer-events:none;white-space:nowrap}
+.flycard{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100% - 24px));max-height:calc(100% - 24px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+.flycard h3{margin:0 0 8px;font-size:20px}.flycard p{margin:8px 0;line-height:1.6}
+.flmodes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.flmodes .btn{display:flex;flex-direction:column;gap:4px;text-align:left;background:var(--ink);color:var(--fg);border:1px solid var(--line);padding:10px}
+.flmodes .btn[aria-pressed="true"]{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+.flmodes small{font-weight:400;font-size:12px;color:var(--muted);line-height:1.4}
+.flstars{font-size:22px;color:var(--amber);margin:6px 0}.flstars b{font-size:30px}
+.fltab{border-collapse:collapse;margin:8px 0}.fltab td{padding:3px 14px 3px 0;border-bottom:1px solid var(--line)}
+@media (pointer:coarse),(max-width:760px){.flyov{--ph:min(24vh,180px)}.flyjoy{display:block;left:14px;width:110px;height:110px}
+  .flybtns{left:8px;right:8px;max-width:none;bottom:calc(var(--ph) + 6px);flex-wrap:nowrap;overflow-x:auto}.flybtns .btn{flex:0 0 auto}
+  .flythr{right:10px;bottom:calc(var(--ph) + 56px)}.flythr input{height:110px}
+  .flyatc{top:calc(112px + env(safe-area-inset-top,0px));bottom:auto;left:10px;right:10px;width:auto;max-height:44vh}.flyatc.closed{max-height:none}
+  .flycue{top:48%;white-space:normal;max-width:92%;text-align:center;font-size:18px}
+  .flwh{display:none}.flytop{font-size:13px}.flmodes{grid-template-columns:1fr}}
+@media (max-width:760px) and (pointer:fine){.flyjoy{display:none}}
+.apjour{position:absolute;left:16px;top:calc(62px + env(safe-area-inset-top,0px));background:rgba(5,10,18,.72);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;max-width:min(460px,calc(100% - 140px));pointer-events:none}
+.jsteps{display:flex;gap:4px;align-items:center;flex-wrap:wrap}.jsteps span{color:var(--muted)}.jsteps span.d{color:var(--good);font-weight:700}.jsteps i{color:var(--muted);font-style:normal}
+.jnext{color:var(--amber);margin-top:2px}
+.apstamp{position:absolute;right:16px;top:calc(62px + env(safe-area-inset-top,0px))}
+.appa{position:absolute;left:50%;top:calc(110px + env(safe-area-inset-top,0px));transform:translateX(-50%);max-width:min(620px,calc(100% - 32px));background:rgba(29,95,138,.92);color:#fff;padding:8px 14px;border-radius:8px;font-size:14px;pointer-events:none}
+.apfade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .4s}.apfade.on{opacity:1}
+.bpass{margin:8px 0;border-radius:10px;background:#f6f1e3;color:#10161f;padding:10px 12px;border-left:6px solid var(--amber);font-family:"IBM Plex Mono",monospace}
+.bpass small{display:block;font-size:10px;color:#6b6457}.bpass b{font-size:16px}.bprow{display:flex;justify-content:space-between;gap:10px;margin-top:6px;font-weight:700}
+.stampbig{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:120px;height:120px;border:4px solid #c0392b;border-radius:50%;color:#c0392b;font-weight:900;font-size:18px;transform:rotate(-12deg);margin:6px 0}.stampbig small{font-size:11px}
+.stampgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0}.stampgrid span{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:2px dashed var(--line);border-radius:50%;aspect-ratio:1;justify-content:center;color:var(--muted);font-size:20px}
+.stampgrid span.got{border:2px solid #e05a4a;color:#e05a4a}.stampgrid small{font-size:10px;text-align:center;line-height:1.2}
+.apinfo .good{color:var(--good);font-weight:700}
+@media (max-width:600px){.apjour{top:calc(96px + env(safe-area-inset-top,0px));font-size:12px;max-width:calc(100% - 32px)}.apstamp{top:auto;bottom:calc(190px + env(safe-area-inset-bottom,0px))}.appa{top:calc(160px + env(safe-area-inset-top,0px))}}
 .aploading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--muted);background:var(--ink)}
 .aplock{position:absolute;left:50%;top:58%;transform:translateX(-50%);font-size:15px;color:#fff;background:rgba(5,10,18,.72);border:1px solid rgba(255,255,255,.25);padding:10px 18px;border-radius:8px;pointer-events:none;white-space:nowrap}
 @media (pointer:coarse){.apjoy,.apact{display:block}.aphelp{display:none}.aplock{display:none}}
@@ -380,10 +442,14 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
   <div class="aptop"><div class="aptitle"><b id="apTitle">機場</b><span id="apClock" class="mono"></span></div><div class="filters" id="apBases"></div><button class="btn sm" id="apClose">離開機場</button></div>
   <div class="apcross"></div>
   <div class="apprompt" id="apPrompt" hidden></div>
-  <div class="aphelp" id="apHelp">電腦：移動滑鼠轉頭、W A S D 走路、Shift 跑步、E／空白鍵／點左鍵 互動（可以坐椅子、彈鋼琴、和旅客聊天⋯⋯）、ESC 離開。手機：左下搖桿走路、右邊滑動轉頭、按「查看」。</div>
+  <div class="aphelp" id="apHelp">電腦：移動滑鼠轉頭、W A S D 走路、Shift 跑步、E／空白鍵／點左鍵 互動、ESC 離開。跟著左上角的旅程：報到→安檢→出境→空橋登機，就能親自開飛機！還有美食街、兒童區、二樓入境大廳、頂樓觀景台、紀念章和小任務。手機：左下搖桿走路、右邊滑動轉頭、按「查看」。</div>
   <div class="apjoy" id="apJoy"><i></i></div>
   <button class="btn apact" id="apAct">查看</button>
   <div class="apinfo" id="apInfo" hidden><div id="apInfoBody"></div><button class="btn sm" id="apInfoClose">關閉</button></div>
+  <div class="apjour" id="apJourney"></div>
+  <button class="btn sm apstamp" id="apStampBtn">🎫 紀念章 0／8</button>
+  <div class="appa" id="apPA" hidden></div>
+  <div class="apfade" id="apFade"></div>
   <div class="aplock" id="apLockHint" hidden>點一下畫面開始 ・ 之後移動滑鼠就能轉頭 ・ ESC 離開機場</div>
   <div class="aploading" id="apLoad">正在載入機場⋯⋯</div>
 </div>
@@ -413,6 +479,31 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
     <p class="hint" id="lvTip"></p>
     <div class="row" id="lvBtns"></div>
   </div>
+</div>
+
+<div class="flyov" id="flyOv" hidden>
+  <canvas id="flyCanvas" aria-label="第一人稱駕駛艙"></canvas>
+  <div class="flycloud" id="flyCloud"></div>
+  <div class="flytop">
+    <div class="fltitle"><b id="flyTitle"></b><span id="flySub"></span></div>
+    <div class="flprog"><span class="mono" id="flyDep"></span><div class="flbar" id="flyProg"><i></i></div><span class="mono" id="flyArr"></span><span class="flinfo"><b id="flyPhase"></b> <span id="flyDist"></span> <span id="flyEta"></span></span></div>
+    <div class="flwarp"><div class="filters" id="flyWarp"><button data-w="1">1×</button><button data-w="4">4×</button><button data-w="16">16×</button><button data-w="64">64×</button><button data-w="256">256×</button></div><span class="flwh" id="flyWarpHint"></span></div>
+    <button class="btn sm" id="flyClose">離開</button>
+  </div>
+  <div class="flyatc" id="flyAtc">
+    <button class="atchead" id="atcToggle"><span>📻 無線電</span><span class="chip" id="atcAi">預設對話</span><span class="atclast" id="atcLast"></span></button>
+    <div class="atcbody"><div class="atclog" id="atcLog"></div><div class="atcthink" id="atcThink" hidden>塔台思考中⋯⋯</div>
+      <div class="atcquick" id="atcQuick"></div>
+      <div class="atcin"><input id="atcIn" placeholder="對塔台說話（中文或英文）" maxlength="200" autocomplete="off"><button class="btn sm" id="atcSend">送出</button></div></div>
+  </div>
+  <div class="flybtns" id="flyBtns"><button class="btn sm" id="fbAP">自動駕駛</button><button class="btn sm" id="fbAT">自動油門</button><button class="btn sm" id="fbFlap">襟翼</button><button class="btn sm" id="fbGear">起落架</button><button class="btn sm" id="fbBrake">煞車</button><button class="btn sm" id="fbBelt">安全帶燈</button><button class="btn sm" id="fbView">外部視角</button><button class="btn sm" id="fbGuide">導引框</button><button class="btn sm" id="fbVoice">語音</button></div>
+  <label class="flythr" id="flyThr"><span>油門</span><input type="range" id="flyThrV" min="0" max="100" value="0" aria-label="油門"></label>
+  <div class="apjoy flyjoy" id="flyJoy"><i></i></div>
+  <canvas class="flypanel" id="flyPanel" aria-label="飛行儀表"></canvas>
+  <div class="flycue" id="flyCue" hidden></div>
+  <div class="flycard" id="flyBrief" hidden><div id="flyBriefBody"></div><div class="row"><button class="btn" id="flyStart">開始飛行</button></div></div>
+  <div class="flycard" id="flyEnd" hidden><div id="flyEndBody"></div><div class="row" id="flyEndBtns"></div></div>
+  <div class="aploading" id="flyLoad">正在準備駕駛艙⋯⋯</div>
 </div>
 
 <div class="overlay" id="capOv" hidden>
@@ -1007,7 +1098,7 @@ function events(){
   else if(r<.0112){const up=Math.random()<.45;S.fuel*=up?1.15:.88;const t=up?'中東局勢緊張，國際油價大漲 15%。':'產油國增產，油價下跌 12%。';news(t,up?'bad':'good');toast(t,up?'bad':'good');}
   else if(r<.0120){addMod('cargo',1.4,45,'AI 伺服器、晶片出貨大爆發！貨運需求 +40%（45 天）。','good');}
 }
-function blockedUI(){return !!document.querySelector('.overlay:not([hidden])');}
+function blockedUI(){return !!document.querySelector('.overlay:not([hidden]),#apOv:not([hidden]),#flyOv:not([hidden])');}
 const CHOICES=[
   {ok:()=>S.crew.p>=30,make(){
     return {board:'UNION NOTICE',title:'機師工會要求加薪',text:'機師工會說排班太累、薪水比別家低，要求所有機組員加薪 6%。不答應的話，可能會罷工。',
@@ -1095,7 +1186,7 @@ function act(a,arg,arg2,quiet,P){
     case 'rf': UI.rfilter=arg;break;
     case 'base': UI.base=arg;UI.sel=null;break;
     case 'cabin': openCabin(arg);return;
-    case 'captain': Cap.open(arg);return;
+    case 'captain': FLY.open(arg);return;
     case 'ally':{const a=ALLIANCES[arg],cost=P??a.fee;if(S.cash<cost||S.alliance)return;S.cash-=cost;S.alliance=arg;
       news(`正式加入${a.name}！聯盟夥伴開始把轉機旅客送到你的航線。`,'good');toast(`加入${a.name}`,'gold');sfx('win');FX.go(3);break;}
     case 'leaveally':{if(!S.alliance)return;news(`退出${ALLIANCES[S.alliance].name}。`,'info');S.alliance=null;break;}
@@ -1333,6 +1424,704 @@ function drawLivery(cv,L,name,code){
   g.fillStyle=L.c1;g.beginPath();g.moveTo(x0+w*.05,cy-fh*.05);g.lineTo(x0+w*.005,cy+fh*.25);g.lineTo(x0+w*.05,cy+fh*.25);g.lineTo(x0+w*.12,cy);g.closePath();g.fill();
 }
 
+/* ===================== 第一人稱開飛機 ===================== */
+const FLY=(()=>{
+  const KT=.514444,FT=.3048,G=9.81,R0=1.225,NM=1852;
+  const TY={
+    narrow:{m:72000,T:270000,S:123,vr:145,v2:155,vref:137,cl:[1.5,2.2,2.5,2.9],a0:[-2,-6,-8,-11],fv:[350,230,200,177],crKt:450,eye:[.55,4.4,18.4],L:44,r:2,span:35},
+    wide:{m:220000,T:700000,S:362,vr:155,v2:165,vref:147,cl:[1.5,2.2,2.5,2.9],a0:[-2,-6,-8,-11],fv:[350,240,215,180],crKt:480,eye:[.6,6.2,27],L:62,r:2.9,span:60}
+  };
+  const EN={TPE:'Taipei',KHH:'Kaohsiung',RMQ:'Taichung',TSA:'Songshan',BKK:'Bangkok',NRT:'Narita',HND:'Tokyo',HKG:'Hong Kong',MFM:'Macau',PVG:'Shanghai',SHA:'Hongqiao',KIX:'Kansai',NGO:'Chubu',FUK:'Fukuoka',CTS:'Chitose',OKA:'Naha',ICN:'Incheon',GMP:'Gimpo',PUS:'Gimhae',MNL:'Manila',CEB:'Mactan',SGN:'Tan Son Nhat',HAN:'Noi Bai',DAD:'Da Nang',KUL:'Kuala Lumpur',SIN:'Singapore',CGK:'Jakarta',DPS:'Bali',HKT:'Phuket',PNH:'Phnom Penh',DEL:'Delhi',SYD:'Sydney',BNE:'Brisbane',MEL:'Melbourne',AKL:'Auckland',GUM:'Guam',HNL:'Honolulu',LAX:'Los Angeles',SFO:'San Francisco',SEA:'Seattle',YVR:'Vancouver',YYZ:'Toronto',JFK:'Kennedy',ORD:"O'Hare",IAH:'Houston',DXB:'Dubai',IST:'Istanbul',LHR:'Heathrow',CDG:'De Gaulle',FRA:'Frankfurt',AMS:'Schiphol',MUC:'Munich',PRG:'Prague',FCO:'Rome',CAN:'Baiyun'};
+  const NATO={A:'Alpha',B:'Bravo',C:'Charlie',D:'Delta',E:'Echo',F:'Foxtrot',G:'Golf',H:'Hotel',I:'India',J:'Juliett',K:'Kilo',L:'Lima',M:'Mike',N:'November',O:'Oscar',P:'Papa',Q:'Quebec',R:'Romeo',S:'Sierra',T:'Tango',U:'Uniform',V:'Victor',W:'Whiskey',X:'X-ray',Y:'Yankee',Z:'Zulu'};
+  const DIG=['zero','one','two','three','four','five','six','seven','eight','nine'];
+  const mobile=matchMedia('(pointer:coarse)').matches;
+  let T=null,renderer=null,scene=null,cam=null,rig=null,cock=null,model=null,built=false,running=false,raf=0,last=0;
+  let skyMat=null,skyCv=null,dome=null,sunL=null,hemi=null,amb=null,sunSpr=null,ocean=null,stars=null,clouds=[],cloudTx=null,glowTex=null;
+  let apts=[],guide=null,papiDots=[];
+  let st=null,mode='easy',view='cockpit',warp=1,voice=true,guideOn=true;
+  let sampleP=null,aiOK=false,aiBusy=false;
+  const keys={};let joy={x:0,y:0,id:null},look={y:0,p:0,drag:null};
+  let audio=null;
+
+  /* ---------- 工具 ---------- */
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const M=(g,m)=>new T.Mesh(g,m);
+  const std=(c,r=.8,m=0,o={})=>new T.MeshStandardMaterial({color:c,roughness:r,metalness:m,...o});
+  const basic=(c,o={})=>new T.MeshBasicMaterial({color:c,...o});
+  function ctex(w,h,draw,rep){const cv=document.createElement('canvas');cv.width=w;cv.height=h;const g=cv.getContext('2d');draw(g,w,h);const tx=new T.CanvasTexture(cv);tx.anisotropy=8;if(rep){tx.wrapS=tx.wrapT=T.RepeatWrapping;tx.repeat.set(rep[0],rep[1]);}return {cv,g,tx};}
+  function loadLib(){if(window.THREE)return Promise.resolve();return new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+  function bearing(l1,p1,l2,p2){const y=Math.sin((l2-l1)*RAD)*Math.cos(p2*RAD),x=Math.cos(p1*RAD)*Math.sin(p2*RAD)-Math.sin(p1*RAD)*Math.cos(p2*RAD)*Math.cos((l2-l1)*RAD);return (Math.atan2(y,x)/RAD+360)%360;}
+  const rwyNum=b=>{const n=Math.round(b/10)%36||36;return String(n).padStart(2,'0');};
+  const spokenCs=()=>S.code.split('').map(c=>NATO[c]||c).join(' ')+' '+String(st.fno).split('').map(d=>DIG[+d]).join(' ');
+  const enName=code=>EN[code]||code;
+
+  /* ---------- 場景 ---------- */
+  function build(){
+    T=window.THREE;const cv=$('#flyCanvas');
+    renderer=new T.WebGLRenderer({canvas:cv,antialias:!mobile,logarithmicDepthBuffer:true});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,mobile?1:1.5));
+    scene=new T.Scene();scene.fog=new T.Fog(0xbfdcf2,3000,60000);
+    cam=new T.PerspectiveCamera(62,1,.05,320000);cam.rotation.order='YXZ';
+    hemi=new T.HemisphereLight(0xdde8ff,0x40505e,.7);scene.add(hemi);amb=new T.AmbientLight(0xffffff,.15);scene.add(amb);
+    sunL=new T.DirectionalLight(0xfff4e0,.9);scene.add(sunL);scene.add(sunL.target);
+    skyCv=ctex(8,256,()=>{});skyMat=basic(0xffffff,{map:skyCv.tx,side:T.BackSide,fog:false,depthWrite:false});
+    dome=M(new T.SphereGeometry(250000,32,16),skyMat);dome.renderOrder=-10;scene.add(dome);
+    glowTex=ctex(64,64,(g)=>{const gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.3,'rgba(255,255,255,.5)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);}).tx;
+    sunSpr=new T.Sprite(new T.SpriteMaterial({map:glowTex,color:0xfff2cc,fog:false,depthWrite:false,transparent:true}));sunSpr.scale.set(26000,26000,1);sunSpr.renderOrder=-8;scene.add(sunSpr);
+    const sg=new T.BufferGeometry(),sp=[];for(let i=0;i<1200;i++){const a=Math.random()*Math.PI*2,e=Math.random()*1.4+.02,R=240000;sp.push(Math.cos(a)*Math.cos(e)*R,Math.sin(e)*R,Math.sin(a)*Math.cos(e)*R);}
+    sg.setAttribute('position',new T.Float32BufferAttribute(sp,3));stars=new T.Points(sg,new T.PointsMaterial({color:0xffffff,size:2,sizeAttenuation:false,transparent:true,opacity:0,fog:false,depthWrite:false}));stars.renderOrder=-9;scene.add(stars);
+    // 海洋
+    const wt=ctex(256,256,(g,w,h)=>{g.fillStyle='#1d4f78';g.fillRect(0,0,w,h);for(let i=0;i<900;i++){g.fillStyle=`rgba(${120+Math.random()*80},${170+Math.random()*60},230,${Math.random()*.18})`;g.fillRect(Math.random()*w,Math.random()*h,6+Math.random()*10,1);}},[1,1]);
+    wt.tx.repeat.set(400,400);
+    ocean=M(new T.PlaneGeometry(400000,400000),std(0xffffff,.35,.1,{map:wt.tx}));ocean.rotation.x=-Math.PI/2;ocean.position.y=-2;ocean.material.depthWrite=false;ocean.renderOrder=-4;scene.add(ocean);ocean.userData.tx=wt.tx;
+    // 雲
+    cloudTx=ctex(256,128,(g)=>{for(let i=0;i<16;i++){const x=40+Math.random()*176,y=50+Math.random()*40,r=18+Math.random()*30;const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(255,255,255,.95)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();}}).tx;
+    for(let i=0;i<(mobile?60:110);i++){const s=new T.Sprite(new T.SpriteMaterial({map:cloudTx,transparent:true,opacity:.9,depthWrite:false}));s.userData.w={x:0,y:0,z:0};scene.add(s);clouds.push(s);}
+    // 駕駛艙（跟著飛機）
+    rig=new T.Group();rig.rotation.order='YXZ';scene.add(rig);
+    cock=new T.Group();rig.add(cock);cock.add(cam);
+    const frame=std(0x1c2129,.6,.2);const FG=new T.Group();cock.add(FG);cock.userData.fg=FG;
+    const glare=M(new T.BoxGeometry(2.6,.1,.55),frame);glare.position.set(0,-.46,.78);FG.add(glare);
+    const glareFace=M(new T.BoxGeometry(2.6,.5,.05),std(0x262c35,.8));glareFace.position.set(0,-.74,.5);FG.add(glareFace);
+    for(const sx of [-1,1]){const pil=M(new T.BoxGeometry(.03,1.4,.03),frame);pil.position.set(sx*.95,.12,1.25);pil.rotation.z=sx*.22;pil.rotation.x=-.35;FG.add(pil);
+      const side=M(new T.BoxGeometry(.04,1.0,.04),frame);side.position.set(sx*1.4,.12,.3);side.rotation.z=sx*.12;FG.add(side);}
+    const top=M(new T.BoxGeometry(2.8,.08,.9),frame);top.position.set(0,.72,.6);FG.add(top);
+    const center=M(new T.BoxGeometry(.02,1,.02),frame);center.position.set(0,.12,1.4);center.rotation.x=-.4;FG.add(center);
+    cock.traverse(o=>{if(o.isMesh){o.material.fog=false;o.renderOrder=10;}});
+    built=true;
+  }
+  function clearDyn(){for(const a of apts){scene.remove(a.g);a.g.traverse(o=>{if(o.geometry)o.geometry.dispose();});}apts=[];if(model){rig.remove(model);model=null;}if(guide){scene.remove(guide);guide=null;}papiDots=[];}
+  /* 跑道與機場 */
+  function airport(Zth,rwy,dest,name){
+    const g=new T.Group();const L=3600,W=60;
+    const land=M(new T.CircleGeometry(26000,48),std(0xffffff,.95,0,{map:landTex()}));land.rotation.x=-Math.PI/2;land.position.set(0,-.6,L/2);land.material.depthWrite=false;land.renderOrder=-3;g.add(land);
+    const asph=M(new T.PlaneGeometry(W,L),std(0x2c2f33,.9,0,{depthWrite:false}));asph.renderOrder=-2;asph.rotation.x=-Math.PI/2;asph.position.set(0,.02,L/2);g.add(asph);
+    const paint=basic(0xeeeeea,{depthWrite:false});
+    const flat=(w,l,x,z)=>{const m=M(new T.PlaneGeometry(w,l),paint);m.renderOrder=-1;m.rotation.x=-Math.PI/2;m.position.set(x,.05,z);g.add(m);};
+    for(let z=80;z<L-80;z+=60)flat(.9,30,0,z);
+    for(let i=0;i<8;i++){flat(1.8,30,-25+i*3.2+(i>3?6:0),20);flat(1.8,30,-25+i*3.2+(i>3?6:0),L-20);}
+    flat(10,60,-9,400);flat(10,60,9,400);flat(10,60,-9,L-400);flat(10,60,9,L-400);
+    for(const z of [150,300,550,700,850])for(const sx of [-1,1]){flat(2,22,sx*8,z);flat(2,22,sx*11,z);}
+    flat(.9,L,-W/2+1,L/2);flat(.9,L,W/2-1,L/2);
+    const num=(txt,z,rot)=>{const s=ctex(128,256,(c,w,h)=>{c.clearRect(0,0,w,h);c.fillStyle='#f0f0ea';c.font='900 120px "IBM Plex Mono",monospace';c.textAlign='center';c.textBaseline='middle';c.fillText(txt[0],w/2,h*.28);c.fillText(txt[1],w/2,h*.74);});
+      const m=M(new T.PlaneGeometry(12,24),basic(0xffffff,{map:s.tx,transparent:true,depthWrite:false}));m.renderOrder=-1;m.rotation.x=-Math.PI/2;m.rotation.z=rot;m.position.set(0,.06,z);g.add(m);};
+    num(rwy,85,Math.PI);
+    // 滑行道、停機坪、航廈、塔台
+    const tw=M(new T.PlaneGeometry(25,L),std(0x3a3d42,.9,0,{depthWrite:false}));tw.renderOrder=-2;tw.rotation.x=-Math.PI/2;tw.position.set(-190,.01,L/2);g.add(tw);
+    const ap=M(new T.PlaneGeometry(260,900),std(0x6f747b,.9,0,{depthWrite:false}));ap.renderOrder=-2;ap.rotation.x=-Math.PI/2;ap.position.set(-360,.01,L/2);g.add(ap);
+    const term=M(new T.BoxGeometry(80,22,700),std(0xd8dde3,.4,.3));term.position.set(-530,11,L/2);g.add(term);
+    const glass=M(new T.BoxGeometry(81,8,690),std(0x4b7da3,.15,.6));glass.position.set(-530,13,L/2);g.add(glass);
+    const tower=M(new T.CylinderGeometry(5,8,70,12),std(0xe2e2dc,.6));tower.position.set(-450,35,L/2-600);g.add(tower);
+    const cab=M(new T.CylinderGeometry(12,9,10,12),std(0x335a78,.2,.5));cab.position.set(-450,74,L/2-600);g.add(cab);
+    const signTx=ctex(512,64,(c,w,h)=>{c.fillStyle='#10161f';c.fillRect(0,0,w,h);c.fillStyle='#F2B53A';c.font='700 40px "Noto Sans TC",sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(name,w/2,h/2+2);}).tx;
+    const sign=M(new T.PlaneGeometry(240,30),basic(0xffffff,{map:signTx}));sign.position.set(-489,28,L/2);sign.rotation.y=Math.PI/2;g.add(sign);
+    for(let i=0;i<7;i++){const p=parked(i);p.position.set(-300,0,L/2-300+i*100);p.rotation.y=Math.PI/2*(i%2?1:1);g.add(p);}
+    // 城市（實例化）
+    const nB=mobile?260:520,bg=new T.BoxGeometry(1,1,1),cityTx=ctex(64,128,(c,w,h)=>{c.fillStyle='#384350';c.fillRect(0,0,w,h);for(let y=6;y<h;y+=10)for(let x=5;x<w;x+=10){c.fillStyle=Math.random()<.5?'#ffd88a':'#1a222c';c.fillRect(x,y,5,5);}}).tx;
+    const bm=std(0x8a96a6,.8,0,{map:cityTx,emissive:0xffffff,emissiveMap:cityTx,emissiveIntensity:0});
+    const city=new T.InstancedMesh(bg,bm,nB),mx=new T.Matrix4();let k=0;
+    while(k<nB){const ang=Math.random()*Math.PI*2,r=3500+Math.random()*12000,x=Math.cos(ang)*r,z=L/2+Math.sin(ang)*r;if(Math.abs(x)<1600&&(z<-0||z>L))continue;if(Math.abs(x)<900)continue;
+      const h=15+Math.random()*Math.random()*160,w=20+Math.random()*40;mx.makeScale(w,h,w);mx.setPosition(x,h/2,z);city.setMatrixAt(k++,mx);}
+    g.add(city);g.userData.city=bm;
+    // 燈光：跑道邊燈、進場燈、PAPI
+    const lp=(arr,col,sz)=>{const b=new T.BufferGeometry();b.setAttribute('position',new T.Float32BufferAttribute(arr,3));const p=new T.Points(b,new T.PointsMaterial({color:col,size:sz,sizeAttenuation:false,transparent:true,map:glowTex,depthWrite:false}));g.add(p);return p;};
+    const e=[],c=[],th=[],en=[],al=[];
+    for(let z=0;z<=L;z+=60){e.push(-W/2,.5,z,W/2,.5,z);}for(let z=30;z<L;z+=30)c.push(0,.3,z);
+    for(let x=-W/2;x<=W/2;x+=4){th.push(x,.5,-2);en.push(x,.5,L+2);}
+    for(let z=-900;z<-20;z+=30){for(let x=-15;x<=15;x+=3)al.push(x,1,z);}for(let x=-30;x<=30;x+=3)al.push(x,1,-300);
+    const lights=[lp(e,0xfff4d6,4),lp(c,0xdfe9ff,3),lp(th,0x3cff6a,5),lp(en,0xff3b30,5),lp(al,0xfff9e0,5)];
+    const papi=[];for(let i=0;i<4;i++){const s=new T.Sprite(new T.SpriteMaterial({map:glowTex,color:0xffffff,depthWrite:false,transparent:true,fog:false}));s.position.set(W/2+15+i*9,1.5,330);s.scale.set(14,14,1);g.add(s);papi.push(s);}
+    g.position.set(0,0,Zth);scene.add(g);
+    const a={g,Zth,L,lights,papi,dest,city:bm};apts.push(a);return a;
+  }
+  let LT=null;function landTex(){return LT||(LT=ctex(512,512,(g,w,h)=>{g.fillStyle='#5d7a4c';g.fillRect(0,0,w,h);const cs=['#6b8a52','#7d9a5a','#4f6e45','#8c9d62','#a39b6a','#5f7f58'];for(let i=0;i<260;i++){g.fillStyle=cs[i%cs.length];g.globalAlpha=.7;const x=Math.random()*w,y=Math.random()*h;g.fillRect(x,y,10+Math.random()*40,10+Math.random()*40);}g.globalAlpha=1;g.strokeStyle='rgba(200,190,160,.35)';for(let i=0;i<14;i++){g.beginPath();g.moveTo(Math.random()*w,0);g.lineTo(Math.random()*w,h);g.stroke();}},[60,60]).tx);}
+  function parked(i){const gr=new T.Group(),c=[0xF2B53A,0x2E86AB,0xc0392b,0x7d3c98,0x16a085][i%5];
+    const b=M(new T.CylinderGeometry(2,2,40,10),std(0xf3f3ef,.5));b.rotation.x=Math.PI/2;b.position.y=4;gr.add(b);
+    const w=M(new T.BoxGeometry(34,.4,6),std(0xb9c1cc,.5));w.position.set(0,3.4,1);gr.add(w);const f=M(new T.BoxGeometry(.4,7,6),std(c,.5));f.position.set(0,8,-17);gr.add(f);return gr;}
+  /* 自己的飛機（外部視角） */
+  function makeModel(c1,c2,wide){
+    const P=TY[wide?'wide':'narrow'],L=P.L,r=P.r,span=P.span,g=new T.Group();
+    const white=std(0xf3f3ef,.45,.15),grey=std(0xb9c1cc,.5,.3),cm=std(c1,.5,.1),cm2=std(c2,.45,.2);
+    const prof=[new T.Vector2(.01,-L/2)];for(let i=1;i<=8;i++){const t=i/8;prof.push(new T.Vector2(r*(.2+.8*Math.sin(t*Math.PI/2)),-L/2+L*.26*t));}prof.push(new T.Vector2(r,L*.33));for(let i=1;i<=8;i++){const t=i/8;prof.push(new T.Vector2(Math.max(.01,r*Math.cos(t*Math.PI/2)**.7),L*.33+L*.17*t));}
+    const fg=new T.LatheGeometry(prof,24);fg.rotateX(Math.PI/2);g.add(M(fg,white));
+    const stripe=M(new T.CylinderGeometry(r*1.01,r*1.01,L*.56,24,1,true,Math.PI*.62,Math.PI*.76),cm);stripe.rotation.x=Math.PI/2;stripe.rotation.z=Math.PI;g.add(stripe);
+    for(const s of [1,-1]){const sh=new T.Shape();sh.moveTo(0,0);sh.lineTo(span/2,-span*.18);sh.lineTo(span/2,-span*.18-r*1.1);sh.lineTo(0,-r*3.6);sh.closePath();const geo=new T.ExtrudeGeometry(sh,{depth:.35,bevelEnabled:false});geo.rotateX(Math.PI/2);const m=M(geo,grey);m.scale.x=s;m.position.set(0,-r*.42,L*.05);g.add(m);
+      const en=M(new T.CylinderGeometry(r*.48,r*.42,r*2.4,16),cm2);en.rotation.x=Math.PI/2;en.position.set(s*span*.27,-r*1.1,L*.08-span*.1);g.add(en);
+      const hs=new T.Shape();hs.moveTo(0,0);hs.lineTo(span*.17,-L*.05);hs.lineTo(span*.17,-L*.085);hs.lineTo(0,-L*.11);hs.closePath();const hg=new T.ExtrudeGeometry(hs,{depth:.25,bevelEnabled:false});hg.rotateX(Math.PI/2);const hm=M(hg,cm);hm.scale.x=s;hm.position.set(0,r*.3,-L*.33);g.add(hm);}
+    const fsh=new T.Shape();fsh.moveTo(0,0);fsh.lineTo(-L*.17,0);fsh.lineTo(-L*.23,r*2.9);fsh.lineTo(-L*.15,r*2.9);fsh.closePath();const fgeo=new T.ExtrudeGeometry(fsh,{depth:.35,bevelEnabled:false});fgeo.rotateY(Math.PI/2);const fin=M(fgeo,cm);fin.position.set(-.17,r*.7,-L*.29);g.add(fin);
+    const gear=new T.Group();for(const [x,z] of [[0,L*.36],[-r*.8,-L*.04],[r*.8,-L*.04]]){const s=M(new T.CylinderGeometry(.18,.18,1.6,8),grey);s.position.set(x,-r-.6,z);gear.add(s);const w=M(new T.CylinderGeometry(.55,.55,.5,12),std(0x15181c,.9));w.rotation.z=Math.PI/2;w.position.set(x,-r-1.3,z);gear.add(w);}
+    g.add(gear);g.userData.gear=gear;g.userData.r=r;
+    return g;
+  }
+
+  /* ---------- 開始一趟飛行 ---------- */
+  function setup(code,opt){
+    const c=LEG(code);const p=(opt&&opt.p)||S.planes.find(x=>x.route===code&&PLANES[x.type].cls!=='cargo'&&x.st==='active')||S.planes.find(x=>x.route===code&&PLANES[x.type].cls!=='cargo');if(!c||!p)return false;
+    const B=BASES[c.base]||BASES.TPE,D=CITY[c.dest],wide=PLANES[p.type].cls!=='narrow',P=TY[wide?'wide':'narrow'];
+    const b0=bearing(B.lon,B.lat,D.lon,D.lat),b1=(bearing(D.lon,D.lat,B.lon,B.lat)+180)%360;
+    const Dm=c.d*1000,crFL=c.d<700?240:c.d<1500?300:c.d<4000?350:370;
+    const h0=acc/DAY_MS*24;
+    st={c,p,B,D,P,wide,code,fno:S.routes[code]?S.routes[code].fno:(S.fno||101),Dm,Zd:Dm+1200,b0,b1,rwy0:rwyNum(b0),rwy1:rwyNum(b1),crFL,h0,t:0,
+      x:0,y:0,z:160,V:0,gam:0,psi:0,th:0,ph:0,phi:0,alpha:0,ground:true,flap:1,flapP:1,gear:true,gearP:1,brake:true,spd:false,rev:false,lever:0,thr:0,
+      apOn:false,athr:mode==='easy',belt:true,stage:'ready',ended:false,crashed:false,stall:false,maxG:1,nz:1,
+      sc:{to:0,toMax:20,atc:0,atcMax:0,cr:20,ld:0,log:[]},tdVS:0,tdZ:0,tdX:0,landClr:false,toClr:false,
+      atc:{unit:'twr',pending:null,remind:0,clearedFT:5000,descGiven:false,unitT:0,handT:0,events:[]},chat:[],
+      turb:null,cue:'',cueT:0,callouts:{},lastAlt:0,checkpoint:null,startReal:performance.now()};
+    if(Dm>1500000){const z0=Dm*(.35+Math.random()*.3);st.turb={z0,z1:z0+Math.min(150000,Dm*.05),warned:false,hit:false,beltPen:false};}
+    st.wind={dir:(Math.round((b1+(Math.random()*60-30))/10)*10+360)%360||360,kt:3+Math.floor(Math.random()*12)};
+    clearDyn();
+    airport(0,st.rwy0,false,B.name);airport(st.Zd,st.rwy1,true,D.name);
+    const L_=S.livery||{};cock.userData.fg.position.x=-P.eye[0];model=makeModel(L_.c1||'#F2B53A',L_.c2||'#7CCBE0',wide);model.visible=false;rig.add(model);model.position.set(-P.eye[0],-(P.eye[1]-P.r-1.85),-P.eye[2]);
+    // 進場導引框（簡單模式）
+    guide=new T.Group();const gm=new T.LineBasicMaterial({color:0x58f08c,transparent:true,opacity:.85});
+    for(let d=600;d<=20000;d+=d<3000?300:700){const y=Math.tan(3*RAD)*d,w=40+d*.012,h=25+d*.008;const pts=[[-w,-h],[w,-h],[w,h],[-w,h],[-w,-h]].map(([a,b])=>new T.Vector3(a,y+b,-d+300));guide.add(new T.Line(new T.BufferGeometry().setFromPoints(pts),gm));}
+    guide.position.set(0,0,st.Zd);scene.add(guide);
+    for(const s of clouds){respawnCloud(s,true);}
+    return true;
+  }
+  function respawnCloud(s,init){
+    const hi=Math.random()<.35,y=hi?6000+Math.random()*3500:900+Math.random()*1800,sc=hi?2500+Math.random()*3000:900+Math.random()*1600;
+    const ang=Math.random()*Math.PI*2,r=init?2000+Math.random()*30000:22000+Math.random()*10000;
+    const fx=-Math.sin(st.psi),fz=Math.cos(st.psi);let x=Math.cos(ang)*r,z=Math.sin(ang)*r;if(!init){x=fx*r+(Math.random()-.5)*36000;z=fz*r+(Math.random()-.5)*36000;}
+    s.userData.w={x:st.x+x,y,z:st.z+z};s.scale.set(sc,sc*.45,1);s.material.opacity=hi?.55:.9;
+  }
+
+  /* ---------- 物理 ---------- */
+  function rho(y){return R0*Math.exp(-Math.max(0,y)/9000);}
+  function ias(){return st.V*Math.sqrt(rho(st.y)/R0);}
+  function distTD(){return st.Zd+300-st.z;}
+  function todDist(){return Math.max(0,st.y-900)/Math.tan(3*RAD)+30000;}
+  function step(dt){
+    const P=st.P,m=P.m,r=rho(st.y),q=.5*r*st.V*st.V,easy=mode==='easy';
+    let ex=0,ey=0;
+    if(!st.apOn){ex=(keys.arrowdown||keys.s?1:0)-(keys.arrowup||keys.w?1:0)+joy.y;ey=(keys.arrowright||keys.d?1:0)-(keys.arrowleft||keys.a?1:0)+joy.x;ex=clamp(ex,-1,1);ey=clamp(ey,-1,1);}
+    // 自動駕駛／自動油門／自動襟翼起落架
+    const I=ias()/KT,dTD=distTD(),agl=st.y;
+    if(st.apOn)autopilot(dt);
+    if(st.ground&&!st.landed&&st.toClr&&st.lever>.3&&!st.toga){st.toga=true;if(easy)st.brake=false;}
+    if(st.athr){let tgt;
+      if(st.ground&&!st.landed)tgt=st.toga?999:-1;
+      else if(st.landed)tgt=0;
+      else{tgt=agl<10000*FT?250:Math.min(290,P.crKt*Math.sqrt(r/R0));if(agl<1000*FT&&dTD>60000)tgt=Math.min(tgt,P.v2+15);if(dTD<60000)tgt=Math.min(tgt,dTD<15000?P.vref+5:dTD<30000?185:220);if(agl<7&&dTD<8000)tgt=0;}
+      st.atTgt=tgt;
+      if(tgt>=999)st.lever=1;else if(tgt===0)st.lever=0;else if(tgt>0){const e=tgt-I;st.atI=clamp((st.atI??st.lever)+e*.0035*dt,0,1);st.lever=clamp(st.atI+e*.03+st.gam*3,0,1);}
+    }
+    if(easy){
+      if(!st.ground&&agl>30&&st.gam>0&&st.gear&&!st.landed)setGear(false,true);
+      if(!st.ground&&dTD<16000&&!st.gear&&agl<1500)setGear(true,true);
+      if(!st.ground&&!st.landed){const tg=st.atTgt||0;st.spd=st.gam<-.01&&tg>0&&I>tg+12;}
+      const want=st.ground&&!st.landed?1:dTD<9000?3:dTD<16000&&I<205?2:dTD<40000&&I<235?1:(I>215||st.gam>0&&agl>900)&&dTD>40000?0:st.flap;
+      if(want!==st.flap&&!st.landed)setFlap(want,true);
+    }
+    st.thr+=(st.lever-st.thr)*Math.min(1,dt*.6);
+    // 起飛前未許可
+    if(!st.toClr&&st.ground&&!st.landed&&st.lever>.15){if(easy){st.lever=0;st.thr=Math.min(st.thr,.05);cue('先跟塔台「請求起飛」！',2);}else if(!st.atc.warnTO){st.atc.warnTO=true;st.sc.to-=5;atcSay(`${st.cs}, stop! You are not cleared for takeoff.`,'還沒許可你起飛！（扣分）');}}
+    st.flapP+=(st.flap-st.flapP)*Math.min(1,dt*.35);st.gearP+=((st.gear?1:0)-st.gearP)*Math.min(1,dt*.5);
+    const fi=Math.round(st.flapP),CLmax=P.cl[fi],a0=P.a0[fi];
+    const Tn=st.thr*P.T*Math.pow(r/R0,.7)*(st.rev&&st.ground?-.45:1);
+    if(st.ground){
+      // 地面滑跑
+      st.phi=0;st.gam=0;st.y=0;
+      const pull=ex;let th=st.th;
+      if(pull>0&&I>40&&!st.landed)th+=3*RAD*dt*pull;else th-=4.5*RAD*dt;
+      if(easy&&!st.landed){if(I<P.vr-3)th=Math.min(th,0);th=Math.min(th,9.5*RAD);if(I>=P.vr&&pull<=0&&!st.rotHint){cue(mobile?'Rotate！把搖桿往下拉，抬起機頭':'Rotate！按 ↓ 或 S 抬起機頭',2.5);st.rotHint=true;}}
+      st.th=clamp(th,0,14*RAD);
+      const CL=clamp(.1*(st.th/RAD-a0),0,CLmax),L=q*P.S*CL,W=m*G;
+      const mu=st.brake||st.landed&&st.athr?(st.landed?.32:.6):.018,Dg=q*P.S*(.03+st.flapP*.015+.045*CL*CL+(st.spd?.08:0));
+      const F=Tn-Dg-mu*Math.max(0,W-L);let a=F/m;if(st.V<.5&&a<0)a=0;st.V=Math.max(0,st.V+a*dt);
+      st.psi+=ey*.08*dt*Math.min(1,st.V/15)*(st.landed?1:1);st.psi*=1-dt*.02;
+      if(st.th>11*RAD&&!st.tail){st.tail=true;if(!easy){st.sc.log.push(['機尾擦地',-5]);st.sc.to-=5;}cue('機尾擦地！',2);}
+      if(!st.landed&&L>W*1.02&&I>P.vr-12){st.ground=false;st.gam=.02;liftoff(I);}
+      st.alpha=st.th;
+    }else{
+      // 空中：線傳飛控（放開搖桿保持航跡角）
+      let gdot=ex*.05;if(st.apOn)gdot=st.apG;
+      if(easy&&!st.apOn&&ex===0&&dTD<20000&&st.gear&&agl>14)gdot=clamp((-3*RAD-st.gam)*.5,-.02,.02);
+      // 自動拉平（簡單模式）
+      if(easy&&!st.apOn&&agl<9&&st.gear&&st.gam<0&&dTD<6000){const want=-.8/Math.max(30,st.V);gdot=Math.max(gdot,clamp((want-st.gam)*1.2,-.06,.06));}
+      if(!st.apOn){const tgtPhi=ey*(easy?28:33)*RAD;const k=ey!==0||!easy?1:1;st.phi+=clamp((ey!==0?tgtPhi:(easy?0:st.phi))-st.phi,-1,1)*Math.min(1,dt*1.6*k);}
+      const cphi=Math.max(.3,Math.cos(st.phi));
+      let n=(gdot*st.V/G+Math.cos(st.gam))/cphi;n=clamp(n,-.5,2.5);
+      let CL=n*m*G/Math.max(50,q*P.S);st.stall=false;
+      const lim=CLmax*(easy?.92:1);
+      if(CL>lim){if(easy)CL=lim;else{CL=CLmax*.62;st.stall=true;}}
+      st.alpha=(CL/.1+a0)*RAD;
+      const L=q*P.S*CL;st.nz=L/(m*G);
+      st.gam+=((L*Math.cos(st.phi)-m*G*Math.cos(st.gam))/(m*Math.max(30,st.V)))*dt;st.gam=clamp(st.gam,-.5,.45);
+      st.psi+=(L*Math.sin(st.phi)/(m*Math.max(30,st.V)*Math.cos(st.gam)))*dt;
+      const Cd=.021+st.flapP*.016+st.gearP*.018+(st.spd?.05:0)+.045*CL*CL;
+      st.V=Math.max(25,st.V+((Tn-q*P.S*Cd)/m-G*Math.sin(st.gam))*dt);
+      st.th=st.gam+st.alpha;
+      if(st.turb&&st.z>st.turb.z0&&st.z<st.turb.z1){st.gam+=(Math.random()-.5)*.004;st.phi+=(Math.random()-.5)*.01;}
+    }
+    st.x+=-st.V*Math.cos(st.gam)*Math.sin(st.psi)*dt;st.z+=st.V*Math.cos(st.gam)*Math.cos(st.psi)*dt;
+    if(!st.ground){st.y+=st.V*Math.sin(st.gam)*dt;if(st.y<=0)touchdown();}
+    st.t+=dt;
+  }
+  function liftoff(I){const P=st.P;
+    if(Math.abs(I-P.vr)<=10){st.sc.to+=5;st.sc.log.push(['抬頭速度剛好',5]);}else st.sc.log.push([`抬頭速度 ${Math.round(I)} 節（建議 ${P.vr}）`,0]);
+    if(!st.tail){st.sc.to+=5;}
+    if(st.toClr)st.sc.to+=5;
+    cue('Positive climb！',2);snd('lift');}
+  function touchdown(){
+    const vs=st.V*Math.sin(st.gam),zr=st.z-st.Zd,onR=Math.abs(st.x)<30&&zr>-20&&zr<3600;
+    st.y=0;st.tdVS=vs;st.tdZ=zr;st.tdX=st.x;
+    const fpm=-vs/FT*60;
+    if(!st.gear||!onR||fpm>1100||Math.abs(st.phi)>12*RAD||st.th<-2*RAD){return crash(!st.gear?'沒有放起落架就著陸了！':!onR?'沒有降落在跑道上！':fpm>1100?`撞擊太重了（每分鐘下降 ${Math.round(fpm)} 呎）！`:'機翼擦到地面了！');}
+    // 若是起飛後沒多久又落地（離目的地很遠）
+    if(st.z<st.Zd-5000)return crash('飛機在半路落地了！');
+    st.ground=true;st.landed=true;st.gam=0;st.phi=0;st.spd=true;st.brake=true;if(mode==='easy'){st.rev=true;}
+    st.lever=0;
+    const s=st.sc;let v=fpm<=180?15:fpm<=360?13:fpm<=540?10:fpm<=750?6:3;s.ld+=v;s.log.push([`著陸下降率 ${Math.round(fpm)} 呎/分`,v]);
+    const zz=zr<150?4:zr<=950?10:zr<=1300?6:2;s.ld+=zz;s.log.push([`著陸點距跑道頭 ${Math.round(zr)} 公尺`,zz]);
+    const cx=Math.abs(st.x)<5?5:Math.abs(st.x)<12?3:1;s.ld+=cx;s.log.push([`偏離中心線 ${Math.abs(st.x).toFixed(1)} 公尺`,cx]);
+    if(st.landClr){s.ld+=5;s.log.push(['有降落許可',5]);}else s.log.push(['沒有降落許可就落地',0]);
+    cue(fpm<=240?'完美著陸！👏':fpm<=500?'著陸成功！':'有點重，但安全著陸了！',3);snd('land');
+    st.atc.landedT=st.t;
+  }
+  function crash(why){st.crashed=true;st.ended=true;st.V=0;snd('crash');
+    st.checkpoint=st.checkpoint||null;
+    showEnd(`<h3>💥 飛行失敗</h3><p>${why}</p><p class="hint">別擔心，這只是模擬。可以從最後進場重新飛一次。</p>`,[
+      ['從進場重飛',()=>retryApproach()],['從起飛重飛',()=>{hideEnd();restart();}],['離開','ghost',close]]);
+  }
+  function retryApproach(){hideEnd();const P=st.P;Object.assign(st,{callouts:{},done:false,tail:false,toga:true,x:0,z:st.Zd+300-16000,y:Math.tan(3*RAD)*16000,V:(P.vref+40)*KT/Math.sqrt(rho(900)/R0),gam:-3*RAD,psi:0,phi:0,ground:false,landed:false,crashed:false,ended:false,gear:mode==='easy'?false:true,flap:2,flapP:2,spd:false,rev:false,brake:false,apOn:false,lever:.35,thr:.35,stage:'final'});
+    st.sc.ld=0;st.sc.log.push(['重新進場',0]);st.retried=true;st.atc.unit='twr2';st.atc.pending=null;st.atc.descGiven=true;st.atc.clearedFT=3000;if(!st.landClr){atcSay(`${st.cs}, ${enName(st.D.code)} Tower, runway ${st.rwy1}, cleared to land, wind ${String(st.wind.dir).padStart(3,'0')} at ${st.wind.kt}.`,`跑道 ${st.rwy1} 可以降落。`);st.landClr=true;}
+    setWarp(1);setReplies(defaultReplies());updButtons();}
+  function restart(){const code=st.code,p=st.p;setup(code,{p});initATC();setWarp(1);st.started=true;updButtons();}
+
+  /* ---------- 自動駕駛 ---------- */
+  function autopilot(dt){
+    const dTD=distTD(),P=st.P;
+    // 橫向 LNAV：對準航線（x=0）
+    const psiT=clamp(st.x*(dTD<40000?.0012:.00025),-.5,.5);const phiT=clamp((psiT-st.psi)*2.2,-25*RAD,25*RAD);st.phi+=clamp(phiT-st.phi,-1,1)*Math.min(1,dt*1.2);
+    // 垂直：許可高度 & 下降剖面
+    const cl=st.atc.clearedFT*FT,prof=Math.tan(3*RAD)*Math.max(0,dTD);let altT=cl,onProf=false;
+    if(st.atc.descGiven){const pa=Math.min(prof+250,st.crFL*100*FT);altT=Math.max(cl,pa);onProf=pa>=cl&&pa<st.y+300;}
+    const ils=(st.atc.unit==='app'||st.atc.unit==='twr2')&&dTD<30000;if(ils&&prof<=st.y+40&&prof<=cl+60){altT=prof;onProf=true;}
+    const e=altT-st.y,maxUp=Math.asin(clamp(2500*FT/60/Math.max(60,st.V),0,.3)),maxDn=Math.asin(clamp(2400*FT/60/Math.max(60,st.V),0,.3));
+    const gT=onProf?clamp(-3*RAD+e*.003,-maxDn,maxUp):clamp(e*.0015,-maxDn,maxUp);st.apG=clamp((gT-st.gam)*.6,-.02,.02);
+    st.apAlt=altT;
+    // 最後進場自動解除
+    if(dTD<6000){st.apOn=false;setWarp(1);cue('自動駕駛解除，請手動降落！',3);snd('apoff');updButtons();}
+  }
+
+  /* ---------- 塔台通訊 ---------- */
+  const UNIT=()=>({twr:[`${enName(st.B.code)} Tower`,`${st.B.short}塔台`,'118.7'],dep:[`${enName(st.B.code)} Departure`,`${st.B.short}離場台`,'124.7'],ctr1:[`${st.B.tw?'Taipei':enName(st.B.code)} Control`,`${st.B.tw?'台北':st.B.short}區管中心`,'128.1'],
+    ctr2:[st.Dm>4500000?'Oceanic Control':`${enName(st.D.code)} Control`,st.Dm>4500000?'海洋管制中心':`${st.D.name}區管中心`,'132.6'],app:[`${enName(st.D.code)} Approach`,`${st.D.name}近場台`,'119.1'],twr2:[`${enName(st.D.code)} Tower`,`${st.D.name}塔台`,'118.1'],gnd:[`${enName(st.D.code)} Ground`,`${st.D.name}地面管制`,'121.7']});
+  function initATC(){st.cs=`${S.code}${st.fno}`;st.chat=[];st.atc={unit:'twr',pending:null,remind:0,clearedFT:5000,descGiven:false,events:[],unitT:0};
+    sys(`你在 ${st.B.name} 跑道 ${st.rwy0} 頭，準備飛往 ${st.D.name}（${Math.round(st.c.d).toLocaleString()} 公里）。先跟塔台請求起飛許可！`);
+    setReplies([['請求起飛',`${UNIT().twr[0]}, ${st.cs}, ready for departure runway ${st.rwy0}.`,'req_takeoff']]);
+  }
+  function sys(t){st.chat.push({who:'sys',zh:t});renderChat();}
+  function atcSay(en,zh,replies){const u=UNIT()[st.atc.unit];st.chat.push({who:'atc',name:u[1],en,zh});renderChat();speak(en);snd('radio');if(replies)setReplies(replies);}
+  function me(text){st.chat.push({who:'me',en:text});renderChat();}
+  function setPending(type,data,replies){st.atc.pending={type,...data,t:st.t,real:performance.now()};st.sc.atcMax+=3;if(replies)setReplies(replies);}
+  function handoff(next){const U=UNIT(),u=U[next];setPending('handoff',{next},[[`切換到 ${u[1]}（${u[2]}）`,`${u[2]}, ${st.cs}, good day.`,'readback']]);atcSay(`${st.cs}, contact ${u[0]} ${u[2]}, good day.`,`請改聯絡${u[1]}，頻率 ${u[2]}。`);}
+  function fl(ft){return ft>=10000?`flight level ${String(Math.round(ft/100)).padStart(3,'0')}`:`${ft.toLocaleString('en')} feet`;}
+  function flZh(ft){return ft>=10000?`FL${Math.round(ft/100)}（${ft.toLocaleString()} 呎）`:`${ft.toLocaleString()} 呎`;}
+  function handle(intent,ai){
+    const A=st.atc,U=UNIT(),u=U[A.unit],dTD=distTD();
+    if(intent==='readback'&&A.pending){const pd=A.pending;A.pending=null;st.sc.atc+=3;snd('ok');
+      if(pd.type==='handoff'){A.unit=pd.next;setReplies([]);setTimeout(()=>{if(running&&st)greet(pd.next);},1500);}
+      else{atcSay(rnd(['Roger.','Thank you.',`${st.cs}, roger.`]),'收到。',defaultReplies());}
+      return;}
+    if(intent==='readback')return atcSay(`${st.cs}, roger.`,'收到。',defaultReplies());
+    if(intent==='req_takeoff'){
+      if(A.unit==='twr'&&st.ground&&!st.toClr){st.toClr=true;st.sc.atcMax+=2;st.sc.atc+=2;setPending('to',{},[['複誦起飛許可',`Cleared for takeoff runway ${st.rwy0}, ${st.cs}.`,'readback']]);
+        atcSay(`${st.cs}, wind ${String(st.wind.dir).padStart(3,'0')} degrees ${st.wind.kt} knots, runway ${st.rwy0}, cleared for takeoff.`,`風向 ${st.wind.dir} 度 ${st.wind.kt} 節，跑道 ${st.rwy0} 可以起飛！${mode==='easy'?'（推油門：按 W 或 Shift，或右下油門）':''}`);return;}
+      return atcSay(st.toClr?`${st.cs}, you are already cleared for takeoff.`:`${st.cs}, say again?`,st.toClr?'你已經可以起飛了喔。':'請再說一次？');}
+    if(intent==='req_land'){
+      if(A.unit==='twr2'&&!st.landClr&&dTD<40000){st.landClr=true;st.sc.atcMax+=3;st.sc.atc+=3;setPending('land',{},[['複誦降落許可',`Cleared to land runway ${st.rwy1}, ${st.cs}.`,'readback']]);
+        atcSay(`${st.cs}, ${U.twr2[0]}, wind ${String(st.wind.dir).padStart(3,'0')} at ${st.wind.kt}, runway ${st.rwy1}, cleared to land.`,`跑道 ${st.rwy1} 可以降落！`);return;}
+      if(A.unit==='app')return atcSay(`${st.cs}, continue approach, contact tower at 15 miles.`,'繼續進場，快到時改聯絡塔台。');
+      if(st.landClr)return atcSay(`${st.cs}, you are cleared to land.`,'你已經可以降落了。');
+      return atcSay(`${st.cs}, negative, you are ${Math.round(dTD/1000)} kilometers from destination. Maintain ${fl(A.clearedFT)}.`,`還太遠了喔（剩 ${Math.round(dTD/1000)} 公里），請保持 ${flZh(A.clearedFT)}。`);}
+    if(intent==='req_descent'){
+      if(!st.atc.descGiven&&dTD<todDist()+80000&&!st.ground){st.sc.atcMax+=2;st.sc.atc+=2;giveDescent(true);return;}
+      return atcSay(`${st.cs}, unable, maintain ${fl(A.clearedFT)}.`,`現在還不行，請保持 ${flZh(A.clearedFT)}。`);}
+    if(intent==='req_climb'){
+      if(!st.ground&&A.unit!=='twr'&&A.clearedFT<st.crFL*100&&A.unit!=='app'&&A.unit!=='twr2'){A.clearedFT=st.crFL*100;return atcSay(`${st.cs}, climb and maintain ${fl(A.clearedFT)}.`,`爬升到 ${flZh(A.clearedFT)}。`);}
+      if(st.turb&&!st.turb.hit&&A.clearedFT<41000&&dTD>todDist()+50000){A.clearedFT+=2000;st.turb.climbed=true;return atcSay(`${st.cs}, climb and maintain ${fl(A.clearedFT)}, smoother ride reported above.`,`可以爬升到 ${flZh(A.clearedFT)}，上面比較平穩。`);}
+      return atcSay(`${st.cs}, unable higher due traffic, maintain ${fl(A.clearedFT)}.`,`上面有其他飛機，請保持 ${flZh(A.clearedFT)}。`);}
+    if(intent==='weather'){const D=dTD<200000||st.ground&&st.z>1000?st.D:st.ground?st.B:st.D;const w=st.wind;
+      return atcSay(ai?.en||`${enName(D.code)} weather: wind ${String(w.dir).padStart(3,'0')} at ${w.kt}, visibility 10 kilometers, few clouds 3000 feet, temperature ${18+Math.floor(Math.random()*10)}.`,ai?.zh||`${D.name}天氣：風 ${w.dir} 度 ${w.kt} 節、能見度 10 公里、雲很少，溫度 ${20+Math.floor(Math.random()*8)} 度。`);}
+    if(intent==='mayday')return atcSay(ai?.en||`${st.cs}, roger mayday. All runways available, emergency services standing by. Say intentions.`,ai?.zh||'收到求救！所有跑道都給你用，消防車已待命。請說明你要怎麼做？');
+    if(intent==='chat')return atcSay(ai?.en||rnd([`${st.cs}, good day to you too!`,`${st.cs}, roger, have a nice flight.`,`Thanks ${st.cs}, enjoy the view.`]),ai?.zh||rnd(['你好！祝你飛行愉快！','收到，祝一路順風！','謝謝機長，好好欣賞風景喔！']));
+    if(A.pending&&!ai)return atcSay(`${st.cs}, read back instructions.`,'請複誦指示（按下方建議的按鈕）。');
+    return atcSay(ai?.en||`${st.cs}, say again?`,ai?.zh||'請再說一次？');
+  }
+  function greet(unit){const A=st.atc,U=UNIT(),u=U[unit];A.unitT=st.t;
+    if(unit==='dep'){A.clearedFT=st.crFL*100;setPending('alt',{},[['複誦高度',`Climb and maintain ${fl(A.clearedFT)}, ${st.cs}.`,'readback']]);atcSay(`${st.cs}, ${u[0]}, radar contact, climb and maintain ${fl(A.clearedFT)}.`,`雷達看到你了，請爬升到 ${flZh(A.clearedFT)}。`);}
+    else if(unit==='ctr1'||unit==='ctr2'){atcSay(`${st.cs}, ${u[0]}, radar contact, maintain ${fl(A.clearedFT)}.`,`雷達看到你了，請保持 ${flZh(A.clearedFT)}。`,defaultReplies());}
+    else if(unit==='app'){A.clearedFT=Math.min(A.clearedFT,3000);A.descGiven=true;setPending('alt',{},[['複誦進場許可',`Descend 3000 feet, cleared ILS runway ${st.rwy1}, ${st.cs}.`,'readback']]);atcSay(`${st.cs}, ${u[0]}, descend and maintain 3000 feet, cleared ILS approach runway ${st.rwy1}.`,`下降到 3,000 呎，可以進行跑道 ${st.rwy1} 的儀器進場。`);}
+    else if(unit==='twr2'){atcSay(`${st.cs}, ${u[0]}, continue approach runway ${st.rwy1}.`,`繼續進場，準備好就「請求降落」。`,[['請求降落',`${u[0]}, ${st.cs}, established ILS runway ${st.rwy1}, request landing.`,'req_land']]);}
+    else if(unit==='gnd'){atcSay(`${st.cs}, welcome to ${enName(st.D.code)}, taxi to the gate.`,`歡迎來到${st.D.name}！滑行到登機門。`);}
+  }
+  function giveDescent(requested){const A=st.atc;A.descGiven=true;A.clearedFT=10000;setPending('alt',{},[['複誦下降',`Descend and maintain flight level 100, ${st.cs}.`,'readback']]);
+    atcSay(`${st.cs}, descend and maintain flight level 100${requested?'':', pilot discretion'}.`,`請下降到 FL100（10,000 呎）${requested?'。':'，快到下降點了！'}`);if(warp>1)setWarp(1);}
+  function defaultReplies(){const r=[];const A=st.atc,dTD=distTD();
+    if(!st.ground&&!A.descGiven&&dTD<todDist()+80000&&dTD>60000)r.push(['請求下降',`${UNIT()[A.unit][0]}, ${st.cs}, request descent.`,'req_descent']);
+    if(st.turb&&!st.turb.hit&&st.turb.warned)r.push(['請求爬升避開亂流',`${st.cs}, request climb due turbulence.`,'req_climb']);
+    if(A.unit==='twr2'&&!st.landClr)r.push(['請求降落',`${UNIT().twr2[0]}, ${st.cs}, request landing.`,'req_land']);
+    r.push(['問天氣',`${st.cs}, request destination weather.`,'weather']);return r;}
+  function updateATC(){
+    const A=st.atc,dTD=distTD(),agl=st.y;
+    if(A.pending&&((A.pending.type==='to'&&!st.ground)||(A.pending.type==='land'&&st.landed)))A.pending=null;
+    if(A.pending){const el=(performance.now()-A.pending.real)/1000;if(el>25&&A.remind<1&&A.pending.type!=='to'&&A.pending.type!=='land'){A.remind++;const pd=A.pending;atcSay(`${st.cs}, ${pd.type==='handoff'?'contact '+UNIT()[pd.next][0]+' '+UNIT()[pd.next][2]:'read back'}.`,pd.type==='handoff'?'提醒你：請換頻率（按下方按鈕回覆）。':'請回覆／複誦指示。');}
+      if(el>60){A.remind=0;pd2(A);}}
+    if(!st.sc.cfg&&!st.ground&&st.y>3000*FT){st.sc.cfg=true;if(!st.gear){st.sc.to+=5;}else st.sc.log.push(['起落架太晚收',0]);}
+    if(A.unit==='twr'&&!st.ground&&agl>450&&!A.pending)handoff('dep');
+    if(A.unit==='dep'&&!A.pending&&st.z>Math.min(st.Dm*.12,120000)&&agl>4000)handoff('ctr1');
+    if(A.unit==='ctr1'&&!A.pending&&st.Dm>2200000&&st.z>st.Dm*.45)handoff('ctr2');
+    if(!A.descGiven&&!A.pending&&!st.ground&&dTD<todDist()&&dTD>60000)giveDescent(false);
+    if((A.unit==='ctr1'||A.unit==='ctr2'||A.unit==='dep')&&!A.pending&&dTD<110000&&A.descGiven)handoff('app');
+    if(A.unit==='app'&&!A.pending&&dTD<20000)handoff('twr2');
+    if(!st.landClr&&dTD<6000&&!st.ground&&A.unit!=='twr2'&&A.unit!=='gnd'&&!A.pending){A.unit='twr2';}
+    if(!st.landClr&&dTD<4500&&!st.ground&&A.unit==='twr2'&&!A.autoLand){A.autoLand=true;st.landClr=true;atcSay(`${st.cs}, ${UNIT().twr2[0]}, runway ${st.rwy1}, cleared to land.`,`（塔台主動給你降落許可）跑道 ${st.rwy1} 可以降落。下次記得先請求喔！`);}
+    if(st.turb&&!st.turb.warned&&st.z>st.turb.z0-160000){st.turb.warned=true;if(warp>1)setWarp(1);atcSay(`${st.cs}, moderate turbulence reported ahead, ${Math.round((st.turb.z0-st.z)/1852)} miles.`,`前方 ${Math.round((st.turb.z0-st.z)/1000)} 公里有中度亂流！記得打開「安全帶燈」，也可以請求爬升。`,defaultReplies());}
+    if(st.landed&&st.V<16&&!st.done){st.done=true;A.unit='gnd';A.pending=null;greet('gnd');setTimeout(()=>{if(running&&st)result();},3500);}
+  }
+  function pd2(A){const pd=A.pending;if(!pd)return false;if(pd.type==='handoff'){A.unit=pd.next;A.pending=null;greet(pd.next);sys('（你沒有回覆，管制員幫你轉了頻率，通訊分數沒拿到）');}else{A.pending=null;}return true;}
+  /* 自由輸入：AI 或關鍵字 */
+  function parseIntent(t){const s=t.toLowerCase();
+    if(/mayday|緊急|求救|pan ?pan/.test(s))return 'mayday';
+    if(/起飛|take ?off|departure|ready/.test(s))return 'req_takeoff';
+    if(/降落|著陸|landing|land|ils|established/.test(s))return 'req_land';
+    if(/下降|descen/.test(s))return 'req_descent';
+    if(/爬升|climb|上升|higher|飛高/.test(s))return 'req_climb';
+    if(/天氣|weather|風|wind|metar|atis/.test(s))return 'weather';
+    if(/roger|wilco|收到|好的|了解|ok|複誦|good ?day|contact|聯絡|copy|\d{3}\.\d|maintain|cleared|flight level|fl\d/.test(s))return 'readback';
+    if(/你好|hello|hi\b|嗨|謝謝|thank|早安|晚安|再見|bye/.test(s))return 'chat';
+    return 'unclear';}
+  async function freeText(t){
+    if(!t.trim()||!st)return;me(t);
+    const s=await getSample();
+    if(!s){const i=parseIntent(t);handle(i==='unclear'?'?':i,null);return;}
+    aiBusy=true;showThinking(true);
+    const A=st.atc,U=UNIT(),u=U[A.unit],dTD=distTD();
+    const prompt=`你在一個給家人和小朋友玩的飛行遊戲裡扮演航空管制員，用無線電回覆玩家（機長）。
+你的單位：${u[0]}（${u[1]}），頻率 ${u[2]}。機長呼號：${st.cs}（${S.name}），機型 ${PLANES[st.p.type].name}。
+航班：${st.B.name}（跑道 ${st.rwy0}）飛往 ${st.D.name}（跑道 ${st.rwy1}），全程 ${Math.round(st.c.d)} 公里。
+目前：${st.ground?(st.landed?'已落地':'在地面跑道上'):'飛行中'}，高度 ${Math.round(st.y/FT)} 呎，空速 ${Math.round(ias()/KT)} 節，距離目的地 ${Math.round(dTD/1000)} 公里，許可高度 ${A.clearedFT} 呎，已許可起飛=${st.toClr}，已許可降落=${st.landClr}，等待機長複誦的指示=${A.pending?A.pending.type:'無'}。
+機長說：「${t.slice(0,300)}」
+請判斷機長的意思，從這些選一個 intent：req_takeoff（請求起飛）、readback（複誦、確認、收到、換頻率）、req_climb（請求爬升）、req_descent（請求下降）、req_land（請求降落）、weather（問天氣）、mayday（緊急狀況）、chat（閒聊、打招呼、問問題）、unclear（聽不懂）。
+再寫出你的回覆：en 是真實航管英文用語（一到兩句，開頭帶呼號），zh 是給 11 歲小朋友看的繁體中文（一句、親切）。閒聊可以有趣、友善，但要像專業的管制員，並回到正事。不要自己發出遊戲狀態沒有的許可。
+只輸出 JSON：{"intent":"...","en":"...","zh":"..."}`;
+    try{const r=await s.json(prompt,{modelTier:'quick',cache:false});const i=['req_takeoff','readback','req_climb','req_descent','req_land','weather','mayday','chat','unclear'].includes(r?.intent)?r.intent:'unclear';
+      handle(i==='unclear'?'?':i,{en:String(r.en||'').slice(0,240),zh:String(r.zh||'').slice(0,160)});}
+    catch(e){if(e&&e.code==='not_granted'){aiOK=false;sampleP=Promise.resolve(null);updAiBadge();}const i=parseIntent(t);handle(i==='unclear'?'?':i,null);}
+    finally{aiBusy=false;showThinking(false);}
+  }
+  function getSample(){if(!sampleP)sampleP=(window.claude&&window.claude.use)?Promise.resolve(window.claude.use('sample')).catch(()=>null):Promise.resolve(null);return sampleP;}
+  /* 語音 */
+  function speak(en){if(!voice||!window.speechSynthesis)return;try{const u=new SpeechSynthesisUtterance(en.replace(new RegExp(st.cs,'g'),spokenCs()));u.lang='en-US';u.rate=1.08;u.pitch=.95;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+  function callout(txt){if(!voice||!window.speechSynthesis)return;try{const u=new SpeechSynthesisUtterance(txt);u.lang='en-US';u.rate=1.15;u.pitch=.7;speechSynthesis.speak(u);}catch(e){}}
+
+  /* ---------- 聲音 ---------- */
+  function snd(k){if(!UI.sound)return;const map={lift:'good',land:'win',crash:'bad',radio:'ping',ok:'ping',apoff:'ping',chime:'ping'};try{sfx(map[k]||'ping');}catch(e){}}
+  function engineAudio(on){
+    if(!UI.sound){if(audio){try{audio.g.gain.value=0;}catch(e){}}return;}
+    try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+      if(!audio){const n=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate),d=n.getChannelData(0);let lp=0;for(let i=0;i<d.length;i++){lp=lp*.97+(Math.random()*2-1)*.03;d[i]=lp*6;}
+        const s=AC.createBufferSource();s.buffer=n;s.loop=true;const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=400;const g=AC.createGain();g.gain.value=0;
+        const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=90;const og=AC.createGain();og.gain.value=0;o.connect(og);og.connect(f);
+        s.connect(f);f.connect(g);g.connect(AC.destination);s.start();o.start();audio={s,f,g,o,og};}
+      if(!on){audio.g.gain.value=0;return;}
+    }catch(e){}
+  }
+  function engineTick(){if(!audio||!UI.sound)return;const k=st?st.thr:0,v=running&&st&&!st.ended?1:0;audio.g.gain.value=v*(.05+k*.12)*(view==='cockpit'?.7:1);audio.f.frequency.value=250+k*900+(st?st.V:0)*1.5;audio.o.frequency.value=70+k*140;audio.og.gain.value=v*.012*k;}
+
+  /* ---------- 畫面 ---------- */
+  function sky(){
+    const f=clamp(st.z/st.Dm,0,1),arc=st.c.arc,i=Math.min(arc.length-1,Math.floor(f*(arc.length-1))),pt=arc[i];
+    const hh=st.h0+st.t/3600,dd=dateOf(S.day),doy=Math.floor((dd-Date.UTC(dd.getUTCFullYear(),0,0))/864e5),decl=-23.44*Math.cos(2*Math.PI*(doy+10)/365);
+    const sp={decl,lon:-((hh-8)-12)*15},cz=sunCos(pt[0],pt[1],sp),e=Math.asin(clamp(cz,-1,1))/RAD;st.sunE=e;st.lonlat=pt;st.localH=hh;
+    const C=h=>new T.Color(h),lerp=(a,b,t)=>a.clone().lerp(b,clamp(t,0,1));let top,hor;
+    if(e>8){top=C(0x2f6fb8);hor=C(0xbcdaf2);}else if(e>0){top=lerp(C(0x4a5f9a),C(0x2f6fb8),e/8);hor=lerp(C(0xf0a070),C(0xbcdaf2),e/8);}else if(e>-8){top=lerp(C(0x081230),C(0x4a5f9a),(e+8)/8);hor=lerp(C(0x16203c),C(0xf0a070),(e+8)/8);}else{top=C(0x030814);hor=C(0x0c1528);}
+    if(st.y>6000){top=lerp(top,C(0x0b2a66),(st.y-6000)/8000*(e>0?1:.3));}
+    const g=skyCv.g;const gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#'+top.getHexString());gr.addColorStop(.48,'#'+hor.getHexString());gr.addColorStop(1,'#'+hor.getHexString());g.fillStyle=gr;g.fillRect(0,0,8,256);skyCv.tx.needsUpdate=true;
+    scene.fog.color.copy(hor);
+    const li=clamp((e+5)/22,0,1);sunL.intensity=.06+.95*li;hemi.intensity=.18+.55*li;amb.intensity=.08+.1*li;sunL.color.set(e<10?0xffc890:0xfff4e0);
+    const night=clamp((-e+3)/10,0,1);st.night=night;stars.material.opacity=night*.9;
+    const ocC=lerp(C(0x0a1626),C(0xffffff),li);ocean.material.color.copy(ocC);
+    // 太陽方向（世界座標：+Z 為目前航向基準）
+    const crs=st.b0+(((st.b1-st.b0+540)%360)-180)*f;const H=(pt[0]-sp.lon)*RAD,az=Math.atan2(Math.sin(H),Math.cos(H)*Math.sin(pt[1]*RAD)-Math.tan(sp.decl*RAD)*Math.cos(pt[1]*RAD));
+    const azN=(az/RAD+180+360)%360,rel=(azN-crs)*RAD,el=Math.max(-.3,e*RAD);
+    const dx=-Math.sin(rel)*Math.cos(el),dz=Math.cos(rel)*Math.cos(el),dy=Math.sin(el);
+    sunL.position.set(cam.getWorldPosition(new T.Vector3()).x+dx*1000,dy*1000+200,dz*1000);sunL.target.position.set(0,0,0);sunSpr.visible=e>-2;st.sunDir={dx,dy,dz};
+    for(const a of apts){a.city.emissiveIntensity=night*.9;const lv=.35+night*.65;a.lights.forEach(l=>l.material.opacity=lv);}
+    st.crs=crs;
+  }
+  function placeWorld(){
+    // 浮動原點：相機附近為原點
+    const ox=st.x,oz=st.z;st.ox=ox;st.oz=oz;
+    rig.position.set(0,st.y+st.P.eye[1],0);
+    rig.rotation.set(-st.th,-st.psi,st.phi);
+    if(st.ground&&st.landed===false&&st.V<1)rig.rotation.x=0;
+    for(const a of apts)a.g.position.set(-ox,0,a.Zth-oz);
+    if(guide){guide.position.set(-ox,0,st.Zd-oz);guide.visible=guideOn&&!st.ground&&distTD()<26000;}
+    ocean.position.set(0,-2,0);const tx=ocean.userData.tx;tx.offset.set((ox/1000)%1,(-oz/1000)%1);
+    dome.position.set(0,st.y,0);stars.position.set(0,st.y,0);
+    if(st.sunDir)sunSpr.position.set(st.sunDir.dx*200000,st.y+st.sunDir.dy*200000,st.sunDir.dz*200000);
+    // 雲
+    let inCloud=0;
+    for(const s of clouds){const w=s.userData.w;const rx=w.x-ox,rz=w.z-oz;if(Math.hypot(rx,rz)>36000)respawnCloud(s,false);s.position.set(w.x-ox,w.y,w.z-oz);
+      const dd=Math.hypot(rx,(w.y-st.y)*2.2,rz);if(dd<s.scale.x*.35)inCloud=Math.max(inCloud,1-dd/(s.scale.x*.35));}
+    st.inCloud=inCloud;
+    // PAPI
+    const arr=apts.find(a=>a.dest);if(arr){const dz=arr.Zth+330-st.z,ang=Math.atan2(st.y,Math.max(1,dz))/RAD;const th=[3.5,3.17,2.83,2.5];arr.papi.forEach((p,i)=>p.material.color.set(ang>th[i]?0xffffff:0xff2a1a));}
+    // 霧距
+    scene.fog.near=st.y>3000?8000:2500;scene.fog.far=st.y>3000?Math.min(260000,60000+st.y*12):45000+st.y*8;
+  }
+  function camUpdate(dt){
+    const P=st.P;
+    if(view==='cockpit'){model.visible=false;cock.visible=true;cock.position.set(0,0,0);cam.position.set(0,0,0);
+      const sh=(st.turb&&st.z>st.turb.z0&&st.z<st.turb.z1?.012:0)+(st.ground&&st.V>5?.002*Math.min(1,st.V/60):0)+(st.inCloud?.004:0);
+      cam.rotation.set(look.p+(Math.random()-.5)*sh,Math.PI+look.y+(Math.random()-.5)*sh,0);
+      if(!look.drag){look.y*=1-Math.min(1,dt*2);look.p+=((cam.aspect<1?.1:-.06)-look.p)*Math.min(1,dt*2);}
+    }else{model.visible=true;cock.visible=true;model.userData.gear.visible=st.gearP>.3;
+      const d=P.L*1.6+20;cock.position.set(0,0,0);cam.position.set(Math.sin(look.y)*d*0+(-Math.sin(look.y))*d*0,P.L*.22+look.p*-40,-d);
+      cam.position.set(-Math.sin(look.y)*d,P.L*.22+6,-Math.cos(look.y)*d);cam.lookAt(rig.localToWorld(new T.Vector3(0,-P.eye[1],-P.eye[2])));
+      cam.rotation.order='YXZ';
+      // 讓外部視角不跟著滾轉太多：把相機放在 rig 外會更穩，這裡簡化處理
+      cock.userData.fg.visible=false;}
+    if(view==='cockpit')cock.userData.fg.visible=true;
+  }
+  /* ---------- 儀表板（2D） ---------- */
+  function drawPanel(){
+    const cv=$('#flyPanel'),dpr=Math.min(2,window.devicePixelRatio||1),w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;
+    if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
+    const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.fillStyle='#14181e';g.fillRect(0,0,w,h);
+    const narrow=w<620,ph=h-12,pw=Math.min(narrow?(w-18)/2:ph*1.05,ph*1.15);
+    pfd(g,6,6,pw,ph);nd(g,12+pw,6,pw,ph);
+    if(!narrow)eng(g,18+pw*2,6,Math.max(120,w-24-pw*2),ph);
+  }
+  function scr(g,x,y,w,h){g.fillStyle='#05080c';g.fillRect(x,y,w,h);g.strokeStyle='#2b323c';g.lineWidth=2;g.strokeRect(x,y,w,h);}
+  function pfd(g,X,Y,W,H){scr(g,X,Y,W,H);g.save();g.beginPath();g.rect(X,Y,W,H);g.clip();
+    const cx=X+W*.47,cy=Y+H*.52,R=Math.min(W*.3,H*.36),ppd=R/14;
+    // 姿態
+    g.save();g.beginPath();g.rect(cx-R,cy-R,R*2,R*2);g.clip();g.translate(cx,cy);g.rotate(-st.phi);const off=st.th/RAD*ppd;
+    g.fillStyle='#2f7fd1';g.fillRect(-R*3,-R*3+off,R*6,R*3);g.fillStyle='#8a5a2b';g.fillRect(-R*3,off,R*6,R*3);g.strokeStyle='#fff';g.lineWidth=2;g.beginPath();g.moveTo(-R*3,off);g.lineTo(R*3,off);g.stroke();
+    g.lineWidth=1;g.fillStyle='#fff';g.font=`${Math.max(8,R*.11)}px ${'IBM Plex Mono'},monospace`;g.textAlign='center';
+    for(let p=-30;p<=30;p+=5){if(!p)continue;const yy=off-p*ppd,l=p%10?R*.15:R*.32;g.beginPath();g.moveTo(-l,yy);g.lineTo(l,yy);g.stroke();if(!(p%10)){g.fillText(Math.abs(p),-l-R*.12,yy+4);g.fillText(Math.abs(p),l+R*.12,yy+4);}}
+    g.restore();
+    // 飛機符號、坡度刻度
+    g.strokeStyle='#F2B53A';g.lineWidth=4;g.beginPath();g.moveTo(cx-R*.6,cy);g.lineTo(cx-R*.2,cy);g.lineTo(cx-R*.2,cy+R*.08);g.moveTo(cx+R*.6,cy);g.lineTo(cx+R*.2,cy);g.lineTo(cx+R*.2,cy+R*.08);g.stroke();g.fillStyle='#F2B53A';g.fillRect(cx-3,cy-3,6,6);
+    g.strokeStyle='#fff';g.lineWidth=1.5;for(const a of [-60,-45,-30,-20,-10,0,10,20,30,45,60]){const ang=(a-90)*RAD;g.beginPath();g.moveTo(cx+Math.cos(ang)*R*1.02,cy+Math.sin(ang)*R*1.02);g.lineTo(cx+Math.cos(ang)*R*(a%30?1.08:1.13),cy+Math.sin(ang)*R*(a%30?1.08:1.13));g.stroke();}
+    {const ang=-st.phi-Math.PI/2;g.fillStyle='#fff';g.beginPath();g.moveTo(cx+Math.cos(ang)*R*1.0,cy+Math.sin(ang)*R*1.0);g.lineTo(cx+Math.cos(ang+.05)*R*.9,cy+Math.sin(ang+.05)*R*.9);g.lineTo(cx+Math.cos(ang-.05)*R*.9,cy+Math.sin(ang-.05)*R*.9);g.fill();}
+    // 飛行導引（簡單模式）
+    if(mode==='easy'&&!st.ground&&!st.apOn){const dTD=distTD();let gt=0,pt=0;if(dTD<30000){const want=Math.tan(3*RAD)*dTD;gt=clamp((want-st.y)*.004-3*RAD,-6*RAD,3*RAD);pt=clamp(st.x*.0015-st.psi,-.4,.4);}else{const altT=st.atc.clearedFT*FT;gt=clamp((altT-st.y)*.001,-4*RAD,8*RAD);pt=clamp(st.x*.0003-st.psi,-.4,.4);}
+      const fy=cy-(gt-st.gam)/RAD*ppd*1.2,fx=cx+pt/RAD*ppd*1.5;g.strokeStyle='#e84bd8';g.lineWidth=3;g.beginPath();g.moveTo(cx-R*.5,clamp(fy,cy-R,cy+R));g.lineTo(cx+R*.5,clamp(fy,cy-R,cy+R));g.moveTo(clamp(fx,cx-R,cx+R),cy-R*.5);g.lineTo(clamp(fx,cx-R,cx+R),cy+R*.5);g.stroke();}
+    // ILS
+    const dTD=distTD();if(dTD<40000&&!st.ground){const loc=clamp(Math.atan2(st.x,Math.max(1,dTD))/RAD/2.5,-1,1),gs=clamp((Math.atan2(st.y,Math.max(1,dTD))/RAD-3)/.7,-1,1);
+      g.fillStyle='#e84bd8';g.beginPath();const lx=cx-loc*R*.8;g.moveTo(lx,cy+R+8);g.lineTo(lx-6,cy+R+14);g.lineTo(lx,cy+R+20);g.lineTo(lx+6,cy+R+14);g.fill();const gy=cy-gs*R*.8;g.beginPath();g.moveTo(cx+R+8,gy);g.lineTo(cx+R+14,gy-6);g.lineTo(cx+R+20,gy);g.lineTo(cx+R+14,gy+6);g.fill();}
+    // 速度帶
+    const I=ias()/KT,tw=W*.15,tx=X+4;g.fillStyle='rgba(60,66,76,.9)';g.fillRect(tx,cy-R,tw,R*2);
+    g.save();g.beginPath();g.rect(tx,cy-R,tw,R*2);g.clip();const sp=R/40;
+    const vs=stallKt();g.fillStyle='#c0392b';g.fillRect(tx+tw-6,cy-(vs-I)*sp,6,R*3);
+    g.fillStyle='#fff';g.font=`${Math.max(9,R*.12)}px monospace`;g.textAlign='right';for(let v=Math.floor((I-60)/10)*10;v<I+60;v+=10){if(v<0)continue;const yy=cy-(v-I)*sp;g.fillRect(tx+tw-12,yy,8,1);if(v%20===0)g.fillText(v,tx+tw-14,yy+4);}
+    if(st.athr&&st.atTgt){g.fillStyle='#e84bd8';g.fillRect(tx+tw-10,cy-(st.atTgt-I)*sp-2,10,4);}
+    g.restore();g.fillStyle='#000';g.strokeStyle='#F2B53A';g.fillRect(tx,cy-11,tw,22);g.strokeRect(tx,cy-11,tw,22);g.fillStyle='#fff';g.font=`700 ${Math.max(11,R*.15)}px monospace`;g.textAlign='center';g.fillText(Math.round(I),tx+tw/2,cy+5);
+    // 高度帶
+    const ft=st.y/FT,ax=X+W-tw-4-W*.05;g.fillStyle='rgba(60,66,76,.9)';g.fillRect(ax,cy-R,tw,R*2);g.save();g.beginPath();g.rect(ax,cy-R,tw,R*2);g.clip();const ap=R/600;g.fillStyle='#fff';g.font=`${Math.max(9,R*.11)}px monospace`;g.textAlign='left';
+    for(let a=Math.floor((ft-700)/100)*100;a<ft+700;a+=100){const yy=cy-(a-ft)*ap;g.fillRect(ax,yy,6,1);if(a%500===0)g.fillText(a,ax+8,yy+4);}
+    const cA=st.atc.clearedFT;g.fillStyle='#4fd1ff';g.fillRect(ax,cy-(cA-ft)*ap-2,tw,3);g.restore();
+    g.fillStyle='#000';g.fillRect(ax,cy-11,tw,22);g.strokeStyle='#F2B53A';g.strokeRect(ax,cy-11,tw,22);g.fillStyle='#fff';g.font=`700 ${Math.max(10,R*.13)}px monospace`;g.textAlign='center';g.fillText(Math.round(ft),ax+tw/2,cy+5);
+    g.fillStyle='#4fd1ff';g.font=`${Math.max(9,R*.11)}px monospace`;g.fillText(cA>=10000?'FL'+Math.round(cA/100):cA,ax+tw/2,cy-R-4);
+    // 升降速度
+    const vsF=st.V*Math.sin(st.gam)/FT*60,vx=X+W-W*.05;g.fillStyle='#fff';g.font=`${Math.max(8,R*.1)}px monospace`;g.textAlign='center';g.fillText((vsF>0?'+':'')+Math.round(vsF/100)*100,vx-2,cy+R+14);
+    g.strokeStyle=Math.abs(vsF)>2000?'#F2B53A':'#7FD493';g.lineWidth=3;g.beginPath();g.moveTo(vx-4,cy);g.lineTo(vx-4,cy-clamp(vsF/6000,-1,1)*R);g.stroke();
+    // 航向
+    const hd=((st.crs||st.b0)+st.psi/RAD+360)%360;g.fillStyle='#fff';g.font=`700 ${Math.max(10,R*.13)}px monospace`;g.fillText(String(Math.round(hd)%360||360).padStart(3,'0')+'°',cx,Y+H-6);
+    // FMA
+    g.font=`700 ${Math.max(8,R*.1)}px monospace`;g.textAlign='left';g.fillStyle=st.athr?'#7FD493':'#555';g.fillText(st.athr?'A/THR SPEED':'MAN THR',X+6,Y+14);
+    g.fillStyle=st.apOn?'#7FD493':'#555';g.fillText(st.apOn?'AP1 NAV ALT':'AP OFF',X+W*.42,Y+14);
+    if(st.stall){g.fillStyle='#ff4a3a';g.font=`900 ${R*.22}px sans-serif`;g.textAlign='center';g.fillText('STALL',cx,cy-R*.5);}
+    if(st.y<760&&!st.ground){g.fillStyle='#F2B53A';g.font=`700 ${R*.15}px monospace`;g.textAlign='center';g.fillText(Math.round(st.y/FT),cx,cy+R*.75);}
+    g.restore();}
+  function stallKt(){const P=st.P,fi=Math.round(st.flapP);return Math.sqrt(2*P.m*G/(R0*P.S*P.cl[fi]))/KT;}
+  function nd(g,X,Y,W,H){scr(g,X,Y,W,H);g.save();g.beginPath();g.rect(X,Y,W,H);g.clip();
+    const cx=X+W/2,cy=Y+H*.78,R=H*.66,dTD=distTD(),rngKm=dTD<40000?20:dTD<150000?80:st.ground&&st.z<5000?20:320;const kpp=rngKm*1000/R;
+    g.strokeStyle='#ddd';g.lineWidth=1.2;g.beginPath();g.arc(cx,cy,R,Math.PI*1.18,Math.PI*1.82);g.stroke();g.beginPath();g.arc(cx,cy,R/2,Math.PI*1.18,Math.PI*1.82);g.stroke();
+    g.fillStyle='#ddd';g.font='10px monospace';g.textAlign='left';g.fillText(rngKm/2+'km',cx+R/2*.55,cy-R/2*.85);
+    // 航線（世界 x=0）
+    g.save();g.translate(cx,cy);g.rotate(-st.psi);
+    g.strokeStyle='#7FD493';g.lineWidth=2;g.beginPath();g.moveTo(-(0-st.x)/kpp,-(0-st.z)/kpp);g.lineTo(-(0-st.x)/kpp,-(st.Zd+3600-st.z)/kpp);g.stroke();
+    for(const [zz,lab] of [[0,st.B.code],[st.Zd,st.D.code]]){const sx=-(0-st.x)/kpp,sy=-(zz-st.z)/kpp;if(Math.abs(sy)<R*1.4){g.save();g.translate(sx,sy);g.rotate(st.psi);g.strokeStyle='#4fd1ff';g.strokeRect(-4,-4,8,8);g.fillStyle='#4fd1ff';g.fillText(lab,8,4);g.restore();
+      g.fillStyle='#fff';g.fillRect(sx-1.5,sy-3600/kpp,3,3600/kpp);}}
+    if(st.turb&&!st.turb.hit){const sy1=-(st.turb.z0-st.z)/kpp,sy2=-(st.turb.z1-st.z)/kpp;if(sy1>-R*1.3){g.fillStyle='rgba(242,124,110,.35)';g.fillRect(-R*.3,sy2,R*.6,sy1-sy2);}}
+    g.restore();
+    g.fillStyle='#F2B53A';g.beginPath();g.moveTo(cx,cy-10);g.lineTo(cx-7,cy+8);g.lineTo(cx+7,cy+8);g.fill();
+    const hd=((st.crs||st.b0)+st.psi/RAD+360)%360;g.fillStyle='#fff';g.font='700 12px monospace';g.textAlign='center';g.fillText('HDG '+String(Math.round(hd)%360||360).padStart(3,'0'),cx,Y+14);
+    g.textAlign='left';g.font='11px monospace';g.fillStyle='#4fd1ff';g.fillText(`${st.D.code} ${Math.max(0,dTD/1000).toFixed(dTD<20000?1:0)}km`,X+6,Y+28);
+    const gs=st.V*Math.cos(st.gam)*3.6;g.fillStyle='#ddd';g.fillText(`GS ${Math.round(st.V/KT)}kt`,X+6,Y+42);
+    if(gs>50){const ete=dTD/(st.V*Math.cos(st.gam)||1)/60;g.fillText(`ETE ${Math.floor(ete/60)}:${String(Math.round(ete%60)).padStart(2,'0')}`,X+6,Y+56);}
+    if(!st.ground&&dTD<todDist()+60000&&!st.atc.descGiven){g.fillStyle='#F2B53A';g.fillText('T/D 下降點接近',X+6,Y+70);}
+    g.restore();}
+  function eng(g,X,Y,W,H){scr(g,X,Y,W,H);g.font='11px monospace';g.textAlign='center';
+    for(let i=0;i<2;i++){const cx=X+W*(.25+i*.3),cy=Y+H*.3,R=Math.min(W*.12,H*.2);g.strokeStyle='#888';g.lineWidth=2;g.beginPath();g.arc(cx,cy,R,Math.PI*.75,Math.PI*2.25);g.stroke();
+      const n1=20+st.thr*80;g.strokeStyle='#7FD493';g.lineWidth=3;g.beginPath();g.moveTo(cx,cy);const a=Math.PI*.75+n1/105*Math.PI*1.5;g.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);g.stroke();
+      g.fillStyle='#7FD493';g.fillText(n1.toFixed(1),cx,cy+R+12);}
+    g.fillStyle='#bbb';g.textAlign='left';const yy=Y+H*.62;
+    g.fillText('N1 %',X+W*.83-20,Y+H*.3);
+    g.fillStyle='#ddd';g.fillText(`FLAPS ${['UP','1','2','FULL'][st.flap]}`,X+8,yy);
+    g.fillStyle=st.gearP>.95?'#7FD493':st.gearP<.05?'#888':'#F27C6E';g.fillText(`GEAR ${st.gearP>.95?'▼▼▼ DOWN':st.gearP<.05?'UP':'TRANSIT'}`,X+8,yy+15);
+    g.fillStyle=st.spd?'#F2B53A':'#888';g.fillText(`SPD BRK ${st.spd?'ON':'OFF'}`,X+8,yy+30);
+    g.fillStyle=st.belt?'#F2B53A':'#888';g.fillText(`SEAT BELTS ${st.belt?'ON':'OFF'}`,X+8,yy+45);
+    g.fillStyle=st.brake?'#F27C6E':'#888';if(st.ground)g.fillText(`BRAKES ${st.brake?'SET':'OFF'}${st.rev?' REV':''}`,X+W*.55,yy);
+    g.fillStyle='#ddd';const lh=((st.localH||0)%24+24)%24;g.fillText(`TIME ${hhmm(lh)} TPE`,X+W*.55,yy+15);g.fillText(`WARP ×${warp}`,X+W*.55,yy+30);
+    g.fillText(`G ${(st.nz||1).toFixed(2)}`,X+W*.55,yy+45);}
+  /* ---------- 迴圈 ---------- */
+  let panelT=0,hudT=0,atcT=0;
+  function loop(now){
+    if(!running)return;raf=requestAnimationFrame(loop);
+    const rdt=Math.min(.05,(now-last)/1000);last=now;if(!st)return;
+    if(!st.ended&&st.started){throttleKeys(rdt);let total=rdt*warp;const n=Math.ceil(total/.05);const h=total/n;for(let i=0;i<n&&!st.ended;i++)step(h);
+      cruiseEvents();if(now-atcT>250){atcT=now;updateATC();callouts();}}
+    sky();placeWorld();camUpdate(rdt);
+    renderer.render(scene,cam);
+    if(now-panelT>(mobile?90:50)){panelT=now;drawPanel();}
+    if(now-hudT>200){hudT=now;hud();}
+    engineTick();
+    if(st.cueT>0){st.cueT-=rdt;if(st.cueT<=0)$('#flyCue').hidden=true;}
+    $('#flyCloud').style.opacity=view==='cockpit'?(st.inCloud*.75).toFixed(2):0;
+  }
+  function cruiseEvents(){
+    const t=st.turb;if(t&&!t.hit&&st.z>t.z0){if(warp>1)setWarp(1);if(st.y>(st.crFL*100+1500)*FT&&t.climbed){t.hit=true;st.sc.log.push(['爬升避開亂流',3]);st.sc.cr=Math.min(20,st.sc.cr+3);cue('成功避開亂流！',2.5);}
+      else{t.hit=true;cue('亂流！',2);if(!st.belt){st.sc.cr-=8;st.sc.log.push(['亂流時沒開安全帶燈',-8]);sys('有旅客打翻了咖啡⋯⋯下次遇到亂流前要打開安全帶燈！');}else{st.sc.log.push(['亂流時安全帶燈有開',0]);sys('安全帶燈有開，旅客都坐好了，很安全！');}}}
+    // 高度偏差（真實模式）
+    if(mode==='real'&&!st.ground&&!st.apOn&&st.atc.unit!=='twr'&&st.y>st.atc.clearedFT*FT+150&&!st.atc.altWarn){st.atc.altWarn=true;st.sc.cr-=4;st.sc.log.push(['超過許可高度',-4]);atcSay(`${st.cs}, check altitude, maintain ${fl(st.atc.clearedFT)}.`,`你飛太高了，請保持 ${flZh(st.atc.clearedFT)}！`);}
+    if(st.y<st.atc.clearedFT*FT)st.atc.altWarn=false;
+    if(!st.ground&&ias()/KT>(st.y<10000*FT?345:360)&&!st.overW){st.overW=true;st.sc.cr-=4;st.sc.log.push(['超速',-4]);cue('超速！減油門',2);}
+    if(st.stall&&!st.stallW){st.stallW=true;st.sc.cr-=6;st.sc.log.push(['失速',-6]);callout('stall, stall');}
+    if(!st.stall)st.stallW=false;
+    // 襟翼超速（真實模式）
+    if(mode==='real'&&st.flap>0&&ias()/KT>st.P.fv[st.flap]+10&&!st.flapW){st.flapW=true;st.sc.cr-=2;st.sc.log.push(['襟翼超速',-2]);cue('襟翼超速！收襟翼或減速',2);}
+  }
+  function callouts(){if(st.ground||st.ended)return;const ft=st.y/FT;const dTD=distTD();if(dTD>12000)return;
+    for(const k of [1000,500,100,50,30,20,10]){if(ft<k&&!st.callouts[k]&&st.gam<0){st.callouts[k]=true;callout(k>=100?(k===1000?'one thousand':k===500?'five hundred':'one hundred'):String(k));if(k===50&&mode==='real')cue('拉平！（輕輕拉 ↓）',1.5);if(k===20&&mode==='real')callout('retard');}}}
+  function cue(t,s){st.cue=t;st.cueT=s;const el=$('#flyCue');el.textContent=t;el.hidden=false;}
+  function hud(){
+    const dTD=distTD(),f=clamp(st.z/st.Dm,0,1),I=ias()/KT;
+    $('#flyProg').style.setProperty('--p',(f*100).toFixed(2)+'%');
+    const phase=st.ended?'結束':st.landed?'落地滑行':st.ground?(st.V>3?'起飛滑跑':'跑道頭待命'):dTD<9000?'最後進場':dTD<60000?'進場':st.atc.descGiven||dTD<todDist()?'下降':st.y<st.crFL*100*FT-300?'爬升':'巡航';
+    st.phase=phase;
+    $('#flyPhase').textContent=phase;
+    $('#flyDist').textContent=dTD>2000?`剩 ${Math.round(dTD/1000).toLocaleString()} 公里`:`剩 ${Math.max(0,Math.round(dTD))} 公尺`;
+    const gs=st.V*Math.cos(st.gam);$('#flyEta').textContent=gs>30?`約 ${fmtH(dTD/gs/3600)}`:'';
+    const canWarp=!st.ground&&st.apOn&&dTD>todDist()+20000&&!(st.turb&&!st.turb.hit&&st.z>st.turb.z0-60000)&&st.y>15000*FT;
+    document.querySelectorAll('#flyWarp button').forEach(b=>{b.disabled=+b.dataset.w>1&&!canWarp;b.setAttribute('aria-pressed',String(+b.dataset.w===warp));});
+    if(warp>1&&!canWarp){setWarp(1);if(dTD<todDist()+20000)cue('快到下降點了，恢復正常速度',2.5);}
+    $('#flyWarpHint').textContent=canWarp?'':(st.ground?'':(st.y<15000*FT?'爬到 15,000 呎以上、開自動駕駛就能快轉':!st.apOn?'開「自動駕駛」才能快轉':''));
+    if(document.activeElement!==$('#flyThrV'))$('#flyThrV').value=Math.round(st.lever*100);
+    updButtons();
+  }
+  function setWarp(w){warp=w;document.querySelectorAll('#flyWarp button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.w===warp)));}
+  function updButtons(){if(!st)return;const b=(id,on,txt)=>{const e=$(id);if(!e)return;e.setAttribute('aria-pressed',String(!!on));if(txt)e.textContent=txt;};
+    b('#fbAP',st.apOn);b('#fbAT',st.athr);b('#fbGear',st.gear,st.gear?'起落架 ▼':'起落架 ▲');b('#fbFlap',st.flap>0,`襟翼 ${['UP','1','2','FULL'][st.flap]}`);b('#fbBrake',st.brake,st.ground?'煞車':'減速板');if(!st.ground)b('#fbBrake',st.spd);
+    b('#fbBelt',st.belt);b('#fbView',view==='chase');b('#fbVoice',voice,voice?'🔊 語音':'🔇 語音');b('#fbGuide',guideOn);
+    $('#fbAT').hidden=mode==='easy';$('#fbFlap').hidden=mode==='easy';$('#fbGear').hidden=mode==='easy';}
+  function setGear(v,auto){if(!st)return;if(!v&&st.ground)return;st.gear=v;if(!auto)snd('ok');}
+  function setFlap(f,auto){st.flap=clamp(f,0,3);if(!auto)snd('ok');}
+
+  /* ---------- 聊天 UI ---------- */
+  function renderChat(){const el=$('#atcLog');if(!el)return;el.innerHTML=st.chat.slice(-40).map(m=>m.who==='sys'?`<div class="am sys">${esc(m.zh)}</div>`:m.who==='me'?`<div class="am me"><b>你</b>${esc(m.en)}</div>`:`<div class="am atc"><b>${esc(m.name)}</b><span class="en">${esc(m.en)}</span><span class="zh">${esc(m.zh||'')}</span></div>`).join('');el.scrollTop=el.scrollHeight;
+    const lastA=[...st.chat].reverse().find(m=>m.who==='atc'||m.who==='sys');$('#atcLast').textContent=lastA?(lastA.who==='atc'?`${lastA.name}：${lastA.zh}`:lastA.zh):'';}
+  function setReplies(r){st.replies=r;const el=$('#atcQuick');el.innerHTML='';for(const [zh,en,intent] of r){const b=document.createElement('button');b.className='btn sm';b.innerHTML=`${esc(zh)}<small>${esc(en)}</small>`;b.onclick=()=>{me(en);setTimeout(()=>handle(intent),500);};el.appendChild(b);}}
+  function showThinking(on){$('#atcThink').hidden=!on;$('#atcSend').disabled=on;}
+  function updAiBadge(){$('#atcAi').textContent=aiOK?'AI 塔台':'預設對話';$('#atcAi').className='chip '+(aiOK?'on':'');}
+
+  /* ---------- 結果 ---------- */
+  function result(){
+    st.ended=true;const s=st.sc,atc=s.atcMax?Math.round(s.atc/s.atcMax*20):10,to=clamp(s.to,0,20),cr=clamp(s.cr,0,20),ld=clamp(s.ld,0,40);
+    const sc=clamp(to+atc+cr+ld-(st.retried?10:0),0,100),stars='★'.repeat(Math.round(sc/20))+'☆'.repeat(5-Math.round(sc/20));
+    const cd=(S.capCD||0)-S.day,reward=cd<=0;let dRep=0;
+    if(reward){dRep=sc>=85?3:sc>=65?2:sc>=45?1:0;S.rep=Math.max(5,Math.min(100,S.rep+dRep));S.capCD=S.day+7;}
+    S.capBest=Math.max(S.capBest||0,sc);S.flights=(S.flights||0)+1;
+    news(`機長親自駕駛 ${st.cs} ${st.B.short}→${st.D.name}：${sc} 分 ${stars}${reward&&dRep?`，聲望 +${dRep}`:''}。`,sc>=65?'good':'');
+    const mins=Math.round(st.t/60);
+    showEnd(`<h3>🛬 抵達${esc(st.D.name)}！</h3><div class="flstars">${stars}　<b>${sc}</b> 分</div>
+      <table class="fltab"><tr><td>起飛</td><td>${to}／20</td></tr><tr><td>塔台通訊</td><td>${atc}／20</td></tr><tr><td>巡航</td><td>${cr}／20</td></tr><tr><td>降落</td><td>${ld}／40</td></tr>${st.retried?'<tr><td>重新進場</td><td>−10</td></tr>':''}</table>
+      <p class="hint">${s.log.map(([t,p])=>`${esc(t)}${p?`（${p>0?'+':''}${p}）`:''}`).join('・')}</p>
+      <p>飛行時間 ${fmtH(st.t/3600)}（實際玩了 ${Math.max(1,Math.round((performance.now()-st.startReal)/60000))} 分鐘）。${reward?(dRep?`公司聲望 +${dRep}！`:'下次飛得更好就能提升聲望。'):`這次是練習飛行（${cd} 天後再飛可以加聲望）。`}</p>`,
+      [['完成',close],['再飛一次','ghost',()=>{hideEnd();restart();}]]);
+    snd(sc>=65?'land':'ok');if(sc>=85)try{FX.go(5);}catch(e){}save();updateHUD();renderPanel(true);
+  }
+  function showEnd(html,btns){const el=$('#flyEnd');$('#flyEndBody').innerHTML=html;const B=$('#flyEndBtns');B.innerHTML='';for(const b of btns){const [t,c,fn]=b.length===2?[b[0],'',b[1]]:b;const x=document.createElement('button');x.className='btn '+c;x.textContent=t;x.onclick=fn;B.appendChild(x);}el.hidden=false;}
+  function hideEnd(){$('#flyEnd').hidden=true;}
+
+  /* ---------- 開始畫面 ---------- */
+  async function open(code,opt){
+    if(!S)return;if(typeof AP!=='undefined'&&AP.running)AP.close(true);
+    $('#flyOv').hidden=false;$('#flyLoad').hidden=false;$('#flyLoad').textContent='正在準備駕駛艙⋯⋯';hideEnd();$('#flyBrief').hidden=true;
+    try{await loadLib();}catch(e){$('#flyLoad').textContent='開飛機需要網路連線才能載入 3D，請連上網路再試。（按 ESC 離開）';return;}
+    try{if(!built)build();}catch(e){console.error(e);$('#flyLoad').textContent='這台裝置不支援 3D 畫面。（按 ESC 離開）';return;}
+    if(!setup(code,opt)){$('#flyLoad').textContent='找不到這條航線的飛機。';return;}
+    initATC();setWarp(1);$('#flyLoad').hidden=true;$('#flyAtc').classList.toggle('closed',mobile||innerWidth<760);
+    $('#flyTitle').textContent=`${st.cs}　${st.B.short} → ${st.D.name}`;$('#flySub').textContent=`${PLANES[st.p.type].name} ${st.p.reg||''}`;
+    $('#flyDep').textContent=st.B.code;$('#flyArr').textContent=st.D.code;
+    getSample().then(s=>{aiOK=!!s;updAiBadge();});updAiBadge();
+    running=true;resize();last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
+    showBrief();
+  }
+  function showBrief(){const el=$('#flyBrief');el.hidden=false;st.started=false;
+    $('#flyBriefBody').innerHTML=`<h3>✈ ${esc(st.cs)}　${esc(st.B.name)} → ${esc(st.D.name)}</h3>
+      <p>全程 ${Math.round(st.c.d).toLocaleString()} 公里、巡航高度 FL${st.crFL}。要親手完成：<b>請求起飛 → 起飛 → 爬升 → 巡航（可以快轉）→ 下降 → 進場 → 降落</b>。一路上要聽塔台的指示並回覆。</p>
+      <div class="flmodes"><button class="btn" data-fm="easy" aria-pressed="${mode==='easy'}">🙂 簡單模式<small>自動油門、自動襟翼和起落架、自動拉平、紫色導引線</small></button>
+      <button class="btn" data-fm="real" aria-pressed="${mode==='real'}">🧑‍✈️ 真實模式<small>自己管油門、襟翼、起落架、減速板，會失速、會超速</small></button></div>
+      <p class="hint">${mobile?'左下搖桿控制飛機（往下拉＝抬頭），右邊滑桿是油門。':'方向鍵或 W A S D 控制飛機（↓／S 抬頭、↑／W 低頭、←→ 轉彎）。油門：E 加、Q 減（或 + −）。F／V 襟翼、G 起落架、B 煞車／減速板、R 反推、Z 自動駕駛、C 切換視角、拖曳滑鼠可以轉頭看。ESC 離開。'}</p>`;
+    $('#flyBriefBody').querySelectorAll('[data-fm]').forEach(b=>b.onclick=()=>{mode=b.dataset.fm;st.athr=mode==='easy';guideOn=mode==='easy';showBrief();});
+  }
+  function startFlight(){$('#flyBrief').hidden=true;st.started=true;st.athr=mode==='easy';guideOn=mode==='easy';st.brake=true;engineAudio(true);updButtons();
+    cue(mode==='easy'?'先跟塔台「請求起飛」，再推油門（E 或右邊油門桿）':'請求起飛 → 放開煞車（B）→ 推油門（E）',4);}
+  function close(fromAP){running=false;cancelAnimationFrame(raf);$('#flyOv').hidden=true;engineAudio(false);if(audio)audio.g.gain.value=0;try{speechSynthesis.cancel();}catch(e){}st=null;for(const k in keys)keys[k]=false;joy={x:0,y:0,id:null};}
+  function resize(){if(!renderer)return;const cv=$('#flyCanvas'),w=cv.clientWidth,h=cv.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.fov=w<h?80:62;cam.updateProjectionMatrix();}
+
+  /* ---------- 輸入 ---------- */
+  function key(k,down){if($('#flyOv').hidden||!st)return false;
+    if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d','e','q','+','-','=','_','pageup','pagedown'].includes(k)){keys[k]=down;return true;}
+    if(!down)return false;
+    if(k==='escape'){close();return true;}
+    if(!st.started||st.ended)return false;
+    if(k==='z'){toggleAP();return true;}if(k==='c'){view=view==='cockpit'?'chase':'cockpit';look.y=0;return true;}
+    if(k==='g'&&mode==='real'){setGear(!st.gear);return true;}
+    if(k==='f'&&mode==='real'){setFlap(st.flap+1);return true;}if(k==='v'&&mode==='real'){setFlap(st.flap-1);return true;}
+    if(k==='b'){if(st.ground)st.brake=!st.brake;else st.spd=!st.spd;snd('ok');return true;}
+    if(k==='r'){if(st.ground&&st.landed)st.rev=!st.rev;return true;}
+    if(k==='t'){$('#atcIn').focus();return true;}
+    return false;}
+  function toggleAP(){if(!st||st.ground){cue('起飛後才能開自動駕駛',2);return;}if(!st.apOn&&distTD()<6000){cue('最後進場要自己飛！',2);return;}st.apOn=!st.apOn;if(st.apOn&&mode==='real')st.athr=true;snd(st.apOn?'ok':'apoff');if(!st.apOn)setWarp(1);updButtons();}
+  function throttleKeys(dt){if(!st)return;const up=keys.e||keys['+']||keys['=']||keys.pageup,dn=keys.q||keys['-']||keys['_']||keys.pagedown;if(!up&&!dn)return;if(st.athr&&!(st.ground&&!st.landed)){if(mode==='real'){st.athr=false;}else return;}st.lever=clamp(st.lever+(up?dt*.5:-dt*.5),0,1);}
+  window.addEventListener('keydown',e=>{if(e.target&&e.target.id==='atcIn'){if(e.key==='Enter'){const v=e.target.value;e.target.value='';freeText(v);e.preventDefault();}if(e.key==='Escape')e.target.blur();return;}if(key(e.key.toLowerCase(),true))e.preventDefault();});
+  window.addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(k in keys)keys[k]=false;});
+  window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
+  const cvEl=$('#flyCanvas');
+  cvEl.addEventListener('pointerdown',e=>{look.drag={x:e.clientX,y:e.clientY,id:e.pointerId};cvEl.setPointerCapture(e.pointerId);});
+  cvEl.addEventListener('pointermove',e=>{if(!look.drag||look.drag.id!==e.pointerId)return;look.y=clamp(look.y-(e.clientX-look.drag.x)*.006,-2.6,2.6);look.p=clamp(look.p-(e.clientY-look.drag.y)*.005,-1,1);look.drag.x=e.clientX;look.drag.y=e.clientY;});
+  const ld=()=>{look.drag=null;};cvEl.addEventListener('pointerup',ld);cvEl.addEventListener('pointercancel',ld);
+  const jEl=$('#flyJoy'),knob=jEl.querySelector('i');
+  function jmove(e){const b=jEl.getBoundingClientRect(),dx=e.clientX-(b.left+b.width/2),dy=e.clientY-(b.top+b.height/2),R=b.width/2,d=Math.min(R,Math.hypot(dx,dy)),a=Math.atan2(dy,dx);joy.x=Math.cos(a)*d/R;joy.y=Math.sin(a)*d/R;
+    if(Math.abs(joy.x)<.08)joy.x=0;if(Math.abs(joy.y)<.08)joy.y=0;joy.y=-joy.y*-1;knob.style.transform=`translate(${Math.cos(a)*d*.6}px,${Math.sin(a)*d*.6}px)`;}
+  jEl.addEventListener('pointerdown',e=>{joy.id=e.pointerId;jEl.setPointerCapture(e.pointerId);jmove(e);});jEl.addEventListener('pointermove',e=>{if(joy.id===e.pointerId)jmove(e);});
+  const jend=()=>{joy={x:0,y:0,id:null};knob.style.transform='';};jEl.addEventListener('pointerup',jend);jEl.addEventListener('pointercancel',jend);
+  $('#flyThrV').addEventListener('input',e=>{if(!st)return;const v=+e.target.value/100;if(st.ground&&!st.landed){st.lever=v;return;}if(mode==='easy'){cue('簡單模式由電腦自動控制油門',1.5);return;}st.athr=false;st.lever=v;});
+  $('#flyStart').addEventListener('click',startFlight);
+  $('#flyClose').addEventListener('click',()=>close());
+  $('#flyWarp').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(!b||b.disabled)return;setWarp(+b.dataset.w);});
+  $('#fbAP').addEventListener('click',toggleAP);
+  $('#fbAT').addEventListener('click',()=>{if(st){st.athr=!st.athr;updButtons();}});
+  $('#fbGear').addEventListener('click',()=>{if(st)setGear(!st.gear);});
+  $('#fbFlap').addEventListener('click',()=>{if(st)setFlap(st.flap>=3?0:st.flap+1);});
+  $('#fbBrake').addEventListener('click',()=>{if(!st)return;if(st.ground)st.brake=!st.brake;else st.spd=!st.spd;updButtons();});
+  $('#fbBelt').addEventListener('click',()=>{if(st){st.belt=!st.belt;snd('chime');updButtons();}});
+  $('#fbView').addEventListener('click',()=>{view=view==='cockpit'?'chase':'cockpit';look.y=0;updButtons();});
+  $('#fbVoice').addEventListener('click',()=>{voice=!voice;if(!voice)try{speechSynthesis.cancel();}catch(e){}updButtons();});
+  $('#fbGuide').addEventListener('click',()=>{guideOn=!guideOn;updButtons();});
+  $('#atcSend').addEventListener('click',()=>{const i=$('#atcIn');const v=i.value;i.value='';freeText(v);});
+  $('#atcToggle').addEventListener('click',()=>{$('#flyAtc').classList.toggle('open');});
+  new ResizeObserver(()=>{if(running)resize();}).observe($('#flyOv'));
+  return {_dbg:()=>({T,scene,cam,rig,cock,apts,ocean}),open,close,get running(){return running;},get st(){return st;},start:startFlight,step:(n,dt)=>{for(let i=0;i<n;i++)step(dt||.05);},handle,freeText,set mode(v){mode=v;},setWarp,toggleAP,distTD:()=>st&&distTD(),todDist:()=>st&&todDist(),retryApproach,result};
+})();
+
 /* ===================== 機長任務小遊戲 ===================== */
 const Cap=(()=>{
   let st=null,raf=0,last=0;
@@ -1450,7 +2239,9 @@ const AP=(()=>{
   const THREE_URL='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
   let T=null,renderer=null,scene=null,cam=null,raf=0,last=0,built=false,loading=null,running=false;
   let base='TPE',yaw=0,pitch=-0.1,sitting=null,locked=false,wantLock=false,noLock=false;
-  const pos={x:0,z:-8},PR=.38;
+  const pos={x:0,z:-53},PR=.38;
+  let G={},CG=null,CF=1,floor=1,archs=[],gates={},carousels=[],rockers=[],lostBag=null,ride=null,zoom=false,boost=0,apNow=0,myFlight=null,pass=false,secDone=false,immDone=false,carrying=false,Q={bag:0,kid:0},paT=0,qNpc={},boarded=false;
+  const BASEY={1:0,2:7,3:14};
   const keys={};let joy={x:0,y:0,id:null},look=null;
   const mobile=matchMedia('(pointer:coarse)').matches;
   const GATES=[-48,-29,-10,10,29,48];
@@ -1472,10 +2263,10 @@ const AP=(()=>{
   function canvasTex(w,h,draw,rep){const cv=document.createElement('canvas');cv.width=w;cv.height=h;const g=cv.getContext('2d');draw(g,w,h);const tx=new T.CanvasTexture(cv);tx.anisotropy=8;if(rep){tx.wrapS=tx.wrapT=T.RepeatWrapping;tx.repeat.set(rep[0],rep[1]);}return {cv,g,tx};}
   function signMesh(wm,hm,pw,ph,draw,lit=true){const s=canvasTex(pw,ph,draw);const m=M(new T.PlaneGeometry(wm,hm),lit?basic(0xffffff,{map:s.tx}):std(0xffffff,.6,0,{map:s.tx}));m.userData.sign=s;return m;}
   function redraw(m,draw){const s=m.userData.sign;draw(s.g,s.cv.width,s.cv.height);s.tx.needsUpdate=true;}
-  function add(o,x,y,z){o.position.set(x,y,z);scene.add(o);return o;}
+  function add(o,x,y,z){o.position.set(x,y,z);(CG||scene).add(o);return o;}
   // 碰撞箱（xz 平面）與互動
-  function col(x,z,w,d,obj){const c={x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2,obj};cols.push(c);return c;}
-  function tag(obj,kind,extra){const set=o=>{o.userData.kind=kind;Object.assign(o.userData,extra||{});};if(obj.isMesh){set(obj);interact.push(obj);}else obj.traverse(o=>{if(o.isMesh){set(o);interact.push(o);}});return obj;}
+  function col(x,z,w,d,obj){const c={x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2,obj,f:CF,off:false};cols.push(c);return c;}
+  function tag(obj,kind,extra){const set=o=>{o.userData.kind=kind;o.userData.f=CF;Object.assign(o.userData,extra||{});};if(obj.isMesh){set(obj);interact.push(obj);}else obj.traverse(o=>{if(o.isMesh){set(o);interact.push(o);}});return obj;}
   function box(w,h,d,c,r,m){return M(new T.BoxGeometry(w,h,d),std(c,r,m));}
 
   /* ---------- 材質貼圖 ---------- */
@@ -1566,7 +2357,7 @@ const AP=(()=>{
   /* ---------- 旅客 ---------- */
   const SHIRTS=[0xd9534f,0x5bc0de,0xf0ad4e,0x5cb85c,0x8e7cc3,0xe0e0e0,0x34495e,0xe67e22,0x16a085,0xc0392b];
   const SKIN=[0xf1c27d,0xe0ac69,0xc68642,0x8d5524];
-  function makeNpc(seat){
+  function makeNpc(seat,region){region=region||'air';
     const g=new T.Group(),kid=Math.random()<.15,s=kid?.62:(.92+Math.random()*.16);
     const shirt=std(SHIRTS[Math.floor(Math.random()*SHIRTS.length)],.8),pants=std([0x2b3240,0x3b3b3b,0x6b5b45,0x1f3a5f][Math.floor(Math.random()*4)],.8),skin=std(SKIN[Math.floor(Math.random()*4)],.7);
     const torso=M(new T.CylinderGeometry(.24,.21,.62,10),shirt);torso.position.y=1.12;g.add(torso);
@@ -1581,13 +2372,18 @@ const AP=(()=>{
     g.scale.setScalar(s);
     const n={g,legs,arms,x:0,z:0,tx:0,tz:0,wait:Math.random()*3,spd:.85+Math.random()*.55,quote:null,seat,phase:Math.random()*6,kid};
     if(seat){n.x=seat.x;n.z=seat.z;g.position.set(seat.x,0,seat.z);g.rotation.y=Math.PI;legs.forEach(l=>l.rotation.x=-1.4);g.position.y=-.38*s;seat.taken=true;}
-    else{do{n.x=-55+Math.random()*110;n.z=-3-Math.random()*13;}while(blocked(n.x,n.z,.4));pickTarget(n);g.position.set(n.x,0,n.z);}
-    scene.add(g);tag(g,'npc',{npc:n});
+    else{n.region=region;do{n.x=-55+Math.random()*110;n.z=region==='land'?-33-Math.random()*21:-3-Math.random()*13;}while(blocked(n.x,n.z,.4,1));pickTarget(n);g.position.set(n.x,0,n.z);}
+    n.region=region;(region==='land'?G.land:scene).add(g);tag(g,'npc',{npc:n});
     return n;
   }
-  function pickTarget(n){for(let k=0;k<10;k++){if(Math.random()<.4){const gx=GATES[Math.floor(Math.random()*GATES.length)];n.tx=gx+(Math.random()-.5)*8;n.tz=-2.2-Math.random()*2;}else{n.tx=-55+Math.random()*110;n.tz=-2.2-Math.random()*14;}if(!blocked(n.tx,n.tz,.4))return;}}
+  function pickTarget(n){if(n.region==='land'){for(let k=0;k<12;k++){n.tx=-55+Math.random()*110;n.tz=-33-Math.random()*21;if(!blocked(n.tx,n.tz,.4,1))return;}return;}for(let k=0;k<10;k++){if(Math.random()<.4){const gx=GATES[Math.floor(Math.random()*GATES.length)];n.tx=gx+(Math.random()-.5)*8;n.tz=-2.2-Math.random()*2;}else{n.tx=-55+Math.random()*110;n.tz=-2.2-Math.random()*14;}if(!blocked(n.tx,n.tz,.4,1))return;}}
   /* ---------- 碰撞 ---------- */
-  function blocked(x,z,r){if(x<-59+r||x>59-r||z>-.6-r||z<-21.5+r)return true;for(const c of cols){if(x>c.x0-r&&x<c.x1+r&&z>c.z0-r&&z<c.z1+r)return true;}return false;}
+  const BND={1:[[-59.6,59.6,-55.6,-.6]],2:[[-59.6,59.6,-55.6,-30.4]],3:[[-59.6,59.6,-12.4,3.7]]};
+  for(const gx of GATES)BND[1].push([gx+3.9,gx+6.1,-3,27.3]);
+  function inB(x,z,r,f){for(const b of BND[f])if(x-r>=b[0]&&x+r<=b[1]&&z-r>=b[2]&&z+r<=b[3])return true;return false;}
+  function blocked(x,z,r,f){f=f||1;if(!inB(x,z,r,f))return true;for(const c of cols){if(c.off||c.f!==f)continue;if(x>c.x0-r&&x<c.x1+r&&z>c.z0-r&&z<c.z1+r)return true;}return false;}
+  function blockedP(x,z){if(blocked(x,z,PR,floor))return true;if(floor===1)for(const n of npcs){const d=Math.hypot(x-n.x,z-n.z);if(d<PR+.3&&d<Math.hypot(pos.x-n.x,pos.z-n.z))return true;}return false;}
+  function groundY(x,z){if(floor===1&&z>0)for(const gx of GATES){if(Math.abs(x-(gx+5))<1.3)return -1.6*Math.min(1,z/27.3);}return 0;}
   function resolve(p,r){
     p.x=Math.max(-59+r,Math.min(59-r,p.x));p.z=Math.max(-21.5+r,Math.min(-.6-r,p.z));
     for(const c of cols){const cx=Math.max(c.x0,Math.min(p.x,c.x1)),cz=Math.max(c.z0,Math.min(p.z,c.z1)),dx=p.x-cx,dz=p.z-cz,d=Math.hypot(dx,dz);
@@ -1620,18 +2416,21 @@ const AP=(()=>{
     const carpet=M(new T.PlaneGeometry(118,3.2),std(0xffffff,.95,0,{map:TX.carpet}));carpet.rotation.x=-Math.PI/2;add(carpet,0,.01,-2.4);
     // 拱形天花板與桁架
     const ceil=M(new T.CylinderGeometry(14,14,120,40,1,true,Math.PI*.14,Math.PI*.72),std(0xeceae4,.8,0,{side:T.BackSide}));ceil.rotation.z=Math.PI/2;add(ceil,0,-1.5,-11);
+    const roofOut=M(new T.CylinderGeometry(14.05,14.05,120,40,1,true,Math.PI*.14,Math.PI*.72),std(0x9aa3ad,.6,.3));roofOut.rotation.z=Math.PI/2;add(roofOut,0,-1.5,-11);
+    const lroof=M(new T.PlaneGeometry(120,34),std(0x9aa3ad,.7,.2));lroof.rotation.x=-Math.PI/2;add(lroof,0,13.55,-39);
     for(let x=-56;x<=56;x+=8){const tr=M(new T.TorusGeometry(14,.12,6,30,Math.PI*.72),std(0x9aa3ad,.4,.6));tr.rotation.set(0,Math.PI/2,Math.PI*.14);add(tr,x,-1.5,-11);}
     for(let x=-54;x<=54;x+=9){const pend=new T.Group();pend.add(add(M(new T.CylinderGeometry(.02,.02,2.5,4),std(0x333333)),0,1.25,0));const sh=M(new T.ConeGeometry(.55,.45,16,1,true),std(0x2d3138,.5,.4,{side:T.DoubleSide}));sh.position.y=0;pend.add(sh);
       const bulb=M(new T.SphereGeometry(.22,10,8),basic(0xfff1c8));bulb.position.y=-.12;pend.add(bulb);lamps.push(bulb);add(pend,x,9,-6);const p2=pend.clone();add(p2,x+4.5,9.3,-14);lamps.push(p2.children[2]);}
     // 牆
-    const back=M(new T.PlaneGeometry(120,12),std(0xd9d4ca,.85));add(back,0,6,-22);
     for(const sx of [-1,1]){const e=M(new T.PlaneGeometry(22,12),std(0xd9d4ca,.85));e.rotation.y=-sx*Math.PI/2;add(e,sx*60,6,-11);}
     // 玻璃帷幕與框
     glass=M(new T.PlaneGeometry(120,12),new T.MeshStandardMaterial({color:0xa9cde6,roughness:.05,metalness:.6,transparent:true,opacity:.14,depthWrite:false}));glass.rotation.y=Math.PI;add(glass,0,6,0);
     const frame=std(0x3a414c,.4,.7);
-    for(let x=-60;x<=60;x+=5)add(box(.22,12,.22,0x3a414c,.4,.7),x,6,0);
+    const inGap=x=>GATES.some(gx=>Math.abs(x-(gx+5))<1.3);
+    for(let x=-60;x<=60;x+=5)if(!inGap(x))add(box(.22,12,.22,0x3a414c,.4,.7),x,6,0);
     for(const y of [.05,3.6,8.2])add(box(120,.18,.28,0x3a414c,.4,.7),0,y,0);
-    add(box(120,.6,.6,0x8d949e,.5,.5),0,.3,-.4);col(0,-.4,120,.6);
+    {let x0=-60;const gp=GATES.map(gx=>gx+5).sort((a,b)=>a-b);for(const gc of [...gp,999]){const x1=gc===999?60:gc-1.15;if(x1>x0){add(box(x1-x0,.6,.6,0x8d949e,.5,.5),(x0+x1)/2,.3,-.4);col((x0+x1)/2,-.4,x1-x0,.6);}x0=gc+1.15;}
+     for(const gc of gp){add(box(.3,2.9,.5,0x3a414c,.4,.7),gc-1.2,1.45,0);add(box(.3,2.9,.5,0x3a414c,.4,.7),gc+1.2,1.45,0);add(box(2.7,.3,.5,0x3a414c,.4,.7),gc,2.95,0);}}
     // ===== 戶外 =====
     const apron=M(new T.PlaneGeometry(1400,260),std(0xffffff,.92,0,{map:TX.concrete}));apron.rotation.x=-Math.PI/2;apron.receiveShadow=true;add(apron,0,-5,130);
     const grass=M(new T.PlaneGeometry(2600,1400),std(0xffffff,.95,0,{map:TX.grass}));grass.rotation.x=-Math.PI/2;add(grass,0,-5.05,800);
@@ -1656,8 +2455,12 @@ const AP=(()=>{
     for(let i=0;i<26;i++){const h=20+Math.random()*60,w=10+Math.random()*16;const b=M(new T.BoxGeometry(w,h,w),std(0x5a6676,.8,0,{map:cityTx,emissive:0xffffff,emissiveMap:cityTx,emissiveIntensity:0}));add(b,500+Math.random()*500,-5+h/2,700+Math.random()*200);b.userData.city=true;}
     // ===== 登機門 =====
     gateObjs=GATES.map((gx,i)=>{
-      const br=box(3.4,3,28,0xb9bec6,.5,.4);add(br,gx+5,-1.6,14);br.castShadow=true;
-      add(M(new T.CylinderGeometry(1.3,1.3,3.2,12),std(0x8e959e,.5,.4)),gx+5,-1.6,28);
+      {const bx=gx+5,Lb=27.3,a=Math.atan2(1.6,Lb);const bf=M(new T.PlaneGeometry(2.3,Lb),std(0x4a5260,.85));bf.rotation.x=-Math.PI/2+a;add(bf,bx,-.8+.01,Lb/2);
+        for(const sx of [-1,1]){const w=box(.2,2.7,Lb,0xb9bec6,.5,.4);w.rotation.x=a;add(w,bx+sx*1.25,-.8+1.35,Lb/2);w.castShadow=true;const wn=box(.04,.7,Lb-2,0x23303f,.2,.5);wn.rotation.x=a;add(wn,bx+sx*1.14,-.8+1.7,Lb/2);col(bx+sx*1.25,Lb/2,.2,Lb);}
+        const rf=box(2.7,.2,Lb,0xa9aeb6,.6,.3);rf.rotation.x=a;add(rf,bx,-.8+2.8,Lb/2);const ls=M(new T.PlaneGeometry(.5,Lb-1),basic(0xfff4dc));ls.rotation.x=Math.PI/2+a;add(ls,bx,-.8+2.68,Lb/2);for(const sx of [-1,1]){const iw=M(new T.PlaneGeometry(Lb,2.4),std(0xe4e6ea,.8,0,{side:T.DoubleSide}));iw.rotation.y=Math.PI/2;iw.rotation.z=-a*sx*0;iw.position.set(bx+sx*1.13,-.8+1.3,Lb/2);iw.rotateX(a);scene.add(iw);}
+        const dr=new T.Group();dr.add(add(box(2.3,2.5,.12,0x8e959e,.4,.5),0,1.25,0));const dsg=signMesh(1.6,.4,160,40,(g,w,h)=>{g.fillStyle='#10161f';g.fillRect(0,0,w,h);g.fillStyle='#F2B53A';g.font=`700 26px ${FONT}`;g.textAlign='center';g.textBaseline='middle';g.fillText('A'+(i+1)+' 機門',w/2,h/2+2);});dsg.position.set(0,2.05,-.07);dsg.rotation.y=Math.PI;dr.add(dsg);
+        dr.position.set(bx,-1.6,Lb+.1);scene.add(dr);col(bx,Lb+.1,2.4,.3);tag(dr,'board',{gi:i});}
+      add(M(new T.CylinderGeometry(1.3,1.3,3.2,12),std(0x8e959e,.5,.4)),gx+5,-1.6,28.6);
       add(box(.8,3.6,.8,0x6d7480,.6,.3),gx+5,-4.6+1.8,22);
       const pil=box(.7,12,.7,0x6d7480,.5,.4);add(pil,gx,6,-1.4);col(gx,-1.4,.7,.7);tag(pil,'pillar');
       const sign=signMesh(4.6,1.4,460,140,()=>{});sign.rotation.y=Math.PI;add(sign,gx,6.2,-1.8);tag(sign,'gate',{gi:i});
@@ -1675,12 +2478,6 @@ const AP=(()=>{
       return {gx,sign,scr,plane:null,veh:null,key:null,name:'A'+(i+1)};
     });
     // ===== 中央：報到櫃台、看板、服務台 =====
-    const ctr=new T.Group();for(let k=0;k<6;k++){const c=new T.Group();c.add(add(box(3.4,1.1,1.4,0x40495a,.5,.2),0,.55,0));c.add(add(box(3.5,.06,1.5,0xe8e4dc,.3,.1),0,1.13,0));
-      c.add(add(box(.5,.35,.05,0x111111,.3,.4),0,1.4,-.4));const belt=box(1.2,.35,1.6,0x2b2b2b,.6,.2);belt.position.set(-2.2,.18,.1);c.add(belt);c.position.x=-10+k*4;ctr.add(c);}
-    ctr.position.set(0,0,-18.6);scene.add(ctr);col(0,-18.6,25,1.8);tag(ctr,'counter');
-    signs.counter=signMesh(20,2.2,1000,110,()=>{});add(signs.counter,0,4.4,-21.9);
-    for(let k=0;k<5;k++){const st=new T.Group();st.add(add(M(new T.CylinderGeometry(.05,.05,1,8),std(0xb0b6bd,.3,.8)),0,.5,0));st.position.set(-8+k*4,0,-15.4);scene.add(st);}
-    const tape=box(16,.06,.02,0xc0392b,.6);add(tape,0,.95,-15.4);col(0,-15.4,16.4,.25);tag(tape,'queue');
     fids=signMesh(11,4.1,1120,416,()=>{});add(fids,-17,5.6,-13);tag(fids,'fids');add(box(.4,3.6,.4,0x3a414c,.4,.7),-17,1.8,-13.05);col(-17,-13.05,.5,.5);
     const fids2=signMesh(11,4.1,1120,416,()=>{});fids2.userData.sign=fids.userData.sign;fids2.material=fids.material;add(fids2,17,5.6,-13);tag(fids2,'fids');add(box(.4,3.6,.4,0x3a414c,.4,.7),17,1.8,-13.05);col(17,-13.05,.5,.5);
     const info=new T.Group();const ib=M(new T.CylinderGeometry(1.8,1.8,1.1,24),std(0x2c3e50,.5,.2));ib.position.y=.55;info.add(ib);const it=M(new T.CylinderGeometry(1.9,1.9,.08,24),std(0xe8e4dc,.3));it.position.y=1.12;info.add(it);
@@ -1707,7 +2504,7 @@ const AP=(()=>{
     // 海報、橫幅
     const dests=openCities().map(c=>c.name);const pool=[...new Set([...dests,'東京','首爾','曼谷','香港','新加坡','洛杉磯','倫敦','雪梨'])];
     const PCOL=[['#e4572e','#f2b53a'],['#2e86ab','#7ccbe0'],['#1b998b','#c9e4a6'],['#8e44ad','#e58fc3'],['#c0392b','#f5d76e'],['#0b3954','#7ccbe0']];
-    [-21,-15,21,27].forEach((x,i)=>{const nm=pool[i%pool.length],[a1,a2]=PCOL[i%PCOL.length];
+    [-21,-17.5,18.5,24].forEach((x,i)=>{const nm=pool[i%pool.length],[a1,a2]=PCOL[i%PCOL.length];
       const po=signMesh(4.6,3.2,460,320,(g,w,h)=>{const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,a1);gr.addColorStop(1,a2);g.fillStyle=gr;g.fillRect(0,0,w,h);
         g.fillStyle='rgba(255,255,255,.9)';g.beginPath();g.arc(w*.72,h*.32,48,0,Math.PI*2);g.fill();
         g.fillStyle='rgba(0,0,0,.25)';g.beginPath();g.moveTo(0,h*.8);for(let x2=0;x2<=w;x2+=20)g.lineTo(x2,h*.78-Math.sin(x2/40+i)*16-((x2*7+i*13)%60));g.lineTo(w,h);g.lineTo(0,h);g.fill();
@@ -1722,14 +2519,194 @@ const AP=(()=>{
     // 跑道起降
     for(let i=0;i<3;i++)runway.push({mesh:null,key:null});
     // 旅客：走動 + 坐著
-    const walkers=mobile?10:22,sitters=mobile?6:14;
+    buildMore();
+    const walkers=mobile?7:14,lw=mobile?6:12,sitters=mobile?6:14;
     for(let i=0;i<sitters;i++){const fr=seats.filter(s=>!s.taken);if(!fr.length)break;npcs.push(makeNpc(rnd(fr)));}
-    for(let i=0;i<walkers;i++)npcs.push(makeNpc(null));
+    for(let i=0;i<walkers;i++)npcs.push(makeNpc(null,'air'));
+    for(let i=0;i<lw;i++)npcs.push(makeNpc(null,'land'));
+    onF(1,()=>{qNpc.kid=person(-36,-48.5,0,0xf0ad4e);qNpc.kid.scale.setScalar(.62);tag(qNpc.kid,'questKid');});
+    onF(2,()=>{qNpc.bag=person(-30,-39.4,Math.PI,0x8e7cc3);qNpc.bag.position.y=7;tag(qNpc.bag,'questBag');col(-30,-39.4,.6,.6);qNpc.mom=person(42,-40,Math.PI*.8,0xd9534f);qNpc.mom.position.y=7;tag(qNpc.mom,'questMom');col(42,-40,.6,.6);});
     // 靜態物件不必每格重算矩陣（效能）
-    const dyn=new Set([...npcs.map(n=>n.g),...clouds,sunSprite,sun,sun.target]);
+    const dyn=new Set([...npcs.map(n=>n.g),...clouds,sunSprite,sun,sun.target,...rockers,...carousels.flatMap(c=>c.bags),lostBag,qNpc.kid,qNpc.mom,qNpc.bag]);
     (function fz(o){if(dyn.has(o))return;if(o!==scene){o.updateMatrix();o.matrixAutoUpdate=false;}o.children.forEach(fz);})(scene);
     built=true;
   }
+  /* ---------- 擴建：管制區、陸側大廳、二樓入境、觀景台 ---------- */
+  const STAMPS={checkin:'報到櫃台',security:'安全檢查',imm:'出境證照查驗',food:'美食街',kids:'兒童遊戲區',piano:'機場鋼琴',carousel:'二樓行李轉盤',deck:'頂樓觀景台'};
+  function grp(f){const g=new T.Group();scene.add(g);g.userData.f=f;return g;}
+  function onF(f,fn){const pc=CG,pf=CF;CG=G[f===1?'land':f===2?'f2':'roof'];CF=f;try{fn();}finally{CG=pc;CF=pf;}}
+  function sign(txt,w,h,bg,fg,size){return signMesh(w,h,Math.round(w*100),Math.round(h*100),(g,W,H)=>{g.fillStyle=bg;g.fillRect(0,0,W,H);g.fillStyle=fg;g.font=`700 ${size||Math.round(H*.55)}px ${FONT}`;g.textAlign='center';g.textBaseline='middle';g.fillText(txt,W/2,H/2+2);});}
+  function stampStand(id,x,z,ry){const s=new T.Group();s.add(add(box(.7,1,.5,0x2E86AB,.5,.1),0,.5,0));s.add(add(box(.8,.06,.6,0xe8e4dc,.4),0,1.03,0));
+    const st=M(new T.CylinderGeometry(.09,.12,.2,12),std(0xc0392b,.4));st.position.set(.15,1.16,0);s.add(st);
+    const sg=sign('紀念章',.9,.32,'#F2B53A','#10161f');sg.position.set(0,1.55,0);s.add(sg);const sg2=sg.clone();sg2.userData={sign:sg.userData.sign};sg2.rotation.y=Math.PI;s.add(sg2);
+    s.position.set(x,0,z);s.rotation.y=ry||0;(CG||scene).add(s);col(x,z,.8,.7);tag(s,'stamp',{sid:id});return s;}
+  function person(x,z,ry,shirt,holdSign){const g=new T.Group(),sh=std(shirt||SHIRTS[Math.floor(Math.random()*SHIRTS.length)],.8),sk=std(SKIN[Math.floor(Math.random()*4)],.7),pa=std(0x2b3240,.8);
+    const t=M(new T.CylinderGeometry(.24,.21,.62,10),sh);t.position.y=1.12;g.add(t);const hd=M(new T.SphereGeometry(.17,12,10),sk);hd.position.y=1.6;g.add(hd);
+    const hr=M(new T.SphereGeometry(.18,12,8,0,Math.PI*2,0,Math.PI*.55),std(0x1a1a1a,.9));hr.position.y=1.62;g.add(hr);
+    for(const sx of [-1,1]){const l=M(new T.CylinderGeometry(.085,.075,.8,8),pa);l.position.set(sx*.1,.42,0);g.add(l);const a=M(new T.CylinderGeometry(.06,.055,.6,8),sh);a.position.set(sx*.29,holdSign?1.45:1.1,holdSign?.15:0);a.rotation.x=holdSign?-1.2:0;g.add(a);}
+    if(holdSign){const s=signMesh(.7,.4,140,80,(c,w,h)=>{c.fillStyle='#fff';c.fillRect(0,0,w,h);c.fillStyle='#c0392b';c.font=`700 30px ${FONT}`;c.textAlign='center';c.textBaseline='middle';c.fillText(holdSign,w/2,h/2);});s.position.set(0,1.75,.45);g.add(s);}
+    g.position.set(x,0,z);g.rotation.y=ry||0;(CG||scene).add(g);return g;}
+  function buildMore(){
+    G.land=grp(1);G.f2=grp(2);G.roof=grp(3);
+    const wallM=std(0xd9d4ca,.85),dark=0x3a414c;
+    /* 管制區（z -22 ~ -30）與牆 */
+    for(const [x0,x1] of [[-60,-14],[14,60]]){const w=x1-x0,cx=(x0+x1)/2;add(box(w,7,.4,0xd9d4ca,.85),cx,3.5,-22.1);col(cx,-22.1,w,.4);add(box(w,7,.4,0xd9d4ca,.85),cx,3.5,-30.2);col(cx,-30.2,w,.4);}
+    add(box(120,5.5,.4,0xd9d4ca,.85),0,9.75,-22.1);
+    for(const sx of [-1,1]){add(box(.4,7,8,0xd9d4ca,.85),sx*14,3.5,-26.1);col(sx*14,-26.1,.4,8);}
+    const cz=M(new T.PlaneGeometry(28,8),std(0xf0eee8,.6));cz.rotation.x=Math.PI/2;add(cz,0,7,-26.1);
+    const cflo=M(new T.PlaneGeometry(28,8),std(0xffffff,.5,0,{map:TX.floor}));cflo.rotation.x=-Math.PI/2;add(cflo,0,.005,-26.1);
+    const lbl=sign('安全檢查 Security',8,.9,'#1d5f8a','#fff');lbl.rotation.y=Math.PI;add(lbl,0,5.6,-30.45);
+    const lbl2=sign('出境查驗 Immigration',8,.9,'#1d5f8a','#fff');add(lbl2,0,5.6,-22.35);lbl2.rotation.y=Math.PI;const lbl3=lbl2.clone();lbl3.userData={sign:lbl2.userData.sign};lbl3.rotation.y=0;add(lbl3,0,5.6,-21.85);
+    // 安檢：X 光機 + 金屬探測門（3 道）
+    for(const lx of [-8,0,8]){
+      const xr=new T.Group();xr.add(add(box(1.3,1.3,2.6,0xb9c1cc,.4,.3),0,.65,0));xr.add(add(box(1.1,.7,.05,0x111111,.4),0,.9,1.31));xr.add(add(box(1.1,.7,.05,0x111111,.4),0,.9,-1.31));
+      const belt=box(.9,.05,4.6,0x2b2b2b,.6);belt.position.set(0,.78,0);xr.add(belt);const scr=signMesh(.5,.35,100,70,(c,w,h)=>{c.fillStyle='#0b2a3a';c.fillRect(0,0,w,h);c.fillStyle='#4fd1ff';for(let i=0;i<6;i++)c.fillRect(10+Math.random()*70,10+Math.random()*40,14,10);});scr.position.set(-.9,1.4,-1.6);scr.rotation.y=Math.PI*.8;xr.add(scr);
+      xr.position.set(lx-1.6,0,-27.6);(CG||scene).add(xr);col(lx-1.6,-27.6,1.3,4.6);tag(xr,'xray');
+      const arch=new T.Group();for(const sx of [-1,1])arch.add(add(box(.18,2.2,.5,0xd8dde3,.4,.3),sx*.6,1.1,0));arch.add(add(box(1.38,.2,.5,0xd8dde3,.4,.3),0,2.25,0));const li=M(new T.SphereGeometry(.07,8,6),basic(0x3cff6a));li.position.set(0,2.4,0);arch.add(li);arch.userData.light=li;
+      arch.position.set(lx+.6,0,-27.6);(CG||scene).add(arch);col(lx-.05,-27.6,.2,.5);col(lx+1.25,-27.6,.2,.5);tag(arch,'metal');archs.push({x:lx+.6,li});}
+    // 自動閘門（需登機證）
+    gates.sec={c:col(0,-30.9,28,.3),meshes:[]};for(let i=0;i<7;i++){const gx=-12+i*4;const p=new T.Group();p.add(add(box(.35,1,.8,0x6d7480,.4,.4),0,.5,0));const fl=box(1.6,.5,.04,0x7fd4ff,.1,.2);fl.material=new T.MeshStandardMaterial({color:0x7fd4ff,transparent:true,opacity:.6});fl.position.set(.95,.75,0);p.add(fl);gates.sec.meshes.push(fl);p.position.set(gx,0,-30.9);(CG||scene).add(p);tag(p,'egate');}
+    stampStand('security',11,-28.5,Math.PI);
+    // 出境查驗櫃台
+    gates.imm={c:col(0,-23.2,28,.3),meshes:[]};
+    for(const bx of [-10.5,-5.5,-.5,4.5,9.5]){const b=new T.Group();b.add(add(box(1.4,1.2,1.6,0x34495e,.5,.2),0,.6,0));b.add(add(box(1.5,.08,1.7,0xe8e4dc,.3),0,1.24,0));
+      const gl=box(1.4,.8,.04,0xbfe0f0,.1,.3);gl.material=new T.MeshStandardMaterial({color:0xbfe0f0,transparent:true,opacity:.35});gl.position.set(0,1.7,.8);b.add(gl);
+      const of=person(0,0,0,0x1f3a5f);b.add(of);of.position.set(0,0,-.3);of.scale.setScalar(.95);
+      b.position.set(bx,0,-24.4);(CG||scene).add(b);col(bx,-24.4,1.5,1.7);tag(b,'imm');}
+    for(let i=0;i<6;i++){const gx=-13+i*5.1;const bar=box(2.2,.06,.06,0xc0392b,.4);bar.position.set(gx+1.6,1,-23.2);(CG||scene).add(bar);gates.imm.meshes.push(bar);}
+    stampStand('imm',12.2,-24.6,Math.PI);
+    /* 陸側一樓（出發報到大廳） */
+    onF(1,()=>{
+      const fl=M(new T.PlaneGeometry(120,26),std(0xffffff,.35,.05,{map:TX.floor}));fl.rotation.x=-Math.PI/2;fl.receiveShadow=true;add(fl,0,0,-43);
+      const ce=M(new T.PlaneGeometry(120,26),std(0xeceae4,.8));ce.rotation.x=Math.PI/2;add(ce,0,7,-43);
+      for(let x=-54;x<=54;x+=12)for(const z of [-36,-48]){const lp=M(new T.CylinderGeometry(.6,.6,.06,16),basic(0xfff1c8));add(lp,x,6.96,z);lamps.push(lp);}
+      for(const sx of [-1,1]){const e=M(new T.PlaneGeometry(26,7),wallM);e.rotation.y=-sx*Math.PI/2;add(e,sx*60,3.5,-43);}
+      // 入口玻璃牆與自動門
+      const gw=M(new T.PlaneGeometry(120,7),new T.MeshStandardMaterial({color:0xa9cde6,roughness:.05,metalness:.6,transparent:true,opacity:.18,depthWrite:false}));add(gw,0,3.5,-56);col(0,-56,120,.3);
+      for(let x=-60;x<=60;x+=6)add(box(.2,7,.2,dark,.4,.7),x,3.5,-56);add(box(120,.3,.3,dark,.4,.7),0,6.9,-56);
+      for(const dx of [-4,4]){const d=box(3.6,2.8,.06,0x9fd0ea,.1,.3);d.material=new T.MeshStandardMaterial({color:0x9fd0ea,transparent:true,opacity:.3});add(d,dx,1.4,-55.9);}
+      const ent=sign('出境 Departures',6,.8,'#10161f','#F2B53A');ent.rotation.y=0;add(ent,0,3.6,-55.85);
+      // 外面：車道、計程車、巴士
+      const road=M(new T.PlaneGeometry(160,14),std(0x3a3d42,.9));road.rotation.x=-Math.PI/2;add(road,0,-.02,-64);
+      const curb=box(160,.2,3,0x9aa3ad,.8);add(curb,0,.1,-57.6);
+      for(let i=0;i<5;i++){const tx=new T.Group();tx.add(add(box(1.8,.8,4.2,0xf2c14e,.4,.2),0,.6,0));tx.add(add(box(1.6,.6,2.2,0x223344,.2,.4),0,1.25,-.2));const tsg=sign('TAXI',.6,.2,'#10161f','#fff');tsg.position.set(0,1.65,-.2);tx.add(tsg);tx.position.set(-30+i*6,0,-61);(CG||scene).add(tx);tag(tx,'taxi');}
+      const bus=new T.Group();bus.add(add(box(2.6,3,11,0x2E86AB,.4,.2),0,1.7,0));bus.add(add(box(2.65,1,10,0x1d2836,.2,.4),0,2.3,0));bus.position.set(26,0,-62);bus.rotation.y=Math.PI/2;(CG||scene).add(bus);tag(bus,'bus');
+      // 報到櫃台（自己的航空公司）
+      const ctr=new T.Group();for(let k=0;k<7;k++){const c=new T.Group();c.add(add(box(3.4,1.1,1.4,0x40495a,.5,.2),0,.55,0));c.add(add(box(3.5,.06,1.5,0xe8e4dc,.3,.1),0,1.13,0));
+        c.add(add(box(.5,.35,.05,0x111111,.3,.4),0,1.4,.4));const belt=box(1.2,.35,1.6,0x2b2b2b,.6,.2);belt.position.set(-2.2,.18,-.1);c.add(belt);
+        const ag=person(0,0,Math.PI,[0xF2B53A,0x2E86AB][k%2]);ag.scale.setScalar(.95);ctr.remove(ag);c.add(ag);ag.position.set(0,0,.9);c.position.x=-12+k*4;ctr.add(c);}
+      ctr.rotation.y=Math.PI;ctr.position.set(0,0,-37.2);(CG||scene).add(ctr);col(0,-37.2,28,2);tag(ctr,'counter');
+      signs.counter=signMesh(22,2,1100,100,()=>{});signs.counter.rotation.y=Math.PI;add(signs.counter,0,4.8,-36);signs.counter.rotation.y=Math.PI;
+      for(let k=0;k<6;k++){const st=new T.Group();st.add(add(M(new T.CylinderGeometry(.05,.05,1,8),std(0xb0b6bd,.3,.8)),0,.5,0));st.position.set(-10+k*4,0,-41);(CG||scene).add(st);}
+      const tape=box(20,.06,.02,0xc0392b,.6);add(tape,0,.95,-41);col(0,-41,20.4,.25);tag(tape,'queue');
+      stampStand('checkin',-15.5,-39,0);
+      // 陸側看板、服務台、柱子
+      const lf=signMesh(10,3.7,1120,416,()=>{});lf.material=fids.material;lf.userData.sign=fids.userData.sign;lf.rotation.y=Math.PI;add(lf,-2,4.9,-30.8);tag(lf,'fids');
+      for(const x of [-28,28])for(const z of [-36.5,-49.5]){const p=M(new T.CylinderGeometry(.5,.5,7,16),std(0xffffff,.4,0,{map:TX.stone}));add(p,x,3.5,z);col(x,z,1,1);tag(p,'pillar');}
+      // 美食街（西側）
+      const foods=[['牛肉麵','#8e2b2b','noodle'],['珍珠奶茶','#6b4a2e','tea'],['小籠包','#c0392b','dumpling'],['便當','#2e7a4a','bento'],['拉麵','#7a2e6a','ramen'],['漢堡','#d4a017','burger']];
+      foods.forEach(([nm,c,k],i)=>{const x=-56+i*5.4;const sh=new T.Group();sh.add(add(box(5,3.2,3,c,.7,.1),0,1.6,0));sh.add(add(box(4.6,1.05,.9,0xe8e4dc,.4),0,.53,1.9));
+        const sg=sign(nm,4.4,.9,'#10161f','#F2E6C8');sg.position.set(0,3.6,1.52);sh.add(sg);sg.rotation.y=0;
+        const ck=person(0,0,0,0xffffff);ck.position.set(0,0,1);ck.scale.setScalar(.95);sh.add(ck);const hat=M(new T.CylinderGeometry(.15,.15,.25,10),std(0xffffff,.8));hat.position.set(0,1.85,1);sh.add(hat);
+        for(let q=0;q<4;q++){const bw=M(new T.CylinderGeometry(.12,.09,.1,10),std([0xffffff,0xf0ad4e,0xd9534f,0x5cb85c][q],.5));bw.position.set(-1.6+q*1.05,1.12,1.9);sh.add(bw);}
+        sh.position.set(x,0,-32);sh.rotation.y=Math.PI;(CG||scene).add(sh);col(x,-32.4,5,3.6);tag(sh,'food',{food:nm,fk:k});});
+      const fsg=sign('美食街 Food Court',8,1,'#F2B53A','#10161f');fsg.rotation.y=Math.PI;add(fsg,-42,5.6,-30.5);
+      for(let i=0;i<8;i++){const tx=-54+(i%4)*7.5,tz=-40-Math.floor(i/4)*6;const tb=new T.Group();tb.add(add(M(new T.CylinderGeometry(.8,.8,.06,16),std(0xe8e4dc,.4)),0,.75,0));tb.add(add(M(new T.CylinderGeometry(.06,.06,.75,8),std(0x5d6670,.4,.6)),0,.37,0));
+        for(let k=0;k<4;k++){const a=k*Math.PI/2;const ch=box(.45,.45,.45,0xc0392b,.6);ch.position.set(Math.cos(a)*1.15,.23,Math.sin(a)*1.15);tb.add(ch);}
+        tb.position.set(tx,0,tz);(CG||scene).add(tb);col(tx,tz,2.5,2.5);tag(tb,'table');}
+      stampStand('food',-24,-35,Math.PI/2);
+      // 兒童遊戲區（東側）
+      const mat=M(new T.PlaneGeometry(28,14),std(0xffffff,.95,0,{map:canvasTex(256,128,(g,w,h)=>{const cs=['#e4572e','#f2b53a','#2e86ab','#1b998b','#8e44ad'];for(let y=0;y<4;y++)for(let x=0;x<8;x++){g.fillStyle=cs[(x+y)%5];g.fillRect(x*32,y*32,32,32);}}).tx}));mat.rotation.x=-Math.PI/2;add(mat,40,.01,-45);
+      for(const [x0,z0,x1,z1] of [[26,-38,37,-38],[43,-38,54,-38],[26,-52,54,-52],[26,-38,26,-52],[54,-38,54,-52]]){const len=Math.hypot(x1-x0,z1-z0);const f=box(x0===x1?.12:len,.8,x0===x1?len:.12,0xf2b53a,.5);f.position.set((x0+x1)/2,.4,(z0+z1)/2);(CG||scene).add(f);col((x0+x1)/2,(z0+z1)/2,x0===x1?.2:len,x0===x1?len:.2);}
+      const kidsg=sign('兒童遊戲區 Kids Zone',7,1,'#e4572e','#fff');kidsg.rotation.y=Math.PI;add(kidsg,40,3.4,-37.8);
+      // 溜滑梯
+      const sl=new T.Group();sl.add(add(box(2.4,.2,2.4,0x2e86ab,.5),0,2.5,0));for(const [x,z] of [[-1.1,-1.1],[1.1,-1.1],[-1.1,1.1],[1.1,1.1]])sl.add(add(box(.15,2.6,.15,0xf2b53a,.5),x,1.3,z));
+      for(let i=0;i<6;i++)sl.add(add(box(1,.1,.35,0xe4572e,.5),-1.9,.4+i*.42,1-i*.0));const ch=M(new T.BoxGeometry(1.1,.1,6),std(0xe4572e,.4));ch.position.set(0,1.25,3.8);ch.rotation.x=.45;sl.add(ch);
+      const roof=M(new T.ConeGeometry(1.9,1.4,4),std(0xe4572e,.6));roof.position.y=3.6;roof.rotation.y=Math.PI/4;sl.add(roof);
+      sl.position.set(32,0,-48.5);(CG||scene).add(sl);col(32,-48.5,2.6,2.6);col(32,-45,1.2,4.6);tag(sl,'slide');
+      // 球池
+      const pit=new T.Group();pit.add(add(box(5,.6,4,0x1b998b,.6),0,.3,0));const balls=new T.InstancedMesh(new T.SphereGeometry(.13,8,6),std(0xffffff,.5),180);const mx=new T.Matrix4(),cl=new T.Color();
+      for(let i=0;i<180;i++){mx.makeTranslation((Math.random()-.5)*4.4,.62+Math.random()*.2,(Math.random()-.5)*3.4);balls.setMatrixAt(i,mx);balls.setColorAt(i,cl.set(['#e4572e','#f2b53a','#2e86ab','#1b998b','#8e44ad'][i%5]));}
+      pit.add(balls);pit.position.set(44,0,-47);(CG||scene).add(pit);col(44,-47,5,4);tag(pit,'balls');
+      // 搖搖飛機
+      for(const [x,z,c] of [[50.5,-41.5,0xF2B53A],[50.5,-49,0x2E86AB]]){const rk=new T.Group();rk.add(add(M(new T.CylinderGeometry(.6,.7,.3,14),std(0x555555,.5)),0,.15,0));
+        const body=new T.Group();const b=M(new T.CylinderGeometry(.35,.35,1.8,12),std(c,.5));b.rotation.x=Math.PI/2;b.position.y=.8;body.add(b);const w=box(2,.08,.5,0xffffff,.5);w.position.y=.8;body.add(w);const t=box(.08,.5,.4,c,.5);t.position.set(0,1.1,-.8);body.add(t);rk.add(body);rk.userData.body=body;
+        rk.position.set(x,0,z);(CG||scene).add(rk);col(x,z,2,2);tag(rk,'rocker');rockers.push(body);}
+      stampStand('kids',30,-40,0);
+      // 便利商店、伴手禮
+      for(const [x,nm,c,k] of [[47,'便利商店','#1b998b','store'],[33.5,'伴手禮','#8e44ad','souvenir']]){const sh=new T.Group();sh.add(add(box(9,4,3.6,c,.7,.1),0,2,0));const g=M(new T.BoxGeometry(8.6,2.6,.08),new T.MeshStandardMaterial({color:0xbfe0f0,transparent:true,opacity:.3}));g.position.set(0,1.5,1.82);sh.add(g);
+        for(let j=0;j<3;j++)for(let q=0;q<6;q++){const it=box(.3,.35,.3,[0xd9534f,0x5bc0de,0xf0ad4e,0x5cb85c,0x8e7cc3,0xffffff][q],.6);it.position.set(-3.6+j*2.8+q*.4,.8+(q%2)*.5,1.2);sh.add(it);}
+        const sg=sign(nm,6,.8,'#10161f','#F2E6C8');sg.position.set(0,3.5,1.85);sh.add(sg);sh.position.set(x,0,-32.2);sh.rotation.y=Math.PI;(CG||scene).add(sh);col(x,-32.2,9,3.6);tag(sh,k);}
+      // 手扶梯（上下）
+      escal(19,-34,-46,0,7,true);escal(21.6,-46,-34,7,0,false);col(20.3,-40,5.2,12.4);
+      const es=sign('↑ 2F 入境大廳 Arrivals',5.2,.7,'#1d5f8a','#fff');es.rotation.y=Math.PI;add(es,20.3,4.2,-33.6);
+      // 長椅
+      for(const x of [-6,6])for(const z of [-46,-50]){const bn=box(3,.45,.8,0x2f4a66,.6);add(bn,x,.25,z);col(x,z,3,.8);tag(bn,'bench');}
+    });
+    /* 二樓入境大廳 */
+    onF(2,()=>{
+      const Y=7;const flo=(w,d,x,z)=>{const m=M(new T.PlaneGeometry(w,d),std(0xffffff,.4,0,{map:TX.floor}));m.rotation.x=-Math.PI/2;add(m,x,Y+.01,z);};
+      flo(120,9.6,0,-35.2);flo(120,9.6,0,-50.8);flo(77.6,6.4,-21.1,-43);flo(36.9,6.4,41.55,-43);
+      const ce=M(new T.PlaneGeometry(120,26),std(0xeceae4,.8));ce.rotation.x=Math.PI/2;add(ce,0,Y+6.5,-43);
+      for(const z of [-30.2,-56])add(box(120,6.5,.4,0xd9d4ca,.85),0,Y+3.25,z);for(const sx of [-1,1]){const e=M(new T.PlaneGeometry(26,6.5),wallM);e.rotation.y=-sx*Math.PI/2;add(e,sx*60,Y+3.25,-43);}
+      for(let x=-54;x<=54;x+=12)for(const z of [-36,-50]){const lp=M(new T.CylinderGeometry(.6,.6,.06,16),basic(0xfff1c8));add(lp,x,Y+6.45,z);lamps.push(lp);}
+      // 窗（看外面車道）
+      const win=M(new T.PlaneGeometry(100,3),new T.MeshStandardMaterial({color:0x9fd0ea,transparent:true,opacity:.35}));win.position.set(0,Y+3.2,-55.75);(CG||scene).add(win);
+      // 手扶梯開口欄杆
+      for(const [x,z,w,d] of [[17.4,-40,.1,12.4],[23.2,-40,.1,12.4],[20.3,-33.9,5.8,.1]]){const r=M(new T.BoxGeometry(w,1,d),new T.MeshStandardMaterial({color:0xbfe0f0,transparent:true,opacity:.35}));r.position.set(x,Y+.5,z);(CG||scene).add(r);}
+      col(20.3,-40,6,12.6);
+      // 行李轉盤 ×2
+      for(const [cx,lab] of [[-30,'1'],[-8,'2']]){const g=new T.Group();const base=box(10,.5,3.2,0x6d7480,.5,.3);base.position.y=.25;g.add(base);
+        const belt=M(new T.TorusGeometry(1,.5,6,24),std(0x2b2b2b,.7));belt.scale.set(5.6,1.8,.5);belt.rotation.x=Math.PI/2;belt.position.y=.55;g.add(belt);
+        const sg=sign('行李轉盤 '+lab,3,.7,'#F2B53A','#10161f');sg.position.set(0,3.2,0);g.add(sg);const s2=sg.clone();s2.userData={sign:sg.userData.sign};s2.rotation.y=Math.PI;g.add(s2);g.add(add(box(.15,2.6,.15,dark,.4,.6),0,1.6,0));
+        const bags=[];for(let i=0;i<14;i++){const b=box(.5,.35,.7,[0x222222,0x8e2b2b,0x2b4f8e,0x6b6b6b,0xd4a017,0x1b998b][i%6],.5);g.add(b);bags.push(b);}
+        g.position.set(cx,Y,-43);(CG||scene).add(g);col(cx,-43,11.8,4.6);tag(g,'carousel',{lab});carousels.push({bags,ph:Math.random()*10});}
+      stampStand('carousel',-19,-46.5,0);
+      // 海關出口、外幣兌換、租車、接機人群
+      const cu=new T.Group();cu.add(add(box(.3,3.2,.3,dark),-2,1.6,0));cu.add(add(box(.3,3.2,.3,dark),2,1.6,0));const gs=sign('免申報 Nothing to Declare',4.4,.7,'#2e7a4a','#fff');gs.position.set(0,3.4,0);cu.add(gs);
+      cu.position.set(-19,Y,-31);(CG||scene).add(cu);tag(cu,'customs');
+      for(const [x,nm,k] of [[6,'外幣兌換','exchange'],[14,'租車','rental']]){const c=new T.Group();c.add(add(box(4,1.1,1.2,0x34495e,.5),0,.55,0));c.add(add(box(4.1,.06,1.3,0xe8e4dc,.3),0,1.13,0));const s=sign(nm,3,.6,'#10161f','#F2E6C8');s.position.set(0,2.6,0);c.add(s);const p=person(0,-.9,0,0x2E86AB);c.add(p);p.position.set(0,0,-.9);
+        c.position.set(x,Y,-53.6);(CG||scene).add(c);col(x,-53.6,4.2,2.6);tag(c,k);}
+      const names=['陳先生','Welcome','林小姐','歡迎回家','王老師','WH VIP','阿嬤'];
+      for(let i=0;i<9;i++){const p=person(-34+i*3.2+(Math.random()-.5),-35.5+(Math.random()-.5),Math.PI,null,i%2?null:rnd(names));p.position.y=Y;tag(p,'crowd');col(p.position.x,p.position.z,.6,.6);}
+      const ban=sign('歡迎來到台灣  Welcome to Taiwan',16,1.4,'#2E86AB','#fff');add(ban,0,Y+5.2,-55.7);
+      const af=signMesh(10,3.7,1120,416,()=>{});af.rotation.y=Math.PI;add(af,30,Y+3.6,-30.5);signs.arr=af;tag(af,'arrfids');
+      for(const x of [-28,28])for(const z of [-36.5,-49.5]){if(x===28&&z===-49.5)continue;const p=M(new T.CylinderGeometry(.5,.5,6.5,16),std(0xffffff,.4,0,{map:TX.stone}));add(p,x,Y+3.25,z);col(x,z,1,1);}
+      for(const x of [36,42,48])for(const z of [-44,-48]){const bn=box(3,.45,.8,0x2f4a66,.6);add(bn,x,Y+.25,z);col(x,z,3,.8);tag(bn,'bench');}
+    });
+    /* 頂樓觀景台 */
+    onF(3,()=>{const Y=14;const deck=M(new T.PlaneGeometry(120,17),std(0x8d7a62,.9,0,{map:canvasTex(128,128,(g,w,h)=>{g.fillStyle='#8d7a62';g.fillRect(0,0,w,h);g.strokeStyle='rgba(60,45,30,.5)';for(let y=0;y<h;y+=16){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}},[40,6]).tx}));deck.rotation.x=-Math.PI/2;add(deck,0,Y,-4.5);
+      const rail=M(new T.BoxGeometry(120,1.2,.06),new T.MeshStandardMaterial({color:0xbfe0f0,transparent:true,opacity:.35}));rail.position.set(0,Y+.6,4);(CG||scene).add(rail);add(box(120,.08,.1,dark,.4,.6),0,Y+1.2,4);
+      for(const sx of [-1,1]){const r=M(new T.BoxGeometry(.06,1.2,17),rail.material);r.position.set(sx*60,Y+.6,-4.5);(CG||scene).add(r);}
+      add(box(120,1.2,.3,0xd9d4ca,.85),0,Y+.6,-13);
+      for(let i=0;i<5;i++){const bx=-40+i*20;const bn=new T.Group();bn.add(add(M(new T.CylinderGeometry(.12,.15,1.1,10),std(0x555c66,.4,.6)),0,.55,0));const hd=new T.Group();for(const sx of [-1,1]){const t=M(new T.CylinderGeometry(.12,.12,.45,12),std(0x2b2b2b,.4,.5));t.rotation.x=Math.PI/2;t.position.set(sx*.14,0,0);hd.add(t);}hd.position.y=1.25;bn.add(hd);
+        bn.position.set(bx,Y,2.8);(CG||scene).add(bn);col(bx,2.8,.6,.6);tag(bn,'scope');}
+      for(const x of [-50,-30,-10,10,30,50]){const bn=box(3,.45,.8,0x6b5b45,.7);add(bn,x,Y+.25,-8);col(x,-8,3,.8);tag(bn,'bench');}
+      const ds=sign('頂樓觀景台 Observation Deck',8,1,'#F2B53A','#10161f');add(ds,-52,Y+2.4,-12.8);
+      for(const x of [-58,58]){const fp=M(new T.CylinderGeometry(.05,.05,5,8),std(0xcccccc,.3,.8));add(fp,x,Y+2.5,-12);const fl=M(new T.PlaneGeometry(1.4,.9),std(0xF2B53A,.6,0,{side:T.DoubleSide}));add(fl,x+.7,Y+4.5,-12);}
+      stampStand('deck',-46,-10,Math.PI/2);
+      for(let x=-50;x<=50;x+=25){const lp=M(new T.CylinderGeometry(.06,.08,3.2,8),std(0x555c66,.4,.6));add(lp,x,Y+1.6,-11.5);const bl=M(new T.SphereGeometry(.25,10,8),basic(0xfff1c8));add(bl,x,Y+3.3,-11.5);lamps.push(bl);}
+      const pl=new T.PointLight(0xffe2b0,.8,60);pl.position.set(0,Y+4,-6);CG.add(pl);
+      const ev=new T.Group();ev.add(add(box(2.4,3,.4,0x6d7480,.4,.5),0,1.5,0));ev.add(add(box(1.8,2.4,.05,0xc8ccd2,.3,.7),0,1.2,.22));const es=sign('電梯 ▼',1.6,.4,'#10161f','#fff');es.position.set(0,2.75,.23);ev.add(es);
+      ev.position.set(-57,Y,-12.6);(CG||scene).add(ev);col(-57,-12.6,2.6,.6);tag(ev,'elevDown');
+    });
+    // 空側：電梯（往觀景台）
+    const ev=new T.Group();ev.add(add(box(.4,3,2.4,0x6d7480,.4,.5),0,1.5,0));ev.add(add(box(.05,2.4,1.8,0xc8ccd2,.3,.7),.22,1.2,0));const es=sign('電梯 ▲ 觀景台',2.2,.4,'#10161f','#fff');es.rotation.y=Math.PI/2;es.position.set(.23,2.75,0);ev.add(es);
+    ev.position.set(-59.6,0,-9);scene.add(ev);tag(ev,'elevUp');
+    stampStand('piano',-21.5,-12.5,0);
+    // 任務道具：遺失的行李、走失的小朋友
+    lostBag=new T.Group();lostBag.add(add(box(.45,.65,.28,0xc0392b,.4,.1),0,.4,0));const hdl=M(new T.CylinderGeometry(.015,.015,.55,6),std(0x888888,.3,.8));hdl.position.y=1;lostBag.add(hdl);lostBag.visible=false;scene.add(lostBag);tag(lostBag,'lostbag');lostBag.userData.fl=1;
+  }
+  function escal(x,z0,z1,y0,y1,up){const len=Math.hypot(z1-z0,y1-y0),ang=Math.atan2(y1-y0,Math.abs(z1-z0));
+    const g=new T.Group();const st=canvasTex(64,256,(c,w,h)=>{c.fillStyle='#3a3d42';c.fillRect(0,0,w,h);c.fillStyle='#8d949e';for(let y=0;y<h;y+=16)c.fillRect(0,y,w,3);c.fillStyle='#F2B53A';c.fillRect(0,0,3,h);c.fillRect(w-3,0,3,h);},[1,8]);
+    const steps=M(new T.PlaneGeometry(1.2,len),std(0xffffff,.6,.2,{map:st.tx}));steps.rotation.x=-Math.PI/2+(z1<z0?ang:-ang);g.add(steps);
+    for(const sx of [-1,1]){const side=M(new T.BoxGeometry(.08,1,len),new T.MeshStandardMaterial({color:0xbfe0f0,transparent:true,opacity:.35}));side.position.set(sx*.68,.5,0);side.rotation.x=(z1<z0?ang:-ang)*1;g.add(side);
+      const hr=M(new T.BoxGeometry(.1,.08,len),std(0x111111,.4));hr.position.set(sx*.7,1.02,0);hr.rotation.x=side.rotation.x;g.add(hr);}
+    const under=M(new T.BoxGeometry(1.5,.6,len),std(0xb9c1cc,.4,.4));under.position.y=-.35;under.rotation.x=z1<z0?ang:-ang;g.add(under);
+    g.position.set(x,(y0+y1)/2,(z0+z1)/2);scene.add(g);tag(g,up?'escUp':'escDown',{f:up?1:2});g.userData.esc={x,z0,z1,y0,y1};
+    if(!up){const fake=new T.Group();fake.position.set(x,7,z0);}
+  }
+
   /* ---------- 班表 → 登機門 ---------- */
   function removeObj(pl){scene.remove(pl);const set=new Set();pl.traverse(o=>{set.add(o);if(o.geometry)o.geometry.dispose();if(o.material&&!Object.values(matCache).includes(o.material)){if(o.material.map&&!o.material.map._keep)o.material.map.dispose();o.material.dispose();}});interact=interact.filter(o=>!set.has(o));nightLights=nightLights.filter(o=>!set.has(o));}
   function legsHere(){return openCities().filter(c=>c.base===base);}
@@ -1747,8 +2724,9 @@ const AP=(()=>{
     }
     atGate.sort((a,b)=>a.t0-b.t0);const used=new Set();
     gateObjs.forEach((gt,i)=>{
-      let a=atGate.find(x=>!used.has(x)&&Math.floor(hash(x.c.code+x.f.idx)*GATES.length)===i)||atGate.find(x=>!used.has(x)&&!gateObjs.some((g2,j)=>j!==i&&g2.key===x.c.code+x.f.idx+'p'));
-      if(a)used.add(a);
+      let a;const myK=myFlight?myFlight.c.code+myFlight.f.idx+'p':null;
+      if(myFlight&&i===myFlight.gi)a={f:myFlight.f,c:myFlight.c,t0:myFlight.t0,tEnd:0,phase:'board',k:0,my:true};
+      else{a=atGate.find(x=>!used.has(x)&&x.c.code+x.f.idx+'p'!==myK&&Math.floor(hash(x.c.code+x.f.idx)*GATES.length)===i&&!(myFlight&&i===myFlight.gi))||atGate.find(x=>!used.has(x)&&x.c.code+x.f.idx+'p'!==myK&&!gateObjs.some((g2,j)=>j!==i&&g2.key===x.c.code+x.f.idx+'p'));if(a)used.add(a);}
       const key=a?a.c.code+a.f.idx+'p':'rival'+i+'-'+(S.day%3);
       if(gt.key!==key){
         if(gt.plane){removeObj(gt.plane);gt.plane=null;}if(gt.veh){removeObj(gt.veh);gt.veh=null;}
@@ -1794,11 +2772,15 @@ const AP=(()=>{
     const L_=S.livery||{};
     redraw(signs.counter,(g,w,h)=>{g.fillStyle=L_.c1||'#F2B53A';g.fillRect(0,0,w,h);g.fillStyle=L_.c1==='#F5F1E6'?'#10161f':'#fff';g.font=`900 64px ${FONT}`;g.textAlign='center';g.textBaseline='middle';g.fillText(`${S.name}　${S.code}　報到櫃台`,w/2,h/2+4);});
     for(const k of ['banner-30','banner30'])if(signs[k])redraw(signs[k],(g,w,h)=>{g.fillStyle=L_.c1||'#F2B53A';g.fillRect(0,0,w,h);g.fillStyle='#fff';g.font=`900 64px ${FONT}`;g.textAlign='center';g.textBaseline='middle';g.fillText(`歡迎搭乘 ${S.name}`,w/2,h/2+4);});
+    if(signs.arr){const arr=[];for(const c of legsHere())for(const f of schedule(c,S.day)){const tA=f.dep+f.b+turn(f.p.type)+f.b;arr.push({c,f,tA});}arr.sort((a,b)=>a.tA-b.tA);const up=arr.filter(r=>r.tA+1>now).slice(0,7);
+      redraw(signs.arr,(g,w,h)=>{g.fillStyle='#0a0f17';g.fillRect(0,0,w,h);g.fillStyle='#7CCBE0';g.font=`700 34px ${MONO}`;g.textBaseline='top';g.textAlign='left';g.fillText('ARRIVALS 入境',24,16);g.textAlign='right';g.fillText(hhmm(now),w-24,16);g.textAlign='left';g.fillStyle='#2a3e58';g.fillRect(20,60,w-40,2);
+        if(!up.length){g.fillStyle='#8E9DB2';g.font=`500 32px ${FONT}`;g.fillText('今天沒有其他抵達班機',24,90);return;}
+        up.forEach((r,i)=>{const y=76+i*47;g.font=`600 32px ${MONO}`;g.fillStyle='#7CCBE0';g.fillText(hhmm(r.tA%24),24,y);g.fillText(S.code+(r.f.fno+1),160,y);g.font=`500 32px ${FONT}`;g.fillStyle='#ECE6D6';g.fillText('由 '+r.c.name,330,y);g.textAlign='right';g.fillStyle=now>r.tA?'#7FD493':'#8E9DB2';g.fillText(now>r.tA?`已抵達・轉盤 ${1+i%2}`:'準時',w-24,y);g.textAlign='left';});});}
     if(signs.lounge)redraw(signs.lounge,(g,w,h)=>{g.fillStyle='#10161f';g.fillRect(0,0,w,h);g.fillStyle=has('lounge')?'#F2B53A':'#8E9DB2';g.font=`700 34px ${FONT}`;g.textAlign='center';g.textBaseline='middle';g.fillText(has('lounge')?`${S.name} 貴賓室`:'貴賓室（建設中）',w/2,h/2+2);});
   }
   /* ---------- 天色 ---------- */
   function sky(){
-    const B=BASES[base],sp=sunPos(),cz=sunCos(B.lon,B.lat,sp),e=Math.asin(Math.max(-1,Math.min(1,cz)))/RAD;
+    const B=BASES[base],sp=sunPos(apNow),cz=sunCos(B.lon,B.lat,sp),e=Math.asin(Math.max(-1,Math.min(1,cz)))/RAD;
     const lerp=(a,b,t)=>a.clone().lerp(b,Math.max(0,Math.min(1,t)));
     const C=h=>new T.Color(h);let top,hor;
     if(e>8){top=C(0x3d7ec4);hor=C(0xbfdcf2);}else if(e>0){top=lerp(C(0x4a5f9a),C(0x3d7ec4),e/8);hor=lerp(C(0xf0a070),C(0xbfdcf2),e/8);}
@@ -1822,14 +2804,15 @@ const AP=(()=>{
     glass.material.opacity=night?.24:.14;
   }
   /* ---------- 互動 ---------- */
-  const NAMES={gate:'登機門看板',plane:'你的飛機',rival:'對手的飛機',fids:'航班看板',counter:'報到櫃台',npc:'旅客',coffee:'咖啡店',book:'書店',duty:'免稅店',lounge:'貴賓室',seat:'座椅',pillar:'大理石柱',plant:'植物',piano:'機場鋼琴',vending:'自動販賣機',trash:'垃圾桶',wc:'廁所',info:'服務台',podium:'登機櫃台',poster:'旅遊海報',queue:'排隊線',tug:'拖車',bags:'行李車',fuel:'加油車'};
-  const VERB={seat:'坐下',piano:'彈一段',vending:'買飲料',coffee:'買咖啡',trash:'丟垃圾',npc:'聊天',info:'問問題',book:'翻翻書',duty:'逛逛',wc:'去廁所',podium:'聽廣播'};
+  const NAMES={gate:'登機門看板',plane:'你的飛機',rival:'對手的飛機',fids:'航班看板',counter:'報到櫃台',npc:'旅客',coffee:'咖啡店',book:'書店',duty:'免稅店',lounge:'貴賓室',seat:'座椅',pillar:'大理石柱',plant:'植物',piano:'機場鋼琴',vending:'自動販賣機',trash:'垃圾桶',wc:'廁所',info:'服務台',podium:'登機櫃台',poster:'旅遊海報',queue:'排隊線',tug:'拖車',bags:'行李車',fuel:'加油車',stamp:'紀念章',xray:'X 光行李檢查',metal:'金屬探測門',egate:'自動閘門',imm:'出境查驗櫃台',board:'機門',food:'美食攤位',table:'餐桌',bench:'長椅',slide:'溜滑梯',balls:'球池',rocker:'搖搖飛機',store:'便利商店',souvenir:'伴手禮店',taxi:'計程車',bus:'機場巴士',escUp:'手扶梯（上 2F）',escDown:'手扶梯（下 1F）',elevUp:'電梯（往頂樓觀景台）',elevDown:'電梯（回出境大廳）',scope:'望遠鏡',carousel:'行李轉盤',customs:'海關',exchange:'外幣兌換',rental:'租車櫃台',crowd:'接機的人',arrfids:'入境看板',questKid:'小朋友',questMom:'著急的媽媽',questBag:'找行李的旅客',lostbag:'紅色行李箱'};
+  const VERB={stamp:'蓋章',counter:'報到',xray:'放行李',egate:'掃描登機證',imm:'查驗護照',board:'登機',food:'點餐',table:'坐下吃',bench:'坐下',slide:'溜下去',balls:'跳進去',rocker:'坐上去',store:'買東西',souvenir:'逛逛',escUp:'搭手扶梯',escDown:'搭手扶梯',elevUp:'搭電梯',elevDown:'搭電梯',scope:'看遠方',carousel:'看行李',questKid:'問問看',questMom:'說話',questBag:'說話',lostbag:'撿起來',crowd:'打招呼',seat:'坐下',piano:'彈一段',vending:'買飲料',coffee:'買咖啡',trash:'丟垃圾',npc:'聊天',info:'問問題',book:'翻翻書',duty:'逛逛',wc:'去廁所',podium:'聽廣播'};
   const RANGE_IN=4.2;
   function ray(){
     const r=new T.Raycaster();r.far=160;
     for(const [dx,dy] of [[0,0],[.03,0],[-.03,0],[0,.04],[0,-.04],[.07,0],[-.07,0],[0,-.09]]){r.setFromCamera(new T.Vector2(dx,dy),cam);
-      const hs=r.intersectObjects(interact,false);for(const h of hs){const k=h.object.userData.kind,far=['plane','rival','tug','bags','fuel','fids','gate'].includes(k);if(far||h.distance<=RANGE_IN)return h;if(h.distance>RANGE_IN)break;}}
+      const hs=r.intersectObjects(interact,false);for(const h of hs){const u=h.object.userData,k=u.kind,far=['plane','rival','tug','bags','fuel','fids','gate'].includes(k);if(!h.object.visible||((u.f||1)!==floor&&!(far&&floor===3)))continue;if(!vis(h.object))continue;if(far||h.distance<=RANGE_IN)return h;if(h.distance>RANGE_IN)break;}}
     return null;}
+  function vis(o){while(o){if(!o.visible)return false;o=o.parent;}return true;}
   function quote(n){
     const pool=[];const oc=openCities();
     if(oc.length){const c=rnd(oc);pool.push(`我要搭你們的飛機去${c.name}，好期待！`,`聽說${c.name}現在很好玩。`);}
@@ -1861,7 +2844,7 @@ const AP=(()=>{
       case 'bags':h=`<h4>行李車</h4><p>${o.a?`正在裝 ${S.code}${o.a.f.fno} 旅客的行李，大約 ${Math.round(seatsOf(o.a.f.p).Y*.8)} 件。`:'等著裝下一班的行李。'}</p>`;break;
       case 'fuel':h=`<h4>加油車</h4><p>${o.a?`正在幫 ${esc(pname(o.a.f.p))} 加油，這一趟大約要 ${Math.round(o.a.f.b*PLANES[o.a.f.p.type].burn/1000)} 噸燃油（${money(o.a.f.b*PLANES[o.a.f.p.type].burn*S.fuel)}）。`:'今天油價每公斤 '+nt(S.fuel)+'。'}</p>`;break;
       case 'fids':h=`<h4>航班看板</h4><p>今天 ${BASES[base].name} 共有 ${legsHere().reduce((s,c)=>s+schedule(c,S.day).length,0)} 班出發。完整資料在「看板」分頁。</p>`;break;
-      case 'counter':{const L=S.last;h=`<h4>${esc(S.name)} 報到櫃台</h4><p>地勤：「歡迎！請出示護照。」</p><p>上個月載客 ${L?Math.round(L.pax).toLocaleString():0} 人次・聲望 ${Math.round(S.rep)}／100・服務「${SERVICE[S.service].name}」</p>`;break;}
+      case 'counter':h=checkin();break;
       case 'queue':h='<h4>排隊線</h4><p>請依序排隊報到。</p>';break;
       case 'npc':{const n=o.npc;n.quote=quote(n);h=`<h4>${n.kid?'小朋友':'旅客'}說：</h4><p>「${esc(n.quote)}」</p>`;n.wait=Math.max(n.wait,3);n.face=true;break;}
       case 'seat':{const s=o.seat;if(s.taken){h='<h4>座椅</h4><p>這個位子有人坐了。</p>';break;}sitting=s;s.taken=true;pos.x=s.x;pos.z=s.z;yaw=0;pitch=-.05;h='<h4>你坐下來了</h4><p>休息一下，看看窗外的飛機。往任何方向走就會站起來。</p>';break;}
@@ -1876,25 +2859,122 @@ const AP=(()=>{
       case 'poster':h=`<h4>旅遊海報：飛吧！${esc(o.dest)}</h4><p>${openCities().some(c=>c.name===o.dest)?`${esc(S.name)}已經有飛${esc(o.dest)}！`:`還沒有飛${esc(o.dest)}，可以去「航線」申請。`}</p>`;break;
       case 'lounge':h=has('lounge')?`<h4>${esc(S.name)} 貴賓室</h4><p>商務艙旅客在這裡休息、吃點心。</p>`:`<h4>貴賓室（建設中）</h4><p>在「營運」投資「桃園貴賓室」就能開放。</p>`;break;
       case 'pillar':h='<h4>大理石柱</h4><p>好大一根柱子，撐起整個航廈的屋頂。</p>';break;
+      default:h=act2(k,o,hit);break;
       case 'plant':h='<h4>植物</h4><p>綠色植物讓機場空氣比較好。</p>';break;
     }
     if(!h)return;$('#apInfoBody').innerHTML=h;$('#apInfo').hidden=false;infoT=performance.now();if(k!=='piano'&&k!=='vending'&&k!=='trash'&&k!=='podium')sfx('ping');
   }
+  /* ---------- 旅程、任務、紀念章 ---------- */
+  function apq(){S.apq=S.apq||{stamps:{},done:false,bagDay:-1,kidDay:-1};S.apq.stamps=S.apq.stamps||{};return S.apq;}
+  function stampCount(){const q=apq();return Object.keys(STAMPS).filter(k=>q.stamps[k]).length;}
+  function pickMyFlight(){let best=null;for(const c of legsHere()){if(cancelled(c))continue;for(const dd of [0,1])for(const f of schedule(c,S.day+dd)){if(f.p.down>0)continue;const t=f.dep+dd*24;if(t<apNow+.25)continue;if(!best||t<best.t)best={c,f,t};}}return best;}
+  function bpass(){const m=myFlight;return `<div class="bpass"><div><small>登機證 BOARDING PASS</small><b>${esc(S.name)}　${S.code}${m.f.fno}</b></div><div class="bprow"><span><small>從</small>${esc(BASES[base].short)}</span><span>✈</span><span><small>到</small>${esc(m.c.name)}</span></div><div class="bprow"><span><small>登機門</small>A${m.gi+1}</span><span><small>起飛</small>${hhmm(m.t0)}</span><span><small>座位</small>${m.seat}</span></div></div>`;}
+  function checkin(){
+    if(pass&&myFlight)return `<h4>${esc(S.name)} 報到櫃台</h4><p>地勤：「您已經報到完成了，請往安全檢查前進！」</p>${bpass()}`;
+    const b=pickMyFlight();if(!b)return `<h4>${esc(S.name)} 報到櫃台</h4><p>地勤：「不好意思，今天從${esc(BASES[base].short)}出發的班機都飛走了，或還沒開航線喔。」</p><p class="hint">先在「航線」開一條從這裡出發的航線，就可以來報到搭飛機！</p>`;
+    pass=true;myFlight={c:b.c,f:b.f,t0:b.t,gi:2,seat:`${10+Math.floor(Math.random()*30)}${'ABCDEF'[Math.floor(Math.random()*6)]}`};resetGates();note(72,0,.12);note(79,.12,.2);
+    return `<h4>✅ 報到完成！</h4><p>地勤：「這是您的登機證，行李已經托運了。祝您旅途愉快！」</p>${bpass()}<p class="hint">下一步：到後面的「安全檢查」，把登機證靠近自動閘門。（記得順便蓋紀念章！）</p>`;}
+  function rewardMsg(cash,rep){if(cash)S.cash+=cash;if(rep)S.rep=Math.max(5,Math.min(100,S.rep+rep));try{save();updateHUD();}catch(e){}return `<p class="good">獎勵：${cash?'現金 +'+money(cash)+' ':''}${rep?'聲望 +'+rep:''}</p>`;}
+  function sitAt(x,z,y,eye,dir){sitting={x,z,taken:true,eye:eye||1.15};pos.x=x;pos.z=z;if(dir!=null)yaw=dir;pitch=-.05;}
+  function startRide(r){ride={t:0,...r};sitting=null;$('#apInfo').hidden=true;}
+  function fade(fn){const f=$('#apFade');f.classList.add('on');setTimeout(()=>{fn();setTimeout(()=>f.classList.remove('on'),250);},450);}
+  function setFloor(f,x,z,yw){floor=f;pos.x=x;pos.z=z;if(yw!=null)yaw=yw;G.land.visible=f===1;G.f2.visible=f===2;G.roof.visible=f===3;renderBases();}
+  function act2(k,o,hit){
+    const q=apq();
+    switch(k){
+      case 'stamp':{const id=o.sid,nm=STAMPS[id];if(q.stamps[id])return `<h4>🎫 ${nm} 紀念章</h4><p>這個章已經蓋過了！目前 ${stampCount()}／8。</p>`;
+        q.stamps[id]=true;note(60,0,.15);note(72,.12,.25);const n=stampCount();let extra='';if(n===8&&!q.done){q.done=true;extra=`<p><b>🎉 八個紀念章全部集滿了！</b></p>`+rewardMsg(2e6,2);}else{try{save();}catch(e){}}
+        updJourney();return `<h4>🎫 蓋章！「${nm}」</h4><div class="stampbig">${nm}<small>${esc(BASES[base].short)}機場</small></div><p>紀念章 ${n}／8</p>${extra}`;}
+      case 'xray':return `<h4>X 光行李檢查</h4><p>你把背包放上輸送帶，螢幕上看得到${rnd(['充電器','水壺（要先倒掉喔！）','三明治','玩具飛機','筆電'])}的形狀。</p><p class="hint">接著從金屬探測門走過去。</p>`;
+      case 'metal':return `<h4>金屬探測門</h4><p>${pass?'直接從門中間走過去就好，綠燈代表沒問題。':'要先報到拿登機證，才能進安檢喔。'}</p>`;
+      case 'egate':if(!pass)return `<h4>自動閘門</h4><p>「嗶嗶！請先到報到櫃台報到，拿到登機證再來。」</p>`;openGate('sec');return `<h4>嗶！登機證掃描成功</h4><p>閘門打開了，請往前走進安全檢查。</p>`;
+      case 'imm':if(!secDone)return `<h4>出境查驗</h4><p>查驗官：「請先通過安全檢查喔。」</p>`;
+        if(!immDone){immDone=true;openGate('imm');note(67,0,.1);note(67,.15,.1);updJourney();return `<h4>出境查驗：蓋章！</h4><p>查驗官看了看你的護照，「咚」一聲蓋上出境章。「祝你一路順風！」</p><p class="hint">下一步：到 A${myFlight?myFlight.gi+1:3} 登機門，從空橋走到底就能登機。</p>`;}
+        return `<h4>出境查驗</h4><p>查驗官：「已經完成了，請往登機門前進。」</p>`;
+      case 'board':{const gi=o.gi,gt=gateObjs[gi];
+        if(myFlight&&gi===myFlight.gi){if(!immDone)return '<h4>機門</h4><p>請先完成出境查驗。</p>';
+          boarded=true;updJourney();const code=myFlight.c.code,p=myFlight.f.p;$('#apInfoBody').innerHTML='<h4>歡迎登機！</h4><p>空服員：「機長，駕駛艙在左邊，請！」</p>';$('#apInfo').hidden=false;
+          setTimeout(()=>{if(typeof FLY!=='undefined')FLY.open(code,{p});},900);return '';}
+        return gt.a?`<h4>A${gi+1} 機門</h4><p>這是 ${S.code}${gt.a.f.fno} 往 ${esc(gt.a.c.name)} 的班機，不是你登機證上的航班喔。</p>`:`<h4>A${gi+1} 機門</h4><p>機門關著，這裡現在沒有你的班機。${myFlight?`你的班機在 A${myFlight.gi+1}。`:''}</p>`;}
+      case 'food':{const msg={noodle:'熱騰騰的紅燒牛肉麵，湯頭超濃！',tea:'珍珠Q彈的大杯珍奶，半糖少冰！',dumpling:'一籠 10 顆小籠包，小心燙！',bento:'排骨便當，台鐵風味！',ramen:'豚骨拉麵加溏心蛋！',burger:'雙層起司漢堡套餐！'}[o.fk]||'好吃！';boost=60;note(64,0,.1);note(69,.1,.15);
+        return `<h4>🍜 ${esc(o.food)}</h4><p>${msg}（NT$${100+Math.floor(Math.random()*15)*10}）</p><p class="hint">吃飽了有力氣，走路變快 1 分鐘！</p>`;}
+      case 'table':case 'bench':{const p=hit.object.getWorldPosition(new T.Vector3());sitAt(pos.x,pos.z,0,1.1,null);return `<h4>坐下來休息</h4><p>${k==='table'?'在美食街找個位子坐下來吃東西。':'坐在長椅上看看來來往往的人。'}往任何方向走就會站起來。</p>`;}
+      case 'slide':if(!(pass||floor===1))return '';startRide({kind:'slide',dur:4.2,end:()=>{pos.x=32;pos.z=-40.8;yaw=0;}});note(76,0,.2);note(72,.8,.2);note(67,1.6,.2);note(60,2.4,.4);return '';
+      case 'balls':startRide({kind:'balls',dur:4,end:()=>{pos.x=44;pos.z=-44.4;yaw=Math.PI;}});return '';
+      case 'rocker':{const wp=hit.object.getWorldPosition(new T.Vector3());startRide({kind:'rocker',dur:5,cx:wp.x,cz:wp.z,end:()=>{pos.x=wp.x-1.4;pos.z=wp.z;}});return '';}
+      case 'store':return `<h4>便利商店</h4><p>你買了${rnd(['茶葉蛋','御飯糰','礦泉水','小包餅乾','口香糖'])}。店員：「需要袋子嗎？」</p>`;
+      case 'souvenir':return `<h4>伴手禮店</h4><p>架上有${rnd(['鳳梨酥','太陽餅','牛軋糖','高山烏龍茶','飛機模型'])}，都是送朋友的好選擇。</p>`;
+      case 'taxi':return '<h4>計程車</h4><p>司機：「要去哪裡？」⋯⋯今天先不出去了，機場比較好玩！</p>';
+      case 'bus':return '<h4>機場巴士</h4><p>開往市區的巴士，每 15 分鐘一班。</p>';
+      case 'escUp':{startRide({kind:'esc',dur:6,x:19,z0:-33.4,z1:-46.6,y0:0,y1:7,end:()=>setFloor(2,19,-47.6,Math.PI)});return '';}
+      case 'escDown':startRide({kind:'esc',dur:6,x:21.6,z0:-46.6,z1:-33.4,y0:7,y1:0,start2:true,end:()=>setFloor(1,21.6,-32.9,0)});return '';
+      case 'elevUp':fade(()=>{setFloor(3,-55,-10,0);});note(84,0,.15);return '';
+      case 'elevDown':fade(()=>{setFloor(1,-57.2,-9,Math.PI/2);});note(84,0,.15);return '';
+      case 'scope':zoom=true;return `<h4>🔭 望遠鏡</h4><p>放大看遠方！可以看到跑道上的飛機起飛降落。移動就會恢復。</p>`;
+      case 'carousel':return `<h4>行李轉盤 ${o.lab||''}</h4><p>${rnd(['剛從東京飛來的班機行李出來了！','一個個行李箱在轉盤上繞圈圈。','有人的行李上綁著可愛的吊飾。'])}</p>`;
+      case 'customs':return '<h4>海關</h4><p>「沒有要申報的東西，走綠色通道就可以了。」</p>';
+      case 'exchange':return `<h4>外幣兌換</h4><p>今天匯率：1 美元 ≈ ${(31+Math.random()).toFixed(2)} 台幣、1 日圓 ≈ 0.${20+Math.floor(Math.random()*3)} 台幣。</p>`;
+      case 'rental':return '<h4>租車櫃台</h4><p>「需要租車嗎？我們有電動車喔！」</p>';
+      case 'crowd':return `<h4>接機的人</h4><p>「${rnd(['我在等我女兒從美國回來！','我們來接阿公阿嬤。','歡迎回家～','接一位很重要的客人。'])}」</p>`;
+      case 'arrfids':return '<h4>入境看板</h4><p>顯示剛降落的班機和行李轉盤號碼。</p>';
+      case 'questKid':{if(q.kidDay===S.day)return '<h4>小朋友</h4><p>「謝謝你幫我找到媽媽！」</p>';if(Q.kid===0){Q.kid=1;pa('走失兒童廣播：有一位穿橘色衣服的小朋友在美食街找媽媽，請家長到服務台。');return `<h4>小朋友（快哭了）</h4><p>「嗚⋯⋯我找不到媽媽了⋯⋯她穿紅色衣服，說要去二樓等阿公⋯⋯」</p><p class="hint">任務：幫小朋友找到媽媽！（可能在二樓入境大廳）</p>`;}return '<h4>小朋友</h4><p>「媽媽穿紅色衣服⋯⋯在二樓嗎？」</p>';}
+      case 'questMom':{if(Q.kid===1){Q.kid=2;q.kidDay=S.day;qNpc.kid.parent.remove(qNpc.kid);G.f2.add(qNpc.kid);qNpc.kid.position.set(43,7,-40.6);qNpc.kid.updateMatrix();qNpc.kid.traverse(o=>{if(o.userData.kind)o.userData.f=2;});
+          return `<h4>著急的媽媽</h4><p>「什麼？我的小孩在美食街？太謝謝你了！」（媽媽趕快去帶回小朋友）</p>`+rewardMsg(0,1);}
+        return `<h4>著急的媽媽</h4><p>「${Q.kid===2?'謝謝你！你真是好心人。':'我在等我爸爸的班機，順便⋯⋯咦，我的小孩跑去哪了？'}」</p>`;}
+      case 'questBag':{if(q.bagDay===S.day)return '<h4>旅客</h4><p>「找到行李真是太好了，謝謝你！」</p>';
+        if(carrying){carrying=false;Q.bag=2;q.bagDay=S.day;return `<h4>找到了！</h4><p>「就是這個紅色行李箱！太感謝你了！這是一點心意。」</p>`+rewardMsg(3e5,1);}
+        if(Q.bag===0){Q.bag=1;const spots=[[1,-40,-51],[1,8,-12.5],[2,45,-52],[3,22,-1],[1,46,-16],[2,-50,-34]];const sp=rnd(spots);lostBag.position.set(sp[1],BASEY[sp[0]],sp[2]);lostBag.updateMatrix();lostBag.visible=true;lostBag.traverse(o=>{o.userData.f=sp[0];});
+          return `<h4>找行李的旅客</h4><p>「我的紅色行李箱沒有出現在轉盤上⋯⋯可能被別人拿錯放到其他地方了。可以幫我找找看嗎？」</p><p class="hint">任務：在機場找到紅色行李箱，拿回來給她！（一樓、二樓、頂樓都有可能）</p>`;}
+        return '<h4>找行李的旅客</h4><p>「紅色的行李箱，上面有一個黃色吊牌⋯⋯拜託了！」</p>';}
+      case 'lostbag':lostBag.visible=false;carrying=true;note(67,0,.12);note(74,.12,.2);return '<h4>找到紅色行李箱了！</h4><p>拿回二樓行李轉盤旁邊，交給那位旅客吧。</p>';
+    }
+    return '';
+  }
+  function openGate(w){const g=gates[w];if(!g||g.c.off)return;g.c.off=true;for(const m of g.meshes)m.visible=false;note(79,0,.1);note(84,.1,.15);}
+  function closeGates(){for(const w of ['sec','imm']){const g=gates[w];if(!g)continue;g.c.off=false;for(const m of g.meshes)m.visible=true;}}
+  function updJourney(){const el=$('#apJourney');if(!el)return;const st=[['報到',pass],['安檢',secDone],['出境',immDone],['登機',boarded]];
+    const nx=!pass?'到報到櫃台報到（往前走）':!secDone?'通過安全檢查（自動閘門→金屬探測門）':!immDone?'到出境查驗櫃台蓋章':`到 A${myFlight?myFlight.gi+1:3} 登機門，走空橋登機`;
+    el.innerHTML=`<div class="jsteps">${st.map(([t,d])=>`<span class="${d?'d':''}">${d?'✓':'○'} ${t}</span>`).join('<i>›</i>')}</div><div class="jnext">${floor===1?'下一步：'+nx:floor===2?'二樓入境大廳・搭手扶梯回 1F':'頂樓觀景台・搭電梯回去'}${carrying?'<br>🧳 帶著紅色行李箱':''}</div>`;
+    $('#apStampBtn').textContent=`🎫 紀念章 ${stampCount()}／8`;}
+  function stampBook(){const q=apq();$('#apInfoBody').innerHTML=`<h4>🎫 紀念章收集冊</h4><div class="stampgrid">${Object.entries(STAMPS).map(([k,n])=>`<span class="${q.stamps[k]?'got':''}">${q.stamps[k]?'✓':'？'}<small>${n}</small></span>`).join('')}</div><p class="hint">集滿 8 個有獎勵！${q.done?'（已領取）':''}</p>`;$('#apInfo').hidden=false;infoT=performance.now();}
+  function pa(text){const el=$('#apPA');el.textContent='📢 '+text;el.hidden=false;clearTimeout(pa.t);pa.t=setTimeout(()=>el.hidden=true,7000);note(72,0,.35);note(76,.3,.35);note(79,.6,.5);
+    if(UI.sound&&window.speechSynthesis){try{const u=new SpeechSynthesisUtterance(text);u.lang='zh-TW';u.rate=1;setTimeout(()=>{speechSynthesis.cancel();speechSynthesis.speak(u);},1200);}catch(e){}}}
+  function paTick(dt){paT-=dt;if(paT>0)return;paT=50+Math.random()*40;const pool=['各位旅客請注意，請隨身攜帶您的行李，不要讓行李離開您的視線。','本航廈全面禁止吸菸，謝謝您的合作。',`歡迎光臨${BASES[base].name}機場，祝您旅途愉快。`,'提醒您，液體超過 100 毫升不能帶上飛機喔。'];
+    if(myFlight&&!boarded)pool.push(`搭乘${S.name} ${S.code}${myFlight.f.fno}班機前往${myFlight.c.name}的旅客，請到 A${myFlight.gi+1} 號登機門準備登機。`,`${S.name} ${S.code}${myFlight.f.fno}班機，機長請盡快到 A${myFlight.gi+1} 號登機門！`);
+    pa(rnd(pool));}
+  function rideTick(dt){const r=ride;r.t+=dt;const k=Math.min(1,r.t/r.dur);let y=0,eye=1.68,roll=0;
+    if(r.kind==='esc'){pos.x=r.x;pos.z=r.z0+(r.z1-r.z0)*k;y=r.y0+(r.y1-r.y0)*Math.min(1,Math.max(0,(k-.05)/.9));yaw=r.z1<r.z0?Math.PI:0;r.y=y;}
+    else if(r.kind==='slide'){if(k<.4){const u=k/.4;pos.x=30.1;pos.z=-49.6+u*.6;y=u*2.6;yaw=0;}else if(k<.5){const u=(k-.4)/.1;pos.x=30.1+u*1.9;pos.z=-49+u*.5;y=2.6;eye=.9;}else{const u=(k-.5)/.5;pos.x=32;pos.z=-48.5+u*7.4;y=2.6*(1-u)**1.3;eye=.9;pitch=-.25;}r.y=y;}
+    else if(r.kind==='balls'){pos.x=44;pos.z=-47;eye=.55+Math.abs(Math.sin(r.t*5))*.25;r.y=0;}
+    else if(r.kind==='rocker'){pos.x=r.cx;pos.z=r.cz;eye=1.2;roll=Math.sin(r.t*4)*.12;r.y=0;for(const b of rockers){if(Math.abs(b.parent.position.x-r.cx)<.1&&Math.abs(b.parent.position.z-r.cz)<.1){b.rotation.z=roll;b.updateMatrix();}}}
+    r.eye=eye;r.roll=roll;if(k>=1){ride=null;for(const b of rockers){b.rotation.z=0;b.updateMatrix();}if(r.end)r.end();updJourney();}}
   function doInteract(){if(!$('#apInfo').hidden){$('#apInfo').hidden=true;return;}const hit=ray();if(hit)act(hit);}
   /* ---------- 迴圈 ---------- */
   function resize(){const cv=$('#apCanvas'),w=cv.clientWidth,h=cv.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.fov=w<h?88:70;cam.updateProjectionMatrix();}
   function loop(t){
     if(!running)return;raf=requestAnimationFrame(loop);
     const dt=Math.min(.05,(t-last)/1000);last=t;if(!S)return;
-    const now=acc/DAY_MS*24;
+    apNow=(apNow+dt/60)%24;const now=apNow;
     let fx=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joy.y,sx=(keys.d?1:0)-(keys.a?1:0)+joy.x;
+    if(ride){fx=sx=0;}
     if(keys.arrowleft)yaw+=dt*1.8;if(keys.arrowright)yaw-=dt*1.8;
-    if((fx||sx)&&sitting){sitting.taken=false;sitting=null;}
-    const spd=(keys.shift?7:3.6)*dt,f={x:Math.sin(yaw),z:Math.cos(yaw)},rg={x:-Math.cos(yaw),z:Math.sin(yaw)};
-    pos.x+=(f.x*fx+rg.x*sx)*spd;pos.z+=(f.z*fx+rg.z*sx)*spd;if(!sitting)resolve(pos,PR);
-    const walking=(fx||sx)&&!sitting,bob=walking?Math.sin(t/(keys.shift?95:140))*.045:0,eye=sitting?1.15:1.68;
-    cam.position.set(pos.x,eye+bob,pos.z);
-    cam.lookAt(pos.x+Math.sin(yaw)*Math.cos(pitch),eye+bob+Math.sin(pitch),pos.z+Math.cos(yaw)*Math.cos(pitch));
+    if((fx||sx)&&sitting){sitting.taken=false;if(sitting.g)pos.z=sitting.z+.75;sitting=null;}
+    if((fx||sx)&&zoom)zoom=false;
+    if(boost>0)boost-=dt;
+    const spd=(keys.shift?7:3.6)*(boost>0?1.5:1)*dt,f={x:Math.sin(yaw),z:Math.cos(yaw)},rg={x:-Math.cos(yaw),z:Math.sin(yaw)};
+    if(!sitting&&!ride&&(fx||sx)){const nx=pos.x+(f.x*fx+rg.x*sx)*spd,nz=pos.z+(f.z*fx+rg.z*sx)*spd;if(!blockedP(nx,pos.z))pos.x=nx;if(!blockedP(pos.x,nz))pos.z=nz;}
+    if(ride)rideTick(dt);
+    // 安檢：走過金屬探測門
+    if(floor===1&&pass&&!secDone&&pos.z<-27&&pos.z>-28.3)for(const a of archs){if(Math.abs(pos.x-a.x)<.62){secDone=true;note(88,0,.12);note(88,.18,.12);$('#apInfoBody').innerHTML='<h4>✅ 安檢通過</h4><p>綠燈！沒有問題，請往前到出境查驗櫃台。</p>';$('#apInfo').hidden=false;infoT=performance.now();updJourney();break;}}
+    if(floor===1&&pass&&gates.sec&&!gates.sec.c.off&&pos.z>-34&&pos.z<-31.2&&Math.abs(pos.x)<13){openGate('sec');$('#apInfoBody').innerHTML='<h4>嗶！登機證掃描成功</h4><p>自動閘門打開了。</p>';$('#apInfo').hidden=false;infoT=performance.now();}
+    const walking=(fx||sx)&&!sitting,bob=walking?Math.sin(t/(keys.shift?95:140))*.045:0;
+    const eye=ride?ride.eye:sitting?(sitting.eye||1.15):1.68,by=ride?ride.y:BASEY[floor]+groundY(pos.x,pos.z);
+    const ey=by+eye+bob;cam.position.set(pos.x,ey,pos.z);
+    cam.lookAt(pos.x+Math.sin(yaw)*Math.cos(pitch),ey+Math.sin(pitch),pos.z+Math.cos(yaw)*Math.cos(pitch));if(ride&&ride.roll)cam.rotateZ(ride.roll);
+    const wantFov=zoom?16:(cam.aspect<1?88:70);if(Math.abs(cam.fov-wantFov)>.3){cam.fov+=(wantFov-cam.fov)*Math.min(1,dt*6);cam.updateProjectionMatrix();}
+    // 行李轉盤
+    if(floor===2)for(const c of carousels){c.ph+=dt*.35;c.bags.forEach((b,i)=>{const u=(c.ph+i/c.bags.length)%1*Math.PI*2;b.position.set(Math.cos(u)*4.9,.95,Math.sin(u)*1.45);b.rotation.y=-u;b.updateMatrix();});}
+    paTick(dt);
     // 旅客
     for(const n of npcs){
       if(n.seat){n.arms[0].rotation.x=Math.sin(t/900+n.phase)*.1;continue;}
@@ -1904,7 +2984,7 @@ const AP=(()=>{
       if(d<.3){n.wait=1+Math.random()*6;pickTarget(n);continue;}
       const nx=n.x+dx/d*n.spd*dt,nz=n.z+dz/d*n.spd*dt;
       const pd=Math.hypot(nx-pos.x,nz-pos.z);
-      if(blocked(nx,nz,.32)||pd<.75){n.wait=.4+Math.random();pickTarget(n);continue;}
+      if(blocked(nx,nz,.32,1)||(floor===1&&pd<.75)){n.wait=.4+Math.random();pickTarget(n);continue;}
       let hitN=false;for(const m of npcs)if(m!==n&&Math.hypot(nx-m.x,nz-m.z)<.6){hitN=true;break;}if(hitN){n.wait=.3+Math.random()*.6;continue;}
       n.x=nx;n.z=nz;n.g.position.set(n.x,0,n.z);n.g.rotation.y=Math.atan2(dx,dz);
       n.phase+=dt*n.spd*6;const sw=Math.sin(n.phase)*.55;n.legs[0].rotation.x=sw;n.legs[1].rotation.x=-sw;n.arms[0].rotation.x=-sw*.7;n.arms[1].rotation.x=sw*.7;
@@ -1912,7 +2992,7 @@ const AP=(()=>{
     for(const c of clouds){c.position.x+=dt*3;if(c.position.x>1500)c.position.x=-1500;}
     if(t-lastAssign>500){lastAssign=t;assign(now);}
     animRunway(now);
-    if(t-fidsT>1000){fidsT=t;drawSigns(now);sky();$('#apClock').textContent=`${dstr(S.day,1)} ${hhmm(now)}`;}
+    if(t-fidsT>1000){fidsT=t;drawSigns(now);sky();updJourney();$('#apClock').textContent=`${dstr(S.day,1)} ${hhmm(now)}`;}
     if(!$('#apInfo').hidden&&t-infoT>6000&&locked)$('#apInfo').hidden=true;
     if(t-lastPrompt>150){lastPrompt=t;const hit=ray(),pr=$('#apPrompt');
       if(hit&&$('#apInfo').hidden){const k=hit.object.userData.kind;pr.hidden=false;pr.textContent=`${mobile?'按「查看」':(locked||noLock)?'點左鍵或 E':'按 E'}：${VERB[k]||'查看'}${NAMES[k]?' '+NAMES[k]:''}`;}else pr.hidden=true;}
@@ -1920,7 +3000,7 @@ const AP=(()=>{
     renderer.render(scene,cam);
   }
   /* ---------- 開關 ---------- */
-  function renderBases(){$('#apTitle').textContent=`${BASES[base].name}機場・出境大廳`;
+  function renderBases(){$('#apTitle').textContent=`${BASES[base].name}機場・${floor===2?'二樓入境大廳':floor===3?'頂樓觀景台':pos.z<-30?'出境報到大廳':'登機門區'}`;
     $('#apBases').innerHTML=(S.bases||['TPE']).length>1?(S.bases||['TPE']).map(b=>`<button data-apb="${b}" aria-pressed="${b===base}">${BASES[b].short}</button>`).join(''):'';}
   function resetGates(){for(const g of gateObjs){if(g.plane){removeObj(g.plane);g.plane=null;}if(g.veh){removeObj(g.veh);g.veh=null;}g.key=null;}for(const rw of runway){if(rw.mesh){removeObj(rw.mesh);rw.mesh=null;}rw.key=null;}lastAssign=0;fidsT=0;}
   async function open(){
@@ -1928,6 +3008,9 @@ const AP=(()=>{
     base=(UI.base&&UI.base!=='+'&&(S.bases||['TPE']).includes(UI.base))?UI.base:'TPE';renderBases();
     try{await loadLib();}catch(e){$('#apLoad').textContent='3D 機場需要網路連線才能載入，請連上網路後再試一次。（按 ESC 離開）';return;}
     try{if(!built)build();}catch(e){console.error(e);$('#apLoad').textContent='這台裝置的瀏覽器不支援 3D 畫面。（按 ESC 離開）';return;}
+    apNow=acc/DAY_MS*24;pass=secDone=immDone=boarded=carrying=false;myFlight=null;ride=null;zoom=false;sitting=null;Q={bag:0,kid:0};closeGates();if(lostBag)lostBag.visible=false;
+    if(qNpc.kid&&qNpc.kid.parent!==G.land){qNpc.kid.parent.remove(qNpc.kid);G.land.add(qNpc.kid);qNpc.kid.position.set(-36,0,-48.5);qNpc.kid.updateMatrix();qNpc.kid.traverse(o=>{if(o.userData.kind)o.userData.f=1;});}
+    setFloor(1,0,-53.5,0);pitch=-.05;paT=8;updJourney();
     resetGates();$('#apLoad').hidden=true;resize();running=true;last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
   }
   function close(){running=false;cancelAnimationFrame(raf);$('#apOv').hidden=true;for(const k in keys)keys[k]=false;joy={x:0,y:0,id:null};if(sitting){sitting.taken=false;sitting=null;}
@@ -1961,10 +3044,11 @@ const AP=(()=>{
   $('#apAct').addEventListener('click',doInteract);
   $('#apInfoClose').addEventListener('click',()=>{$('#apInfo').hidden=true;});
   $('#apClose').addEventListener('click',close);
-  $('#apBases').addEventListener('click',e=>{const b=e.target.closest('[data-apb]');if(!b)return;base=b.dataset.apb;renderBases();resetGates();});
+  $('#apStampBtn').addEventListener('click',e=>{e.stopPropagation();stampBook();});
+  $('#apBases').addEventListener('click',e=>{const b=e.target.closest('[data-apb]');if(!b)return;base=b.dataset.apb;pass=secDone=immDone=boarded=false;myFlight=null;closeGates();setFloor(1,0,-53.5,0);renderBases();resetGates();});
   new ResizeObserver(()=>{if(running)resize();}).observe($('#apOv'));
   $('#apBtn').addEventListener('click',open);
-  return {open,close,get running(){return running;},get pos(){return pos;},set yaw(v){yaw=v;},set pitch(v){pitch=v;},get sitting(){return sitting;},info:()=>renderer&&renderer.info.render,_dbg:()=>({T,scene,cam}),ray:()=>{const h=ray();return h&&h.object.userData.kind;},interactHit:()=>{const h=ray();if(h)act(h);return h&&h.object.userData.kind;},get cols(){return cols.length;}};
+  return {fin:()=>{if(ride){ride.t=ride.dur;rideTick(0);}},tp:(f,x,z,yw)=>setFloor(f,x,z,yw),get floor(){return floor;},get state(){return {pass,secDone,immDone,boarded,my:!!myFlight,ride:!!ride,carrying,Q:{...Q},stamps:stampCount()};},info:()=>renderer&&renderer.info.render,open,close,get running(){return running;},get pos(){return pos;},set yaw(v){yaw=v;},set pitch(v){pitch=v;},get sitting(){return sitting;},_dbg:()=>({T,scene,cam}),ray:()=>{const h=ray();return h&&h.object.userData.kind;},interactHit:()=>{const h=ray();if(h)act(h);return h&&h.object.userData.kind;},get cols(){return cols.length;}};
 })();
 
 /* ===================== 殺價 ===================== */
@@ -2222,7 +3306,7 @@ function vOpen(c,r){
    else if(oc.f>0)o_cs=`<div class="row"><button class="btn ghost sm" data-act="neg" data-arg="cs" data-arg2="${c.code}" ${S.cash<csCost(c)*.7?'disabled':''}>和${pn}談代碼共享</button><span class="hint">外國航空公司每週飛 ${oc.f} 班，合作後變成夥伴</span></div>`;
    else o_cs='';
    o+=o_cs;}
-  if(mine.some(p=>flying(p)&&PLANES[p.type].cls!=='cargo')){const cd=(S.capCD||0)-S.day;o+=`<div class="row"><button class="btn sm" data-act="captain" data-arg="${c.code}" ${cd>0?'disabled':''}>✈ 親自當機長飛一趟</button><span class="hint">${cd>0?`${cd} 天後可以再飛`:'飛得好可以提高聲望'}</span></div>`;}
+  if(mine.some(p=>flying(p)&&PLANES[p.type].cls!=='cargo')){const cd=(S.capCD||0)-S.day;o+=`<div class="row"><button class="btn sm" data-act="captain" data-arg="${c.code}">✈ 坐進駕駛艙親自飛</button><span class="hint">${cd>0?`現在是練習飛行（${cd} 天後再飛可以加聲望）`:'第一人稱全程駕駛，飛得好可以提高聲望'}</span></div>`;}
   const ac=1e7+c.M*1500;
   o+=`<div class="row">${S.ads[c.code]?`<span class="hint">廣告中（到 ${dstr(S.ads[c.code],1)}）</span>`:`<button class="btn ghost sm" data-act="neg" data-arg="ad" data-arg2="${c.code}" ${S.cash<ac?'disabled':''}>廣告 30 天（${money(ac)}）</button>`}<button class="btn ghost sm" data-act="close" data-arg="${c.code}">停飛這條航線</button></div>`;
   o+=marketBlock(c);
@@ -2487,10 +3571,10 @@ function drawLand(){
   landDirty=false;
 }
 // 太陽位置（遊戲時間是台北時間 UTC+8）
-function sunPos(){
+function sunPos(hh){
   const d=dateOf(S.day),doy=Math.floor((d-Date.UTC(d.getUTCFullYear(),0,0))/864e5);
   const decl=-23.44*Math.cos(2*Math.PI*(doy+10)/365);
-  const utc=acc/DAY_MS*24-8;
+  const utc=(hh??acc/DAY_MS*24)-8;
   return {decl:Math.abs(decl)<.5?.5:decl,lon:-(utc-12)*15};
 }
 function sunCos(lon,lat,sp){return Math.sin(lat*RAD)*Math.sin(sp.decl*RAD)+Math.cos(lat*RAD)*Math.cos(sp.decl*RAD)*Math.cos((lon-sp.lon)*RAD);}
@@ -2656,7 +3740,7 @@ function frame(now){
     if(n){if(!S.over&&now-lastSave>2000){save();lastSave=now;}if(!S.over&&now-lastCloud>60000){lastCloud=now;writeSlot('auto',true);}renderPanel();}
   }
   if(now-hudT>200&&S){updateHUD();hudT=now;if(dirty)renderPanel();}
-  if(!(typeof AP!=='undefined'&&AP.running))draw();requestAnimationFrame(frame);
+  if(!(typeof AP!=='undefined'&&AP.running)&&!(typeof FLY!=='undefined'&&FLY.running))draw();requestAnimationFrame(frame);
 }
 
 /* ===================== 事件綁定 ===================== */
