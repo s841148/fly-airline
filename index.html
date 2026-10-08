@@ -205,6 +205,13 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
 .board{font-family:var(--f-mono);font-size:12px;letter-spacing:.2em;color:var(--amber)}
 .field{display:flex;flex-direction:column;gap:6px}
 .field label{font-size:13px;color:var(--muted)}
+.field select{background:var(--ink);border:1px solid var(--line);border-radius:7px;padding:10px 12px;color:var(--fg);font:inherit;font-size:16px}
+.modecards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.modecard{display:flex;flex-direction:column;gap:6px;align-items:flex-start;text-align:left;background:var(--ink);border:1px solid var(--line);border-radius:12px;padding:16px;color:var(--fg);cursor:pointer;min-height:150px}
+.modecard:hover,.modecard:focus-visible{border-color:var(--amber)}.modecard .mi{font-size:34px}.modecard b{font-size:20px}.modecard small{color:var(--muted);line-height:1.5;font-size:13px}
+#pilotOv .fields{grid-template-columns:1fr 1fr}@media (max-width:600px){#pilotOv .fields{grid-template-columns:1fr}}
+.pilotrec{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.pilotrec div{background:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;text-align:center}.pilotrec b{display:block;font-size:18px;color:var(--amber)}.pilotrec small{color:var(--muted);font-size:12px}
+@media (max-width:600px){.modecards{grid-template-columns:1fr}.pilotrec{grid-template-columns:repeat(2,1fr)}}
 .field input{background:var(--ink);border:1px solid var(--line);border-radius:7px;padding:10px 12px;color:var(--fg);font:inherit;font-size:16px}
 .fields{display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:10px}
 .diffs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
@@ -235,7 +242,7 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
 @media (max-width:440px){.capwrap{height:230px}}
 .apov{position:fixed;inset:0;z-index:25;background:#000;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
 .apov canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
-.aptop{position:absolute;left:0;right:0;top:0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:linear-gradient(rgba(5,10,18,.85),rgba(5,10,18,0))}
+.aptop{position:absolute;left:0;right:0;top:0;z-index:3;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:linear-gradient(rgba(5,10,18,.85),rgba(5,10,18,0))}
 .aptitle{display:flex;flex-direction:column;margin-right:auto;line-height:1.25}
 .aptitle b{font-size:16px}.aptitle span{font-size:12px;color:var(--amber)}
 .apcross{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border:2px solid rgba(255,255,255,.7);border-radius:50%;pointer-events:none}
@@ -250,14 +257,14 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
 #flyCanvas{position:absolute;left:0;top:0;width:100%;height:calc(100% - var(--ph));display:block}
 .flypanel{position:absolute;left:0;bottom:0;width:100%;height:var(--ph);display:block;border-top:2px solid #262c35}
 .flycloud{position:absolute;left:0;top:0;right:0;height:calc(100% - var(--ph));background:#e9edf2;opacity:0;pointer-events:none}
-.flytop{position:absolute;left:0;right:0;top:0;display:flex;gap:8px 14px;align-items:center;flex-wrap:wrap;padding:calc(8px + env(safe-area-inset-top,0px)) 12px 14px;background:linear-gradient(rgba(5,10,18,.85),rgba(5,10,18,0))}
+.flytop{position:absolute;left:0;right:0;top:0;z-index:3;display:flex;gap:8px 14px;align-items:center;flex-wrap:wrap;padding:calc(8px + env(safe-area-inset-top,0px)) 12px 14px;background:linear-gradient(rgba(5,10,18,.85),rgba(5,10,18,0))}
 .fltitle{display:flex;flex-direction:column;line-height:1.2}.fltitle span{font-size:12px;color:var(--muted)}
 .flprog{display:flex;align-items:center;gap:8px;flex:1;min-width:240px;font-size:13px}
 .flbar{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.18);position:relative;min-width:80px}
 .flbar i{position:absolute;left:0;top:0;bottom:0;width:var(--p,0%);background:var(--amber);border-radius:3px}
 .flbar i::after{content:"✈";position:absolute;right:-8px;top:-9px;font-size:14px;color:var(--amber)}
 .flinfo{white-space:nowrap}.flinfo b{color:var(--amber)}
-.flwarp{display:flex;align-items:center;gap:8px}.flwh{font-size:12px;color:var(--muted);max-width:220px}
+.flwarp{display:flex;align-items:center;gap:8px}#flyWarp button.dim{opacity:.45}.flwh{font-size:12px;color:var(--muted);max-width:220px}
 .flyatc{position:absolute;right:10px;top:72px;width:min(360px,calc(100% - 20px));max-height:calc(100% - var(--ph) - 150px);display:flex;flex-direction:column;background:rgba(8,14,22,.88);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .atchead{display:flex;gap:8px;align-items:center;padding:8px 10px;background:transparent;border:0;color:var(--fg);text-align:left;font-weight:700;min-height:38px}
 .atclast{display:none;font-weight:400;font-size:13px;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
@@ -411,7 +418,37 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
       </div>
     </div>
     <p class="hint">規則接近現實但比較好上手，差別只有起始資金。目標：淨值超過三家對手，成為台灣第一大航空公司。</p>
-    <div class="row"><button class="btn" id="startBtn">成立公司</button><button class="btn ghost" id="contBtn" hidden>繼續上次的遊戲</button><button class="btn ghost" id="loadBtn">讀取存檔</button></div>
+    <div class="row"><button class="btn" id="startBtn">成立公司</button><button class="btn ghost" id="contBtn" hidden>繼續上次的遊戲</button><button class="btn ghost" id="loadBtn">讀取存檔</button><button class="btn ghost" id="toModeBtn">← 換遊戲</button></div>
+    <p class="copy">© 2026 麥麥的遊戲工廠 版權所有　<button class="linkbtn" data-terms>使用條款</button></p>
+  </div>
+</div>
+
+<div class="overlay" id="pilotOv" hidden>
+  <div class="modal">
+    <div class="board">WHALE AIR · FLIGHT OPS</div>
+    <h2>🐋 鯨魚機長</h2>
+    <p class="muted">你是鯨魚航空的飛行員。選好今天要飛的航班，就坐進駕駛艙出發吧！</p>
+    <div class="pilotrec" id="pilotRec"></div>
+    <div class="fields">
+      <div class="field"><label for="plFrom">出發機場</label><select id="plFrom"></select></div>
+      <div class="field"><label for="plTo">目的地</label><select id="plTo"></select></div>
+      <div class="field"><label for="plType">機型</label><select id="plType"></select></div>
+      <div class="field"><label for="plTime">起飛時間</label><select id="plTime"><option value="7">早上 7 點</option><option value="12">中午 12 點</option><option value="17.5">傍晚 5 點半（看夕陽）</option><option value="21">晚上 9 點（夜景）</option><option value="now">現在的時間</option></select></div>
+    </div>
+    <p class="hint" id="plInfo"></p>
+    <div class="row"><button class="btn" id="plGo">進入駕駛艙</button><button class="btn ghost" id="plBack">回到遊戲選單</button></div>
+    <p class="copy">© 2026 麥麥的遊戲工廠 版權所有　<button class="linkbtn" data-terms>使用條款</button></p>
+  </div>
+</div>
+
+<div class="overlay" id="modeOv" hidden>
+  <div class="modal">
+    <div class="board">麥麥的遊戲工廠 · 飛吧！</div>
+    <h2>選一個遊戲</h2>
+    <div class="modecards">
+      <button class="modecard" data-mode="tycoon"><span class="mi">🏢</span><b>航空大亨</b><small>成立自己的航空公司：買飛機、開航線、和對手搶客人，成為台灣第一大航空公司。</small></button>
+      <button class="modecard" data-mode="pilot"><span class="mi">🐋</span><b>鯨魚機長</b><small>當鯨魚航空的飛行員，坐進駕駛艙、和塔台通話，親手把飛機從起飛開到降落。</small></button>
+    </div>
     <p class="copy">© 2026 麥麥的遊戲工廠 版權所有　<button class="linkbtn" data-terms>使用條款</button></p>
   </div>
 </div>
@@ -619,8 +656,16 @@ const PLANES={
   b789:{name:'787-9',cls:'wide',C:26,Y:278,range:14000,speed:870,burn:5600,price:4.5e9,lead:720,lease:3.5e7,pilots:20,cabin:65,mbh:48000,util:16,belly:18,tag:'省油長程，飛美國主力'},
   a359:{name:'A350-900',cls:'wide',C:32,Y:274,range:15000,speed:880,burn:5900,price:5e9,lead:720,lease:3.8e7,pilots:20,cabin:65,mbh:50000,util:16,belly:20,tag:'長程旗艦，可飛歐洲'},
   a35k:{name:'A350-1000',cls:'wide',C:40,Y:308,range:16000,speed:880,burn:6800,price:5.7e9,lead:900,lease:4.4e7,pilots:22,cabin:75,mbh:56000,util:16,belly:24,tag:'最大最遠，可直飛紐約'},
+  b738:{name:'737-800',cls:'narrow',C:12,Y:150,range:5400,speed:840,burn:2550,price:1.35e9,lead:300,lease:1e7,pilots:12,cabin:28,mbh:20000,util:13,belly:2,tag:'經典窄體，便宜好買，但比 A321neo 耗油'},
+  b763:{name:'767-300ER',cls:'wide',C:24,Y:230,range:11000,speed:850,burn:5500,price:2.2e9,lead:360,lease:1.8e7,pilots:18,cabin:55,mbh:42000,util:14,belly:12,tag:'老牌中型廣體，價格便宜'},
+  b788:{name:'787-8',cls:'wide',C:22,Y:220,range:13500,speed:870,burn:4900,price:3.8e9,lead:600,lease:3e7,pilots:18,cabin:55,mbh:44000,util:16,belly:14,tag:'最小的夢幻客機，適合長程但客人不多的航線'},
+  b78x:{name:'787-10',cls:'wide',C:32,Y:300,range:11900,speed:870,burn:6100,price:5e9,lead:720,lease:3.9e7,pilots:20,cabin:70,mbh:50000,util:16,belly:22,tag:'最長的 787，中長程載客王'},
+  b772:{name:'777-200ER',cls:'wide',C:36,Y:280,range:13000,speed:890,burn:7000,price:3.9e9,lead:450,lease:3e7,pilots:20,cabin:70,mbh:52000,util:15,belly:20,tag:'大型雙引擎，長程耐操'},
+  b744:{name:'747-400',cls:'wide',C:50,Y:340,range:13400,speed:910,burn:11000,price:3.2e9,lead:300,lease:3e7,pilots:24,cabin:90,mbh:70000,util:14,belly:20,quad:1,tag:'空中女王！載客最多，但四具引擎很耗油'},
   b77f:{name:'777F 貨機',cls:'cargo',C:0,Y:0,range:9000,speed:870,burn:7800,price:5.8e9,lead:600,lease:4e7,pilots:18,cabin:0,mbh:52000,util:16,belly:102,tag:'全貨機，載 102 噸'}
 };
+// 3D 尺寸：長、機身半徑、翼展、四發
+const PDIM={a321:[44,2,35],b738:[40,1.9,34],a339:[63,2.8,64],b789:[63,2.9,60],b788:[57,2.9,60],b78x:[68,2.9,60],a359:[67,3,65],a35k:[74,3,65],b763:[55,2.5,48],b772:[64,3.1,61],b744:[71,3.2,64,1],b77f:[64,3.1,65]};
 // 城市：代碼、名稱、經度、緯度、桃園出發每週單程旅客市場、商務艙比例、經濟艙平均單程票價、你可取得的每週時段上限、區域
 const RAW=[
  ['HKG','香港',113.92,22.31,30000,.10,4200,35,'cn'],['MFM','澳門',113.59,22.15,6000,.05,3800,14,'cn'],
@@ -1115,7 +1160,7 @@ const CHOICES=[
       opts:[{t:'免費協助（聲望 +5）',run(){S.rep=Math.min(100,S.rep+5);news(`免費運送大貓熊到${c.name}，新聞大篇幅報導。`,'good');sfx('good');}},
             {t:'收運費 2,000萬（聲望 +1）',run(){S.cash+=2e7;S.rep=Math.min(100,S.rep+1);news('運送大貓熊，收入 2,000萬。','good');sfx('coin');}}]};}},
   {ok:()=>S.day>200,make(){
-    const t=rnd(['a339','b789','a359']),disc=.08,price=PLANES[t].price*(1-disc);
+    const t=rnd(['a339','b789','a359','b772','b78x','b788']),disc=.08,price=PLANES[t].price*(1-disc);
     return {board:'AIRSHOW OFFER',title:'航空展特別優惠',text:`飛機製造商在航空展上提出優惠：現在下訂 ${PLANES[t].name} 打 92 折（${money(price)}），而且交機時間可提前 6 個月。要先付 20% 訂金 ${money(price*.2)}。`,
       opts:[{t:'下訂一架',dis:S.cash<price*.2,run(){orderNew(t,price,PLANES[t].lead-180);}},{t:'不用了',run(){}}]};}},
   {ok:()=>openCities().some(c=>c.reg==='sea'),make(){
@@ -1173,7 +1218,7 @@ function closeRoute(code,silent){
   if(!silent)news(`停飛${LEG(code).pair}，飛機回到機庫。`,'info');
 }
 function refreshUsed(){
-  const list=[];const types=['a321','a321','a321','a339','b789','a359','b77f'];
+  const list=[];const types=['a321','a321','b738','b738','b738','a339','b763','b763','b789','b772','b744','a359','b77f'];
   for(let i=0;i<4;i++){const t=rnd(types),age=4+Math.floor(Math.random()*12),val=PLANES[t].price*Math.max(.25,Math.pow(.93,age))*(0.9+Math.random()*.2);
     list.push({id:'U'+S.day+'-'+i,type:t,age,price:Math.round(val/1e7)*1e7});}
   S.used=list;
@@ -1431,6 +1476,11 @@ const FLY=(()=>{
     narrow:{m:72000,T:270000,S:123,vr:145,v2:155,vref:137,cl:[1.5,2.2,2.5,2.9],a0:[-2,-6,-8,-11],fv:[350,230,200,177],crKt:450,eye:[.55,4.4,18.4],L:44,r:2,span:35},
     wide:{m:220000,T:700000,S:362,vr:155,v2:165,vref:147,cl:[1.5,2.2,2.5,2.9],a0:[-2,-6,-8,-11],fv:[350,240,215,180],crKt:480,eye:[.6,6.2,27],L:62,r:2.9,span:60}
   };
+  const MASS={a321:72000,b738:70000,a339:210000,b789:220000,b788:200000,b78x:245000,a359:250000,a35k:300000,b763:170000,b772:270000,b744:360000,b77f:300000};
+  const VSP={b738:[145,155,140],b763:[150,160,142],b788:[150,160,142],b78x:[160,168,152],b772:[160,170,150],b744:[165,175,155],a35k:[160,170,150],a359:[155,165,147]};
+  function perf(t){const T=PLANES[t]||PLANES.a321,base=TY[T.cls==='narrow'?'narrow':'wide'],D=PDIM[t]||[base.L,base.r,base.span],m=MASS[t]||base.m,k=m/base.m,v=VSP[t];
+    return {...base,m,T:base.T*k*(D[3]?1.05:1),S:base.S*k,L:D[0],r:D[1],span:D[2],quad:!!D[3],vr:v?v[0]:base.vr,v2:v?v[1]:base.v2,vref:v?v[2]:base.vref,crKt:Math.round((T.speed||850)/1.852*.98),eye:[D[1]<2.2?.55:.6,D[1]+1.85+(D[3]?2.6:.55),D[0]/2-(D[3]?6:3.6)],type:t};}
+  let CX={name:'',code:'WH',livery:{},pilot:false};
   const EN={TPE:'Taipei',KHH:'Kaohsiung',RMQ:'Taichung',TSA:'Songshan',BKK:'Bangkok',NRT:'Narita',HND:'Tokyo',HKG:'Hong Kong',MFM:'Macau',PVG:'Shanghai',SHA:'Hongqiao',KIX:'Kansai',NGO:'Chubu',FUK:'Fukuoka',CTS:'Chitose',OKA:'Naha',ICN:'Incheon',GMP:'Gimpo',PUS:'Gimhae',MNL:'Manila',CEB:'Mactan',SGN:'Tan Son Nhat',HAN:'Noi Bai',DAD:'Da Nang',KUL:'Kuala Lumpur',SIN:'Singapore',CGK:'Jakarta',DPS:'Bali',HKT:'Phuket',PNH:'Phnom Penh',DEL:'Delhi',SYD:'Sydney',BNE:'Brisbane',MEL:'Melbourne',AKL:'Auckland',GUM:'Guam',HNL:'Honolulu',LAX:'Los Angeles',SFO:'San Francisco',SEA:'Seattle',YVR:'Vancouver',YYZ:'Toronto',JFK:'Kennedy',ORD:"O'Hare",IAH:'Houston',DXB:'Dubai',IST:'Istanbul',LHR:'Heathrow',CDG:'De Gaulle',FRA:'Frankfurt',AMS:'Schiphol',MUC:'Munich',PRG:'Prague',FCO:'Rome',CAN:'Baiyun'};
   const NATO={A:'Alpha',B:'Bravo',C:'Charlie',D:'Delta',E:'Echo',F:'Foxtrot',G:'Golf',H:'Hotel',I:'India',J:'Juliett',K:'Kilo',L:'Lima',M:'Mike',N:'November',O:'Oscar',P:'Papa',Q:'Quebec',R:'Romeo',S:'Sierra',T:'Tango',U:'Uniform',V:'Victor',W:'Whiskey',X:'X-ray',Y:'Yankee',Z:'Zulu'};
   const DIG=['zero','one','two','three','four','five','six','seven','eight','nine'];
@@ -1452,7 +1502,7 @@ const FLY=(()=>{
   function loadLib(){if(window.THREE)return Promise.resolve();return new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
   function bearing(l1,p1,l2,p2){const y=Math.sin((l2-l1)*RAD)*Math.cos(p2*RAD),x=Math.cos(p1*RAD)*Math.sin(p2*RAD)-Math.sin(p1*RAD)*Math.cos(p2*RAD)*Math.cos((l2-l1)*RAD);return (Math.atan2(y,x)/RAD+360)%360;}
   const rwyNum=b=>{const n=Math.round(b/10)%36||36;return String(n).padStart(2,'0');};
-  const spokenCs=()=>S.code.split('').map(c=>NATO[c]||c).join(' ')+' '+String(st.fno).split('').map(d=>DIG[+d]).join(' ');
+  const spokenCs=()=>CX.code.split('').map(c=>NATO[c]||c).join(' ')+' '+String(st.fno).split('').map(d=>DIG[+d]).join(' ');
   const enName=code=>EN[code]||code;
 
   /* ---------- 場景 ---------- */
@@ -1538,16 +1588,17 @@ const FLY=(()=>{
     const b=M(new T.CylinderGeometry(2,2,40,10),std(0xf3f3ef,.5));b.rotation.x=Math.PI/2;b.position.y=4;gr.add(b);
     const w=M(new T.BoxGeometry(34,.4,6),std(0xb9c1cc,.5));w.position.set(0,3.4,1);gr.add(w);const f=M(new T.BoxGeometry(.4,7,6),std(c,.5));f.position.set(0,8,-17);gr.add(f);return gr;}
   /* 自己的飛機（外部視角） */
-  function makeModel(c1,c2,wide){
-    const P=TY[wide?'wide':'narrow'],L=P.L,r=P.r,span=P.span,g=new T.Group();
+  function makeModel(c1,c2,P){
+    const L=P.L,r=P.r,span=P.span,g=new T.Group();
     const white=std(0xf3f3ef,.45,.15),grey=std(0xb9c1cc,.5,.3),cm=std(c1,.5,.1),cm2=std(c2,.45,.2);
     const prof=[new T.Vector2(.01,-L/2)];for(let i=1;i<=8;i++){const t=i/8;prof.push(new T.Vector2(r*(.2+.8*Math.sin(t*Math.PI/2)),-L/2+L*.26*t));}prof.push(new T.Vector2(r,L*.33));for(let i=1;i<=8;i++){const t=i/8;prof.push(new T.Vector2(Math.max(.01,r*Math.cos(t*Math.PI/2)**.7),L*.33+L*.17*t));}
     const fg=new T.LatheGeometry(prof,24);fg.rotateX(Math.PI/2);g.add(M(fg,white));
     const stripe=M(new T.CylinderGeometry(r*1.01,r*1.01,L*.56,24,1,true,Math.PI*.62,Math.PI*.76),cm);stripe.rotation.x=Math.PI/2;stripe.rotation.z=Math.PI;g.add(stripe);
     for(const s of [1,-1]){const sh=new T.Shape();sh.moveTo(0,0);sh.lineTo(span/2,-span*.18);sh.lineTo(span/2,-span*.18-r*1.1);sh.lineTo(0,-r*3.6);sh.closePath();const geo=new T.ExtrudeGeometry(sh,{depth:.35,bevelEnabled:false});geo.rotateX(Math.PI/2);const m=M(geo,grey);m.scale.x=s;m.position.set(0,-r*.42,L*.05);g.add(m);
-      const en=M(new T.CylinderGeometry(r*.48,r*.42,r*2.4,16),cm2);en.rotation.x=Math.PI/2;en.position.set(s*span*.27,-r*1.1,L*.08-span*.1);g.add(en);
+      for(const fr of (P.quad?[.2,.37]:[.27])){const en=M(new T.CylinderGeometry(r*.48,r*.42,r*2.4,16),cm2);en.rotation.x=Math.PI/2;en.position.set(s*span*fr,-r*1.1,L*.08-span*.37*fr);g.add(en);}
       const hs=new T.Shape();hs.moveTo(0,0);hs.lineTo(span*.17,-L*.05);hs.lineTo(span*.17,-L*.085);hs.lineTo(0,-L*.11);hs.closePath();const hg=new T.ExtrudeGeometry(hs,{depth:.25,bevelEnabled:false});hg.rotateX(Math.PI/2);const hm=M(hg,cm);hm.scale.x=s;hm.position.set(0,r*.3,-L*.33);g.add(hm);}
     const fsh=new T.Shape();fsh.moveTo(0,0);fsh.lineTo(-L*.17,0);fsh.lineTo(-L*.23,r*2.9);fsh.lineTo(-L*.15,r*2.9);fsh.closePath();const fgeo=new T.ExtrudeGeometry(fsh,{depth:.35,bevelEnabled:false});fgeo.rotateY(Math.PI/2);const fin=M(fgeo,cm);fin.position.set(-.17,r*.7,-L*.29);g.add(fin);
+    if(P.quad){const hp=M(new T.SphereGeometry(r*.8,16,12),white);hp.scale.set(1,.75,5.2);hp.position.set(0,r*.62,L*.27);g.add(hp);}
     const gear=new T.Group();for(const [x,z] of [[0,L*.36],[-r*.8,-L*.04],[r*.8,-L*.04]]){const s=M(new T.CylinderGeometry(.18,.18,1.6,8),grey);s.position.set(x,-r-.6,z);gear.add(s);const w=M(new T.CylinderGeometry(.55,.55,.5,12),std(0x15181c,.9));w.rotation.z=Math.PI/2;w.position.set(x,-r-1.3,z);gear.add(w);}
     g.add(gear);g.userData.gear=gear;g.userData.r=r;
     return g;
@@ -1555,12 +1606,12 @@ const FLY=(()=>{
 
   /* ---------- 開始一趟飛行 ---------- */
   function setup(code,opt){
-    const c=LEG(code);const p=(opt&&opt.p)||S.planes.find(x=>x.route===code&&PLANES[x.type].cls!=='cargo'&&x.st==='active')||S.planes.find(x=>x.route===code&&PLANES[x.type].cls!=='cargo');if(!c||!p)return false;
-    const B=BASES[c.base]||BASES.TPE,D=CITY[c.dest],wide=PLANES[p.type].cls!=='narrow',P=TY[wide?'wide':'narrow'];
+    const c=LEG(code);const p=(opt&&opt.p)||(S&&!CX.pilot?(S.planes.find(x=>x.route===code&&PLANES[x.type].cls!=='cargo'&&x.st==='active')||S.planes.find(x=>x.route===code&&PLANES[x.type].cls!=='cargo')):null);if(!c||!p)return false;
+    const B=BASES[c.base]||BASES.TPE,D=CITY[c.dest],wide=PLANES[p.type].cls!=='narrow',P=perf(p.type);
     const b0=bearing(B.lon,B.lat,D.lon,D.lat),b1=(bearing(D.lon,D.lat,B.lon,B.lat)+180)%360;
     const Dm=c.d*1000,crFL=c.d<700?240:c.d<1500?300:c.d<4000?350:370;
-    const h0=acc/DAY_MS*24;
-    st={c,p,B,D,P,wide,code,fno:S.routes[code]?S.routes[code].fno:(S.fno||101),Dm,Zd:Dm+1200,b0,b1,rwy0:rwyNum(b0),rwy1:rwyNum(b1),crFL,h0,t:0,
+    const h0=(opt&&opt.h0!=null)?opt.h0:CX.pilot?new Date().getHours()+new Date().getMinutes()/60:acc/DAY_MS*24;
+    st={opt,c,p,B,D,P,wide,code,fno:(opt&&opt.fno)||(S&&!CX.pilot&&S.routes[code]?S.routes[code].fno:101),Dm,Zd:Dm+1200,b0,b1,rwy0:rwyNum(b0),rwy1:rwyNum(b1),crFL,h0,t:0,
       x:0,y:0,z:160,V:0,gam:0,psi:0,th:0,ph:0,phi:0,alpha:0,ground:true,flap:1,flapP:1,gear:true,gearP:1,brake:true,spd:false,rev:false,lever:0,thr:0,
       apOn:false,athr:mode==='easy',belt:true,stage:'ready',ended:false,crashed:false,stall:false,maxG:1,nz:1,
       sc:{to:0,toMax:20,atc:0,atcMax:0,cr:20,ld:0,log:[]},tdVS:0,tdZ:0,tdX:0,landClr:false,toClr:false,
@@ -1570,7 +1621,7 @@ const FLY=(()=>{
     st.wind={dir:(Math.round((b1+(Math.random()*60-30))/10)*10+360)%360||360,kt:3+Math.floor(Math.random()*12)};
     clearDyn();
     airport(0,st.rwy0,false,B.name);airport(st.Zd,st.rwy1,true,D.name);
-    const L_=S.livery||{};cock.userData.fg.position.x=-P.eye[0];model=makeModel(L_.c1||'#F2B53A',L_.c2||'#7CCBE0',wide);model.visible=false;rig.add(model);model.position.set(-P.eye[0],-(P.eye[1]-P.r-1.85),-P.eye[2]);
+    const L_=CX.livery||{};cock.userData.fg.position.x=-P.eye[0];model=makeModel(L_.c1||'#F2B53A',L_.c2||'#7CCBE0',P);model.visible=false;rig.add(model);model.position.set(-P.eye[0],-(P.eye[1]-P.r-1.85),-P.eye[2]);
     // 進場導引框（簡單模式）
     guide=new T.Group();const gm=new T.LineBasicMaterial({color:0x58f08c,transparent:true,opacity:.85});
     for(let d=600;d<=20000;d+=d<3000?300:700){const y=Math.tan(3*RAD)*d,w=40+d*.012,h=25+d*.008;const pts=[[-w,-h],[w,-h],[w,h],[-w,h],[-w,-h]].map(([a,b])=>new T.Vector3(a,y+b,-d+300));guide.add(new T.Line(new T.BufferGeometry().setFromPoints(pts),gm));}
@@ -1601,7 +1652,7 @@ const FLY=(()=>{
     if(st.athr){let tgt;
       if(st.ground&&!st.landed)tgt=st.toga?999:-1;
       else if(st.landed)tgt=0;
-      else{tgt=agl<10000*FT?250:Math.min(290,P.crKt*Math.sqrt(r/R0));if(agl<1000*FT&&dTD>60000)tgt=Math.min(tgt,P.v2+15);if(dTD<60000)tgt=Math.min(tgt,dTD<15000?P.vref+5:dTD<30000?185:220);if(agl<7&&dTD<8000)tgt=0;}
+      else{tgt=agl<10000*FT?250:Math.min(290,P.crKt*Math.sqrt(r/R0));if(agl<1000*FT&&dTD>60000)tgt=Math.min(tgt,P.v2+15);if(dTD<60000)tgt=Math.min(tgt,dTD<15000?P.vref+5:dTD<30000?185:220);if(agl<5&&dTD<8000)tgt=0;}
       st.atTgt=tgt;
       if(tgt>=999)st.lever=1;else if(tgt===0)st.lever=0;else if(tgt>0){const e=tgt-I;st.atI=clamp((st.atI??st.lever)+e*.0035*dt,0,1);st.lever=clamp(st.atI+e*.03+st.gam*3,0,1);}
     }
@@ -1637,7 +1688,7 @@ const FLY=(()=>{
       let gdot=ex*.05;if(st.apOn)gdot=st.apG;
       if(easy&&!st.apOn&&ex===0&&dTD<20000&&st.gear&&agl>14)gdot=clamp((-3*RAD-st.gam)*.5,-.02,.02);
       // 自動拉平（簡單模式）
-      if(easy&&!st.apOn&&agl<9&&st.gear&&st.gam<0&&dTD<6000){const want=-.8/Math.max(30,st.V);gdot=Math.max(gdot,clamp((want-st.gam)*1.2,-.06,.06));}
+      if(easy&&!st.apOn&&agl<6.5&&st.gear&&st.gam<0&&dTD<6000){const want=-1.15/Math.max(30,st.V);gdot=Math.max(gdot,clamp((want-st.gam)*1.2,-.06,.06));}
       if(!st.apOn){const tgtPhi=ey*(easy?28:33)*RAD;const k=ey!==0||!easy?1:1;st.phi+=clamp((ey!==0?tgtPhi:(easy?0:st.phi))-st.phi,-1,1)*Math.min(1,dt*1.6*k);}
       const cphi=Math.max(.3,Math.cos(st.phi));
       let n=(gdot*st.V/G+Math.cos(st.gam))/cphi;n=clamp(n,-.5,2.5);
@@ -1686,7 +1737,7 @@ const FLY=(()=>{
   function retryApproach(){hideEnd();const P=st.P;Object.assign(st,{callouts:{},done:false,tail:false,toga:true,x:0,z:st.Zd+300-16000,y:Math.tan(3*RAD)*16000,V:(P.vref+40)*KT/Math.sqrt(rho(900)/R0),gam:-3*RAD,psi:0,phi:0,ground:false,landed:false,crashed:false,ended:false,gear:mode==='easy'?false:true,flap:2,flapP:2,spd:false,rev:false,brake:false,apOn:false,lever:.35,thr:.35,stage:'final'});
     st.sc.ld=0;st.sc.log.push(['重新進場',0]);st.retried=true;st.atc.unit='twr2';st.atc.pending=null;st.atc.descGiven=true;st.atc.clearedFT=3000;if(!st.landClr){atcSay(`${st.cs}, ${enName(st.D.code)} Tower, runway ${st.rwy1}, cleared to land, wind ${String(st.wind.dir).padStart(3,'0')} at ${st.wind.kt}.`,`跑道 ${st.rwy1} 可以降落。`);st.landClr=true;}
     setWarp(1);setReplies(defaultReplies());updButtons();}
-  function restart(){const code=st.code,p=st.p;setup(code,{p});initATC();setWarp(1);st.started=true;updButtons();}
+  function restart(){const code=st.code,o={...(st.opt||{}),p:st.p};setup(code,o);initATC();setWarp(1);st.started=true;updButtons();}
 
   /* ---------- 自動駕駛 ---------- */
   function autopilot(dt){
@@ -1707,14 +1758,14 @@ const FLY=(()=>{
   /* ---------- 塔台通訊 ---------- */
   const UNIT=()=>({twr:[`${enName(st.B.code)} Tower`,`${st.B.short}塔台`,'118.7'],dep:[`${enName(st.B.code)} Departure`,`${st.B.short}離場台`,'124.7'],ctr1:[`${st.B.tw?'Taipei':enName(st.B.code)} Control`,`${st.B.tw?'台北':st.B.short}區管中心`,'128.1'],
     ctr2:[st.Dm>4500000?'Oceanic Control':`${enName(st.D.code)} Control`,st.Dm>4500000?'海洋管制中心':`${st.D.name}區管中心`,'132.6'],app:[`${enName(st.D.code)} Approach`,`${st.D.name}近場台`,'119.1'],twr2:[`${enName(st.D.code)} Tower`,`${st.D.name}塔台`,'118.1'],gnd:[`${enName(st.D.code)} Ground`,`${st.D.name}地面管制`,'121.7']});
-  function initATC(){st.cs=`${S.code}${st.fno}`;st.chat=[];st.atc={unit:'twr',pending:null,remind:0,clearedFT:5000,descGiven:false,events:[],unitT:0};
+  function initATC(){st.cs=`${CX.code}${st.fno}`;st.chat=[];st.atc={unit:'twr',pending:null,remind:0,clearedFT:5000,descGiven:false,events:[],unitT:0};
     sys(`你在 ${st.B.name} 跑道 ${st.rwy0} 頭，準備飛往 ${st.D.name}（${Math.round(st.c.d).toLocaleString()} 公里）。先跟塔台請求起飛許可！`);
     setReplies([['請求起飛',`${UNIT().twr[0]}, ${st.cs}, ready for departure runway ${st.rwy0}.`,'req_takeoff']]);
   }
   function sys(t){st.chat.push({who:'sys',zh:t});renderChat();}
   function atcSay(en,zh,replies){const u=UNIT()[st.atc.unit];st.chat.push({who:'atc',name:u[1],en,zh});renderChat();speak(en);snd('radio');if(replies)setReplies(replies);}
   function me(text){st.chat.push({who:'me',en:text});renderChat();}
-  function setPending(type,data,replies){st.atc.pending={type,...data,t:st.t,real:performance.now()};st.sc.atcMax+=3;if(replies)setReplies(replies);}
+  function setPending(type,data,replies){if(warp>1)setWarp(1);st.atc.remind=0;st.atc.pending={type,...data,t:st.t,real:performance.now()};st.sc.atcMax+=3;if(replies)setReplies(replies);}
   function handoff(next){const U=UNIT(),u=U[next];setPending('handoff',{next},[[`切換到 ${u[1]}（${u[2]}）`,`${u[2]}, ${st.cs}, good day.`,'readback']]);atcSay(`${st.cs}, contact ${u[0]} ${u[2]}, good day.`,`請改聯絡${u[1]}，頻率 ${u[2]}。`);}
   function fl(ft){return ft>=10000?`flight level ${String(Math.round(ft/100)).padStart(3,'0')}`:`${ft.toLocaleString('en')} feet`;}
   function flZh(ft){return ft>=10000?`FL${Math.round(ft/100)}（${ft.toLocaleString()} 呎）`:`${ft.toLocaleString()} 呎`;}
@@ -1727,7 +1778,7 @@ const FLY=(()=>{
     if(intent==='readback')return atcSay(`${st.cs}, roger.`,'收到。',defaultReplies());
     if(intent==='req_takeoff'){
       if(A.unit==='twr'&&st.ground&&!st.toClr){st.toClr=true;st.sc.atcMax+=2;st.sc.atc+=2;setPending('to',{},[['複誦起飛許可',`Cleared for takeoff runway ${st.rwy0}, ${st.cs}.`,'readback']]);
-        atcSay(`${st.cs}, wind ${String(st.wind.dir).padStart(3,'0')} degrees ${st.wind.kt} knots, runway ${st.rwy0}, cleared for takeoff.`,`風向 ${st.wind.dir} 度 ${st.wind.kt} 節，跑道 ${st.rwy0} 可以起飛！${mode==='easy'?'（推油門：按 W 或 Shift，或右下油門）':''}`);return;}
+        atcSay(`${st.cs}, wind ${String(st.wind.dir).padStart(3,'0')} degrees ${st.wind.kt} knots, runway ${st.rwy0}, cleared for takeoff.`,`風向 ${st.wind.dir} 度 ${st.wind.kt} 節，跑道 ${st.rwy0} 可以起飛！${mode==='easy'?'（推油門：按 E，或拉右邊的油門桿）':''}`);return;}
       return atcSay(st.toClr?`${st.cs}, you are already cleared for takeoff.`:`${st.cs}, say again?`,st.toClr?'你已經可以起飛了喔。':'請再說一次？');}
     if(intent==='req_land'){
       if(A.unit==='twr2'&&!st.landClr&&dTD<40000){st.landClr=true;st.sc.atcMax+=3;st.sc.atc+=3;setPending('land',{},[['複誦降落許可',`Cleared to land runway ${st.rwy1}, ${st.cs}.`,'readback']]);
@@ -1772,12 +1823,12 @@ const FLY=(()=>{
     if(A.unit==='twr'&&!st.ground&&agl>450&&!A.pending)handoff('dep');
     if(A.unit==='dep'&&!A.pending&&st.z>Math.min(st.Dm*.12,120000)&&agl>4000)handoff('ctr1');
     if(A.unit==='ctr1'&&!A.pending&&st.Dm>2200000&&st.z>st.Dm*.45)handoff('ctr2');
-    if(!A.descGiven&&!A.pending&&!st.ground&&dTD<todDist()&&dTD>60000)giveDescent(false);
+    if(!A.descGiven&&!A.pending&&!st.ground&&dTD<todDist())giveDescent(false);
     if((A.unit==='ctr1'||A.unit==='ctr2'||A.unit==='dep')&&!A.pending&&dTD<110000&&A.descGiven)handoff('app');
     if(A.unit==='app'&&!A.pending&&dTD<20000)handoff('twr2');
-    if(!st.landClr&&dTD<6000&&!st.ground&&A.unit!=='twr2'&&A.unit!=='gnd'&&!A.pending){A.unit='twr2';}
+    if(!st.landClr&&dTD<6000&&!st.ground&&A.unit!=='twr2'&&A.unit!=='gnd'){A.pending=null;A.unit='twr2';}
     if(!st.landClr&&dTD<4500&&!st.ground&&A.unit==='twr2'&&!A.autoLand){A.autoLand=true;st.landClr=true;atcSay(`${st.cs}, ${UNIT().twr2[0]}, runway ${st.rwy1}, cleared to land.`,`（塔台主動給你降落許可）跑道 ${st.rwy1} 可以降落。下次記得先請求喔！`);}
-    if(st.turb&&!st.turb.warned&&st.z>st.turb.z0-160000){st.turb.warned=true;if(warp>1)setWarp(1);atcSay(`${st.cs}, moderate turbulence reported ahead, ${Math.round((st.turb.z0-st.z)/1852)} miles.`,`前方 ${Math.round((st.turb.z0-st.z)/1000)} 公里有中度亂流！記得打開「安全帶燈」，也可以請求爬升。`,defaultReplies());}
+    if(st.turb&&!st.turb.warned&&st.z>st.turb.z0-160000){st.turb.warned=true;if(warp>1)setWarp(1);atcSay(`${st.cs}, moderate turbulence reported ahead, ${Math.round((st.turb.z0-st.z)/1852)} miles.`,`前方 ${Math.round((st.turb.z0-st.z)/1000)} 公里有中度亂流！記得打開「安全帶燈」，也可以請求爬升。`,A.pending?undefined:defaultReplies());}
     if(st.landed&&st.V<16&&!st.done){st.done=true;A.unit='gnd';A.pending=null;greet('gnd');setTimeout(()=>{if(running&&st)result();},3500);}
   }
   function pd2(A){const pd=A.pending;if(!pd)return false;if(pd.type==='handoff'){A.unit=pd.next;A.pending=null;greet(pd.next);sys('（你沒有回覆，管制員幫你轉了頻率，通訊分數沒拿到）');}else{A.pending=null;}return true;}
@@ -1796,19 +1847,19 @@ const FLY=(()=>{
     if(!t.trim()||!st)return;me(t);
     const s=await getSample();
     if(!s){const i=parseIntent(t);handle(i==='unclear'?'?':i,null);return;}
-    aiBusy=true;showThinking(true);
+    const s0=st;aiBusy=true;showThinking(true);
     const A=st.atc,U=UNIT(),u=U[A.unit],dTD=distTD();
     const prompt=`你在一個給家人和小朋友玩的飛行遊戲裡扮演航空管制員，用無線電回覆玩家（機長）。
-你的單位：${u[0]}（${u[1]}），頻率 ${u[2]}。機長呼號：${st.cs}（${S.name}），機型 ${PLANES[st.p.type].name}。
+你的單位：${u[0]}（${u[1]}），頻率 ${u[2]}。機長呼號：${st.cs}（${CX.name}），機型 ${PLANES[st.p.type].name}。
 航班：${st.B.name}（跑道 ${st.rwy0}）飛往 ${st.D.name}（跑道 ${st.rwy1}），全程 ${Math.round(st.c.d)} 公里。
 目前：${st.ground?(st.landed?'已落地':'在地面跑道上'):'飛行中'}，高度 ${Math.round(st.y/FT)} 呎，空速 ${Math.round(ias()/KT)} 節，距離目的地 ${Math.round(dTD/1000)} 公里，許可高度 ${A.clearedFT} 呎，已許可起飛=${st.toClr}，已許可降落=${st.landClr}，等待機長複誦的指示=${A.pending?A.pending.type:'無'}。
 機長說：「${t.slice(0,300)}」
 請判斷機長的意思，從這些選一個 intent：req_takeoff（請求起飛）、readback（複誦、確認、收到、換頻率）、req_climb（請求爬升）、req_descent（請求下降）、req_land（請求降落）、weather（問天氣）、mayday（緊急狀況）、chat（閒聊、打招呼、問問題）、unclear（聽不懂）。
 再寫出你的回覆：en 是真實航管英文用語（一到兩句，開頭帶呼號），zh 是給 11 歲小朋友看的繁體中文（一句、親切）。閒聊可以有趣、友善，但要像專業的管制員，並回到正事。不要自己發出遊戲狀態沒有的許可。
 只輸出 JSON：{"intent":"...","en":"...","zh":"..."}`;
-    try{const r=await s.json(prompt,{modelTier:'quick',cache:false});const i=['req_takeoff','readback','req_climb','req_descent','req_land','weather','mayday','chat','unclear'].includes(r?.intent)?r.intent:'unclear';
+    try{const r=await s.json(prompt,{modelTier:'quick',cache:false});if(st!==s0)return;const i=['req_takeoff','readback','req_climb','req_descent','req_land','weather','mayday','chat','unclear'].includes(r?.intent)?r.intent:'unclear';
       handle(i==='unclear'?'?':i,{en:String(r.en||'').slice(0,240),zh:String(r.zh||'').slice(0,160)});}
-    catch(e){if(e&&e.code==='not_granted'){aiOK=false;sampleP=Promise.resolve(null);updAiBadge();}const i=parseIntent(t);handle(i==='unclear'?'?':i,null);}
+    catch(e){if(e&&e.code==='not_granted'){aiOK=false;sampleP=Promise.resolve(null);updAiBadge();}if(st!==s0)return;const i=parseIntent(t);handle(i==='unclear'?'?':i,null);}
     finally{aiBusy=false;showThinking(false);}
   }
   function getSample(){if(!sampleP)sampleP=(window.claude&&window.claude.use)?Promise.resolve(window.claude.use('sample')).catch(()=>null):Promise.resolve(null);return sampleP;}
@@ -1833,7 +1884,7 @@ const FLY=(()=>{
   /* ---------- 畫面 ---------- */
   function sky(){
     const f=clamp(st.z/st.Dm,0,1),arc=st.c.arc,i=Math.min(arc.length-1,Math.floor(f*(arc.length-1))),pt=arc[i];
-    const hh=st.h0+st.t/3600,dd=dateOf(S.day),doy=Math.floor((dd-Date.UTC(dd.getUTCFullYear(),0,0))/864e5),decl=-23.44*Math.cos(2*Math.PI*(doy+10)/365);
+    const hh=st.h0+st.t/3600,dd=CX.pilot?new Date(Date.UTC(new Date().getFullYear(),new Date().getMonth(),new Date().getDate())):dateOf(S.day),doy=Math.floor((dd-Date.UTC(dd.getUTCFullYear(),0,0))/864e5),decl=-23.44*Math.cos(2*Math.PI*(doy+10)/365);
     const sp={decl,lon:-((hh-8)-12)*15},cz=sunCos(pt[0],pt[1],sp),e=Math.asin(clamp(cz,-1,1))/RAD;st.sunE=e;st.lonlat=pt;st.localH=hh;
     const C=h=>new T.Color(h),lerp=(a,b,t)=>a.clone().lerp(b,clamp(t,0,1));let top,hor;
     if(e>8){top=C(0x2f6fb8);hor=C(0xbcdaf2);}else if(e>0){top=lerp(C(0x4a5f9a),C(0x2f6fb8),e/8);hor=lerp(C(0xf0a070),C(0xbcdaf2),e/8);}else if(e>-8){top=lerp(C(0x081230),C(0x4a5f9a),(e+8)/8);hor=lerp(C(0x16203c),C(0xf0a070),(e+8)/8);}else{top=C(0x030814);hor=C(0x0c1528);}
@@ -1989,7 +2040,7 @@ const FLY=(()=>{
     const t=st.turb;if(t&&!t.hit&&st.z>t.z0){if(warp>1)setWarp(1);if(st.y>(st.crFL*100+1500)*FT&&t.climbed){t.hit=true;st.sc.log.push(['爬升避開亂流',3]);st.sc.cr=Math.min(20,st.sc.cr+3);cue('成功避開亂流！',2.5);}
       else{t.hit=true;cue('亂流！',2);if(!st.belt){st.sc.cr-=8;st.sc.log.push(['亂流時沒開安全帶燈',-8]);sys('有旅客打翻了咖啡⋯⋯下次遇到亂流前要打開安全帶燈！');}else{st.sc.log.push(['亂流時安全帶燈有開',0]);sys('安全帶燈有開，旅客都坐好了，很安全！');}}}
     // 高度偏差（真實模式）
-    if(mode==='real'&&!st.ground&&!st.apOn&&st.atc.unit!=='twr'&&st.y>st.atc.clearedFT*FT+150&&!st.atc.altWarn){st.atc.altWarn=true;st.sc.cr-=4;st.sc.log.push(['超過許可高度',-4]);atcSay(`${st.cs}, check altitude, maintain ${fl(st.atc.clearedFT)}.`,`你飛太高了，請保持 ${flZh(st.atc.clearedFT)}！`);}
+    if(mode==='real'&&!st.ground&&!st.apOn&&st.atc.unit!=='twr'&&st.y>st.atc.clearedFT*FT+150&&st.gam>.005&&!st.atc.altWarn){st.atc.altWarn=true;st.sc.cr-=4;st.sc.log.push(['超過許可高度',-4]);atcSay(`${st.cs}, check altitude, maintain ${fl(st.atc.clearedFT)}.`,`你飛太高了，請保持 ${flZh(st.atc.clearedFT)}！`);}
     if(st.y<st.atc.clearedFT*FT)st.atc.altWarn=false;
     if(!st.ground&&ias()/KT>(st.y<10000*FT?345:360)&&!st.overW){st.overW=true;st.sc.cr-=4;st.sc.log.push(['超速',-4]);cue('超速！減油門',2);}
     if(st.stall&&!st.stallW){st.stallW=true;st.sc.cr-=6;st.sc.log.push(['失速',-6]);callout('stall, stall');}
@@ -2008,13 +2059,16 @@ const FLY=(()=>{
     $('#flyPhase').textContent=phase;
     $('#flyDist').textContent=dTD>2000?`剩 ${Math.round(dTD/1000).toLocaleString()} 公里`:`剩 ${Math.max(0,Math.round(dTD))} 公尺`;
     const gs=st.V*Math.cos(st.gam);$('#flyEta').textContent=gs>30?`約 ${fmtH(dTD/gs/3600)}`:'';
-    const canWarp=!st.ground&&st.apOn&&dTD>todDist()+20000&&!(st.turb&&!st.turb.hit&&st.z>st.turb.z0-60000)&&st.y>15000*FT;
-    document.querySelectorAll('#flyWarp button').forEach(b=>{b.disabled=+b.dataset.w>1&&!canWarp;b.setAttribute('aria-pressed',String(+b.dataset.w===warp));});
-    if(warp>1&&!canWarp){setWarp(1);if(dTD<todDist()+20000)cue('快到下降點了，恢復正常速度',2.5);}
-    $('#flyWarpHint').textContent=canWarp?'':(st.ground?'':(st.y<15000*FT?'爬到 15,000 呎以上、開自動駕駛就能快轉':!st.apOn?'開「自動駕駛」才能快轉':''));
+    const why=warpWhy();
+    document.querySelectorAll('#flyWarp button').forEach(b=>{b.classList.toggle('dim',+b.dataset.w>1&&!!why);b.setAttribute('aria-pressed',String(+b.dataset.w===warp));});
+    if(warp>1&&why){setWarp(1);cue(why,2.5);}
+    $('#flyWarpHint').textContent=why&&!st.ground?why:warp>1?'快轉中（自動駕駛飛行）':'';
     if(document.activeElement!==$('#flyThrV'))$('#flyThrV').value=Math.round(st.lever*100);
     updButtons();
   }
+  function warpWhy(){if(!st||st.ended)return '飛行結束了';if(st.atc.pending&&!['to','land'].includes(st.atc.pending.type))return '先回覆塔台的指示';if(st.ground)return '起飛以後才能快轉';if(st.y<300)return '先爬高到 1,000 呎以上';const dTD=distTD();if(dTD<25000)return '進場了，要自己飛';
+    if(st.turb&&!st.turb.hit&&st.z>st.turb.z0-40000&&st.z<st.turb.z1)return '前方有亂流，先別快轉';return '';}
+  function tryWarp(w){if(!st)return;if(w>1){const why=warpWhy();if(why){cue(why,2.5);return;}if(!st.apOn){st.apOn=true;if(mode==='real')st.athr=true;cue('已自動打開自動駕駛',1.8);updButtons();}}setWarp(w);}
   function setWarp(w){warp=w;document.querySelectorAll('#flyWarp button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.w===warp)));}
   function updButtons(){if(!st)return;const b=(id,on,txt)=>{const e=$(id);if(!e)return;e.setAttribute('aria-pressed',String(!!on));if(txt)e.textContent=txt;};
     b('#fbAP',st.apOn);b('#fbAT',st.athr);b('#fbGear',st.gear,st.gear?'起落架 ▼':'起落架 ▲');b('#fbFlap',st.flap>0,`襟翼 ${['UP','1','2','FULL'][st.flap]}`);b('#fbBrake',st.brake,st.ground?'煞車':'減速板');if(!st.ground)b('#fbBrake',st.spd);
@@ -2026,7 +2080,7 @@ const FLY=(()=>{
   /* ---------- 聊天 UI ---------- */
   function renderChat(){const el=$('#atcLog');if(!el)return;el.innerHTML=st.chat.slice(-40).map(m=>m.who==='sys'?`<div class="am sys">${esc(m.zh)}</div>`:m.who==='me'?`<div class="am me"><b>你</b>${esc(m.en)}</div>`:`<div class="am atc"><b>${esc(m.name)}</b><span class="en">${esc(m.en)}</span><span class="zh">${esc(m.zh||'')}</span></div>`).join('');el.scrollTop=el.scrollHeight;
     const lastA=[...st.chat].reverse().find(m=>m.who==='atc'||m.who==='sys');$('#atcLast').textContent=lastA?(lastA.who==='atc'?`${lastA.name}：${lastA.zh}`:lastA.zh):'';}
-  function setReplies(r){st.replies=r;const el=$('#atcQuick');el.innerHTML='';for(const [zh,en,intent] of r){const b=document.createElement('button');b.className='btn sm';b.innerHTML=`${esc(zh)}<small>${esc(en)}</small>`;b.onclick=()=>{me(en);setTimeout(()=>handle(intent),500);};el.appendChild(b);}}
+  function setReplies(r){st.replies=r;const el=$('#atcQuick');el.innerHTML='';for(const [zh,en,intent] of r){const b=document.createElement('button');b.className='btn sm';b.innerHTML=`${esc(zh)}<small>${esc(en)}</small>`;b.onclick=()=>{const s0=st;me(en);setTimeout(()=>{if(st&&st===s0)handle(intent);},500);};el.appendChild(b);}}
   function showThinking(on){$('#atcThink').hidden=!on;$('#atcSend').disabled=on;}
   function updAiBadge(){$('#atcAi').textContent=aiOK?'AI 塔台':'預設對話';$('#atcAi').className='chip '+(aiOK?'on':'');}
 
@@ -2034,24 +2088,28 @@ const FLY=(()=>{
   function result(){
     st.ended=true;const s=st.sc,atc=s.atcMax?Math.round(s.atc/s.atcMax*20):10,to=clamp(s.to,0,20),cr=clamp(s.cr,0,20),ld=clamp(s.ld,0,40);
     const sc=clamp(to+atc+cr+ld-(st.retried?10:0),0,100),stars='★'.repeat(Math.round(sc/20))+'☆'.repeat(5-Math.round(sc/20));
-    const cd=(S.capCD||0)-S.day,reward=cd<=0;let dRep=0;
+    let cd=0,reward=false,dRep=0,extra='';
+    if(CX.pilot){extra=CX.onResult?CX.onResult({sc,hours:st.t/3600,km:st.c.d,dest:st.D.name,type:st.p.type}):'';}
+    else{cd=(S.capCD||0)-S.day;reward=cd<=0;
     if(reward){dRep=sc>=85?3:sc>=65?2:sc>=45?1:0;S.rep=Math.max(5,Math.min(100,S.rep+dRep));S.capCD=S.day+7;}
     S.capBest=Math.max(S.capBest||0,sc);S.flights=(S.flights||0)+1;
-    news(`機長親自駕駛 ${st.cs} ${st.B.short}→${st.D.name}：${sc} 分 ${stars}${reward&&dRep?`，聲望 +${dRep}`:''}。`,sc>=65?'good':'');
+    news(`機長親自駕駛 ${st.cs} ${st.B.short}→${st.D.name}：${sc} 分 ${stars}${reward&&dRep?`，聲望 +${dRep}`:''}。`,sc>=65?'good':'');}
     const mins=Math.round(st.t/60);
     showEnd(`<h3>🛬 抵達${esc(st.D.name)}！</h3><div class="flstars">${stars}　<b>${sc}</b> 分</div>
       <table class="fltab"><tr><td>起飛</td><td>${to}／20</td></tr><tr><td>塔台通訊</td><td>${atc}／20</td></tr><tr><td>巡航</td><td>${cr}／20</td></tr><tr><td>降落</td><td>${ld}／40</td></tr>${st.retried?'<tr><td>重新進場</td><td>−10</td></tr>':''}</table>
       <p class="hint">${s.log.map(([t,p])=>`${esc(t)}${p?`（${p>0?'+':''}${p}）`:''}`).join('・')}</p>
-      <p>飛行時間 ${fmtH(st.t/3600)}（實際玩了 ${Math.max(1,Math.round((performance.now()-st.startReal)/60000))} 分鐘）。${reward?(dRep?`公司聲望 +${dRep}！`:'下次飛得更好就能提升聲望。'):`這次是練習飛行（${cd} 天後再飛可以加聲望）。`}</p>`,
+      <p>飛行時間 ${fmtH(st.t/3600)}（實際玩了 ${Math.max(1,Math.round((performance.now()-st.startReal)/60000))} 分鐘）。${CX.pilot?extra:reward?(dRep?`公司聲望 +${dRep}！`:'下次飛得更好就能提升聲望。'):`這次是練習飛行（${cd} 天後再飛可以加聲望）。`}</p>`,
       [['完成',close],['再飛一次','ghost',()=>{hideEnd();restart();}]]);
-    snd(sc>=65?'land':'ok');if(sc>=85)try{FX.go(5);}catch(e){}save();updateHUD();renderPanel(true);
+    snd(sc>=65?'land':'ok');if(sc>=85)try{FX.go(5);}catch(e){}if(!CX.pilot){save();updateHUD();renderPanel(true);}
   }
   function showEnd(html,btns){const el=$('#flyEnd');$('#flyEndBody').innerHTML=html;const B=$('#flyEndBtns');B.innerHTML='';for(const b of btns){const [t,c,fn]=b.length===2?[b[0],'',b[1]]:b;const x=document.createElement('button');x.className='btn '+c;x.textContent=t;x.onclick=fn;B.appendChild(x);}el.hidden=false;}
   function hideEnd(){$('#flyEnd').hidden=true;}
 
   /* ---------- 開始畫面 ---------- */
   async function open(code,opt){
-    if(!S)return;if(typeof AP!=='undefined'&&AP.running)AP.close(true);
+    opt=opt||{};if(opt.pilot)CX={pilot:true,name:opt.name||'鯨魚航空',code:opt.code||'WH',livery:opt.livery||{c1:'#2E86AB',c2:'#F2B53A',pat:'wave'},onResult:opt.onResult,onClose:opt.onClose};
+    else{if(!S)return;CX={pilot:false,name:S.name,code:S.code,livery:S.livery||{}};}
+    if(typeof AP!=='undefined'&&AP.running)AP.close(true);
     $('#flyOv').hidden=false;$('#flyLoad').hidden=false;$('#flyLoad').textContent='正在準備駕駛艙⋯⋯';hideEnd();$('#flyBrief').hidden=true;
     try{await loadLib();}catch(e){$('#flyLoad').textContent='開飛機需要網路連線才能載入 3D，請連上網路再試。（按 ESC 離開）';return;}
     try{if(!built)build();}catch(e){console.error(e);$('#flyLoad').textContent='這台裝置不支援 3D 畫面。（按 ESC 離開）';return;}
@@ -2065,19 +2123,19 @@ const FLY=(()=>{
   }
   function showBrief(){const el=$('#flyBrief');el.hidden=false;st.started=false;
     $('#flyBriefBody').innerHTML=`<h3>✈ ${esc(st.cs)}　${esc(st.B.name)} → ${esc(st.D.name)}</h3>
-      <p>全程 ${Math.round(st.c.d).toLocaleString()} 公里、巡航高度 FL${st.crFL}。要親手完成：<b>請求起飛 → 起飛 → 爬升 → 巡航（可以快轉）→ 下降 → 進場 → 降落</b>。一路上要聽塔台的指示並回覆。</p>
+      <p>全程 ${Math.round(st.c.d).toLocaleString()} 公里、巡航高度 FL${st.crFL}。要親手完成：<b>請求起飛 → 起飛 → 爬升 → 巡航（可以快轉）→ 下降 → 進場 → 降落</b>。一路上要聽塔台的指示並回覆。起飛後按右上角 4×～256× 就能快轉（會自動打開自動駕駛）。</p>
       <div class="flmodes"><button class="btn" data-fm="easy" aria-pressed="${mode==='easy'}">🙂 簡單模式<small>自動油門、自動襟翼和起落架、自動拉平、紫色導引線</small></button>
       <button class="btn" data-fm="real" aria-pressed="${mode==='real'}">🧑‍✈️ 真實模式<small>自己管油門、襟翼、起落架、減速板，會失速、會超速</small></button></div>
-      <p class="hint">${mobile?'左下搖桿控制飛機（往下拉＝抬頭），右邊滑桿是油門。':'方向鍵或 W A S D 控制飛機（↓／S 抬頭、↑／W 低頭、←→ 轉彎）。油門：E 加、Q 減（或 + −）。F／V 襟翼、G 起落架、B 煞車／減速板、R 反推、Z 自動駕駛、C 切換視角、拖曳滑鼠可以轉頭看。ESC 離開。'}</p>`;
+      <p class="hint">${mobile?'左下搖桿控制飛機（往下拉＝抬頭），右邊滑桿是油門。':'方向鍵或 W A S D 控制飛機（↓／S 抬頭、↑／W 低頭、←→ 轉彎）。油門：E 加、Q 減（或 + −）。F／V 襟翼、G 起落架、B 煞車／減速板、R 反推、Z 自動駕駛、[ ] 快轉、C 切換視角、拖曳滑鼠可以轉頭看。ESC 離開。'}</p>`;
     $('#flyBriefBody').querySelectorAll('[data-fm]').forEach(b=>b.onclick=()=>{mode=b.dataset.fm;st.athr=mode==='easy';guideOn=mode==='easy';showBrief();});
   }
   function startFlight(){$('#flyBrief').hidden=true;st.started=true;st.athr=mode==='easy';guideOn=mode==='easy';st.brake=true;engineAudio(true);updButtons();
     cue(mode==='easy'?'先跟塔台「請求起飛」，再推油門（E 或右邊油門桿）':'請求起飛 → 放開煞車（B）→ 推油門（E）',4);}
-  function close(fromAP){running=false;cancelAnimationFrame(raf);$('#flyOv').hidden=true;engineAudio(false);if(audio)audio.g.gain.value=0;try{speechSynthesis.cancel();}catch(e){}st=null;for(const k in keys)keys[k]=false;joy={x:0,y:0,id:null};}
+  function close(fromAP){const oc=CX.pilot&&CX.onClose;running=false;cancelAnimationFrame(raf);$('#flyOv').hidden=true;engineAudio(false);if(audio)audio.g.gain.value=0;try{speechSynthesis.cancel();}catch(e){}st=null;for(const k in keys)keys[k]=false;joy={x:0,y:0,id:null};if(oc)setTimeout(oc,0);}
   function resize(){if(!renderer)return;const cv=$('#flyCanvas'),w=cv.clientWidth,h=cv.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.fov=w<h?80:62;cam.updateProjectionMatrix();}
 
   /* ---------- 輸入 ---------- */
-  function key(k,down){if($('#flyOv').hidden||!st)return false;
+  function key(k,down){if($('#flyOv').hidden)return false;if(down&&k==='escape'){close();return true;}if(!st)return false;
     if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d','e','q','+','-','=','_','pageup','pagedown'].includes(k)){keys[k]=down;return true;}
     if(!down)return false;
     if(k==='escape'){close();return true;}
@@ -2088,6 +2146,7 @@ const FLY=(()=>{
     if(k==='b'){if(st.ground)st.brake=!st.brake;else st.spd=!st.spd;snd('ok');return true;}
     if(k==='r'){if(st.ground&&st.landed)st.rev=!st.rev;return true;}
     if(k==='t'){$('#atcIn').focus();return true;}
+    if(k==='['||k===']'){const L=[1,4,16,64,256],i=L.indexOf(warp);tryWarp(L[Math.max(0,Math.min(4,i+(k===']'?1:-1)))]);return true;}
     return false;}
   function toggleAP(){if(!st||st.ground){cue('起飛後才能開自動駕駛',2);return;}if(!st.apOn&&distTD()<6000){cue('最後進場要自己飛！',2);return;}st.apOn=!st.apOn;if(st.apOn&&mode==='real')st.athr=true;snd(st.apOn?'ok':'apoff');if(!st.apOn)setWarp(1);updButtons();}
   function throttleKeys(dt){if(!st)return;const up=keys.e||keys['+']||keys['=']||keys.pageup,dn=keys.q||keys['-']||keys['_']||keys.pagedown;if(!up&&!dn)return;if(st.athr&&!(st.ground&&!st.landed)){if(mode==='real'){st.athr=false;}else return;}st.lever=clamp(st.lever+(up?dt*.5:-dt*.5),0,1);}
@@ -2106,7 +2165,7 @@ const FLY=(()=>{
   $('#flyThrV').addEventListener('input',e=>{if(!st)return;const v=+e.target.value/100;if(st.ground&&!st.landed){st.lever=v;return;}if(mode==='easy'){cue('簡單模式由電腦自動控制油門',1.5);return;}st.athr=false;st.lever=v;});
   $('#flyStart').addEventListener('click',startFlight);
   $('#flyClose').addEventListener('click',()=>close());
-  $('#flyWarp').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(!b||b.disabled)return;setWarp(+b.dataset.w);});
+  $('#flyWarp').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(!b)return;tryWarp(+b.dataset.w);});
   $('#fbAP').addEventListener('click',toggleAP);
   $('#fbAT').addEventListener('click',()=>{if(st){st.athr=!st.athr;updButtons();}});
   $('#fbGear').addEventListener('click',()=>{if(st)setGear(!st.gear);});
@@ -2119,7 +2178,7 @@ const FLY=(()=>{
   $('#atcSend').addEventListener('click',()=>{const i=$('#atcIn');const v=i.value;i.value='';freeText(v);});
   $('#atcToggle').addEventListener('click',()=>{$('#flyAtc').classList.toggle('open');});
   new ResizeObserver(()=>{if(running)resize();}).observe($('#flyOv'));
-  return {_dbg:()=>({T,scene,cam,rig,cock,apts,ocean}),open,close,get running(){return running;},get st(){return st;},start:startFlight,step:(n,dt)=>{for(let i=0;i<n;i++)step(dt||.05);},handle,freeText,set mode(v){mode=v;},setWarp,toggleAP,distTD:()=>st&&distTD(),todDist:()=>st&&todDist(),retryApproach,result};
+  return {tryWarp,get warp(){return warp;},_dbg:()=>({T,scene,cam,rig,cock,apts,ocean}),open,close,get running(){return running;},get st(){return st;},start:startFlight,step:(n,dt)=>{for(let i=0;i<n;i++)step(dt||.05);},handle,freeText,set mode(v){mode=v;},setWarp,toggleAP,distTD:()=>st&&distTD(),todDist:()=>st&&todDist(),retryApproach,result};
 })();
 
 /* ===================== 機長任務小遊戲 ===================== */
@@ -2234,6 +2293,39 @@ const Cap=(()=>{
   return {open,get st(){return st;}};
 })();
 
+/* ===================== 鯨魚機長（獨立模式） ===================== */
+const Pilot=(()=>{
+  const KEY='whalePilot.v1';let R={};
+  try{R=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){R={};}
+  const sv=()=>{try{localStorage.setItem(KEY,JSON.stringify(R));}catch(e){}};
+  const RANKS=[[0,'實習副機長'],[3,'副機長'],[20,'機長'],[80,'資深機長'],[250,'首席機長']];
+  const rank=h=>RANKS.filter(r=>h>=r[0]).pop()[1];
+  function legs(b){return (b==='TPE'?CITIES:CITIES.filter(c=>c.code!==b).map(c=>LEG(b+'>'+c.code))).filter(l=>l&&l.d>=250).sort((a,b)=>a.d-b.d);}
+  function code(b,l){return b==='TPE'?l.dest:b+'>'+l.dest;}
+  function rec(){const h=R.hours||0;$('#pilotRec').innerHTML=`<div><b>${rank(h)}</b><small>階級</small></div><div><b>${R.flights||0}</b><small>飛行趟數</small></div><div><b>${h.toFixed(1)}</b><small>飛行時數</small></div><div><b>${R.best||0}</b><small>最高分</small></div>`;}
+  function fillTo(){const b=$('#plFrom').value,keep=$('#plTo').value;$('#plTo').innerHTML=legs(b).map(l=>`<option value="${l.dest}">${esc(l.name)}（${Math.round(l.d).toLocaleString()} 公里）</option>`).join('');if([...$('#plTo').options].some(o=>o.value===keep))$('#plTo').value=keep;fillType();}
+  function fillType(){const b=$('#plFrom').value,l=LEG(code(b,{dest:$('#plTo').value}));if(!l)return;const keep=$('#plType').value;
+    const ok=Object.entries(PLANES).filter(([k,T])=>T.cls!=='cargo'&&T.range>=l.d);$('#plType').innerHTML=ok.map(([k,T])=>`<option value="${k}">${T.name}（${T.cls==='narrow'?'窄體':'廣體'}${T.quad?'・四引擎':''}）</option>`).join('');
+    if(ok.some(([k])=>k===keep))$('#plType').value=keep;info();}
+  function info(){const b=$('#plFrom').value,l=LEG(code(b,{dest:$('#plTo').value})),T=PLANES[$('#plType').value];if(!l||!T)return;const hrs=l.d/T.speed+.4;
+    $('#plInfo').textContent=`${BASES[b].short} → ${l.name}：${Math.round(l.d).toLocaleString()} 公里，真實飛行大約 ${fmtH(hrs)}。起飛後可以快轉。`;}
+  function show(){$('#modeOv').hidden=true;$('#startOv').hidden=true;$('#pilotOv').hidden=false;
+    if(!$('#plFrom').options.length){$('#plFrom').innerHTML=Object.values(BASES).map(B=>`<option value="${B.code}">${esc(B.name)}</option>`).join('');$('#plFrom').value='TPE';fillTo();$('#plTo').value='HKG';fillType();$('#plType').value='b738';info();}
+    rec();}
+  function go(){const b=$('#plFrom').value,dest=$('#plTo').value,t=$('#plType').value,tv=$('#plTime').value,k=code(b,{dest});if(!LEG(k)||!PLANES[t])return;
+    const fno=100+Math.floor(hash('WH'+k)*800);const h0=tv==='now'?null:+tv;
+    $('#pilotOv').hidden=true;
+    FLY.open(k,{pilot:true,name:'鯨魚航空',code:'WH',p:{type:t,reg:'B-'+(58100+Math.floor(hash(t+'r')*800))},fno,h0,onResult,onClose:show});}
+  function onResult(r){const before=rank(R.hours||0);R.flights=(R.flights||0)+1;R.hours=(R.hours||0)+r.hours;R.km=(R.km||0)+r.km;R.best=Math.max(R.best||0,r.sc);
+    R.log=(R.log||[]).slice(-29);R.log.push({d:Date.now(),to:r.dest,t:r.type,sc:r.sc});sv();const after=rank(R.hours);
+    return `機長紀錄：累計 ${R.flights} 趟、${R.hours.toFixed(1)} 小時。${after!==before?`<b>🎉 升官了！你現在是「${after}」！</b>`:`目前階級：${after}。`}`;}
+  $('#plFrom').addEventListener('change',fillTo);$('#plTo').addEventListener('change',fillType);$('#plType').addEventListener('change',info);
+  $('#plGo').addEventListener('click',go);$('#plBack').addEventListener('click',()=>{$('#pilotOv').hidden=true;$('#modeOv').hidden=false;});
+  document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.mode==='pilot')show();else{$('#modeOv').hidden=true;if(!S)$('#startOv').hidden=false;}}));
+  $('#toModeBtn').addEventListener('click',()=>{$('#modeOv').hidden=false;});
+  return {show,get rec(){return R;}};
+})();
+
 /* ===================== 第一人稱 3D 機場 ===================== */
 const AP=(()=>{
   const THREE_URL='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
@@ -2292,7 +2384,7 @@ const AP=(()=>{
   let GLOW=null;function glowTx(){return GLOW||(GLOW=canvasTex(64,64,(g,w,h)=>{const gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.3,'rgba(255,255,255,.55)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,w,h);}).tx,GLOW._keep=true,GLOW);}
   /* ---------- 精細飛機模型 ---------- */
   function makePlane(c1,c2,wide,name,pat,code){
-    const L=wide?62:44,r=wide?2.9:2,span=wide?60:35,g=new T.Group();
+    const D=typeof wide==='string'?PDIM[wide]:null,L=D?D[0]:wide?62:44,r=D?D[1]:wide?2.9:2,span=D?D[2]:wide?60:35,quad=D&&D[3],g=new T.Group();
     const white=std(0xf3f3ef,.45,.15),grey=std(0xb9c1cc,.5,.3),dark=std(0x1d2633,.4,.2),cm=std(c1,.5,.1),cm2=std(c2,.45,.2);
     // 流線機身（旋轉體）
     const prof=[];const tailEnd=-L/2,tailStart=-L*.24,noseStart=L*.33,nose=L/2;
@@ -2315,7 +2407,8 @@ const AP=(()=>{
       const wl=M(new T.BoxGeometry(.25,r*.9,tip*.8),cm);wl.position.set(s*span/2,-r*.42+r*.42,L*.05-sweep-tip*.45);wl.rotation.z=-s*.25;g.add(wl);return m;};
     g.add(wing(1));g.add(wing(-1));
     // 引擎
-    for(const sx of [-1,1]){const ex=sx*span*.27,ez=L*.08-span*.18*.54;
+    if(quad){const hp=M(new T.SphereGeometry(r*.8,16,12),white);hp.scale.set(1,.75,5.2);hp.position.set(0,r*.62,L*.27);g.add(hp);}
+    for(const [sx,fr] of (quad?[[-1,.2],[1,.2],[-1,.37],[1,.37]]:[[-1,.27],[1,.27]])){const ex=sx*span*fr,ez=L*.08-span*.18*fr*2;
       const nac=M(new T.CylinderGeometry(r*.48,r*.42,r*2.4,20,1),cm2);nac.rotation.x=Math.PI/2;nac.position.set(ex,-r*1.1,ez);g.add(nac);
       const lip=M(new T.TorusGeometry(r*.46,r*.06,8,20),std(0xd8dde3,.3,.6));lip.position.set(ex,-r*1.1,ez+r*1.2);g.add(lip);
       const fan=M(new T.CircleGeometry(r*.42,20),dark);fan.position.set(ex,-r*1.1,ez+r*1.18);g.add(fan);
@@ -2731,7 +2824,7 @@ const AP=(()=>{
       if(gt.key!==key){
         if(gt.plane){removeObj(gt.plane);gt.plane=null;}if(gt.veh){removeObj(gt.veh);gt.veh=null;}
         let pl;const L_=S.livery||{};
-        if(a){pl=makePlane(L_.c1||'#F2B53A',L_.c2||'#7CCBE0',PLANES[a.f.p.type].cls!=='narrow',S.name,L_.pat||'stripe',S.code);tag(pl,'plane',{a});}
+        if(a){pl=makePlane(L_.c1||'#F2B53A',L_.c2||'#7CCBE0',a.f.p.type,S.name,L_.pat||'stripe',S.code);tag(pl,'plane',{a});}
         else if(hash('r'+i+S.day)<.6){const rv=S.rivals[Math.floor(hash('rv'+i+S.day)*S.rivals.length)];pl=makePlane(COL[rv.col],'#c8ccd2',hash('w'+i)<.4,rv.name,'solid','');tag(pl,'rival',{rv});}
         if(pl){pl.rotation.y=Math.PI;pl.position.set(gt.gx,-5+pl.userData.r+1.85,30+pl.userData.L/2);scene.add(pl);
           const v=makeVehicles();v.position.set(gt.gx,-5,30+pl.userData.L*.45);if(a)v.traverse(o=>{if(o.isMesh)o.userData.a=a;});scene.add(v);gt.veh=v;}
@@ -2748,7 +2841,7 @@ const AP=(()=>{
       redraw(gt.scr,(g,w,h)=>{g.fillStyle='#0b1220';g.fillRect(0,0,w,h);g.fillStyle=a?'#7FD493':'#8E9DB2';g.font=`700 34px ${MONO}`;g.textAlign='center';g.textBaseline='middle';g.fillText(a?`${S.code}${a.f.fno}`:'—',w/2,h/2-18);g.font=`500 26px ${FONT}`;g.fillText(a?a.c.name:'',w/2,h/2+24);});
     });
     runway.forEach((rw,i)=>{const a=onRwy[i];const key=a?a.c.code+a.f.idx+a.phase:null;
-      if(rw.key!==key){if(rw.mesh){removeObj(rw.mesh);rw.mesh=null;}if(a){const L_=S.livery||{};rw.mesh=makePlane(L_.c1||'#F2B53A',L_.c2||'#7CCBE0',PLANES[a.f.p.type].cls!=='narrow',S.name,L_.pat||'stripe',S.code);tag(rw.mesh,'plane',{a});scene.add(rw.mesh);}rw.key=key;}
+      if(rw.key!==key){if(rw.mesh){removeObj(rw.mesh);rw.mesh=null;}if(a){const L_=S.livery||{};rw.mesh=makePlane(L_.c1||'#F2B53A',L_.c2||'#7CCBE0',a.f.p.type,S.name,L_.pat||'stripe',S.code);tag(rw.mesh,'plane',{a});scene.add(rw.mesh);}rw.key=key;}
       rw.a=a;});
   }
   function animRunway(now){
@@ -2867,7 +2960,7 @@ const AP=(()=>{
   /* ---------- 旅程、任務、紀念章 ---------- */
   function apq(){S.apq=S.apq||{stamps:{},done:false,bagDay:-1,kidDay:-1};S.apq.stamps=S.apq.stamps||{};return S.apq;}
   function stampCount(){const q=apq();return Object.keys(STAMPS).filter(k=>q.stamps[k]).length;}
-  function pickMyFlight(){let best=null;for(const c of legsHere()){if(cancelled(c))continue;for(const dd of [0,1])for(const f of schedule(c,S.day+dd)){if(f.p.down>0)continue;const t=f.dep+dd*24;if(t<apNow+.25)continue;if(!best||t<best.t)best={c,f,t};}}return best;}
+  function pickMyFlight(){let best=null;for(const c of legsHere()){if(cancelled(c))continue;for(const dd of [0,1])for(const f of schedule(c,S.day+dd)){if(f.p.down>0||f.cargo||f.idx>=Math.ceil(f.n*crewRatio()-1e-9))continue;const t=f.dep+dd*24;if(t<apNow+.25)continue;if(!best||t<best.t)best={c,f,t};}}return best;}
   function bpass(){const m=myFlight;return `<div class="bpass"><div><small>登機證 BOARDING PASS</small><b>${esc(S.name)}　${S.code}${m.f.fno}</b></div><div class="bprow"><span><small>從</small>${esc(BASES[base].short)}</span><span>✈</span><span><small>到</small>${esc(m.c.name)}</span></div><div class="bprow"><span><small>登機門</small>A${m.gi+1}</span><span><small>起飛</small>${hhmm(m.t0)}</span><span><small>座位</small>${m.seat}</span></div></div>`;}
   function checkin(){
     if(pass&&myFlight)return `<h4>${esc(S.name)} 報到櫃台</h4><p>地勤：「您已經報到完成了，請往安全檢查前進！」</p>${bpass()}`;
@@ -2923,7 +3016,7 @@ const AP=(()=>{
         return `<h4>著急的媽媽</h4><p>「${Q.kid===2?'謝謝你！你真是好心人。':'我在等我爸爸的班機，順便⋯⋯咦，我的小孩跑去哪了？'}」</p>`;}
       case 'questBag':{if(q.bagDay===S.day)return '<h4>旅客</h4><p>「找到行李真是太好了，謝謝你！」</p>';
         if(carrying){carrying=false;Q.bag=2;q.bagDay=S.day;return `<h4>找到了！</h4><p>「就是這個紅色行李箱！太感謝你了！這是一點心意。」</p>`+rewardMsg(3e5,1);}
-        if(Q.bag===0){Q.bag=1;const spots=[[1,-40,-51],[1,8,-12.5],[2,45,-52],[3,22,-1],[1,46,-16],[2,-50,-34]];const sp=rnd(spots);lostBag.position.set(sp[1],BASEY[sp[0]],sp[2]);lostBag.updateMatrix();lostBag.visible=true;lostBag.traverse(o=>{o.userData.f=sp[0];});
+        if(Q.bag===0){Q.bag=1;const spots=immDone?[[1,-40,-51],[1,8,-12.5],[2,45,-52],[3,22,-1],[1,46,-16],[2,-50,-34]]:[[1,-40,-51],[2,45,-52],[2,-50,-34],[1,50,-35.5],[1,-20,-53]];const sp=rnd(spots);lostBag.position.set(sp[1],BASEY[sp[0]],sp[2]);lostBag.updateMatrix();lostBag.visible=true;lostBag.traverse(o=>{o.userData.f=sp[0];});
           return `<h4>找行李的旅客</h4><p>「我的紅色行李箱沒有出現在轉盤上⋯⋯可能被別人拿錯放到其他地方了。可以幫我找找看嗎？」</p><p class="hint">任務：在機場找到紅色行李箱，拿回來給她！（一樓、二樓、頂樓都有可能）</p>`;}
         return '<h4>找行李的旅客</h4><p>「紅色的行李箱，上面有一個黃色吊牌⋯⋯拜託了！」</p>';}
       case 'lostbag':lostBag.visible=false;carrying=true;note(67,0,.12);note(74,.12,.2);return '<h4>找到紅色行李箱了！</h4><p>拿回二樓行李轉盤旁邊，交給那位旅客吧。</p>';
@@ -3020,7 +3113,7 @@ const AP=(()=>{
   function requestLock(){if(mobile||locked||noLock)return;wantLock=true;try{const p=cv.requestPointerLock?cv.requestPointerLock():null;if(!cv.requestPointerLock)noLock=true;if(p&&p.catch)p.catch(()=>{noLock=true;});}catch(e){noLock=true;}}
   document.addEventListener('pointerlockerror',()=>{noLock=true;wantLock=false;});
   document.addEventListener('pointerlockchange',()=>{const was=locked;locked=document.pointerLockElement===cv;
-    if(was&&!locked&&running&&wantLock){close();}  // 按 ESC 解除滑鼠鎖定 → 直接離開機場
+    if(was&&!locked&&running&&wantLock&&document.hasFocus()){close();}  // 按 ESC 解除滑鼠鎖定 → 直接離開機場
   });
   cv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'){if(!locked&&!noLock){requestLock();}else doInteract();return;}look={x:e.clientX,y:e.clientY,id:e.pointerId,moved:0};cv.setPointerCapture(e.pointerId);});
   cv.addEventListener('pointermove',e=>{
@@ -3045,7 +3138,7 @@ const AP=(()=>{
   $('#apInfoClose').addEventListener('click',()=>{$('#apInfo').hidden=true;});
   $('#apClose').addEventListener('click',close);
   $('#apStampBtn').addEventListener('click',e=>{e.stopPropagation();stampBook();});
-  $('#apBases').addEventListener('click',e=>{const b=e.target.closest('[data-apb]');if(!b)return;base=b.dataset.apb;pass=secDone=immDone=boarded=false;myFlight=null;closeGates();setFloor(1,0,-53.5,0);renderBases();resetGates();});
+  $('#apBases').addEventListener('click',e=>{const b=e.target.closest('[data-apb]');if(!b)return;base=b.dataset.apb;if(sitting){sitting.taken=false;sitting=null;}ride=null;carrying=false;pass=secDone=immDone=boarded=false;myFlight=null;closeGates();setFloor(1,0,-53.5,0);renderBases();resetGates();});
   new ResizeObserver(()=>{if(running)resize();}).observe($('#apOv'));
   $('#apBtn').addEventListener('click',open);
   return {fin:()=>{if(ride){ride.t=ride.dur;rideTick(0);}},tp:(f,x,z,yw)=>setFloor(f,x,z,yw),get floor(){return floor;},get state(){return {pass,secDone,immDone,boarded,my:!!myFlight,ride:!!ride,carrying,Q:{...Q},stamps:stampCount()};},info:()=>renderer&&renderer.info.render,open,close,get running(){return running;},get pos(){return pos;},set yaw(v){yaw=v;},set pitch(v){pitch=v;},get sitting(){return sitting;},_dbg:()=>({T,scene,cam}),ray:()=>{const h=ray();return h&&h.object.userData.kind;},interactHit:()=>{const h=ray();if(h)act(h);return h&&h.object.userData.kind;},get cols(){return cols.length;}};
@@ -3061,7 +3154,7 @@ let N=null;
 function negCfg(kind,key){
   const T=PLANES[key],c=LEG(key);
   switch(kind){
-    case 'buynew': return {seller:['b789','b77f'].includes(key)?'boeing':'airbus',title:`訂購 ${T.name}`,desc:`新飛機定價，每架先付 20% 訂金，大約 ${Math.round(T.lead*.6/30)} 個月後交機。真實的航空公司下大訂單常常能談到很大的折扣。`,list:T.price,unit:'每架',qtyMax:6,base:.05,rnd:.07,bulk:.025,
+    case 'buynew': return {seller:key[0]==='b'?'boeing':'airbus',title:`訂購 ${T.name}`,desc:`新飛機定價，每架先付 20% 訂金，大約 ${Math.round(T.lead*.6/30)} 個月後交機。真實的航空公司下大訂單常常能談到很大的折扣。`,list:T.price,unit:'每架',qtyMax:6,base:.05,rnd:.07,bulk:.025,
       ok:(u,q)=>S.cash>=u*.2*q,need:(u,q)=>`訂金 ${money(u*.2*q)}`,deal:(u,q)=>{for(let i=0;i<q;i++)act('buynew',key,null,true,u);}};
     case 'lease': return {seller:'lessor',title:`租賃 ${T.name}`,desc:'談的是每月租金，押金是 2 個月租金。',list:T.lease,unit:'每月',qtyMax:4,base:.03,rnd:.07,bulk:.015,
       ok:(u,q)=>S.cash>=u*2*q,need:(u,q)=>`押金 ${money(u*2*q)}`,deal:(u,q)=>{for(let i=0;i<q;i++)act('lease',key,null,true,u);}};
@@ -3783,7 +3876,7 @@ $('#contBtn').onclick=()=>{const s=load();if(s){S=s;if(UI.music)Music.start();$(
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&S&&!S.over){save();writeSlot('auto',true);}});
 function start(data){
   if(data&&data.S){S=migrate(data.S);Object.assign(UI,data.UI||{});acc=data.acc||0;$('#startOv').hidden=true;legend();updateHUD();renderPanel(true);setSpeed(UI.speed);}
-  else if(load()) $('#contBtn').hidden=false;
+  else{if(load()) $('#contBtn').hidden=false;$('#modeOv').hidden=false;}
   requestAnimationFrame(frame);
 }
 window.claude?.hot?.snapshot?.(()=>({S,UI,acc}));
