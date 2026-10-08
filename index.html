@@ -535,7 +535,7 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
   <div class="apinfo" id="wkInfo" hidden><div id="wkInfoBody"></div><button class="btn sm" id="wkInfoClose">關閉</button></div>
   <div class="aplock" id="wkLock" hidden>點一下畫面開始 ・ 之後移動滑鼠就能轉頭 ・ ESC 離開</div>
   <div class="apfade" id="wkFade"></div>
-  <div class="xrov" id="xrOv" hidden><div class="xrbox"><div class="board">X-RAY SCREENING · 安檢判讀</div><canvas id="xrCanvas" width="640" height="300"></canvas><p id="xrInfo"></p><p class="hint" id="xrMsg"></p><div class="row"><button class="btn ghost" id="xrPass">✅ 放行</button><button class="btn" id="xrStop">🛑 攔下檢查</button></div></div></div>
+  <div class="xrov" id="xrOv" hidden><div class="xrbox"><div class="board">X-RAY SCREENING · 安檢判讀</div><canvas id="xrCanvas" width="640" height="300"></canvas><p id="xrInfo"></p><p class="hint" id="xrMsg"></p><div class="row"><button class="btn ghost" id="xrPass">✅ 放行（1）</button><button class="btn" id="xrStop">🛑 攔下檢查（2）</button></div></div></div>
   <div class="aploading" id="wkLoad">正在載入⋯⋯</div>
 </div>
 
@@ -2543,7 +2543,8 @@ const WALK=(()=>{
     n.pick();return n;}
   function hitCol(x,z,r){if(x<bnd[0]+r||x>bnd[1]-r||z<bnd[2]+r||z>bnd[3]-r)return true;for(const c of cols)if(x>c[0]-r&&x<c[1]+r&&z>c[2]-r&&z<c[3]+r)return true;return false;}
   function wander(list){anim.push((t,dt)=>{for(const n of list){if(n.frozen)continue;if(n.wait>0){n.wait-=dt;continue;}if(n.step(dt)){n.wait=1+Math.random()*4;n.pick();}}});}
-  function ask(h,opts){$('#wkInfoBody').innerHTML=h+'<div class="row wkopts"></div>';const r=$('#wkInfoBody .wkopts');for(const [lab,fn] of opts){const b=document.createElement('button');b.className='btn sm ghost';b.textContent=lab;b.onclick=e=>{e.stopPropagation();fn();};r.appendChild(b);}$('#wkInfo').hidden=false;infoT=performance.now()+60000;}
+  function freeMouse(){if(document.pointerLockElement){wantLock=false;try{document.exitPointerLock();}catch(e){}}}
+  function ask(h,opts){freeMouse();$('#wkInfoBody').innerHTML=h+'<div class="row wkopts"></div>';const r=$('#wkInfoBody .wkopts');trip.opts=opts.map(o=>o[1]);for(const [i,[lab,fn]] of opts.entries()){const b=document.createElement('button');b.className='btn sm ghost';b.textContent=`${i+1}. ${lab}`;b.onclick=e=>{e.stopPropagation();trip.opts=null;fn();};r.appendChild(b);}$('#wkInfo').hidden=false;infoT=performance.now()+60000;}
   function bubble(g,txt,col){const s=new T.Sprite(new T.SpriteMaterial({map:ctex(128,128,(c,w,h)=>{c.fillStyle=col||'#F2B53A';c.beginPath();c.arc(64,58,52,0,7);c.fill();c.beginPath();c.moveTo(50,100);c.lineTo(64,126);c.lineTo(78,100);c.fill();c.fillStyle='#10161f';c.font='900 64px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(txt,64,60);}),depthTest:false}));s.scale.set(.5,.5,1);s.position.y=2.2;g.add(s);anim.push(t=>{s.position.y=2.2+Math.sin(t/250)*.06;});return s;}
   function finish(){const R=trip.role;let rec={};try{rec=JSON.parse(localStorage.getItem('fly.roles'))||{};}catch(e){}rec[R]=(rec[R]||0)+1;try{localStorage.setItem('fly.roles',JSON.stringify(rec));}catch(e){}
     note(72,0,.15);note(76,.15,.15);note(79,.3,.15);note(84,.45,.4);
@@ -2612,7 +2613,7 @@ const WALK=(()=>{
   const XR_ITEMS=[['衣服',0,'cloth'],['筆電',0,'laptop'],['書',0,'book'],['玩具車',0,'toy'],['雨傘',0,'umbrella'],['水果刀',1,'knife'],['剪刀（長）',1,'scissors'],['大瓶水（超過 100 毫升）',1,'bottle'],['打火機',1,'lighter'],['鞭炮',1,'fireworks'],['充電寶',0,'power'],['鞋子',0,'shoe']];
   function xray(){if(trip.done.xray)return msg('<h4>X 光機</h4><p>今天的判讀任務已經完成了！</p>');
     const bags=[];for(let i=0;i<6;i++){const items=[];const n=2+Math.floor(Math.random()*3);for(let k=0;k<n;k++)items.push(XR_ITEMS[Math.floor(Math.random()*5)+(Math.random()<.5?0:6)]);if(i%2===0&&Math.random()<.85)items[0]=XR_ITEMS[5+Math.floor(Math.random()*5)];bags.push(items);}
-    let i=0,ok=0;const ov=$('#xrOv');ov.hidden=false;
+    freeMouse();let i=0,ok=0;const ov=$('#xrOv');ov.hidden=false;trip.xrKeys=[()=>ans(false),()=>ans(true)];
     function draw(){const cv=$('#xrCanvas'),g=cv.getContext('2d'),w=cv.width,h=cv.height;g.fillStyle='#0a1a2a';g.fillRect(0,0,w,h);g.fillStyle='rgba(120,180,255,.25)';g.fillRect(40,40,w-80,h-80);g.strokeStyle='#4fd1ff';g.strokeRect(40,40,w-80,h-80);
       bags[i].forEach((it,k)=>{const x=80+k*((w-160)/bags[i].length),y=90+((k*37)%60);g.save();g.translate(x+40,y+50);g.rotate((k%2?-1:1)*.3);
         const o='#ff9b3d',b='#4fd1ff',gr='#7fd493';switch(it[2]){
@@ -2626,7 +2627,7 @@ const WALK=(()=>{
       $('#xrInfo').textContent=`第 ${i+1}／${bags.length} 個行李　判對 ${ok} 個`;}
     function ans(stop){const bad=bags[i].some(x=>x[1]);const right=bad===stop;if(right){ok++;note(79,0,.12);}else note(48,0,.25);
       const what=bags[i].filter(x=>x[1]).map(x=>x[0]).join('、');$('#xrMsg').textContent=right?(bad?`✅ 抓到了！裡面有${what}。`:'✅ 正確，可以放行。'):(bad?`❌ 漏掉了！裡面有${what}。`:'❌ 這個行李沒有違禁品喔。');
-      i++;if(i>=bags.length){setTimeout(()=>{ov.hidden=true;const pass=ok>=4;if(pass){trip.done.xray=true;checkDone();}msg(`<h4>X 光判讀結束</h4><p>判對 ${ok}／${bags.length} 個。${pass?'表現很好，安檢任務完成！':'再試一次，至少要判對 4 個喔。'}</p><p class="hint">不能帶上飛機：刀子、長剪刀、超過 100 毫升的液體、鞭炮、打火機（不能託運）。</p>`);},900);return;}draw();}
+      i++;if(i>=bags.length){trip.xrKeys=null;setTimeout(()=>{ov.hidden=true;const pass=ok>=4;if(pass){trip.done.xray=true;checkDone();}msg(`<h4>X 光判讀結束</h4><p>判對 ${ok}／${bags.length} 個。${pass?'表現很好，安檢任務完成！':'再試一次，至少要判對 4 個喔。'}</p><p class="hint">不能帶上飛機：刀子、長剪刀、超過 100 毫升的液體、鞭炮、打火機（不能託運）。</p>`);},900);return;}draw();}
     $('#xrPass').onclick=()=>ans(false);$('#xrStop').onclick=()=>ans(true);$('#xrMsg').textContent='仔細看螢幕，有違禁品就「攔下檢查」。';draw();}
 
   /* ---------- 空中安全官：客艙 ---------- */
@@ -2767,7 +2768,7 @@ const WALK=(()=>{
     T=window.THREE;if(!renderer){renderer=new T.WebGLRenderer({canvas:$('#wkCanvas'),antialias:!mobile});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,mobile?1:1.5));cam=new T.PerspectiveCamera(70,1,.05,2000);}
     $('#wkLoad').hidden=true;running=true;resize();go(trip.role==='pilot'?'home':ROLE[trip.role].start);last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);}
   function close(toFly){running=false;cancelAnimationFrame(raf);$('#wkOv').hidden=true;if(document.pointerLockElement){wantLock=false;try{document.exitPointerLock();}catch(e){}}for(const k in keys)keys[k]=false;const tr=trip;if(!toFly&&tr&&tr.onExit)setTimeout(tr.onExit,0);}
-  function doInteract(){if(!$('#wkInfo').hidden){$('#wkInfo').hidden=true;return;}if(ride)return;const h=ray();if(h)act(h);}
+  function doInteract(){if(!$('#xrOv').hidden)return;if(!$('#wkInfo').hidden){if(trip&&trip.opts)return;$('#wkInfo').hidden=true;return;}if(ride)return;const h=ray();if(h)act(h);}
   const cv=$('#wkCanvas');
   function requestLock(){if(mobile||locked||noLock)return;wantLock=true;try{const p=cv.requestPointerLock?cv.requestPointerLock():null;if(!cv.requestPointerLock)noLock=true;if(p&&p.catch)p.catch(()=>{noLock=true;});}catch(e){noLock=true;}}
   document.addEventListener('pointerlockerror',()=>{if(running){noLock=true;wantLock=false;}});
@@ -2780,7 +2781,8 @@ const WALK=(()=>{
   function jmove(e){const b=jEl.getBoundingClientRect(),dx=e.clientX-(b.left+b.width/2),dy=e.clientY-(b.top+b.height/2),R=b.width/2,d=Math.min(R,Math.hypot(dx,dy)),a=Math.atan2(dy,dx);joy.x=Math.cos(a)*d/R;joy.y=Math.sin(a)*d/R;knob.style.transform=`translate(${Math.cos(a)*d*.6}px,${Math.sin(a)*d*.6}px)`;}
   jEl.addEventListener('pointerdown',e=>{joy.id=e.pointerId;jEl.setPointerCapture(e.pointerId);jmove(e);});jEl.addEventListener('pointermove',e=>{if(joy.id===e.pointerId)jmove(e);});
   const jend=()=>{joy={x:0,y:0,id:null};knob.style.transform='';};jEl.addEventListener('pointerup',jend);jEl.addEventListener('pointercancel',jend);
-  window.addEventListener('keydown',e=>{if($('#wkOv').hidden)return;const k=e.key.toLowerCase();if(['w','a','s','d','shift','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){keys[k]=true;e.preventDefault();}if(k==='e'||k===' '){doInteract();e.preventDefault();}if(k==='escape'){e.preventDefault();close();}});
+  window.addEventListener('keydown',e=>{if($('#wkOv').hidden)return;const k=e.key.toLowerCase();if(['w','a','s','d','shift','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){keys[k]=true;e.preventDefault();}if(/^[1-9]$/.test(k)){const n=+k-1;if(!$('#xrOv').hidden&&trip&&trip.xrKeys&&trip.xrKeys[n]){trip.xrKeys[n]();e.preventDefault();return;}if(trip&&trip.opts&&trip.opts[n]&&!$('#wkInfo').hidden){const f=trip.opts[n];trip.opts=null;f();e.preventDefault();return;}}
+    if(k==='e'||k===' '){if(!$('#xrOv').hidden)return;if(trip&&trip.opts&&!$('#wkInfo').hidden){e.preventDefault();return;}doInteract();e.preventDefault();}if(k==='escape'){e.preventDefault();close();}});
   window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
   $('#wkAct').addEventListener('click',doInteract);$('#wkInfoClose').addEventListener('click',()=>{$('#wkInfo').hidden=true;});
   $('#wkClose').addEventListener('click',()=>close());
