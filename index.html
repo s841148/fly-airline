@@ -253,6 +253,7 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
 .apact{position:absolute;right:20px;bottom:calc(80px + env(safe-area-inset-bottom,0px));min-width:84px;min-height:56px;display:none}
 .apinfo{position:absolute;right:16px;top:70px;width:min(360px,calc(100% - 32px));max-height:calc(100% - 160px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;font-size:14px}
 .apinfo h4{margin:0;font-size:16px}
+.wkov{z-index:44}.wkov .apjour{top:calc(58px + env(safe-area-inset-top,0px))}
 .flyov{position:fixed;inset:0;z-index:45;background:#000;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;--ph:min(30vh,250px)}
 #flyCanvas{position:absolute;left:0;top:0;width:100%;height:calc(100% - var(--ph));display:block}
 .flypanel{position:absolute;left:0;bottom:0;width:100%;height:var(--ph);display:block;border-top:2px solid #262c35}
@@ -436,7 +437,7 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
       <div class="field"><label for="plTime">起飛時間</label><select id="plTime"><option value="7">早上 7 點</option><option value="12">中午 12 點</option><option value="17.5">傍晚 5 點半（看夕陽）</option><option value="21">晚上 9 點（夜景）</option><option value="now">現在的時間</option></select></div>
     </div>
     <p class="hint" id="plInfo"></p>
-    <div class="row"><button class="btn" id="plGo">進入駕駛艙</button><button class="btn ghost" id="plBack">回到遊戲選單</button></div>
+    <div class="row"><button class="btn" id="plGo">🏠 從家裡出發</button><button class="btn ghost" id="plQuick">✈ 直接進駕駛艙</button><button class="btn ghost" id="plBack">回到遊戲選單</button></div>
     <p class="copy">© 2026 麥麥的遊戲工廠 版權所有　<button class="linkbtn" data-terms>使用條款</button></p>
   </div>
 </div>
@@ -516,6 +517,21 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
     <p class="hint" id="lvTip"></p>
     <div class="row" id="lvBtns"></div>
   </div>
+</div>
+
+<div class="apov wkov" id="wkOv" hidden>
+  <canvas id="wkCanvas" aria-label="機長的一天"></canvas>
+  <div class="aptop"><div class="aptitle"><b id="wkTitle">機長的家</b></div><div class="row" style="margin-left:auto;gap:8px"><button class="btn sm ghost" id="wkSkip" hidden>跳過</button><button class="btn sm ghost" id="wkFast">直接進駕駛艙</button><button class="btn sm" id="wkClose">離開</button></div></div>
+  <div class="apjour"><div class="jsteps" id="wkSteps"></div><div class="jnext" id="wkNext"></div></div>
+  <div class="apcross"></div>
+  <div class="apprompt" id="wkPrompt" hidden></div>
+  <div class="aphelp">電腦：移動滑鼠轉頭、W A S D 走路、Shift 跑步、E／空白鍵／點左鍵 互動、ESC 離開。手機：左下搖桿走路、右邊滑動轉頭、按「查看」。</div>
+  <div class="apjoy" id="wkJoy"><i></i></div>
+  <button class="btn apact" id="wkAct">查看</button>
+  <div class="apinfo" id="wkInfo" hidden><div id="wkInfoBody"></div><button class="btn sm" id="wkInfoClose">關閉</button></div>
+  <div class="aplock" id="wkLock" hidden>點一下畫面開始 ・ 之後移動滑鼠就能轉頭 ・ ESC 離開</div>
+  <div class="apfade" id="wkFade"></div>
+  <div class="aploading" id="wkLoad">正在載入⋯⋯</div>
 </div>
 
 <div class="flyov" id="flyOv" hidden>
@@ -1143,7 +1159,7 @@ function events(){
   else if(r<.0112){const up=Math.random()<.45;S.fuel*=up?1.15:.88;const t=up?'中東局勢緊張，國際油價大漲 15%。':'產油國增產，油價下跌 12%。';news(t,up?'bad':'good');toast(t,up?'bad':'good');}
   else if(r<.0120){addMod('cargo',1.4,45,'AI 伺服器、晶片出貨大爆發！貨運需求 +40%（45 天）。','good');}
 }
-function blockedUI(){return !!document.querySelector('.overlay:not([hidden]),#apOv:not([hidden]),#flyOv:not([hidden])');}
+function blockedUI(){return !!document.querySelector('.overlay:not([hidden]),#apOv:not([hidden]),#flyOv:not([hidden]),#wkOv:not([hidden])');}
 const CHOICES=[
   {ok:()=>S.crew.p>=30,make(){
     return {board:'UNION NOTICE',title:'機師工會要求加薪',text:'機師工會說排班太累、薪水比別家低，要求所有機組員加薪 6%。不答應的話，可能會罷工。',
@@ -1536,6 +1552,18 @@ const FLY=(()=>{
       const side=M(new T.BoxGeometry(.04,1.0,.04),frame);side.position.set(sx*1.4,.12,.3);side.rotation.z=sx*.12;FG.add(side);}
     const top=M(new T.BoxGeometry(2.8,.08,.9),frame);top.position.set(0,.72,.6);FG.add(top);
     const center=M(new T.BoxGeometry(.02,1,.02),frame);center.position.set(0,.12,1.4);center.rotation.x=-.4;FG.add(center);
+    {const dk=std(0x2a2f37,.6,.2),lt=std(0x8d949e,.5,.4);
+      const ped=M(new T.BoxGeometry(.5,.25,.9),dk);ped.position.set(0,-.82,.35);FG.add(ped);
+      const scr=ctex(256,128,(c,w,h)=>{c.fillStyle='#0b0f15';c.fillRect(0,0,w,h);c.fillStyle='#4fd1ff';c.font='16px monospace';['FMS  WH','ROUTE DCT','FUEL OK','ATC 1200'].forEach((t,i)=>c.fillText(t,14,26+i*26));c.strokeStyle='#7FD493';c.strokeRect(6,6,w-12,h-12);}).tx;
+      const sp=M(new T.PlaneGeometry(.42,.22),basic(0xffffff,{map:scr}));sp.position.set(0,-.69,.62);sp.rotation.x=-1.0;sp.rotation.y=Math.PI;FG.add(sp);
+      const thr=new T.Group();for(const sx of [-1,1]){const lv=new T.Group();const st=M(new T.BoxGeometry(.03,.2,.03),lt);st.position.y=.1;lv.add(st);const kn=M(new T.BoxGeometry(.09,.04,.05),std(0x111111,.5));kn.position.y=.21;lv.add(kn);lv.position.set(sx*.05,-.72,.25);thr.add(lv);}FG.add(thr);cock.userData.thr=thr;
+      const yk=new T.Group();const col_=M(new T.CylinderGeometry(.03,.03,.45,8),dk);col_.position.set(0,-.23,0);yk.add(col_);const hb=M(new T.TorusGeometry(.14,.018,6,20,Math.PI),dk);hb.rotation.z=Math.PI;yk.add(hb);const lg=M(new T.BoxGeometry(.06,.05,.03),std(0xF2B53A,.4));lg.position.set(0,-.02,0);yk.add(lg);
+      yk.position.set(.55,-.62,.42);FG.add(yk);cock.userData.yoke=yk;
+      const ovh=ctex(512,256,(c,w,h)=>{c.fillStyle='#3a414c';c.fillRect(0,0,w,h);for(let y=10;y<h;y+=30)for(let x=10;x<w;x+=34){c.fillStyle=Math.random()<.2?'#F2B53A':Math.random()<.3?'#7FD493':'#1d2129';c.fillRect(x,y,24,16);}}).tx;
+      const ov=M(new T.PlaneGeometry(1.6,.9),std(0xffffff,.7,0,{map:ovh}));ov.position.set(0,.66,.25);ov.rotation.x=Math.PI/2+.5;ov.rotation.z=Math.PI;FG.add(ov);
+      for(const sx of [-1,1]){const seat=M(new T.BoxGeometry(.6,.9,.15),std(0x30363f,.8));seat.position.set(sx*.55,-.5,-.45);FG.add(seat);}
+      const co=new T.Group();const tor=M(new T.CylinderGeometry(.22,.19,.6,10),std(0xffffff,.8));tor.position.y=-.4;co.add(tor);const hd=M(new T.SphereGeometry(.15,12,10),std(0xe0ac69,.7));hd.position.y=.0;co.add(hd);const hat=M(new T.CylinderGeometry(.16,.17,.08,14),std(0x1f2a44,.6));hat.position.y=.12;co.add(hat);
+      for(const sx of [-1,1]){const sl=M(new T.BoxGeometry(.04,.02,.12),std(0xF2B53A,.4));sl.position.set(sx*.21,-.18,0);co.add(sl);}co.position.set(-.55,-.05,-.1);FG.add(co);}
     cock.traverse(o=>{if(o.isMesh){o.material.fog=false;o.renderOrder=10;}});
     built=true;
   }
@@ -1593,12 +1621,19 @@ const FLY=(()=>{
     const white=std(0xf3f3ef,.45,.15),grey=std(0xb9c1cc,.5,.3),cm=std(c1,.5,.1),cm2=std(c2,.45,.2);
     const prof=[new T.Vector2(.01,-L/2)];for(let i=1;i<=8;i++){const t=i/8;prof.push(new T.Vector2(r*(.2+.8*Math.sin(t*Math.PI/2)),-L/2+L*.26*t));}prof.push(new T.Vector2(r,L*.33));for(let i=1;i<=8;i++){const t=i/8;prof.push(new T.Vector2(Math.max(.01,r*Math.cos(t*Math.PI/2)**.7),L*.33+L*.17*t));}
     const fg=new T.LatheGeometry(prof,24);fg.rotateX(Math.PI/2);g.add(M(fg,white));
+    // 客艙窗、門、駕駛艙窗、公司名
+    const wt=ctex(1024,32,(c,w,h)=>{c.clearRect(0,0,w,h);c.fillStyle='#1d2836';for(let x=40;x<w-30;x+=17){c.beginPath();c.ellipse(x,h/2,5,9,0,0,Math.PI*2);c.fill();}}).tx;
+    const nm=ctex(1024,96,(c,w,h)=>{c.clearRect(0,0,w,h);c.fillStyle=c1;c.font=`900 64px "Noto Sans TC",sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText((CX&&CX.name)||'鯨魚航空',w*.42,h/2);c.font=`800 44px "IBM Plex Mono",monospace`;c.fillText(((CX&&CX.code)||'WH')==='WH'?'WHALE AIR':(CX.code||''),w*.82,h/2);}).tx;
+    for(const sx of [-1,1]){const wp=M(new T.PlaneGeometry(L*.62,r*.22),basic(0xffffff,{map:wt,transparent:true}));wp.position.set(sx*r*.99,r*.28,L*.02);wp.rotation.y=sx*Math.PI/2;if(sx<0)wp.scale.x=-1;g.add(wp);
+      if(!P.noName){const np=M(new T.PlaneGeometry(L*.42,r*.42),basic(0xffffff,{map:nm,transparent:true}));np.position.set(sx*r*1.0,r*.66,L*.04);np.rotation.y=sx*Math.PI/2;if(sx<0)np.scale.x=-1;g.add(np);}
+      for(const dz of [L*.36,-L*.3]){const d=M(new T.PlaneGeometry(1.05,1.9),basic(0x9aa3ad,{transparent:true,opacity:.55}));d.position.set(sx*r*1.002,r*.12,dz);d.rotation.y=sx*Math.PI/2;g.add(d);}}
+    const ckw=M(new T.BoxGeometry(r*1.25,r*.26,r*.8),std(0x1d2633,.15,.6));ckw.position.set(0,r*.42,L*.43);ckw.rotation.x=-.4;g.add(ckw);
     const stripe=M(new T.CylinderGeometry(r*1.01,r*1.01,L*.56,24,1,true,Math.PI*.62,Math.PI*.76),cm);stripe.rotation.x=Math.PI/2;stripe.rotation.z=Math.PI;g.add(stripe);
     for(const s of [1,-1]){const sh=new T.Shape();sh.moveTo(0,0);sh.lineTo(span/2,-span*.18);sh.lineTo(span/2,-span*.18-r*1.1);sh.lineTo(0,-r*3.6);sh.closePath();const geo=new T.ExtrudeGeometry(sh,{depth:.35,bevelEnabled:false});geo.rotateX(Math.PI/2);const m=M(geo,grey);m.scale.x=s;m.position.set(0,-r*.42,L*.05);g.add(m);
       for(const fr of (P.quad?[.2,.37]:[.27])){const en=M(new T.CylinderGeometry(r*.48,r*.42,r*2.4,16),cm2);en.rotation.x=Math.PI/2;en.position.set(s*span*fr,-r*1.1,L*.08-span*.37*fr);g.add(en);}
       const hs=new T.Shape();hs.moveTo(0,0);hs.lineTo(span*.17,-L*.05);hs.lineTo(span*.17,-L*.085);hs.lineTo(0,-L*.11);hs.closePath();const hg=new T.ExtrudeGeometry(hs,{depth:.25,bevelEnabled:false});hg.rotateX(Math.PI/2);const hm=M(hg,cm);hm.scale.x=s;hm.position.set(0,r*.3,-L*.33);g.add(hm);}
     const fsh=new T.Shape();fsh.moveTo(0,0);fsh.lineTo(-L*.17,0);fsh.lineTo(-L*.23,r*2.9);fsh.lineTo(-L*.15,r*2.9);fsh.closePath();const fgeo=new T.ExtrudeGeometry(fsh,{depth:.35,bevelEnabled:false});fgeo.rotateY(Math.PI/2);const fin=M(fgeo,cm);fin.position.set(-.17,r*.7,-L*.29);g.add(fin);
-    if(P.quad){const hp=M(new T.SphereGeometry(r*.8,16,12),white);hp.scale.set(1,.75,5.2);hp.position.set(0,r*.62,L*.27);g.add(hp);}
+    if(P.quad){const hp=M(new T.SphereGeometry(r*.8,16,12),white);hp.scale.set(1.05,.9,6.5);hp.position.set(0,r*.72,L*.27);g.add(hp);}
     const gear=new T.Group();for(const [x,z] of [[0,L*.36],[-r*.8,-L*.04],[r*.8,-L*.04]]){const s=M(new T.CylinderGeometry(.18,.18,1.6,8),grey);s.position.set(x,-r-.6,z);gear.add(s);const w=M(new T.CylinderGeometry(.55,.55,.5,12),std(0x15181c,.9));w.rotation.z=Math.PI/2;w.position.set(x,-r-1.3,z);gear.add(w);}
     g.add(gear);g.userData.gear=gear;g.userData.r=r;
     return g;
@@ -1935,7 +1970,7 @@ const FLY=(()=>{
       cam.rotation.order='YXZ';
       // 讓外部視角不跟著滾轉太多：把相機放在 rig 外會更穩，這裡簡化處理
       cock.userData.fg.visible=false;}
-    if(view==='cockpit')cock.userData.fg.visible=true;
+    if(view==='cockpit'){cock.userData.fg.visible=true;const th=cock.userData.thr;if(th)th.children.forEach(l=>l.rotation.x=-(st.thr||0)*.9+.3);const yk=cock.userData.yoke;if(yk){yk.rotation.z=-(st.phi||0)*.6;yk.position.z=.42-(st.apOn?0:clamp((keys.arrowdown||keys.s?1:0)-(keys.arrowup||keys.w?1:0)+joy.y,-1,1)*.06);}}
   }
   /* ---------- 儀表板（2D） ---------- */
   function drawPanel(){
@@ -2178,7 +2213,7 @@ const FLY=(()=>{
   $('#atcSend').addEventListener('click',()=>{const i=$('#atcIn');const v=i.value;i.value='';freeText(v);});
   $('#atcToggle').addEventListener('click',()=>{$('#flyAtc').classList.toggle('open');});
   new ResizeObserver(()=>{if(running)resize();}).observe($('#flyOv'));
-  return {tryWarp,get warp(){return warp;},_dbg:()=>({T,scene,cam,rig,cock,apts,ocean}),open,close,get running(){return running;},get st(){return st;},start:startFlight,step:(n,dt)=>{for(let i=0;i<n;i++)step(dt||.05);},handle,freeText,set mode(v){mode=v;},setWarp,toggleAP,distTD:()=>st&&distTD(),todDist:()=>st&&todDist(),retryApproach,result};
+  return {_model:(type,c1,c2,noName)=>{T=window.THREE;const P=perf(type);P.noName=!!noName;return makeModel(c1||'#2E86AB',c2||'#F2B53A',P);},tryWarp,get warp(){return warp;},_dbg:()=>({T,scene,cam,rig,cock,apts,ocean}),open,close,get running(){return running;},get st(){return st;},start:startFlight,step:(n,dt)=>{for(let i=0;i<n;i++)step(dt||.05);},handle,freeText,set mode(v){mode=v;},setWarp,toggleAP,distTD:()=>st&&distTD(),todDist:()=>st&&todDist(),retryApproach,result};
 })();
 
 /* ===================== 機長任務小遊戲 ===================== */
@@ -2293,6 +2328,258 @@ const Cap=(()=>{
   return {open,get st(){return st;}};
 })();
 
+/* ===================== 機長的一天（走路場景） ===================== */
+const WALK=(()=>{
+  let T=null,renderer=null,scene=null,cam=null,raf=0,last=0,running=false,trip=null,scn='',inter=[],cols=[],bnd=[-5,5,-5,5],anim=[],ride=null,lastPrompt=0,infoT=0;
+  const mobile=matchMedia('(pointer:coarse)').matches;
+  let yaw=0,pitch=0,eye=1.68;const pos={x:0,z:0},PR=.32,keys={};let joy={x:0,y:0,id:null},look=null,locked=false,wantLock=false,noLock=false;
+  const FONT='"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
+  const M=(g,m)=>new T.Mesh(g,m),std=(c,r=.7,m=0,o={})=>new T.MeshStandardMaterial({color:c,roughness:r,metalness:m,...o}),basic=(c,o={})=>new T.MeshBasicMaterial({color:c,...o});
+  const box=(w,h,d,c,r,m)=>M(new T.BoxGeometry(w,h,d),std(c,r,m));
+  function ctex(w,h,draw,rep){const cv=document.createElement('canvas');cv.width=w;cv.height=h;const g=cv.getContext('2d');draw(g,w,h);const tx=new T.CanvasTexture(cv);tx.anisotropy=8;if(rep){tx.wrapS=tx.wrapT=T.RepeatWrapping;tx.repeat.set(rep[0],rep[1]);}return tx;}
+  function add(o,x,y,z,p){o.position.set(x,y,z);(p||scene).add(o);return o;}
+  function col(x,z,w,d){cols.push([x-w/2,x+w/2,z-d/2,z+d/2]);}
+  function tag(o,kind,ex){o.traverse(m=>{if(m.isMesh){m.userData.kind=kind;Object.assign(m.userData,ex||{});inter.push(m);}});return o;}
+  function sign(t,w,h,bg,fg,fs){return M(new T.PlaneGeometry(w,h),basic(0xffffff,{map:ctex(Math.round(w*120),Math.round(h*120),(g,W,H)=>{g.fillStyle=bg;g.fillRect(0,0,W,H);g.fillStyle=fg;g.font=`700 ${fs||Math.round(H*.55)}px ${FONT}`;g.textAlign='center';g.textBaseline='middle';g.fillText(t,W/2,H/2+2);})}));}
+  function person(x,z,ry,o){o=o||{};const g=new T.Group(),sh=std(o.shirt||0xffffff,.8),sk=std(o.skin||0xe0ac69,.7),pa=std(o.pants||0x1f2a44,.8);
+    const t=M(new T.CylinderGeometry(.24,.21,.62,12),sh);t.position.y=1.12;g.add(t);const hd=M(new T.SphereGeometry(.17,14,12),sk);hd.position.y=1.6;g.add(hd);
+    const hr=M(new T.SphereGeometry(.18,14,10,0,Math.PI*2,0,Math.PI*.55),std(o.hair||0x1a1a1a,.9));hr.position.y=1.62;g.add(hr);
+    if(o.jacket){const j=M(new T.CylinderGeometry(.255,.225,.6,12,1,true),std(o.jacket,.7));j.position.y=1.12;g.add(j);}
+    if(o.cap){const c=M(new T.CylinderGeometry(.19,.2,.1,16),std(o.cap,.6));c.position.y=1.8;g.add(c);const v=M(new T.BoxGeometry(.3,.02,.14),std(0x111111,.4));v.position.set(0,1.75,.15);g.add(v);}
+    if(o.vest){const v=M(new T.CylinderGeometry(.26,.23,.5,12,1,true),std(0xd8f000,.6));v.position.y=1.15;g.add(v);}
+    for(const sx of [-1,1]){const l=M(new T.CylinderGeometry(.085,.075,.8,8),pa);l.position.set(sx*.1,.42,0);g.add(l);const a=M(new T.CylinderGeometry(.06,.055,.6,8),o.jacket?std(o.jacket,.7):sh);a.position.set(sx*.29,1.1,0);g.add(a);
+      if(o.stripes)for(let i=0;i<o.stripes;i++){const s=M(new T.CylinderGeometry(.062,.062,.015,8),std(0xF2B53A,.4,.5));s.position.set(sx*.29,.86+i*.03,0);g.add(s);}}
+    g.position.set(x,0,z);g.rotation.y=ry||0;scene.add(g);col(x,z,.6,.6);return g;}
+  function skyCol(h){h=((h%24)+24)%24;const night=h<5.5||h>19,dusk=(h>=17&&h<=19)||(h>=5.5&&h<7);return night?['#0a1430','#1a2546']:dusk?['#4a5f9a','#f0a070']:['#3d7ec4','#bfdcf2'];}
+  function skyline(h){const [a,b]=skyCol(h),night=(h%24)<5.5||(h%24)>19;return ctex(1024,512,(g,w,H)=>{const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,a);gr.addColorStop(.75,b);g.fillStyle=gr;g.fillRect(0,0,w,H);
+    for(let i=0;i<60;i++){const bw=20+Math.random()*50,bh=60+Math.random()*260,x=Math.random()*w;g.fillStyle=night?'#141c2a':'#7d8a9c';g.fillRect(x,H-bh,bw,bh);for(let y=H-bh+8;y<H-6;y+=12)for(let xx=x+4;xx<x+bw-4;xx+=9){if(Math.random()<(night?.45:.15)){g.fillStyle=night?'#ffd88a':'#c9d6e6';g.fillRect(xx,y,4,5);}}}
+    if(!night&&!(h%24>=17)){g.fillStyle='rgba(255,255,255,.85)';for(let i=0;i<6;i++){g.beginPath();g.ellipse(Math.random()*w,40+Math.random()*120,60,18,0,0,Math.PI*2);g.fill();}}
+    if(night){g.fillStyle='#fff';for(let i=0;i<80;i++)g.fillRect(Math.random()*w,Math.random()*H*.5,2,2);}
+    const p=new Path2D();g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=3;g.beginPath();g.moveTo(w*.2,H*.25);g.lineTo(w*.32,H*.2);g.stroke();});}
+  function lights(h,warm){const night=(h%24)<6||(h%24)>18.5;scene.add(new T.HemisphereLight(0xdde8ff,0x5a4a3a,night?.35:.7));scene.add(new T.AmbientLight(0xffffff,night?.25:.25));
+    if(warm){const pl=new T.PointLight(0xffe2b0,night?1.1:.6,18);pl.position.set(0,2.6,0);scene.add(pl);}}
+  const wood=()=>ctex(256,256,(g,w,h)=>{for(let i=0;i<8;i++){g.fillStyle=['#a0764e','#94693f','#a8805a','#8d6440'][i%4];g.fillRect(0,i*32,w,32);g.strokeStyle='rgba(60,40,20,.35)';g.strokeRect(0,i*32,w,32);for(let k=0;k<6;k++){g.strokeStyle='rgba(70,45,20,.15)';g.beginPath();g.moveTo(Math.random()*w,i*32+Math.random()*32);g.lineTo(Math.random()*w,i*32+Math.random()*32);g.stroke();}}},[3,3]);
+  function room(w,d,hgt,floorTx,wallC){const f=M(new T.PlaneGeometry(w,d),std(0xffffff,.6,0,{map:floorTx}));f.rotation.x=-Math.PI/2;scene.add(f);
+    const c=M(new T.PlaneGeometry(w,d),std(0xf4f1ea,.9));c.rotation.x=Math.PI/2;c.position.y=hgt;scene.add(c);
+    for(const [x,z,ry,len] of [[0,-d/2,0,w],[0,d/2,Math.PI,w],[-w/2,0,Math.PI/2,d],[w/2,0,-Math.PI/2,d]]){const m=M(new T.PlaneGeometry(len,hgt),std(wallC,.9));m.position.set(x,hgt/2,z);m.rotation.y=ry;scene.add(m);
+      const bb=box(ry===0||ry===Math.PI?len:.04,.1,ry===0||ry===Math.PI?.04:len,0xf0ece2,.6);bb.position.set(x*.995,.05,z*.995);scene.add(bb);}
+    bnd=[-w/2,w/2,-d/2,d/2];}
+  function clear(){if(!scene)return;scene.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m.map)m.map.dispose();m.dispose();});}});}
+  function newScene(){clear();scene=new T.Scene();inter=[];cols=[];anim=[];ride=null;}
+  /* ---------- 場景一：家 ---------- */
+  function home(){newScene();const h=trip.h0-2.5;scene.background=new T.Color(0x1a1f28);lights(h,true);
+    room(9,7,2.8,wood(),0xe9e2d4);
+    // 窗戶（城市景）
+    const win=M(new T.PlaneGeometry(3.6,1.6),basic(0xffffff,{map:skyline(h)}));add(win,-.5,1.55,3.49);win.rotation.y=Math.PI;
+    for(const [w_,h_,x,y] of [[3.8,.08,-.5,2.38],[3.8,.08,-.5,.72],[.08,1.7,-2.37,1.55],[.08,1.7,1.37,1.55],[.06,1.6,-.5,1.55]])add(box(w_,h_,.1,0xf5f5f0,.5),x,y,3.45);
+    for(const sx of [-1,1]){const cu=box(.6,2.1,.08,0x2E86AB,.9);add(cu,-.5+sx*2.15,1.45,3.35);}
+    // 床
+    const bed=new T.Group();bed.add(add(box(1.9,.35,2.2,0x6b4a2e,.7),0,.18,0));bed.add(add(box(1.8,.22,2.1,0xf4f4f0,.9),0,.46,0));bed.add(add(box(1.82,.08,1.3,0x2E86AB,.9),0,.6,-.35));bed.add(add(box(.7,.14,.4,0xffffff,.9),-.45,.65,.8));bed.add(add(box(.7,.14,.4,0xffffff,.9),.45,.65,.8));bed.add(add(box(1.9,1,.1,0x6b4a2e,.7),0,.7,1.1));
+    add(bed,-3.3,0,1.9);bed.rotation.y=Math.PI/2;col(-3.3,1.9,2.4,2.1);tag(bed,'bed');
+    // 地毯、沙發、茶几
+    const rug=M(new T.CircleGeometry(1.4,32),std(0xc0392b,.95));rug.rotation.x=-Math.PI/2;add(rug,.8,.01,.3);
+    const sofa=new T.Group();sofa.add(add(box(2.2,.45,.9,0x5d6d7e,.9),0,.25,0));sofa.add(add(box(2.2,.6,.2,0x5d6d7e,.9),0,.6,-.4));for(const sx of [-1,1])sofa.add(add(box(.2,.55,.9,0x5d6d7e,.9),sx*1.1,.35,0));add(sofa,.8,0,-1.6);col(.8,-1.6,2.4,1);tag(sofa,'sofa');
+    const tbl=box(1.1,.08,.6,0x8d6440,.5);add(tbl,.8,.42,.3);add(box(.06,.4,.06,0x5a3a20),.4,.2,.1);add(box(.06,.4,.06,0x5a3a20),1.2,.2,.5);col(.8,.3,1.1,.6);
+    // 電視（天氣預報）
+    const D=trip.D;const tv=M(new T.PlaneGeometry(1.6,.9),basic(0xffffff,{map:ctex(640,360,(g,w,hh)=>{g.fillStyle='#103a5c';g.fillRect(0,0,w,hh);g.fillStyle='#F2B53A';g.font=`900 40px ${FONT}`;g.fillText('氣象預報',30,60);g.fillStyle='#fff';g.font=`700 34px ${FONT}`;g.fillText(`${trip.B.short}：晴時多雲 28°C`,30,140);g.fillText(`${D.name}：${rnd(['晴天','多雲','晴朗'])} ${20+Math.floor(Math.random()*10)}°C`,30,200);g.font=`500 26px ${FONT}`;g.fillText('適合飛行的好天氣！',30,280);g.fillStyle='#F2B53A';g.beginPath();g.arc(560,110,50,0,Math.PI*2);g.fill();})}));
+    add(tv,.8,1.6,-3.46);add(box(1.7,1,.06,0x111111,.4),.8,1.6,-3.5);tag(tv,'tv');
+    // 衣櫃與制服
+    add(box(1.4,2.2,.6,0xd8cbb0,.7),3.6,1.1,-2.9);col(3.6,-2.9,1.4,.6);
+    const uni=new T.Group();uni.add(add(M(new T.CylinderGeometry(.03,.03,1.7,8),std(0x777777,.3,.7)),0,.85,0));uni.add(add(M(new T.CylinderGeometry(.25,.25,.04,12),std(0x555555,.4,.6)),0,.02,0));
+    const jk=M(new T.CylinderGeometry(.26,.22,.75,14),std(0x1f2a44,.6));jk.position.y=1.25;uni.add(jk);const sh=M(new T.BoxGeometry(.12,.5,.03),std(0xffffff,.8));sh.position.set(0,1.35,.25);uni.add(sh);const ti=M(new T.BoxGeometry(.05,.3,.02),std(0x2E86AB,.6));ti.position.set(0,1.3,.27);uni.add(ti);
+    for(const sx of [-1,1]){const ar=M(new T.CylinderGeometry(.06,.06,.6,8),std(0x1f2a44,.6));ar.position.set(sx*.3,1.2,0);uni.add(ar);for(let i=0;i<4;i++){const st=M(new T.CylinderGeometry(.063,.063,.016,8),std(0xF2B53A,.3,.6));st.position.set(sx*.3,.95+i*.035,0);uni.add(st);}}
+    const hat=M(new T.CylinderGeometry(.18,.19,.1,16),std(0x1f2a44,.6));hat.position.y=1.72;uni.add(hat);const badge=M(new T.SphereGeometry(.04,8,6),std(0xF2B53A,.3,.7));badge.position.set(0,1.73,.18);uni.add(badge);
+    add(uni,2.6,0,-2.7);col(2.6,-2.7,.6,.6);tag(uni,'uniform');trip.uniObj=uni;
+    // 書桌、筆電、飛行包、相框、時鐘
+    add(box(1.4,.06,.7,0xe8e4dc,.4),3.9,.75,1.6);for(const [x,z] of [[3.3,1.3],[4.5,1.3],[3.3,1.9],[4.5,1.9]])add(box(.05,.75,.05,0x777777,.4,.6),x,.37,z);col(3.9,1.6,1.4,.7);
+    const lap=M(new T.PlaneGeometry(.55,.35),basic(0xffffff,{map:ctex(330,210,(g,w,hh)=>{g.fillStyle='#0b1220';g.fillRect(0,0,w,hh);g.fillStyle='#F2B53A';g.font=`700 22px ${FONT}`;g.fillText('鯨魚航空 機組班表',14,32);g.fillStyle='#fff';g.font=`500 19px ${FONT}`;g.fillText(`航班 WH${trip.fno}`,14,72);g.fillText(`${trip.B.short} → ${trip.D.name}`,14,104);g.fillText(`機型 ${PLANES[trip.type].name}`,14,136);g.fillText(`起飛 ${hhmm(trip.h0)}`,14,168);})}));
+    lap.position.set(3.9,1.0,1.85);lap.rotation.y=Math.PI;lap.rotation.x=.25;scene.add(lap);add(box(.55,.02,.38,0x333333,.4,.5),3.9,.79,1.62);tag(lap,'laptop');
+    const bag=new T.Group();bag.add(add(box(.45,.6,.25,0x111111,.6),0,.4,0));bag.add(add(M(new T.CylinderGeometry(.015,.015,.5,6),std(0x888888,.3,.8)),0,.95,-.08));bag.add(add(box(.3,.05,.02,0xF2B53A,.4),0,.55,.13));add(bag,3,0,.7);col(3,.7,.5,.4);tag(bag,'bag');trip.bagObj=bag;
+    const ph=M(new T.PlaneGeometry(.35,.28),basic(0xffffff,{map:ctex(140,112,(g,w,hh)=>{g.fillStyle='#bfdcf2';g.fillRect(0,0,w,hh);g.fillStyle='#5d7a4c';g.fillRect(0,80,w,32);for(const [x,c,s] of [[40,'#c0392b',1],[70,'#2E86AB',1],[100,'#f0ad4e',.7]]){g.fillStyle='#e0ac69';g.beginPath();g.arc(x,60-12*s,10*s,0,7);g.fill();g.fillStyle=c;g.fillRect(x-9*s,70-12*s,18*s,26*s);}g.strokeStyle='#8d6440';g.lineWidth=8;g.strokeRect(0,0,w,hh);})}));
+    ph.position.set(4.3,.95,1.4);ph.rotation.y=-Math.PI/2-.4;scene.add(ph);tag(ph,'photo');
+    const clk=M(new T.CircleGeometry(.25,24),basic(0xffffff,{map:ctex(128,128,(g,w,hh)=>{g.fillStyle='#fff';g.beginPath();g.arc(64,64,62,0,7);g.fill();g.strokeStyle='#222';g.lineWidth=4;g.stroke();const t=h;const ha=((t%12)/12)*Math.PI*2-Math.PI/2,ma=((t%1))*Math.PI*2-Math.PI/2;g.lineWidth=6;g.beginPath();g.moveTo(64,64);g.lineTo(64+Math.cos(ha)*32,64+Math.sin(ha)*32);g.stroke();g.lineWidth=3;g.beginPath();g.moveTo(64,64);g.lineTo(64+Math.cos(ma)*48,64+Math.sin(ma)*48);g.stroke();})}));
+    add(clk,-4.49,2,-1);clk.rotation.y=Math.PI/2;tag(clk,'clock');
+    // 植物、貓
+    const pl=new T.Group();pl.add(add(M(new T.CylinderGeometry(.22,.18,.4,14),std(0xd35400,.8)),0,.2,0));for(let k=0;k<6;k++){const lf=M(new T.SphereGeometry(.22,10,8),std(0x3f7a4a,.9));lf.position.set((Math.random()-.5)*.3,.6+Math.random()*.5,(Math.random()-.5)*.3);pl.add(lf);}add(pl,-4,0,-3);col(-4,-3,.5,.5);tag(pl,'plant');
+    const cat=new T.Group(),cf=std(0xf0a040,.9);const cb=M(new T.SphereGeometry(.2,14,10),cf);cb.scale.set(1,.8,1.5);cb.position.y=.2;cat.add(cb);const ch=M(new T.SphereGeometry(.13,12,10),cf);ch.position.set(0,.33,.28);cat.add(ch);
+    for(const sx of [-1,1]){const e=M(new T.ConeGeometry(.05,.1,4),cf);e.position.set(sx*.07,.45,.28);cat.add(e);const ey=M(new T.SphereGeometry(.018,6,4),basic(0x111111));ey.position.set(sx*.05,.35,.4);cat.add(ey);}
+    const tail=M(new T.CylinderGeometry(.03,.02,.35,6),cf);tail.position.set(0,.32,-.32);tail.rotation.x=-.8;cat.add(tail);add(cat,1.3,0,.9);cat.rotation.y=-2.2;tag(cat,'cat');anim.push(t=>{tail.rotation.z=Math.sin(t/300)*.5;});
+    // 門
+    const door=new T.Group();door.add(add(box(1,2.1,.08,0x8d6440,.6),0,1.05,0));const kn=M(new T.SphereGeometry(.04,8,6),std(0xd4af37,.3,.8));kn.position.set(.38,1,.06);door.add(kn);door.add(add(box(1.15,.08,.1,0xf0ece2,.6),0,2.12,0));
+    add(door,-2,0,-3.46);tag(door,'door');const ds=sign('出門 → 機場',.9,.22,'#10161f','#F2B53A');add(ds,-2,2.35,-3.44);
+    // 鞋櫃、玄關墊
+    add(box(.9,.5,.35,0xd8cbb0,.7),-3.2,.25,-3.2);col(-3.2,-3.2,.9,.4);const mat=M(new T.PlaneGeometry(1.1,.6),std(0x6b4a2e,.95));mat.rotation.x=-Math.PI/2;add(mat,-2,.012,-2.9);
+    pos.x=-2;pos.z=1.8;yaw=Math.PI*.15;pitch=-.05;eye=1.68;
+  }
+  /* ---------- 場景二：機組巴士 ---------- */
+  function bus(){newScene();const h=trip.h0-1.8;scene.background=new T.Color(skyCol(h)[1]);scene.fog=new T.Fog(new T.Color(skyCol(h)[1]),40,260);lights(h,false);
+    const night=(h%24)<6||(h%24)>18.5;
+    const inside=new T.Group();scene.add(inside);
+    inside.add(add(box(2.6,.05,9,0x3a3d42,.8),0,0,0));inside.add(add(box(2.6,.05,9,0xd8dce2,.6),0,2.2,0));
+    for(const sx of [-1,1]){inside.add(add(box(.05,.55,9,0x2E86AB,.6),sx*1.3,.27,0));inside.add(add(box(.05,.25,9,0x9aa3ad,.5),sx*1.3,2.08,0));
+      for(let i=0;i<5;i++){const s=new T.Group();s.add(add(box(.9,.12,.5,0x1f3a5f,.8),0,.45,0));s.add(add(box(.9,.6,.1,0x1f3a5f,.8),0,.8,-.25));s.position.set(sx*.75,0,-3+i*1.4);inside.add(s);}}
+    for(let i=0;i<3;i++){const p=person(.75*(i%2?1:-1),-1.6+i*1.4,0,{shirt:0xffffff,jacket:i===1?null:0x1f2a44,skin:[0xf1c27d,0xe0ac69,0xc68642][i],hair:i===2?0x4a2c17:0x1a1a1a});p.position.y=-.35;p.children.forEach(o=>{if(o.geometry&&o.geometry.type==='CylinderGeometry'&&o.position.y<.6){o.rotation.x=-1.4;o.position.z=.25;}});}
+    const drv=person(-.7,4,0,{shirt:0x2E86AB});drv.position.y=-.35;
+    // 外面：道路、建築、路燈
+    const road=M(new T.PlaneGeometry(14,400),std(0xffffff,.9,0,{map:ctex(64,256,(g,w,hh)=>{g.fillStyle='#3a3d42';g.fillRect(0,0,w,hh);g.fillStyle='#e8e8e0';g.fillRect(30,0,4,120);},[1,40])}));road.rotation.x=-Math.PI/2;road.position.set(0,-.6,0);scene.add(road);
+    anim.push((t,dt)=>{road.material.map.offset.y+=dt*1.2;});
+    const blds=[];for(let i=0;i<40;i++){const hh=6+Math.random()*30,w=6+Math.random()*10;const b=M(new T.BoxGeometry(w,hh,w),std(night?0x2a3340:0x9aa6b6,.8,0,{map:ctex(32,64,(g,W,H)=>{g.fillStyle=night?'#2a3340':'#9aa6b6';g.fillRect(0,0,W,H);for(let y=4;y<H;y+=8)for(let x=3;x<W;x+=7){if(Math.random()<(night?.5:.4)){g.fillStyle=night?'#ffd88a':'#c9d6e6';g.fillRect(x,y,3,4);}}}),emissive:night?0x222222:0}));
+      b.position.set((i%2?1:-1)*(16+Math.random()*20),hh/2-.6,-200+i*10);scene.add(b);blds.push(b);}
+    const lampsG=[];for(let i=0;i<14;i++){const l=new T.Group();l.add(add(M(new T.CylinderGeometry(.08,.1,6,6),std(0x777777,.4,.6)),0,3,0));const bulb=M(new T.SphereGeometry(.3,8,6),basic(night?0xffe2a0:0xdddddd));bulb.position.set(-1,6,0);l.add(bulb);l.position.set(10,-.6,-200+i*30);scene.add(l);lampsG.push(l);}
+    anim.push((t,dt)=>{for(const b of blds){b.position.z+=dt*24;if(b.position.z>60)b.position.z-=400;}for(const l of lampsG){l.position.z+=dt*24;if(l.position.z>60)l.position.z-=420;}inside.position.y=Math.sin(t/120)*.01;});
+    const pl=new T.Group();const fu=M(new T.CylinderGeometry(1.5,1.5,30,12),std(0xf3f3ef,.5));fu.rotation.x=Math.PI/2;pl.add(fu);const wi=box(36,.3,5,0xb9c1cc,.5);pl.add(wi);pl.position.set(-60,40,-150);scene.add(pl);anim.push((t,dt)=>{pl.position.y+=dt*4;pl.position.z+=dt*10;});
+    bnd=[-1,1,-4,4];pos.x=.75;pos.z=-.2;yaw=Math.PI/2+.35;pitch=-.05;eye=1.15;
+    ride={t:0,dur:9,end:()=>go('crew')};
+    msg('<h4>🚌 搭機組巴士去機場</h4><p>同事們都在車上。看看窗外的城市，快到機場了⋯⋯</p>');
+  }
+  /* ---------- 場景三：機組報到中心 ---------- */
+  function crew(){newScene();const h=trip.h0-1.2;scene.background=new T.Color(0x1a1f28);lights(h,true);
+    const cp=ctex(256,256,(g,w,hh)=>{g.fillStyle='#284a72';g.fillRect(0,0,w,hh);g.strokeStyle='rgba(255,255,255,.06)';for(let i=0;i<w;i+=16){g.beginPath();g.moveTo(i,0);g.lineTo(i,hh);g.stroke();}},[6,4]);
+    room(16,12,3.2,cp,0xdfe3e8);
+    for(let x=-6;x<=6;x+=4)for(const z of [-3,3]){const lp=M(new T.PlaneGeometry(1.6,.4),basic(0xfff8e8));lp.rotation.x=Math.PI/2;add(lp,x,3.19,z);}
+    const pl2=new T.PointLight(0xffffff,.6,20);pl2.position.set(0,3,0);scene.add(pl2);
+    // 公司 LOGO 牆
+    const logo=M(new T.PlaneGeometry(5,1.6),basic(0xffffff,{map:ctex(600,192,(g,w,hh)=>{g.fillStyle='#2E86AB';g.fillRect(0,0,w,hh);g.fillStyle='#fff';g.beginPath();g.ellipse(110,100,70,42,0,0,7);g.fill();g.beginPath();g.moveTo(170,95);g.lineTo(215,60);g.lineTo(210,135);g.fill();g.fillStyle='#2E86AB';g.beginPath();g.arc(80,90,7,0,7);g.fill();
+      g.fillStyle='#fff';g.font=`900 64px ${FONT}`;g.fillText('鯨魚航空',250,95);g.font=`700 34px "IBM Plex Mono",monospace`;g.fillStyle='#F2B53A';g.fillText('WHALE AIR · CREW',254,150);})}));add(logo,0,2.1,-5.98);
+    // 飛行計畫大螢幕
+    const B=trip.B,D=trip.D,P=PLANES[trip.type],fl=trip.c.d<700?240:trip.c.d<1500?300:trip.c.d<4000?350:370,fuel=Math.round((trip.c.d/P.speed+1.2)*P.burn/1000*10)/10;
+    const scr=M(new T.PlaneGeometry(4.2,2.4),basic(0xffffff,{map:ctex(840,480,(g,w,hh)=>{g.fillStyle='#0a0f17';g.fillRect(0,0,w,hh);g.fillStyle='#F2B53A';g.font=`700 34px ${FONT}`;g.fillText(`飛行計畫 FLIGHT PLAN　WH${trip.fno}`,24,50);
+      g.fillStyle='#ECE6D6';g.font=`500 26px ${FONT}`;[[`航線`,`${B.name} → ${D.name}`],['距離',`${Math.round(trip.c.d).toLocaleString()} 公里`],['機型',`${P.name}  ${trip.reg}`],['巡航高度',`FL${fl}（${(fl*100).toLocaleString()} 呎）`],['預計燃油',`${fuel} 噸`],['起飛時間',hhmm(trip.h0)],[`${D.name}天氣`,`風 ${rnd(['050','120','230','310'])}/${5+Math.floor(Math.random()*10)} 節，能見度 10 公里`]].forEach(([a,b],i)=>{g.fillStyle='#8E9DB2';g.fillText(a,24,105+i*48);g.fillStyle='#ECE6D6';g.fillText(b,190,105+i*48);});
+      g.strokeStyle='#4fd1ff';g.lineWidth=4;g.beginPath();g.moveTo(600,380);g.quadraticCurveTo(700,200,800,140);g.stroke();g.fillStyle='#F2B53A';g.beginPath();g.arc(600,380,9,0,7);g.arc(800,140,9,0,7);g.fill();g.fillStyle='#8E9DB2';g.font=`600 20px monospace`;g.fillText(B.code,580,415);g.fillText(D.code,770,125);})}));
+    add(scr,-7.9,1.8,0);scr.rotation.y=Math.PI/2;tag(scr,'plan');add(box(.06,2.6,4.4,0x111111,.4),-7.97,1.8,0);
+    // 會議桌、副機長、空服員
+    const tb=M(new T.CylinderGeometry(1.3,1.3,.08,28),std(0xe8e4dc,.4));add(tb,-3.5,.75,0);add(M(new T.CylinderGeometry(.12,.2,.75,10),std(0x555c66,.4,.6)),-3.5,.37,0);col(-3.5,0,2.6,2.6);
+    const docs=box(.5,.02,.35,0xffffff,.8);add(docs,-3.1,.8,.3);tag(docs,'release');
+    const fo=person(-5.2,0,Math.PI/2,{shirt:0xffffff,jacket:0x1f2a44,stripes:3,cap:0x1f2a44,skin:0xf1c27d});tag(fo,'fo');
+    const cc=[[2,1.5,0xc0392b,0xc0392b],[3,2.2,0xc0392b,0xc0392b],[4,1.4,0x2E86AB,0x1f2a44]];cc.forEach(([x,z,sh,pa],i)=>{const p=person(x,z,-Math.PI*.6,{shirt:sh,pants:pa,hair:[0x1a1a1a,0x4a2c17,0x1a1a1a][i],skin:[0xf1c27d,0xe0ac69,0xc68642][i]});tag(p,i===0?'purser':'crew');});
+    // 咖啡機、置物櫃、天氣圖、出口
+    const cf=new T.Group();cf.add(add(box(.9,.9,.6,0x34495e,.5),0,.45,0));cf.add(add(box(.5,.6,.4,0x111111,.3,.5),0,1.2,0));add(cf,6.5,0,-5.4);col(6.5,-5.4,.9,.6);tag(cf,'coffee');
+    for(let i=0;i<6;i++){const lk=box(.6,2,.5,[0x9aa3ad,0x8d949e][i%2],.4,.5);add(lk,-6.5+i*.62,1,5.7);}col(-4.95,5.7,3.8,.6);
+    const wx=M(new T.PlaneGeometry(2.2,1.4),basic(0xffffff,{map:ctex(330,210,(g,w,hh)=>{g.fillStyle='#e8f4ff';g.fillRect(0,0,w,hh);g.strokeStyle='#2E86AB';for(let i=0;i<6;i++){g.beginPath();g.ellipse(160,110,30+i*22,18+i*14,0,0,7);g.stroke();}g.fillStyle='#c0392b';g.font=`700 22px ${FONT}`;g.fillText('天氣圖',10,30);g.fillStyle='#F2B53A';g.beginPath();g.arc(250,60,22,0,7);g.fill();})}));add(wx,7.97,1.7,-2);wx.rotation.y=-Math.PI/2;tag(wx,'weather');
+    const ex=new T.Group();ex.add(add(box(1.6,2.3,.1,0x6d7480,.4,.5),0,1.15,0));const es=sign('往停機坪 TO APRON',1.8,.3,'#2e7a4a','#fff');es.position.set(0,2.55,.06);ex.add(es);add(ex,4,0,5.95);ex.rotation.y=Math.PI;tag(ex,'apronDoor');
+    pos.x=1;pos.z=-1;yaw=-Math.PI/2;pitch=-.05;eye=1.68;
+  }
+  /* ---------- 場景四：停機坪 ---------- */
+  function apron(){newScene();const h=trip.h0-.4,[top,hor]=skyCol(h),night=(h%24)<6||(h%24)>18.5;
+    scene.background=ctex(8,256,(g,w,hh)=>{const gr=g.createLinearGradient(0,0,0,hh);gr.addColorStop(0,top);gr.addColorStop(1,hor);g.fillStyle=gr;g.fillRect(0,0,w,hh);});scene.fog=new T.Fog(new T.Color(hor),120,700);
+    scene.add(new T.HemisphereLight(0xdde8ff,0x404850,night?.35:.8));const sun=new T.DirectionalLight(night?0x8899cc:0xfff0d8,night?.25:.9);sun.position.set(80,120,40);scene.add(sun);scene.add(new T.AmbientLight(0xffffff,.15));
+    const conc=ctex(256,256,(g,w,hh)=>{g.fillStyle='#8a8e94';g.fillRect(0,0,w,hh);for(let i=0;i<2500;i++){const v=120+Math.random()*40;g.fillStyle=`rgba(${v},${v},${v+4},.25)`;g.fillRect(Math.random()*w,Math.random()*hh,2,2);}g.strokeStyle='rgba(50,52,56,.5)';g.lineWidth=2;g.strokeRect(0,0,w,hh);},[60,60]);
+    const gnd=M(new T.PlaneGeometry(600,600),std(night?0x9a9ea4:0xc4c8cc,.9,0,{map:conc}));gnd.rotation.x=-Math.PI/2;scene.add(gnd);
+    const ln=(w,l,x,z,c)=>{const m=M(new T.PlaneGeometry(w,l),basic(c||0xe2b93b));m.rotation.x=-Math.PI/2;m.position.set(x,.02,z);scene.add(m);};ln(.4,120,0,10);ln(40,.4,0,-14);ln(.3,60,-14,0,0xc0392b);ln(.3,60,14,0,0xc0392b);
+    // 航廈背景
+    const term=new T.Group();term.add(add(box(220,18,30,0xd8dde3,.4,.3),0,9,0));term.add(add(box(221,8,31,0x4b7da3,.15,.6),0,11,0));term.position.set(0,0,-60);scene.add(term);
+    const twr=new T.Group();twr.add(add(M(new T.CylinderGeometry(3,4.5,50,12),std(0xe2e2dc,.6)),0,25,0));twr.add(add(M(new T.CylinderGeometry(8,6,7,12),std(0x335a78,.2,.5)),0,53,0));twr.position.set(-90,0,-30);scene.add(twr);
+    // 機組出口
+    const door=new T.Group();door.add(add(box(3,3,.3,0x6d7480,.4,.5),0,1.5,0));const ds=sign('CREW 機組專用',2.6,.4,'#10161f','#F2B53A');ds.position.set(0,3.3,.2);door.add(ds);add(door,-8,0,-44.8);
+    // 飛機
+    const pm=FLY._model(trip.type,'#2E86AB','#F2B53A'),Pf=PDIM[trip.type]||[44,2,35],L=Pf[0],r=Pf[1];pm.rotation.y=Math.PI/2;pm.position.set(0,r+1.85,6);scene.add(pm);
+    const span=Pf[2];
+    // 機身與引擎碰撞
+    col(0,6,L*.9,r*2.2);for(const sx of [-1,1])for(const fr of (Pf[3]?[.2,.37]:[.27])){col(L*.08-span*.37*fr,6+sx*span*fr,r*2.6,r*1.2);}
+    // 登機梯車
+    const stairsX=L*.36-0,stZ=6-r-.2;const st=new T.Group();const stepsN=12,rise=(r+1.85+.1)/stepsN;
+    for(let i=0;i<stepsN;i++){const s=box(1.4,.08,.42,0xd8dde3,.5,.4);s.position.set(0,rise*(i+1),-(stepsN-i)*.42);st.add(s);}
+    for(const sx of [-1,1]){const rl=M(new T.BoxGeometry(.05,.05,stepsN*.42+.4),std(0xf2c14e,.4));rl.position.set(sx*.7,rise*stepsN/2+1,-stepsN*.21);rl.rotation.x=Math.atan2(rise*stepsN,stepsN*.42);st.add(rl);}
+    st.add(add(box(2.2,.9,stepsN*.42+1.5,0xf2c14e,.5),0,.45,-stepsN*.21-1));
+    st.position.set(stairsX,0,stZ);st.rotation.y=0;scene.add(st);tag(st,'stairs');col(stairsX,stZ-stepsN*.21-1,2.4,stepsN*.42+1.6);
+    // 外部檢查點
+    const chk=[['tire','前輪',L*.36-0,6,1.2],['engine','左發動機',L*.08-span*.37*.27-r*1.6,6-span*.27,2.4],['wing','右機翼與燈',L*.05-span*.15,6+span*.42,3.5],['tail','尾翼',-L*.44,6,4]];
+    trip.checks=trip.checks||{};
+    for(const [k,nm,x,z,y] of chk){const ring=M(new T.TorusGeometry(.7,.06,8,24),basic(0x7FD493,{transparent:true,opacity:.85}));ring.rotation.x=Math.PI/2;const g=new T.Group();g.add(ring);const pole=M(new T.CylinderGeometry(.6,.6,y,12,1,true),basic(0x7FD493,{transparent:true,opacity:.12,side:T.DoubleSide}));pole.position.y=y/2;g.add(pole);
+      add(g,x,.05,z);tag(g,'check',{ck:k,nm});g.visible=!trip.checks[k];anim.push(t=>{ring.position.y=.2+Math.sin(t/300)*.15;});}
+    // 地勤
+    person(L*.36-3,stZ-3,Math.PI/2,{shirt:0x2b2b2b,vest:true});const gr2=person(L*.45+6,6,-Math.PI/2,{shirt:0x2b2b2b,vest:true,cap:0x2b2b2b});tag(gr2,'ground');
+    const tug=new T.Group();tug.add(add(box(2.2,1.2,3.6,0xf2c14e,.6),0,.9,0));tug.add(add(box(1.8,.9,1.2,0x2c3e50,.4),0,1.9,-.8));add(tug,L/2+6,0,6);tug.rotation.y=Math.PI/2;col(L/2+6,6,3.8,2.4);
+    for(let i=0;i<3;i++){const c=new T.Group();c.add(add(box(1.6,1.2,2.2,0x4a6fa5,.6),0,1.1,0));c.add(add(box(1.7,.2,2.4,0x555555,.6),0,.45,0));add(c,-8-i*3,0,-3);col(-8-i*3,-3,1.8,2.4);}
+    for(const [x,z] of [[L/2+1,6],[-L/2-1,6],[0,6+span/2+1],[0,6-span/2-1]]){const cn=M(new T.ConeGeometry(.25,.7,10),std(0xff6a00,.6));add(cn,x,.35,z);}
+    const fuel=new T.Group();fuel.add(add(box(2.4,1.8,3,0xffffff,.5),0,1.3,2.5));const tk=M(new T.CylinderGeometry(1.2,1.2,6,16),std(0xe8e8e8,.35,.4));tk.rotation.x=Math.PI/2;tk.position.set(0,1.6,-2);fuel.add(tk);add(fuel,-6,0,6+span*.32);col(-6,6+span*.32,2.6,9);
+    for(const [x,i] of [[-95,0],[-165,1],[105,2],[175,3]]){const ty=['a321','b789','b738','a339'][i],D_=PDIM[ty];const op=FLY._model(ty,['#c0392b','#7d3c98','#16a085','#d4a017'][i],'#c8ccd2',true);op.rotation.y=Math.PI/2;op.position.set(x,D_[1]+1.85,6);scene.add(op);}
+    if(night){for(const x of [-40,40]){const pl3=new T.PointLight(0xffe2b0,1.2,90);pl3.position.set(x,20,10);scene.add(pl3);const pole=M(new T.CylinderGeometry(.3,.4,20,8),std(0x9aa3ad,.4,.6));add(pole,x,10,-6);const hd=M(new T.SphereGeometry(1,8,6),basic(0xfff1c8));add(hd,x,20,-6);}}
+    bnd=[-70,70,-44,50];pos.x=-8;pos.z=-42.5;yaw=0;pitch=-.02;eye=1.68;
+  }
+  /* ---------- 切換、提示 ---------- */
+  const STEPS=[['uniform','換上機長制服'],['bag','拿飛行包'],['home','出門'],['plan','看飛行計畫'],['brief','和副機長開會'],['release','簽名放行'],['walk','外部檢查'],['board','登機']];
+  function updSteps(){$('#wkSteps').innerHTML=STEPS.map(([k,t])=>`<span class="${trip.done[k]?'d':''}">${trip.done[k]?'✓':'○'} ${t}</span>`).join('<i>›</i>');
+    const nxt=STEPS.find(([k])=>!trip.done[k]);$('#wkNext').textContent=nxt?'下一步：'+({uniform:'到衣櫃旁換上機長制服',bag:'拿書桌旁的黑色飛行包',home:'從門口出門',plan:'看左邊牆上的飛行計畫大螢幕',brief:'到會議桌找副機長',release:'看桌上的文件，簽名放行',walk:`繞飛機做外部檢查（${Object.keys(trip.checks||{}).length}／4，綠色光圈）`,board:'走到登機梯，上飛機'}[nxt[0]]):'';}
+  function msg(h){$('#wkInfoBody').innerHTML=h;$('#wkInfo').hidden=false;infoT=performance.now();}
+  function fade(fn){const f=$('#wkFade');f.classList.add('on');setTimeout(()=>{fn();setTimeout(()=>f.classList.remove('on'),300);},450);}
+  function go(name){fade(()=>{scn=name;$('#wkInfo').hidden=true;({home,bus,crew,apron})[name]();$('#wkTitle').textContent=({home:'🏠 機長的家',bus:'🚌 機組巴士',crew:'🧑‍✈️ 鯨魚航空 機組報到中心',apron:'🛫 停機坪'})[name];updSteps();$('#wkSkip').hidden=name!=='bus';});}
+  function note(m,t,d){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const t0=AC.currentTime+t,o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=440*Math.pow(2,(m-69)/12);g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.15,t0+.01);g.gain.exponentialRampToValueAtTime(.0001,t0+d);o.connect(g);g.connect(AC.destination);o.start(t0);o.stop(t0+d+.05);}catch(e){}}
+  function act(hit){const u=hit.object.userData,k=u.kind,d=trip.done;
+    switch(k){
+      case 'uniform':if(d.uniform)return msg('<h4>制服</h4><p>已經穿好了，帥氣！</p>');d.uniform=true;trip.uniObj.visible=false;note(72,0,.15);note(79,.12,.2);msg('<h4>👨‍✈️ 換上機長制服！</h4><p>深藍色外套、白襯衫、領帶，袖子上有 4 條金色條紋，代表「機長」。戴上帽子，準備出發！</p>');break;
+      case 'bag':if(d.bag)return;d.bag=true;trip.bagObj.visible=false;note(67,0,.12);msg('<h4>🧳 拿起飛行包</h4><p>裡面有飛行執照、護照、耳機、手電筒，還有媽媽準備的便當。</p>');break;
+      case 'door':if(!d.uniform||!d.bag)return msg(`<h4>還不能出門</h4><p>${!d.uniform?'先換上機長制服！':'飛行包忘了帶！'}</p>`);d.home=true;go('bus');break;
+      case 'cat':note(76,0,.15);note(72,.15,.3);msg(`<h4>🐱 摸摸貓</h4><p>「喵～」${rnd(['牠在你手上磨蹭，好像捨不得你出門。','牠伸了個懶腰，翻肚子給你摸。','牠說：早點回來喔！'])}</p>`);break;
+      case 'tv':msg(`<h4>📺 氣象預報</h4><p>今天${trip.B.short}和${trip.D.name}天氣都不錯，很適合飛行！</p>`);break;
+      case 'laptop':msg(`<h4>💻 機組班表</h4><p>今天飛 WH${trip.fno}，${trip.B.short} → ${trip.D.name}，${PLANES[trip.type].name}，${hhmm(trip.h0)} 起飛。</p>`);break;
+      case 'photo':msg('<h4>🖼 全家福</h4><p>家人的照片。每次飛行前看一眼，提醒自己要平安回家。</p>');break;
+      case 'clock':msg(`<h4>🕰 時鐘</h4><p>現在大約 ${hhmm(trip.h0-2.5)}，離起飛還有 2 個半小時。</p>`);break;
+      case 'bed':msg('<h4>床</h4><p>昨晚睡得很飽，機長一定要休息充足才能飛。</p>');break;
+      case 'sofa':msg('<h4>沙發</h4><p>回家再來好好躺著看電視。</p>');break;
+      case 'plant':msg('<h4>盆栽</h4><p>記得出門前幫它澆水⋯⋯好，澆好了！</p>');break;
+      case 'plan':d.plan=true;msg(`<h4>🗺 飛行計畫</h4><p>${trip.B.name} → ${trip.D.name}，${Math.round(trip.c.d).toLocaleString()} 公里。巡航高度、油量、目的地天氣都確認了。</p>`);updSteps();break;
+      case 'fo':d.brief=true;note(67,0,.1);msg(`<h4>副機長</h4><p>「機長好！我是今天的副機長小林。天氣很好，燃油已經算好了。起飛由你操縱，無線電我幫忙，有問題隨時叫我！」</p>`);updSteps();break;
+      case 'purser':msg(`<h4>座艙長</h4><p>「機長好！今天客艙有 ${Math.round((PLANES[trip.type].C+PLANES[trip.type].Y)*.86)} 位旅客，餐點和安全示範都準備好了。」</p>`);break;
+      case 'crew':msg(`<h4>空服員</h4><p>「${rnd(['機長好！','今天也請多指教！','聽說今天有小朋友第一次搭飛機喔。'])}」</p>`);break;
+      case 'release':if(!d.plan||!d.brief)return msg('<h4>放行文件</h4><p>先看完飛行計畫、和副機長開完會再簽名。</p>');d.release=true;note(72,0,.1);note(76,.1,.1);note(79,.2,.2);msg('<h4>✍️ 簽名放行！</h4><p>你在飛行放行單上簽了名，代表機長確認這班飛機可以安全出發。</p>');updSteps();break;
+      case 'coffee':msg('<h4>☕ 咖啡機</h4><p>來一杯熱咖啡，精神百倍！</p>');break;
+      case 'weather':msg('<h4>天氣圖</h4><p>航路上沒有颱風，只有一小段可能有亂流。</p>');break;
+      case 'apronDoor':if(!d.release)return msg('<h4>往停機坪</h4><p>先完成簽名放行才能去飛機那裡。</p>');go('apron');break;
+      case 'check':{const ck=u.ck;if(trip.checks[ck])return;trip.checks[ck]=true;let o=hit.object;while(o.parent&&o.parent.type!=='Scene')o=o.parent;o.visible=false;inter=inter.filter(m=>m.userData.ck!==ck);note(79,0,.12);
+        const t={tire:'輪胎胎紋正常、沒有破損，胎壓 OK！',engine:'發動機進氣口乾淨，沒有異物，風扇葉片完好！',wing:'機翼、襟翼和航行燈都正常！',tail:'尾翼和方向舵正常，塗裝很漂亮！'}[ck];
+        if(Object.keys(trip.checks).length>=4)d.walk=true;msg(`<h4>🔍 外部檢查：${u.nm}</h4><p>${t}</p><p class="hint">已檢查 ${Object.keys(trip.checks).length}／4</p>`);updSteps();break;}
+      case 'ground':msg('<h4>地勤人員</h4><p>「機長好！行李裝好了，油也加滿了，隨時可以推出！」</p>');break;
+      case 'stairs':if(!d.walk)return msg(`<h4>登機梯</h4><p>機長要先繞飛機一圈做外部檢查（${Object.keys(trip.checks).length}／4）。找綠色光圈！</p>`);
+        d.board=true;updSteps();ride={t:0,dur:3,climb:true,end:()=>{msg('<h4>歡迎登機，機長！</h4><p>座艙長：「機長請進，駕駛艙在左邊。」</p>');setTimeout(()=>{const tr=trip;close(true);tr.onBoard();},900);}};break;
+    }
+  }
+  function ray(){const r=new T.Raycaster();r.far=60;for(const [dx,dy] of [[0,0],[.04,0],[-.04,0],[0,-.06],[0,.05]]){r.setFromCamera(new T.Vector2(dx,dy),cam);const hs=r.intersectObjects(inter,false);for(const h of hs){if(!vis(h.object))continue;const far=['check','stairs','plan'].includes(h.object.userData.kind);if(h.distance<=(far?14:3.2))return h;break;}}return null;}
+  function vis(o){while(o){if(!o.visible)return false;o=o.parent;}return true;}
+  const NM={uniform:'機長制服',bag:'飛行包',door:'大門',cat:'貓咪',tv:'電視',laptop:'筆電',photo:'相框',clock:'時鐘',bed:'床',sofa:'沙發',plant:'盆栽',plan:'飛行計畫',fo:'副機長',purser:'座艙長',crew:'空服員',release:'放行文件',coffee:'咖啡機',weather:'天氣圖',apronDoor:'往停機坪的門',check:'檢查點',ground:'地勤',stairs:'登機梯'};
+  const VB={uniform:'換上',bag:'拿起',door:'出門',cat:'摸摸',release:'簽名',stairs:'登機',check:'檢查',fo:'開會',coffee:'喝杯'};
+  function blocked(x,z){if(x<bnd[0]+PR||x>bnd[1]-PR||z<bnd[2]+PR||z>bnd[3]-PR)return true;for(const c of cols)if(x>c[0]-PR&&x<c[1]+PR&&z>c[2]-PR&&z<c[3]+PR)return true;return false;}
+  function loop(t){if(!running)return;raf=requestAnimationFrame(loop);if(!scene)return;const dt=Math.min(.05,(t-last)/1000);last=t;
+    let fx=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joy.y,sx=(keys.d?1:0)-(keys.a?1:0)+joy.x;if(keys.arrowleft)yaw+=dt*1.8;if(keys.arrowright)yaw-=dt*1.8;
+    let y0=0;
+    if(ride){ride.t+=dt;const k=Math.min(1,ride.t/ride.dur);if(ride.climb){const P=PDIM[trip.type]||[44,2];pos.x=(P[0]*.36);pos.z=6-P[1]-.2-5.5+k*4.6;y0=k*(P[1]+1.85);yaw=0;}if(k>=1){const e=ride.end;ride=null;e&&e();}fx=sx=0;}
+    const spd=(keys.shift?6:3.2)*dt,f={x:Math.sin(yaw),z:Math.cos(yaw)},rg={x:-Math.cos(yaw),z:Math.sin(yaw)};
+    if(fx||sx){const nx=pos.x+(f.x*fx+rg.x*sx)*spd,nz=pos.z+(f.z*fx+rg.z*sx)*spd;if(!blocked(nx,pos.z))pos.x=nx;if(!blocked(pos.x,nz))pos.z=nz;}
+    const bob=(fx||sx)?Math.sin(t/140)*.04:0,ey=y0+eye+bob;cam.position.set(pos.x,ey,pos.z);cam.lookAt(pos.x+Math.sin(yaw)*Math.cos(pitch),ey+Math.sin(pitch),pos.z+Math.cos(yaw)*Math.cos(pitch));
+    for(const a of anim)a(t,dt);
+    if(!$('#wkInfo').hidden&&t-infoT>7000&&(locked||noLock||mobile))$('#wkInfo').hidden=true;
+    if(t-lastPrompt>150){lastPrompt=t;const h=ray(),pr=$('#wkPrompt');if(h&&$('#wkInfo').hidden){const k=h.object.userData.kind;pr.hidden=false;pr.textContent=`${mobile?'按「查看」':'按 E'}：${VB[k]||'查看'} ${h.object.userData.nm||NM[k]||''}`;}else pr.hidden=true;}
+    $('#wkLock').hidden=mobile||locked||noLock||scn==='bus';
+    renderer.render(scene,cam);}
+  function resize(){if(!renderer)return;const cv=$('#wkCanvas'),w=cv.clientWidth,h=cv.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.fov=w<h?85:70;cam.updateProjectionMatrix();}
+  async function open(t){trip={...t,done:{},checks:{}};$('#wkOv').hidden=false;$('#wkLoad').hidden=false;$('#wkInfo').hidden=true;
+    try{if(!window.THREE)await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});}catch(e){$('#wkLoad').textContent='需要網路連線才能載入 3D。（按 ESC 離開）';return;}
+    T=window.THREE;if(!renderer){renderer=new T.WebGLRenderer({canvas:$('#wkCanvas'),antialias:!mobile});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,mobile?1:1.5));cam=new T.PerspectiveCamera(70,1,.05,2000);}
+    $('#wkLoad').hidden=true;running=true;resize();go('home');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);}
+  function close(toFly){running=false;cancelAnimationFrame(raf);$('#wkOv').hidden=true;if(document.pointerLockElement){wantLock=false;try{document.exitPointerLock();}catch(e){}}for(const k in keys)keys[k]=false;const tr=trip;if(!toFly&&tr&&tr.onExit)setTimeout(tr.onExit,0);}
+  function doInteract(){if(!$('#wkInfo').hidden){$('#wkInfo').hidden=true;return;}if(ride)return;const h=ray();if(h)act(h);}
+  const cv=$('#wkCanvas');
+  function requestLock(){if(mobile||locked||noLock)return;wantLock=true;try{const p=cv.requestPointerLock?cv.requestPointerLock():null;if(!cv.requestPointerLock)noLock=true;if(p&&p.catch)p.catch(()=>{noLock=true;});}catch(e){noLock=true;}}
+  document.addEventListener('pointerlockerror',()=>{if(running){noLock=true;wantLock=false;}});
+  document.addEventListener('pointerlockchange',()=>{const was=locked;locked=document.pointerLockElement===cv;if(was&&!locked&&running&&wantLock&&document.hasFocus())close();});
+  cv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'){if(!locked&&!noLock)requestLock();else doInteract();return;}look={x:e.clientX,y:e.clientY,id:e.pointerId};cv.setPointerCapture(e.pointerId);});
+  cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'){const mx=e.movementX||0,my=e.movementY||0;if(Math.abs(mx)>200||Math.abs(my)>200)return;yaw-=mx*(locked?.0025:.004);pitch=Math.max(-1.2,Math.min(1.2,pitch-my*(locked?.0022:.003)));return;}
+    if(!look||look.id!==e.pointerId)return;yaw-=(e.clientX-look.x)*.005;pitch=Math.max(-1.1,Math.min(1.1,pitch-(e.clientY-look.y)*.004));look.x=e.clientX;look.y=e.clientY;});
+  cv.addEventListener('pointerup',()=>{look=null;});cv.addEventListener('pointercancel',()=>{look=null;});
+  const jEl=$('#wkJoy'),knob=jEl.querySelector('i');
+  function jmove(e){const b=jEl.getBoundingClientRect(),dx=e.clientX-(b.left+b.width/2),dy=e.clientY-(b.top+b.height/2),R=b.width/2,d=Math.min(R,Math.hypot(dx,dy)),a=Math.atan2(dy,dx);joy.x=Math.cos(a)*d/R;joy.y=Math.sin(a)*d/R;knob.style.transform=`translate(${Math.cos(a)*d*.6}px,${Math.sin(a)*d*.6}px)`;}
+  jEl.addEventListener('pointerdown',e=>{joy.id=e.pointerId;jEl.setPointerCapture(e.pointerId);jmove(e);});jEl.addEventListener('pointermove',e=>{if(joy.id===e.pointerId)jmove(e);});
+  const jend=()=>{joy={x:0,y:0,id:null};knob.style.transform='';};jEl.addEventListener('pointerup',jend);jEl.addEventListener('pointercancel',jend);
+  window.addEventListener('keydown',e=>{if($('#wkOv').hidden)return;const k=e.key.toLowerCase();if(['w','a','s','d','shift','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){keys[k]=true;e.preventDefault();}if(k==='e'||k===' '){doInteract();e.preventDefault();}if(k==='escape'){e.preventDefault();close();}});
+  window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+  $('#wkAct').addEventListener('click',doInteract);$('#wkInfoClose').addEventListener('click',()=>{$('#wkInfo').hidden=true;});
+  $('#wkClose').addEventListener('click',()=>close());
+  $('#wkSkip').addEventListener('click',()=>{if(scn==='bus'&&ride){ride.t=ride.dur;}});
+  $('#wkFast').addEventListener('click',()=>{const tr=trip;close(true);tr.onBoard();});
+  new ResizeObserver(()=>{if(running)resize();}).observe($('#wkOv'));
+  return {open,close,get running(){return running;},get scn(){return scn;},get trip(){return trip;},_dbg:()=>({scene,inter,cam,T}),get pos(){return pos;},set yaw(v){yaw=v;},set pitch(v){pitch=v;},tp:(x,z)=>{pos.x=x;pos.z=z;},go,interactHit:()=>{const h=ray();if(h)act(h);return h&&h.object.userData.kind;},ray:()=>{const h=ray();return h&&h.object.userData.kind;},fin:()=>{if(ride)ride.t=ride.dur;}};
+})();
+
 /* ===================== 鯨魚機長（獨立模式） ===================== */
 const Pilot=(()=>{
   const KEY='whalePilot.v1';let R={};
@@ -2312,15 +2599,17 @@ const Pilot=(()=>{
   function show(){$('#modeOv').hidden=true;$('#startOv').hidden=true;$('#pilotOv').hidden=false;
     if(!$('#plFrom').options.length){$('#plFrom').innerHTML=Object.values(BASES).map(B=>`<option value="${B.code}">${esc(B.name)}</option>`).join('');$('#plFrom').value='TPE';fillTo();$('#plTo').value='HKG';fillType();$('#plType').value='b738';info();}
     rec();}
-  function go(){const b=$('#plFrom').value,dest=$('#plTo').value,t=$('#plType').value,tv=$('#plTime').value,k=code(b,{dest});if(!LEG(k)||!PLANES[t])return;
+  function go(skip){const b=$('#plFrom').value,dest=$('#plTo').value,t=$('#plType').value,tv=$('#plTime').value,k=code(b,{dest});if(!LEG(k)||!PLANES[t])return;
     const fno=100+Math.floor(hash('WH'+k)*800);const h0=tv==='now'?null:+tv;
-    $('#pilotOv').hidden=true;
-    FLY.open(k,{pilot:true,name:'鯨魚航空',code:'WH',p:{type:t,reg:'B-'+(58100+Math.floor(hash(t+'r')*800))},fno,h0,onResult,onClose:show});}
+    $('#pilotOv').hidden=true;const reg='B-'+(58100+Math.floor(hash(t+'r')*800));
+    const fly=()=>FLY.open(k,{pilot:true,name:'鯨魚航空',code:'WH',p:{type:t,reg},fno,h0,onResult,onClose:show});
+    if(skip===true)return fly();
+    const l=LEG(k),now=new Date();WALK.open({c:l,B:BASES[l.base]||BASES.TPE,D:CITY[l.dest],type:t,fno,reg,h0:h0==null?now.getHours()+now.getMinutes()/60:h0,onBoard:fly,onExit:show});}
   function onResult(r){const before=rank(R.hours||0);R.flights=(R.flights||0)+1;R.hours=(R.hours||0)+r.hours;R.km=(R.km||0)+r.km;R.best=Math.max(R.best||0,r.sc);
     R.log=(R.log||[]).slice(-29);R.log.push({d:Date.now(),to:r.dest,t:r.type,sc:r.sc});sv();const after=rank(R.hours);
     return `機長紀錄：累計 ${R.flights} 趟、${R.hours.toFixed(1)} 小時。${after!==before?`<b>🎉 升官了！你現在是「${after}」！</b>`:`目前階級：${after}。`}`;}
   $('#plFrom').addEventListener('change',fillTo);$('#plTo').addEventListener('change',fillType);$('#plType').addEventListener('change',info);
-  $('#plGo').addEventListener('click',go);$('#plBack').addEventListener('click',()=>{$('#pilotOv').hidden=true;$('#modeOv').hidden=false;});
+  $('#plGo').addEventListener('click',()=>go(false));$('#plQuick').addEventListener('click',()=>go(true));$('#plBack').addEventListener('click',()=>{$('#pilotOv').hidden=true;$('#modeOv').hidden=false;});
   document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.mode==='pilot')show();else{$('#modeOv').hidden=true;if(!S)$('#startOv').hidden=false;}}));
   $('#toModeBtn').addEventListener('click',()=>{$('#modeOv').hidden=false;});
   return {show,get rec(){return R;}};
