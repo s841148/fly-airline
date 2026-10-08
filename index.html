@@ -2409,7 +2409,7 @@ const WALK=(()=>{
     add(door,-2,0,-3.46);tag(door,'door');const ds=sign('出門 → 機場',.9,.22,'#10161f','#F2B53A');add(ds,-2,2.35,-3.44);
     // 鞋櫃、玄關墊
     add(box(.9,.5,.35,0xd8cbb0,.7),-3.2,.25,-3.2);col(-3.2,-3.2,.9,.4);const mat=M(new T.PlaneGeometry(1.1,.6),std(0x6b4a2e,.95));mat.rotation.x=-Math.PI/2;add(mat,-2,.012,-2.9);
-    pos.x=-2;pos.z=1.8;yaw=Math.PI*.15;pitch=-.05;eye=1.68;
+    pos.x=-.6;pos.z=1.6;yaw=Math.PI*.7;pitch=-.05;eye=1.68;
   }
   /* ---------- 場景二：機組巴士 ---------- */
   function bus(){newScene();const h=trip.h0-1.8;scene.background=new T.Color(skyCol(h)[1]);scene.fog=new T.Fog(new T.Color(skyCol(h)[1]),40,260);lights(h,false);
@@ -2544,7 +2544,7 @@ const WALK=(()=>{
     let y0=0;
     if(ride){ride.t+=dt;const k=Math.min(1,ride.t/ride.dur);if(ride.climb){const P=PDIM[trip.type]||[44,2];pos.x=(P[0]*.36);pos.z=6-P[1]-.2-5.5+k*4.6;y0=k*(P[1]+1.85);yaw=0;}if(k>=1){const e=ride.end;ride=null;e&&e();}fx=sx=0;}
     const spd=(keys.shift?6:3.2)*dt,f={x:Math.sin(yaw),z:Math.cos(yaw)},rg={x:-Math.cos(yaw),z:Math.sin(yaw)};
-    if(fx||sx){const nx=pos.x+(f.x*fx+rg.x*sx)*spd,nz=pos.z+(f.z*fx+rg.z*sx)*spd;if(!blocked(nx,pos.z))pos.x=nx;if(!blocked(pos.x,nz))pos.z=nz;}
+    if(fx||sx){const nx=pos.x+(f.x*fx+rg.x*sx)*spd,nz=pos.z+(f.z*fx+rg.z*sx)*spd,stuck=blocked(pos.x,pos.z);if(stuck||!blocked(nx,pos.z))pos.x=nx;if(stuck||!blocked(pos.x,nz))pos.z=nz;}
     const bob=(fx||sx)?Math.sin(t/140)*.04:0,ey=y0+eye+bob;cam.position.set(pos.x,ey,pos.z);cam.lookAt(pos.x+Math.sin(yaw)*Math.cos(pitch),ey+Math.sin(pitch),pos.z+Math.cos(yaw)*Math.cos(pitch));
     for(const a of anim)a(t,dt);
     if(!$('#wkInfo').hidden&&t-infoT>7000&&(locked||noLock||mobile))$('#wkInfo').hidden=true;
