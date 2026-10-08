@@ -370,6 +370,7 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
       <button data-speed="20" aria-pressed="false">20×</button>
       <button data-speed="60" aria-pressed="false">60×</button>
     </div>
+    <button class="iconbtn" id="homeBtn" title="回到遊戲選單">🏠 主頁面</button>
     <button class="iconbtn" id="apBtn">走進機場</button>
     <button class="iconbtn" id="saveBtn">存檔／讀檔</button>
     <button class="iconbtn" id="musBtn">音樂：開</button>
@@ -2821,6 +2822,7 @@ const Pilot=(()=>{
   $('#plGo').addEventListener('click',()=>go(false));$('#plQuick').addEventListener('click',()=>go(true));$('#plBack').addEventListener('click',()=>{$('#pilotOv').hidden=true;$('#modeOv').hidden=false;});
   document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{const m=b.dataset.mode;if(m==='pilot')show();else if(m==='police'||m==='marshal'){$('#modeOv').hidden=true;$('#startOv').hidden=true;WALK.open({role:m,onExit:()=>{$('#modeOv').hidden=false;}});}else{$('#modeOv').hidden=true;if(!S)$('#startOv').hidden=false;}}));
   $('#toModeBtn').addEventListener('click',()=>{$('#modeOv').hidden=false;});
+  $('#homeBtn').addEventListener('click',()=>{if(S)try{save();}catch(e){}$('#modeOv').hidden=false;});
   return {show,get rec(){return R;}};
 })();
 
