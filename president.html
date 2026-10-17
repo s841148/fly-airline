@@ -1669,6 +1669,7 @@ function peerTick(){if(!state||!state.net||state.net.kind!=="peer"||!NET.peer)re
   if(pr.disconnected&&!pr.destroyed){try{pr.reconnect();}catch(_){}return;}
   if(!NET.conn||!NET.conn.open){if(seat!==0&&pr.open){try{NET.wire(pr.connect(peerId(state.net.room),{reliable:true}));}catch(_){}}return;}
   if((state.net.ver||0)>(NET.acked||0))peerSendState();}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&state&&state.net&&state.net.kind==="peer"){try{peerTick();if(NET.conn&&NET.conn.open)NET.conn.send({t:"hello",ver:state.net.ver||0});}catch(_){}}});
 function netResync(){if(!state||!state.net)return;if(state.net.kind==="peer"){if(NET.conn&&NET.conn.open){NET.conn.send({t:"hello",ver:state.net.ver||0});if((state.net.ver||0)>(NET.acked||0))peerSendState();toast("🔄 已重新同步");}else{peerStart(state.net.room,netSeat());toast("🔄 重新連線中…");}}else{NET.unsub&&NET.unsub();NET.unsub=null;netSub(state.net.room);toast("🔄 已重新同步");}}
 async function peerSendState(){if(!NET.conn||!NET.conn.open||!state)return false;const copy=JSON.parse(JSON.stringify(state));
   if(copy.net&&copy.net.local){const L=copy.net.local;delete copy.net.local;Object.assign(copy,L);}
