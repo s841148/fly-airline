@@ -208,6 +208,9 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--brass);outline-
 @keyframes tin{from{transform:translateY(12px);opacity:0}}
 @media (prefers-reduced-motion:reduce){.toast{animation:none}}
 [hidden]{display:none!important}
+#netpill{position:fixed;right:12px;bottom:12px;z-index:46;background:rgba(20,28,26,.92);color:var(--paper);border:1px solid var(--line);padding:6px 10px;font-size:.82rem;border-radius:20px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+#netpill.ok{border-color:#5fbf7f}#netpill.bad{border-color:var(--seal)}#netpill button{background:none;border:0;color:inherit;font-size:1rem;cursor:pointer;min-height:0;padding:0 2px}
+
 .veil.waitv{background:none!important;backdrop-filter:none!important;pointer-events:none;place-items:end center;padding-bottom:16px}.veil.waitv .dispatch{pointer-events:auto;animation:none;box-shadow:0 6px 24px rgba(0,0,0,.5)}
 .paper{background:#f4ecd8;color:#1a1712;padding:14px 16px;border:1px solid #8b7a55;font-family:var(--f-display);box-shadow:inset 0 0 40px rgba(120,90,40,.18)}
 .pp-mast{text-align:center;font-size:clamp(26px,5vw,40px);font-weight:900;letter-spacing:.15em;border-bottom:3px double #1a1712;padding-bottom:4px}
@@ -1632,7 +1635,7 @@ function netLocalView(){const hs=state.hs,me=netSeat();state.net.turnOf=hs.cur;i
 async function netApply(data){if(!data||!data.z)return;if(NET.applyingVer===data.ver)return;NET.applyingVer=data.ver;if(state&&state.net&&state.net.room===NET.room&&(data.ver||0)<=(state.net.ver||0))return;
   let st;try{st=JSON.parse(await netUnzip(data.z));}catch(_){return;}
   const room=NET.room,kind=NET.kind||st.net.kind;state=st;state.net.room=room;state.net.kind=kind;if(kind==="peer"){const c=JSON.parse(JSON.stringify(st));delete c.net.shared;state.net.shared=c;}ensureWar();const me=netSeat();state.net.turnOf=state.hs.cur;
-  if(state.net.sim){simSetBase(st);NET.readyMsg=null;NET.racked=false;NET.guestReady=null;NET.hostReady=false;state.net.ready=false;
+  if(state.net.sim){simSetBase(st);NET.otherReady=false;NET.readyMsg=null;NET.racked=false;NET.guestReady=null;NET.hostReady=false;state.net.ready=false;
     if(state.hs.result)state.pending={kind:"over"};else{if(state.hs.cur!==me)hsSwitch(me);if(state.pending&&(state.pending.kind==="wait2"||state.pending.kind==="hand"))state.pending=null;ui.ws=state.W.me;toast("⚡ 新的一季開始！");try{sfx("turn");}catch(_){}}
     save();render();return;}
   if(state.hs.result){state.pending={kind:"over"};}
@@ -1646,7 +1649,7 @@ async function netCreate(){const db=await netDB();
   const A="ABCDEFGHJKLMNPQRSTUVWXYZ";let code="";for(let i=0;i<4;i++)code+=A[Math.floor(Math.random()*A.length)];
   state.net={room:code,ver:0,turnOf:0,kind:db?"db":"peer"};NET.room=code;NET.kind=state.net.kind;try{localStorage.setItem("lanzhou-seat-"+code,"0");}catch(_){}
   if(db){const ok=await netPush();if(!ok)return false;await netSub(code);}else{state.net.sim=true;const ok=await peerStart(code,0);if(!ok)return false;await netPush();simSetBase(state.net.shared);}
-  state.pending={kind:"msg",kicker:"線上對戰",stamp:"開房",title:`房間代碼：${code}`,text:`請 ${esc(state.hs.names[1])} 在他的電腦或平板打開同一個遊戲網址${state.net.kind==="peer"?"（你這邊的遊戲要保持開著）":""}，選「父子對戰 → 線上連線」，輸入代碼 <b style="font-size:1.4em;letter-spacing:.2em">${code}</b> 按「加入房間」。${state.net.sim?"兩人同時下指令，都按「✅ 準備好了」就一起進入下一季。":`${esc(state.hs.names[0])} 先開始，結束本季後就換對方。`}`};save();render();return true;}
+  state.pending={kind:"msg",kicker:"線上對戰",stamp:"開房",title:`房間代碼：${code}`,text:`${state.net.kind==="peer"?`<button class="pbtn" type="button" id="invBtn" style="margin:0 0 10px">📤 把邀請連結傳給 ${esc(state.hs.names[1])}（點了就能直接加入）</button><br>`:""}或請 ${esc(state.hs.names[1])} 在他的電腦或平板打開同一個遊戲網址${state.net.kind==="peer"?"（你這邊的遊戲要保持開著）":""}，選「父子對戰 → 線上連線」，輸入代碼 <b style="font-size:1.4em;letter-spacing:.2em">${code}</b> 按「加入房間」。${state.net.sim?"兩人同時下指令，都按「✅ 準備好了」就一起進入下一季。":`${esc(state.hs.names[0])} 先開始，結束本季後就換對方。`}`};save();render();return true;}
 async function netJoin(code){code=(code||"").trim().toUpperCase();if(!/^[A-Z]{4}$/.test(code))return toast("請輸入 4 個英文字母的房間代碼");
   const db=await netDB();if(!db){try{localStorage.setItem("lanzhou-seat-"+code,"1");}catch(_){}NET.room=code;NET.kind="peer";state=null;ui={tab:"map",sel:"root",vb:[0,0,1000,500],mm:"pol",ws:null};toast("🔗 連線中，請稍候…");await peerStart(code,1);return;}let sn;try{sn=await db.doc("games/"+code).get();}catch(_){return toast("⚠ 讀不到房間，請確認網路");}
   if(!sn.exists)return toast("找不到這個房間，代碼對嗎？");try{localStorage.setItem("lanzhou-seat-"+code,"1");}catch(_){}
@@ -1662,7 +1665,8 @@ async function peerData(d){if(!d||!d.t)return;const c=NET.conn;
   else if(d.t==="state"){if(netSeat()===0)return;await netApply(d);try{c.send({t:"ack",ver:state&&state.net?state.net.ver:d.ver});}catch(_){}}
   else if(d.t==="ack")NET.acked=Math.max(NET.acked||0,d.ver||0);
   else if(d.t==="ready"&&state&&state.net&&state.net.sim&&netSeat()===0){if((d.bv||0)===(state.net.ver||0)&&!NET.guestReady){NET.guestReady=d.z;try{c.send({t:"rack",bv:d.bv});}catch(_){}toast("✅ 對方已準備好");render();if(NET.hostReady||(state.pending&&state.pending.kind==="wait2"))simResolve();}}
-  else if(d.t==="rack")NET.racked=true;}
+  else if(d.t==="rack")NET.racked=true;
+  else if(d.t==="hrdy"&&state&&state.net&&(d.bv||0)===(state.net.ver||0)){NET.otherReady=true;toast(`✅ ${state.hs.names[0]} 已準備好`);}}
 async function peerStart(room,seat){try{await loadMQTT();}catch(_){toast("⚠ 連線元件載入失敗，請檢查網路");return false;}
   (NET.cl||[]).forEach(c=>{try{c.end(true);}catch(_){}});NET.applyingVer=null;NET.room=room;NET.kind="peer";NET.seat=seat;
   const base="lanzhou-pres-v1/"+room.toUpperCase(),T={me:base+"/to"+seat,other:base+"/to"+(1-seat),state:base+"/state",ready:base+"/ready"};NET.topics=T;
@@ -1675,7 +1679,7 @@ async function peerStart(room,seat){try{await loadMQTT();}catch(_){toast("⚠ �
     c.on("message",(t,m)=>{const str=m&&m.toString?m.toString():"";if(!str)return;let d;try{d=JSON.parse(str);}catch(_){return;}peerData(d);});
     c.on("error",()=>{});return c;});
   if(seat===1)setTimeout(()=>{if(!state&&NET.room===room)toast("找不到房間：請確認代碼，而且爸爸那邊已經建好房間");},12000);
-  if(!NET.tick){NET.tick=setInterval(peerTick,5000);}
+  if(!NET.tick){NET.tick=setInterval(peerTick,3000);}
   return true;}
 function peerTick(){if(!state||!state.net||state.net.kind!=="peer"||!NET.conn||!NET.conn.open)return;
   if(netSeat()===0&&(state.net.ver||0)>(NET.acked||0))peerSendState();if(NET.readyMsg&&!NET.racked)simSendReady();}
@@ -1693,7 +1697,7 @@ function simMergeW(H,G,B){const skip=new Set(PWK),J=x=>JSON.stringify(x);
     else H[k]=g===undefined?undefined:JSON.parse(J(g));}}
 async function simReady(){const seat=netSeat();state.net.ready=true;state.pending={kind:"wait2"};save();render();
   if(seat===1){const copy=JSON.parse(JSON.stringify(state));copy.pending=null;delete copy.net.shared;NET.readyMsg={t:"ready",z:await netZip(JSON.stringify(copy)),bv:state.net.ver||0};NET.racked=false;simSendReady();}
-  else{NET.hostReady=true;if(NET.guestReady)simResolve();}}
+  else{NET.hostReady=true;try{NET.conn&&NET.conn.send({t:"hrdy",bv:state.net.ver||0});}catch(_){}if(NET.guestReady)simResolve();}}
 function simSendReady(){if(NET.readyMsg&&NET.conn&&NET.conn.open)try{NET.conn.send(NET.readyMsg);}catch(_){}}
 async function simResolve(){if(NET.resolving)return;NET.resolving=true;try{
   const G=JSON.parse(await netUnzip(NET.guestReady)),B=JSON.parse(NET.base||lsGet("lanzhou-base-"+state.net.room)||"null");if(!B){toast("⚠ 找不到這一季的起點資料，請重新同步");return;}
@@ -1709,6 +1713,19 @@ async function simResolve(){if(NET.resolving)return;NET.resolving=true;try{
   if(NET.conn&&NET.conn.open){NET.conn.send({t:"state",z:await netZip(JSON.stringify(copy)),ver:state.net.ver});try{NET.conn.clearReady&&NET.conn.clearReady();}catch(_){}}
   NET.acked=NET.acked||0;toast("⚡ 新的一季開始！");try{sfx("turn");showSeason();}catch(_){}save();render();}
   finally{NET.resolving=false;}}
+
+/* ---- 連線體驗：邀請連結、連線狀態、對方準備狀態 ---- */
+function inviteUrl(){return location.origin+location.pathname+"?room="+(state&&state.net?state.net.room:NET.room);}
+async function shareInvite(){const u=inviteUrl(),t=`來跟我對戰「總統模擬器」！點連結就能加入（房間 ${state.net.room}）`;
+  try{if(navigator.share){await navigator.share({title:"總統模擬器 父子對戰",text:t,url:u});return;}}catch(_){}
+  try{await navigator.clipboard.writeText(t+"\n"+u);toast("📋 邀請連結已複製，貼到 LINE 傳給對方");}catch(_){prompt("複製這個連結傳給對方：",u);}}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#invBtn");if(b){e.preventDefault();shareInvite();}});
+function netPill(){let el=document.getElementById("netpill");if(!state||!state.net||state.net.kind!=="peer"||state.over){if(el)el.remove();return;}
+  if(!el){el=document.createElement("div");el.id="netpill";document.body.appendChild(el);}
+  const on=NET.conn&&NET.conn.open,me=netSeat(),oth=state.hs.names[1-me];let st="";
+  if(state.net.sim){const oR=me===0?!!NET.guestReady:!!NET.otherReady;st=`${esc(oth)}：${oR?"✅ 準備好了":"🤔 思考中"}`;}
+  el.className=on?"ok":"bad";el.innerHTML=`${on?"🟢 連線中":"🔴 斷線重連中…"}　${st}　<button type="button" id="invBtn" title="邀請連結">📤</button>`;}
+setInterval(()=>{try{netPill();}catch(_){}},2000);
 async function peerSendState(){if(!NET.conn||!NET.conn.open||!state)return false;const copy=JSON.parse(JSON.stringify(state));
   if(copy.net&&copy.net.local){const L=copy.net.local;delete copy.net.local;Object.assign(copy,L);}
   const sh=state.net.shared?JSON.parse(JSON.stringify(state.net.shared)):copy;delete sh.net.shared;NET.conn.send({t:"state",z:await netZip(JSON.stringify(sh)),ver:state.net.ver});return true;}
@@ -2505,7 +2522,10 @@ $("#menuBtn").onclick=()=>{if(!state||state.pending)return;state.pending={kind:"
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&state&&state.pending&&["menu","cabinet","general","declare","nuke","treaty","arms"].includes(state.pending.kind)){state.pending=null;render();}});
 window.addEventListener("error",()=>setTimeout(unstick,0));
 window.claude?.hot?.snapshot?.(()=>({state,ui}));
-function start(data){if(data&&data.state&&data.state.v===3){state=data.state;ui=data.ui||ui;}render();}
+function start(data){if(data&&data.state&&data.state.v===3){state=data.state;ui=data.ui||ui;}render();
+  try{const rm=(new URLSearchParams(location.search).get("room")||"").toUpperCase();if(/^[A-Z]{4}$/.test(rm)&&!state){const sv=loadSave();
+    if(sv&&sv.net&&sv.net.room===rm){const c=document.getElementById("cont");if(c)c.click();}
+    else{startOpt.mode="vs";startOpt.net="online";showStart();toast(`🔗 正在加入房間 ${rm}…`);netJoin(rm);}}}catch(_){}}
 window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
 })();
 </script>
