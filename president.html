@@ -1272,19 +1272,23 @@ function hsFinish(){const hs=state.hs,cur=hs.cur,res=[];
   state.pending={kind:"over"};save();render();}
 const HSN={pact:"互不侵犯條約",trade:"貿易協定",ally:"結為同盟",peace:"停戰和談"};
 function hsSend(k,o){const hs=state.hs,oi=hsIdx(o),me=state.W.me,nm_=hs.names[hs.cur];
-  if(k==="gift"){if(state.stats.treasury<50)return toast("國庫不夠 50 億");state.stats.treasury-=50;hs.P[oi].stats.treasury+=50;hs.inbox[oi].push({k:"gift",from:me,name:nm_});log(`送給${tagName(o)} 50 億`);toast(`💰 已送出 50 億`);return;}
+  if(k==="gift"){if(state.stats.treasury<50)return toast("國庫不夠 50 億");state.stats.treasury-=50;hs.inbox[oi].push({k:"gift",from:me,name:nm_,amt:50});log(`送給${tagName(o)} 50 億`);toast(`💰 已送出 50 億`);return;}
   if(hs.inbox[oi].some(x=>x.k===k&&x.from===me))return toast("已經送過這個提議，等對方回覆");
   hs.inbox[oi].push({k,from:me,name:nm_});log(`向${tagName(o)}提議：${HSN[k]}`);toast(`📨 已送出「${HSN[k]}」提議，等 ${hs.names[oi]} 的回合決定`);}
-function hsAnswer(yes){const c=state.pending,W=state.W,me=W.me,o=c.from,hs=state.hs,oi=hsIdx(o),S=hs.P[oi];state.pending=null;
-  const Wp=S.Wp;["pact","trade","rel","target"].forEach(k=>{Wp[k]=Wp[k]||{};W[k]=W[k]||{};});
-  if(yes){if(c.k==="pact"){W.pact[o]=state.turn+20;Wp.pact[me]=state.turn+20;}
-    else if(c.k==="trade"){W.trade[o]=1;Wp.trade[me]=1;}
+function hsAnswer(yes){const c=state.pending,W=state.W,me=W.me,o=c.from,hs=state.hs,oi=hsIdx(o);state.pending=null;
+  const Wp={};["pact","trade","rel","target"].forEach(k=>{Wp[k]={};W[k]=W[k]||{};});
+  if(yes){if(c.k==="pact"){W.pact[o]=state.turn+20;}
+    else if(c.k==="trade"){W.trade[o]=1;}
     else if(c.k==="ally"){if(atWar(me,o))makePeace(o);for(const f of Object.keys(W.fac)){W.fac[f]=W.fac[f].filter(t=>t!==me&&t!==o);if(!W.fac[f].length)delete W.fac[f];}W.fac[`${hs.names[0]}與${hs.names[1]}同盟`]=[o,me];news(`${tagName(o)}與${tagName(me)}結為同盟`);}
     else if(c.k==="peace"){makePeace(o);delete Wp.target[me];W.pact[o]=state.turn+8;Wp.pact[me]=state.turn+8;news(`${tagName(o)}與${tagName(me)}停戰`);}
     W.rel[o]=clamp((W.rel[o]||0)+20,-100,100);Wp.rel[me]=clamp((Wp.rel[me]||0)+20,-100,100);log(`同意${tagName(o)}的提議：${HSN[c.k]}`);}
   else log(`拒絕${tagName(o)}的提議：${HSN[c.k]}`);
   hs.inbox[oi].push({k:"reply",from:me,name:hs.names[hs.cur],ok:yes,what:c.k});save();render();}
 function hsInbox(){const hs=state.hs;if(!hs||state.pending||state.over)return;const ib=hs.inbox[hs.cur];if(!ib||!ib.length)return;const c=ib.shift();
+  const W=state.W;
+  if(c.k==="gift")state.stats.treasury+=c.amt||0;
+  if(c.k==="reply"&&c.ok){W.pact=W.pact||{};W.trade=W.trade||{};if(c.what==="pact")W.pact[c.from]=state.turn+20;else if(c.what==="trade")W.trade[c.from]=1;else if(c.what==="peace"){W.pact[c.from]=state.turn+8;delete (W.target||{})[c.from];}W.rel[c.from]=clamp((W.rel[c.from]||0)+20,-100,100);}
+  if(c.k==="spyx"&&c.ok){if(c.eff==="sab")W.extra=Math.max(0,(W.extra||0)-3);else if(c.eff==="kill"){state.gen=["shi"];W.org=Math.max(10,(W.org||100)-30);}}
   if(c.k==="gift")state.pending={kind:"msg",kicker:"父子對戰",stamp:"禮物",title:`${c.name} 送你 50 億！`,text:`${tagName(c.from)}把 50 億匯進我國國庫。記得道謝喔！`};
   else if(c.k==="spyx")state.pending={kind:"msg",kicker:"國安局",stamp:c.ok?"被滲透":"抓到間諜",title:c.ok?`我國遭到「${c.what}」間諜行動！`:`抓到${c.name}派來的間諜！`,text:c.ok?`情報顯示幕後黑手可能是 ${c.name}（${tagName(c.from)}）……`:`${c.name}（${tagName(c.from)}）想對我們進行「${c.what}」，被我們識破了！`};
   else if(c.k==="reply")state.pending={kind:"msg",kicker:"父子對戰",stamp:c.ok?"同意":"拒絕",title:`${c.name}${c.ok?"同意":"拒絕"}了你的「${HSN[c.what]}」提議`,text:c.ok?"協議已經生效。":"下次多送點禮物再試試看？"};
@@ -1480,12 +1484,12 @@ function spyDo(op,o){const W=state.W,me=W.me,O=SPYOPS.find(x=>x[0]===op);if(!O||
   const T=tagName(o),hum=isHum(o),oi=hum?hsIdx(o):-1,S=hum?state.hs.P[oi]:null;
   if(rng(990+hashS(o)+SPYOPS.indexOf(O))>spyChance(o)){W.rel[o]=clamp((W.rel[o]||0)-25,-100,100);mem(o).spy++;applyFx({tension:4});log(`間諜在${T}被捕，行動失敗`);toast("🕵 行動失敗，特工被捕！");if(hum)state.hs.inbox[oi].push({k:"spyx",from:me,name:state.hs.names[state.hs.cur],ok:false,what:O[1]});save();render();return;}
   let msg="";
-  if(op==="sab"){if(hum)S.Wp.extra=Math.max(0,(S.Wp.extra||0)-3);else W.dv[o]=divs(o)*.9;msg=`破壞了${T}的軍工廠`;}
+  if(op==="sab"){if(hum){}else W.dv[o]=divs(o)*.9;msg=`破壞了${T}的軍工廠`;}
   else if(op==="tech"){const sl=state.res.slots.find(x=>x);if(sl){sl.left=Math.max(1,sl.left-4);msg=`偷到${T}的科技資料，研究加速 4 季`;}else{state.pp+=15;msg=`偷到${T}的資料，換到 15 點政治點數`;}}
   else if(op==="riot"){const L=Object.keys(W.own).filter(x=>W.own[x]===o&&x!==o);if(L.length){const x=L[Math.floor(rng(991)*L.length)];W.own[x]=x;delete W.orig[x];W.dv[x]=Math.max(2,base(x)[0]*.4);W.war[wk(o,x)]={t:0,air:50};msg=`${T}的「${GBY[x].n}」爆發起義，宣布獨立！`;news(`${T}的「${GBY[x].n}」爆發起義`);}else msg="對方沒有可以煽動的領土";}
-  else if(op==="kill"){if(hum){S.gen=["shi"];S.Wp.org=Math.max(10,(S.Wp.org||100)-30);}else W.dv[o]=divs(o)*.92;msg=`暗殺了${T}的高級將領，對方軍心大亂`;}
+  else if(op==="kill"){if(hum){}else W.dv[o]=divs(o)*.92;msg=`暗殺了${T}的高級將領，對方軍心大亂`;}
   else if(op==="flip"){const sub=Object.keys(W.subj).filter(x=>W.subj[x]===o&&alive(x));if(sub.length){const x=sub[0];W.subj[x]=me;for(const f of Object.keys(W.fac))W.fac[f]=W.fac[f].filter(t=>t!==x);msg=`成功策反${tagName(x)}，現在是我們的附庸！`;}else{state.pp+=20;msg="對方沒有附庸國，退回 20 點";}}
-  log(`間諜行動成功：${msg}`);toast("🕵 "+msg);if(hum)state.hs.inbox[oi].push({k:"spyx",from:me,name:state.hs.names[state.hs.cur],ok:true,what:O[1]});save();render();}
+  log(`間諜行動成功：${msg}`);toast("🕵 "+msg);if(hum)state.hs.inbox[oi].push({k:"spyx",from:me,name:state.hs.names[state.hs.cur],ok:true,what:O[1],eff:op});save();render();}
 
 /* ================= 聯合國大會 ================= */
 function unName(){return state.W.sc==="g"?"國際和平會議":state.W.sc==="w"?"國際聯盟大會":"聯合國大會";}
@@ -1628,6 +1632,9 @@ function netLocalView(){const hs=state.hs,me=netSeat();state.net.turnOf=hs.cur;i
 async function netApply(data){if(!data||!data.z)return;if(state&&state.net&&state.net.room===NET.room&&(data.ver||0)<=(state.net.ver||0))return;
   let st;try{st=JSON.parse(await netUnzip(data.z));}catch(_){return;}
   const room=NET.room,kind=NET.kind||st.net.kind;state=st;state.net.room=room;state.net.kind=kind;if(kind==="peer"){const c=JSON.parse(JSON.stringify(st));delete c.net.shared;state.net.shared=c;}ensureWar();const me=netSeat();state.net.turnOf=state.hs.cur;
+  if(state.net.sim){simSetBase(st);NET.readyMsg=null;NET.racked=false;NET.guestReady=null;NET.hostReady=false;state.net.ready=false;
+    if(state.hs.result)state.pending={kind:"over"};else{if(state.hs.cur!==me)hsSwitch(me);if(state.pending&&(state.pending.kind==="wait2"||state.pending.kind==="hand"))state.pending=null;ui.ws=state.W.me;toast("⚡ 新的一季開始！");try{sfx("turn");}catch(_){}}
+    save();render();return;}
   if(state.hs.result){state.pending={kind:"over"};}
   else if(state.hs.cur===me){if(state.pending&&state.pending.kind==="hand"){state.pending=state.hs.held||null;state.hs.held=null;}ui.ws=state.W.me;try{centerOn(state.W.me,ui.vb[2]);}catch(_){}toast("🔔 輪到你了！");try{sfx("turn");}catch(_){}try{showSeason();}catch(_){}}
   else netLocalView();
@@ -1638,8 +1645,8 @@ async function netSub(room){const db=await netDB();if(!db){toast("連線對戰�
 async function netCreate(){const db=await netDB();
   const A="ABCDEFGHJKLMNPQRSTUVWXYZ";let code="";for(let i=0;i<4;i++)code+=A[Math.floor(Math.random()*A.length)];
   state.net={room:code,ver:0,turnOf:0,kind:db?"db":"peer"};NET.room=code;NET.kind=state.net.kind;try{localStorage.setItem("lanzhou-seat-"+code,"0");}catch(_){}
-  if(db){const ok=await netPush();if(!ok)return false;await netSub(code);}else{const ok=await peerStart(code,0);if(!ok)return false;await netPush();}
-  state.pending={kind:"msg",kicker:"線上對戰",stamp:"開房",title:`房間代碼：${code}`,text:`請 ${esc(state.hs.names[1])} 在他的電腦或平板打開同一個遊戲網址${state.net.kind==="peer"?"（你這邊的遊戲要保持開著）":""}，選「父子對戰 → 線上連線」，輸入代碼 <b style="font-size:1.4em;letter-spacing:.2em">${code}</b> 按「加入房間」。${esc(state.hs.names[0])} 先開始，結束本季後就換對方。`};save();render();return true;}
+  if(db){const ok=await netPush();if(!ok)return false;await netSub(code);}else{state.net.sim=true;const ok=await peerStart(code,0);if(!ok)return false;await netPush();simSetBase(state.net.shared);}
+  state.pending={kind:"msg",kicker:"線上對戰",stamp:"開房",title:`房間代碼：${code}`,text:`請 ${esc(state.hs.names[1])} 在他的電腦或平板打開同一個遊戲網址${state.net.kind==="peer"?"（你這邊的遊戲要保持開著）":""}，選「父子對戰 → 線上連線」，輸入代碼 <b style="font-size:1.4em;letter-spacing:.2em">${code}</b> 按「加入房間」。${state.net.sim?"兩人同時下指令，都按「✅ 準備好了」就一起進入下一季。":`${esc(state.hs.names[0])} 先開始，結束本季後就換對方。`}`};save();render();return true;}
 async function netJoin(code){code=(code||"").trim().toUpperCase();if(!/^[A-Z]{4}$/.test(code))return toast("請輸入 4 個英文字母的房間代碼");
   const db=await netDB();if(!db){try{localStorage.setItem("lanzhou-seat-"+code,"1");}catch(_){}NET.room=code;NET.kind="peer";state=null;ui={tab:"map",sel:"root",vb:[0,0,1000,500],mm:"pol",ws:null};toast("🔗 連線中，請稍候…");await peerStart(code,1);return;}let sn;try{sn=await db.doc("games/"+code).get();}catch(_){return toast("⚠ 讀不到房間，請確認網路");}
   if(!sn.exists)return toast("找不到這個房間，代碼對嗎？");try{localStorage.setItem("lanzhou-seat-"+code,"1");}catch(_){}
@@ -1655,7 +1662,10 @@ async function peerStart(room,seat,tries){tries=tries||0;try{await loadPeerJS();
   const wire=c=>{c.on("open",()=>{NET.conn=c;c.send({t:"hello",ver:state&&state.net?state.net.ver||0:0});toast("🔗 已和對方連線");});
     c.on("data",async d=>{if(!d)return;if(d.t==="hello"){NET.acked=Math.max(NET.acked||0,d.ver||0);if(state&&state.net&&(state.net.ver||0)>(d.ver||0))peerSendState();}
       else if(d.t==="state"){await netApply(d);try{c.send({t:"ack",ver:state&&state.net?state.net.ver:d.ver});}catch(_){}}
-      else if(d.t==="ack")NET.acked=Math.max(NET.acked||0,d.ver||0);});
+      else if(d.t==="ack")NET.acked=Math.max(NET.acked||0,d.ver||0);
+      else if(d.t==="ready"&&state&&state.net&&state.net.sim&&netSeat()===0){if((d.bv||0)===(state.net.ver||0)){NET.guestReady=d.z;try{c.send({t:"rack",bv:d.bv});}catch(_){}toast("✅ 對方已準備好");render();if(NET.hostReady||(state.pending&&state.pending.kind==="wait2"))simResolve();}}
+      else if(d.t==="rack")NET.racked=true;
+      if(d.t==="hello"&&NET.readyMsg&&!NET.racked)simSendReady();});
     c.on("close",()=>{if(NET.conn===c)NET.conn=null;toast("📴 和對方的連線中斷，正在自動重連…");});};
   NET.wire=wire;
   pr.on("error",e=>{const t=e&&e.type;if(t==="unavailable-id"&&tries<6){setTimeout(()=>peerStart(room,seat,tries+1),4000);}else if(t==="peer-unavailable"){toast("找不到房間，爸爸那邊的遊戲要先開著喔");setTimeout(()=>{if(!NET.conn)peerStart(room,seat,tries+1);},6000);}else if(t==="network"||t==="server-error"||t==="socket-error"){toast("⚠ 連線伺服器忙碌，稍後自動重試");if(tries<6)setTimeout(()=>peerStart(room,seat,tries+1),5000);}});
@@ -1668,9 +1678,37 @@ async function peerStart(room,seat,tries){tries=tries||0;try{await loadPeerJS();
 function peerTick(){if(!state||!state.net||state.net.kind!=="peer"||!NET.peer)return;const pr=NET.peer,seat=netSeat();
   if(pr.disconnected&&!pr.destroyed){try{pr.reconnect();}catch(_){}return;}
   if(!NET.conn||!NET.conn.open){if(seat!==0&&pr.open){try{NET.wire(pr.connect(peerId(state.net.room),{reliable:true}));}catch(_){}}return;}
-  if((state.net.ver||0)>(NET.acked||0))peerSendState();}
+  if((state.net.ver||0)>(NET.acked||0))peerSendState();if(NET.readyMsg&&!NET.racked)simSendReady();}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&state&&state.net&&state.net.kind==="peer"){try{peerTick();if(NET.conn&&NET.conn.open)NET.conn.send({t:"hello",ver:state.net.ver||0});}catch(_){}}});
-function netResync(){if(!state||!state.net)return;if(state.net.kind==="peer"){if(NET.conn&&NET.conn.open){NET.conn.send({t:"hello",ver:state.net.ver||0});if((state.net.ver||0)>(NET.acked||0))peerSendState();toast("🔄 已重新同步");}else{peerStart(state.net.room,netSeat());toast("🔄 重新連線中…");}}else{NET.unsub&&NET.unsub();NET.unsub=null;netSub(state.net.room);toast("🔄 已重新同步");}}
+function netResync(){if(!state||!state.net)return;if(NET.readyMsg){NET.racked=false;simSendReady();}if(state.net.kind==="peer"){if(NET.conn&&NET.conn.open){NET.conn.send({t:"hello",ver:state.net.ver||0});if((state.net.ver||0)>(NET.acked||0))peerSendState();toast("🔄 已重新同步");}else{peerStart(state.net.room,netSeat());toast("🔄 重新連線中…");}}else{NET.unsub&&NET.unsub();NET.unsub=null;netSub(state.net.room);toast("🔄 已重新同步");}}
+
+/* ---- 同時行動制（線上點對點） ---- */
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(_){}}function lsGet(k){try{return localStorage.getItem(k);}catch(_){return null;}}
+function simSetBase(st){NET.base=JSON.stringify(st);lsSet("lanzhou-base-"+st.net.room,NET.base);}
+function simMergeW(H,G,B){const skip=new Set(PWK),J=x=>JSON.stringify(x);
+  for(const k of new Set([...Object.keys(G),...Object.keys(B)])){if(skip.has(k))continue;const g=G[k],b=B[k];if(J(g)===J(b))continue;
+    const isObj=x=>x&&typeof x==="object"&&!Array.isArray(x);
+    if(isObj(g)&&isObj(b)&&isObj(H[k])){for(const t of new Set([...Object.keys(g),...Object.keys(b)]))if(J(g[t])!==J(b[t])){if(g[t]===undefined)delete H[k][t];else H[k][t]=JSON.parse(J(g[t]));}}
+    else if(Array.isArray(g)&&Array.isArray(H[k])){const bb=b||[],add=g.filter(x=>!bb.includes(x)),rem=bb.filter(x=>!g.includes(x));H[k]=[...new Set([...H[k],...add])].filter(x=>!rem.includes(x));}
+    else H[k]=g===undefined?undefined:JSON.parse(J(g));}}
+async function simReady(){const seat=netSeat();state.net.ready=true;state.pending={kind:"wait2"};save();render();
+  if(seat===1){const copy=JSON.parse(JSON.stringify(state));copy.pending=null;delete copy.net.shared;NET.readyMsg={t:"ready",z:await netZip(JSON.stringify(copy)),bv:state.net.ver||0};NET.racked=false;simSendReady();}
+  else{NET.hostReady=true;if(NET.guestReady)simResolve();}}
+function simSendReady(){if(NET.readyMsg&&NET.conn&&NET.conn.open)try{NET.conn.send(NET.readyMsg);}catch(_){}}
+async function simResolve(){if(NET.resolving)return;NET.resolving=true;try{
+  const G=JSON.parse(await netUnzip(NET.guestReady)),B=JSON.parse(NET.base||lsGet("lanzhou-base-"+state.net.room)||"null");if(!B){toast("⚠ 找不到這一季的起點資料，請重新同步");return;}
+  state.pending=null;const H=state;simMergeW(H.W,G.W,B.W);
+  const gp={};for(const k of Object.keys(G))if(k!=="W"&&k!=="hs"&&k!=="net")gp[k]=G[k];gp.Wp={};for(const k of PWK)gp.Wp[k]=G.W[k]===undefined?null:G.W[k];gp.pending=null;
+  H.hs.P[1]=JSON.parse(JSON.stringify(gp));const key=x=>JSON.stringify(x),add=(base,from)=>(from||[]).filter(x=>!(base||[]).some(y=>key(y)===key(x)));
+  H.hs.inbox[0]=[...H.hs.inbox[0],...add(B.hs.inbox[0],G.hs.inbox[0])];H.hs.inbox[1]=[...(G.hs.inbox[1]||[]),...add(B.hs.inbox[1],H.hs.inbox[1])];
+  NET.guestReady=null;NET.hostReady=false;state.net.ready=false;
+  endTurn0();if(!state.over&&!state.hs.result){hsSwitch(1);state.pending=null;endTurn0();if(!state.over&&!state.hs.result)hsSwitch(0);}
+  if(state.hs.result&&state.hs.cur!==0)hsSwitch(0);
+  state.net.ver=(state.net.ver||0)+1;const copy=JSON.parse(JSON.stringify(state));delete copy.net.shared;copy.net.ready=false;
+  if(state.hs.result)copy.pending={kind:"over"};state.net.shared=copy;simSetBase(copy);
+  if(NET.conn&&NET.conn.open)NET.conn.send({t:"state",z:await netZip(JSON.stringify(copy)),ver:state.net.ver});
+  NET.acked=NET.acked||0;toast("⚡ 新的一季開始！");try{sfx("turn");showSeason();}catch(_){}save();render();}
+  finally{NET.resolving=false;}}
 async function peerSendState(){if(!NET.conn||!NET.conn.open||!state)return false;const copy=JSON.parse(JSON.stringify(state));
   if(copy.net&&copy.net.local){const L=copy.net.local;delete copy.net.local;Object.assign(copy,L);}
   const sh=state.net.shared?JSON.parse(JSON.stringify(state.net.shared)):copy;delete sh.net.shared;NET.conn.send({t:"state",z:await netZip(JSON.stringify(sh)),ver:state.net.ver});return true;}
@@ -1833,7 +1871,7 @@ function showReport(prev){const s=state.stats,box=$("#toasts");if(!box)return;
   const dt=s.treasury-prev.treasury;items.push(`<span style="color:var(--${dt>=0?"good":"seal"})">國庫 ${dt>=0?"+":""}${dt} 億</span>`);
   const el=document.createElement("div");el.className="report";el.innerHTML=`<b>${shortDate(state.turn-1)} 季報</b><div class="rr">${items.join("")}</div>`;
   box.appendChild(el);setTimeout(()=>el.remove(),5000);}
-function endTurn(){if(!state||state.pending||state.over)return;if(state.net&&state.hs&&(state.net.turnOf??state.hs.cur)!==netSeat()){toast("還沒輪到你喔");return;}const mk=state.log[0];endTurn0();try{if(state&&!state.over){const ents=[];for(const e of state.log){if(e===mk)break;ents.push(e);}makePaper(ents);}}catch(e){console.error(e);}if(state.hs&&!state.over&&!state.hs.result){hsNext();if(state.net){netPush().then(ok=>{if(ok){netLocalView();save();render();toast("📨 已送出，等對方行動");}});}}}
+function endTurn(){if(!state||state.pending||state.over)return;if(state.net&&state.net.sim){simReady();return;}if(state.net&&state.hs&&(state.net.turnOf??state.hs.cur)!==netSeat()){toast("還沒輪到你喔");return;}const mk=state.log[0];endTurn0();try{if(state&&!state.over){const ents=[];for(const e of state.log){if(e===mk)break;ents.push(e);}makePaper(ents);}}catch(e){console.error(e);}if(state.hs&&!state.over&&!state.hs.result){hsNext();if(state.net){netPush().then(ok=>{if(ok){netLocalView();save();render();toast("📨 已送出，等對方行動");}});}}}
 function endTurn0(){
   if(state.pending||state.over)return;
   const prev={...state.stats};state.prev=prev;
@@ -1943,7 +1981,7 @@ function finish(kind){if(kind)state.over=kind;try{medAdd("games");medAdd("cards"
 
 /* ================= render ================= */
 function unstick(){const v=$("#veil");if(!v)return;if(!v.hidden&&!v.textContent.trim()){if(state)state.pending=null;v.hidden=true;v.innerHTML="";}}
-function render(){try{if(state&&state.paperNext&&!state.pending&&!state.over){const id=state.paperNext;state.paperNext=null;const i=(state.papers||[]).findIndex(p=>p.id===id);if(i>=0)state.pending={kind:"paper",i};}if(state&&ui.lastTurn!==state.turn+"|"+(state.hs?state.hs.cur:0)){if(ui.lastTurn!==undefined)ui.capUntil=Date.now()+3500;ui.lastTurn=state.turn+"|"+(state.hs?state.hs.cur:0);}auLabel();try{hsInbox();}catch(_){}if(state&&state.W&&!state.pending&&!state.over&&state.W.aiNext){const P=state.W.aiNext;state.W.aiNext=null;if(alive(P.o)&&(/^peace/.test(P.k)===atWar(state.W.me,P.o)))state.pending=P;}renderInner();try{audioHook();}catch(_){}try{tutRender();}catch(_){}if(state&&state.W)document.body.classList.toggle("bigmap",!!ui.big&&ui.tab==="map");else document.body.classList.remove("bigmap");}catch(e){console.error(e);
+function render(){try{{const eb=$("#endBtn");if(eb&&state)eb.textContent=state.net&&state.net.sim?"✅ 準備好了 ▶":"結束本季 ▶";}if(state&&state.paperNext&&!state.pending&&!state.over){const id=state.paperNext;state.paperNext=null;const i=(state.papers||[]).findIndex(p=>p.id===id);if(i>=0)state.pending={kind:"paper",i};}if(state&&ui.lastTurn!==state.turn+"|"+(state.hs?state.hs.cur:0)){if(ui.lastTurn!==undefined)ui.capUntil=Date.now()+3500;ui.lastTurn=state.turn+"|"+(state.hs?state.hs.cur:0);}auLabel();try{hsInbox();}catch(_){}if(state&&state.W&&!state.pending&&!state.over&&state.W.aiNext){const P=state.W.aiNext;state.W.aiNext=null;if(alive(P.o)&&(/^peace/.test(P.k)===atWar(state.W.me,P.o)))state.pending=P;}renderInner();try{audioHook();}catch(_){}try{tutRender();}catch(_){}if(state&&state.W)document.body.classList.toggle("bigmap",!!ui.big&&ui.tab==="map");else document.body.classList.remove("bigmap");}catch(e){console.error(e);
     if(state){state.pending=null;try{save();}catch(_){}}const v=$("#veil");if(v&&state){v.hidden=true;v.innerHTML="";}
     toast("剛才的畫面出錯，已自動修復，可以繼續玩");}
   unstick();}
@@ -1951,7 +1989,7 @@ function renderInner(){
   if(!state){showStart();return;}
   ensureWar();checkAch();
   const s=state.stats;$("#natname").textContent=tagName(state.W.me);{const nw=(state.W.news||[]).slice(0,6);const nt=nw.map(n=>`【${n.t}】${n.x}`).join("　　　")||"世界局勢暫時平靜。";if($("#newsT").textContent!==nt)$("#newsT").textContent=nt;}$("#flagbg").setAttribute("fill",colorOf(state.W.me));
-  $("#date").textContent=dateStr(Math.min(state.turn,maxTurns()-1))+(state.duel?`　·　${state.duel.names[state.duel.idx]} 執政中`:"")+(state.hs?`　·　👤 ${state.hs.names[state.net?state.net.turnOf:state.hs.cur]} 的回合`:"")+(state.net?`　·　🌐 房間 ${state.net.room}`:"")+(()=>{try{const t=medalTitle(medalName());return t?`　·　🏅${t}`:"";}catch(_){return"";}})();
+  $("#date").textContent=dateStr(Math.min(state.turn,maxTurns()-1))+(state.duel?`　·　${state.duel.names[state.duel.idx]} 執政中`:"")+(state.hs?(state.net&&state.net.sim?`　·　⚡ 同時行動（你是 ${state.hs.names[netSeat()]}）`:`　·　👤 ${state.hs.names[state.net?state.net.turnOf:state.hs.cur]} 的回合`):"")+(state.net?`　·　🌐 房間 ${state.net.room}`:"")+(()=>{try{const t=medalTitle(medalName());return t?`　·　🏅${t}`:"";}catch(_){return"";}})();
   $("#c-pp").textContent=Math.floor(state.pp)+` (${ppGain()>=0?"+":""}${ppGain()})`;
   const BN=budget().net;$("#c-tr").textContent=`${s.treasury} 億（${BN>=0?"+":""}${BN}/季）`;$("#chip-tr").classList.toggle("neg",s.treasury<0);
   if(!isDem())$("#c-el").textContent="無（威權體制）";else $("#c-el").textContent=state.turn+16-state.turn%16>=maxTurns()?`卸任 ${maxTurns()-state.turn} 季`:`${16-state.turn%16} 季`;
@@ -2229,7 +2267,7 @@ function renderWarPanel(){const W=state.W,me=W.me,en=myEnemies(),el=$("#wwar"),d
   el.innerHTML=h;}
 
 /* ================= modals ================= */
-function renderModal(){const v=$("#veil");const p=state.pending;v.classList.toggle("waitv",!!p&&p.kind==="wait");
+function renderModal(){const v=$("#veil");const p=state.pending;v.classList.toggle("waitv",!!p&&(p.kind==="wait"||p.kind==="wait2"));
   if(!p){v.hidden=true;v.innerHTML="";return;}
   v.hidden=false;
   if(p.kind==="event"){const e=getEvent(p.ev);const chs=visibleChoices(e);
@@ -2239,6 +2277,8 @@ function renderModal(){const v=$("#veil");const p=state.pending;v.classList.togg
        return `<button class="choice" type="button" data-ch="${i}"><strong>${nm(c.n)}</strong>${special}${body}</button>`;}).join("")}</div>
      ${easy()?"":'<p style="font-size:.75rem;color:#7a6a45;margin:12px 0 0">標準難度只顯示影響方向，不顯示數字。</p>'}</div>`;
     v.querySelectorAll("[data-ch]").forEach(b=>b.onclick=()=>choose(+b.dataset.ch));v.querySelector("button").focus();}
+  else if(p.kind==="wait2"){const hs=state.hs,oi=1-netSeat(),oth=netSeat()===0&&NET.guestReady;
+    v.innerHTML=`<div class="dispatch" role="status" style="width:min(460px,100%)"><div class="kicker"><span>⚡ 同時行動・房間 ${state.net.room}</span><span>${dateStr()}</span></div><h2 style="font-size:1.2rem">✅ 你已準備好！${oth?"對方也好了，結算中…":`等待 ${esc(hs.names[oi])} 按「準備好了」…`}</h2><p style="font-size:.85rem;margin:0 0 8px">兩人都準備好，這一季就會一起結算。</p><button class="pbtn" type="button" id="resync">🔄 等太久？重新同步</button></div>`;$("#resync").onclick=netResync;}
   else if(p.kind==="wait"){const hs=state.hs,o=hs.tags[state.net.turnOf];
     v.innerHTML=`<div class="dispatch" role="status" style="width:min(460px,100%)"><div class="kicker"><span>🌐 線上對戰・房間 ${state.net.room}</span><span>${dateStr()}</span></div><h2 style="font-size:1.2rem">⏳ 等待 ${esc(hs.names[state.net.turnOf])}（${tagName(o)}）下指令…</h2><p style="font-size:.85rem;margin:0 0 8px">你可以先看看地圖和各分頁。對方按「結束本季」後，這裡會自動換你。</p><button class="pbtn" type="button" id="resync">🔄 等太久？按這裡重新同步</button></div>`;$("#resync").onclick=netResync;}
   else if(p.kind==="paper"){const L=state.papers||[],i=clamp(p.i||0,0,Math.max(0,L.length-1)),P=L[i];
@@ -2428,7 +2468,7 @@ function showStart(){const v=$("#veil");v.hidden=false;const sv=loadSave();const
     state=newState(opt);if(startOpt.fan==="off"||C)state.noFantasy=true;if(C&&C.setup)C.setup(state);if(!C&&startOpt.mode==="single"&&startOpt.tut==="on")state.tut=0;ui={tab:"map",sel:"root",vb:[0,0,1000,500],mm:"pol",ws:opt.nat};centerOn(opt.nat,340);
     log(C?`挑戰開始：${C.n}`:duel?`${duel.names[0]} 開始執政`:`${tagName(state.W.me)}新政府上任`);
     if(C)state.pending={kind:"msg",kicker:"歷史挑戰",stamp:"任務",title:C.n,text:`${C.d}　★ 完成挑戰　★ ${C.t2}　★ ${C.t3}`};save();render();};
-  const c=$("#cont");if(c)c.onclick=()=>{state=sv;ui.ws=sv.W.me;centerOn(sv.W.me,340);if(sv.net){NET.room=sv.net.room;NET.kind=sv.net.kind||"db";if(NET.kind==="peer")peerStart(sv.net.room,netSeat());else netSub(sv.net.room);}render();};
+  const c=$("#cont");if(c)c.onclick=()=>{state=sv;ui.ws=sv.W.me;centerOn(sv.W.me,340);if(sv.net){NET.room=sv.net.room;NET.kind=sv.net.kind||"db";if(NET.kind==="peer"){NET.base=lsGet("lanzhou-base-"+sv.net.room);NET.hostReady=netSeat()===0&&sv.pending&&sv.pending.kind==="wait2";if(netSeat()===1&&sv.pending&&sv.pending.kind==="wait2"){state=sv;simReady();}peerStart(sv.net.room,netSeat());}else netSub(sv.net.room);}render();};
   const lm=$("#loadmenu");if(lm)lm.onclick=()=>{v.innerHTML=`<div class="dispatch"><div class="kicker"><span>存檔室</span><span></span></div><h2>讀取存檔</h2><div class="choices">${[1,2,3,4,5].map(n=>{const m=slotMeta(n);return `<button class="choice" type="button" data-ld="${n}" ${m?"":"disabled"}><strong>存檔 ${n}</strong><small>${m?esc(m):"（空）"}</small></button>`;}).join("")}</div>
     <p style="margin:12px 0 6px;font-size:.85rem">或貼上存檔代碼：</p><textarea id="savecode2" rows="3" style="width:100%;font-size:.72rem" aria-label="存檔代碼"></textarea>
     <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="pbtn" type="button" id="imp2">匯入代碼</button><button class="pbtn" type="button" id="bk">返回</button><span id="cm2" style="font-size:.85rem;align-self:center"></span></div></div>`;
