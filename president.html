@@ -1653,12 +1653,23 @@ async function peerStart(room,seat,tries){tries=tries||0;try{await loadPeerJS();
   if(NET.peer){try{NET.peer.destroy();}catch(_){}}NET.room=room;NET.kind="peer";
   const pr=NET.peer=seat===0?new window.Peer(peerId(room)):new window.Peer();
   const wire=c=>{c.on("open",()=>{NET.conn=c;c.send({t:"hello",ver:state&&state.net?state.net.ver||0:0});toast("🔗 已和對方連線");});
-    c.on("data",async d=>{if(!d)return;if(d.t==="hello"){if(state&&state.net&&(state.net.ver||0)>(d.ver||0))peerSendState();}else if(d.t==="state")netApply(d);});
-    c.on("close",()=>{if(NET.conn===c)NET.conn=null;toast("📴 對方離線了，等他回來會自動接上");});};
+    c.on("data",async d=>{if(!d)return;if(d.t==="hello"){NET.acked=Math.max(NET.acked||0,d.ver||0);if(state&&state.net&&(state.net.ver||0)>(d.ver||0))peerSendState();}
+      else if(d.t==="state"){await netApply(d);try{c.send({t:"ack",ver:state&&state.net?state.net.ver:d.ver});}catch(_){}}
+      else if(d.t==="ack")NET.acked=Math.max(NET.acked||0,d.ver||0);});
+    c.on("close",()=>{if(NET.conn===c)NET.conn=null;toast("📴 和對方的連線中斷，正在自動重連…");});};
+  NET.wire=wire;
   pr.on("error",e=>{const t=e&&e.type;if(t==="unavailable-id"&&tries<6){setTimeout(()=>peerStart(room,seat,tries+1),4000);}else if(t==="peer-unavailable"){toast("找不到房間，爸爸那邊的遊戲要先開著喔");setTimeout(()=>{if(!NET.conn)peerStart(room,seat,tries+1);},6000);}else if(t==="network"||t==="server-error"||t==="socket-error"){toast("⚠ 連線伺服器忙碌，稍後自動重試");if(tries<6)setTimeout(()=>peerStart(room,seat,tries+1),5000);}});
+  pr.on("disconnected",()=>{try{if(!pr.destroyed)pr.reconnect();}catch(_){}});
+  if(!NET.tick){NET.tick=setInterval(peerTick,5000);}
   if(seat===0)pr.on("connection",c=>wire(c));
   else pr.on("open",()=>wire(pr.connect(peerId(room),{reliable:true})));
   return true;}
+
+function peerTick(){if(!state||!state.net||state.net.kind!=="peer"||!NET.peer)return;const pr=NET.peer,seat=netSeat();
+  if(pr.disconnected&&!pr.destroyed){try{pr.reconnect();}catch(_){}return;}
+  if(!NET.conn||!NET.conn.open){if(seat!==0&&pr.open){try{NET.wire(pr.connect(peerId(state.net.room),{reliable:true}));}catch(_){}}return;}
+  if((state.net.ver||0)>(NET.acked||0))peerSendState();}
+function netResync(){if(!state||!state.net)return;if(state.net.kind==="peer"){if(NET.conn&&NET.conn.open){NET.conn.send({t:"hello",ver:state.net.ver||0});if((state.net.ver||0)>(NET.acked||0))peerSendState();toast("🔄 已重新同步");}else{peerStart(state.net.room,netSeat());toast("🔄 重新連線中…");}}else{NET.unsub&&NET.unsub();NET.unsub=null;netSub(state.net.room);toast("🔄 已重新同步");}}
 async function peerSendState(){if(!NET.conn||!NET.conn.open||!state)return false;const copy=JSON.parse(JSON.stringify(state));
   if(copy.net&&copy.net.local){const L=copy.net.local;delete copy.net.local;Object.assign(copy,L);}
   const sh=state.net.shared?JSON.parse(JSON.stringify(state.net.shared)):copy;delete sh.net.shared;NET.conn.send({t:"state",z:await netZip(JSON.stringify(sh)),ver:state.net.ver});return true;}
@@ -2228,7 +2239,7 @@ function renderModal(){const v=$("#veil");const p=state.pending;v.classList.togg
      ${easy()?"":'<p style="font-size:.75rem;color:#7a6a45;margin:12px 0 0">標準難度只顯示影響方向，不顯示數字。</p>'}</div>`;
     v.querySelectorAll("[data-ch]").forEach(b=>b.onclick=()=>choose(+b.dataset.ch));v.querySelector("button").focus();}
   else if(p.kind==="wait"){const hs=state.hs,o=hs.tags[state.net.turnOf];
-    v.innerHTML=`<div class="dispatch" role="status" style="width:min(460px,100%)"><div class="kicker"><span>🌐 線上對戰・房間 ${state.net.room}</span><span>${dateStr()}</span></div><h2 style="font-size:1.2rem">⏳ 等待 ${esc(hs.names[state.net.turnOf])}（${tagName(o)}）下指令…</h2><p style="font-size:.85rem;margin:0">你可以先看看地圖和各分頁。對方按「結束本季」後，這裡會自動換你。</p></div>`;}
+    v.innerHTML=`<div class="dispatch" role="status" style="width:min(460px,100%)"><div class="kicker"><span>🌐 線上對戰・房間 ${state.net.room}</span><span>${dateStr()}</span></div><h2 style="font-size:1.2rem">⏳ 等待 ${esc(hs.names[state.net.turnOf])}（${tagName(o)}）下指令…</h2><p style="font-size:.85rem;margin:0 0 8px">你可以先看看地圖和各分頁。對方按「結束本季」後，這裡會自動換你。</p><button class="pbtn" type="button" id="resync">🔄 等太久？按這裡重新同步</button></div>`;$("#resync").onclick=netResync;}
   else if(p.kind==="paper"){const L=state.papers||[],i=clamp(p.i||0,0,Math.max(0,L.length-1)),P=L[i];
     v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true" style="width:min(640px,100%);background:#efe6cf">${P?paperHtml(P):"<p>沒有報紙</p>"}
      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><button class="pbtn" type="button" id="ppPrev" ${i>=L.length-1?"disabled":""}>◀ 前一期</button><button class="pbtn" type="button" id="ppNext" ${i<=0?"disabled":""}>下一期 ▶</button><button class="pbtn" type="button" id="ok">看完了</button><span style="font-size:.8rem;color:#6b5b3e">共 ${L.length} 期</span></div></div>`;
