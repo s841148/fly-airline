@@ -396,7 +396,7 @@ body{margin:0}
       <span class="chip">政治點數 <b id="c-pp"></b></span>
       <span class="chip" id="chip-tr">國庫 <b id="c-tr"></b></span>
       <span class="chip">距選舉 <b id="c-el"></b></span>
-      <button class="ghost" id="paperBtn" type="button" title="看報紙">📰 報紙</button><button class="ghost" id="sndBtn" type="button" title="音樂／音效">🎵 音樂</button><button class="ghost" id="menuBtn" type="button">💾 存檔／選單</button>
+      <button class="ghost" id="chatBtn2" type="button" title="聊天" hidden>💬 聊天</button><button class="ghost" id="paperBtn" type="button" title="看報紙">📰 報紙</button><button class="ghost" id="sndBtn" type="button" title="音樂／音效">🎵 音樂</button><button class="ghost" id="menuBtn" type="button">💾 存檔／選單</button>
       <button class="endturn" id="endBtn" type="button">結束本季 ▶</button>
     </div>
   </div>
@@ -1730,7 +1730,7 @@ async function shareInvite(){const u=inviteUrl(),t=`來跟我對戰「總統模�
   try{if(navigator.share){await navigator.share({title:"總統模擬器 父子對戰",text:t,url:u});return;}}catch(_){}
   try{await navigator.clipboard.writeText(t+"\n"+u);toast("📋 邀請連結已複製，貼到 LINE 傳給對方");}catch(_){prompt("複製這個連結傳給對方：",u);}}
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#invBtn");if(b){e.preventDefault();shareInvite();}});
-function netPill(){let el=document.getElementById("netpill");if(!state||!state.net||state.net.kind!=="peer"){if(el)el.remove();NET.chatOpen=false;chatRender();return;}
+function netPill(){const hb=document.getElementById("chatBtn2");if(hb){const on=!!(state&&state.net&&state.net.kind==="peer");hb.hidden=!on;hb.textContent=`💬 聊天${NET.unread?`（${NET.unread}）`:""}`;}let el=document.getElementById("netpill");if(!state||!state.net||state.net.kind!=="peer"){if(el)el.remove();NET.chatOpen=false;chatRender();return;}
   if(!el){el=document.createElement("div");el.id="netpill";document.body.appendChild(el);}
   const on=NET.conn&&NET.conn.open,me=netSeat(),oth=state.hs.names[1-me];let st="";
   if(state.net.sim){const oR=me===0?!!NET.guestReady:!!NET.otherReady;st=`${esc(oth)}：${oR?"✅ 準備好了":"🤔 思考中"}`;}
@@ -1752,7 +1752,7 @@ function chatRender(){let p=document.getElementById("chatbox");if(!NET.chatOpen|
     p.querySelector("#cbX").onclick=()=>{NET.chatOpen=false;chatRender();};p.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>chatSend(b.dataset.q));
     p.querySelector("#cbF").onsubmit=e=>{e.preventDefault();const i=p.querySelector("#cbI");chatSend(i.value);i.value="";i.focus();};}
   const me=netSeat(),L=p.querySelector("#cbL");L.innerHTML=chatList().map(x=>`<div class="cb-m ${x.s===me?"me":""}"><span>${esc(x.n)}</span>${esc(x.m)}</div>`).join("")||`<p class="cb-e">還沒有訊息，打個招呼吧！</p>`;L.scrollTop=L.scrollHeight;}
-document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#chatBtn");if(b){e.preventDefault();NET.chatOpen=!NET.chatOpen;NET.unread=0;chatRender();netPill();}});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#chatBtn,#chatBtn2");if(b){e.preventDefault();NET.chatOpen=!NET.chatOpen;NET.unread=0;chatRender();netPill();}});
 async function peerSendState(){if(!NET.conn||!NET.conn.open||!state)return false;const copy=JSON.parse(JSON.stringify(state));
   if(copy.net&&copy.net.local){const L=copy.net.local;delete copy.net.local;Object.assign(copy,L);}
   const sh=state.net.shared?JSON.parse(JSON.stringify(state.net.shared)):copy;delete sh.net.shared;NET.conn.send({t:"state",z:await netZip(JSON.stringify(sh)),ver:state.net.ver});return true;}
