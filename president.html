@@ -208,6 +208,15 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--brass);outline-
 @keyframes tin{from{transform:translateY(12px);opacity:0}}
 @media (prefers-reduced-motion:reduce){.toast{animation:none}}
 [hidden]{display:none!important}
+#netpill button{position:relative}.cb-n{position:absolute;top:-6px;right:-8px;background:var(--seal);color:#fff;font-style:normal;font-size:.68rem;border-radius:9px;padding:0 5px;line-height:1.4}
+#chatbox{position:fixed;right:12px;bottom:58px;z-index:47;width:min(340px,calc(100vw - 24px));height:min(420px,60vh);background:var(--paper);color:#22201a;border:2px solid var(--brass);box-shadow:0 10px 30px rgba(0,0,0,.45);display:flex;flex-direction:column;border-radius:10px;overflow:hidden}
+.cb-h{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#efe3c4}.cb-h button{background:none;border:0;font-size:1rem;cursor:pointer;min-height:0}
+.cb-l{flex:1;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:6px}.cb-e{color:#8a7a5a;font-size:.85rem;text-align:center}
+.cb-m{max-width:80%;background:#fff;border:1px solid #d9cba6;border-radius:10px;padding:5px 9px;font-size:.92rem;align-self:flex-start;word-break:break-word}.cb-m span{display:block;font-size:.7rem;color:#8a6d2b;font-weight:700}
+.cb-m.me{align-self:flex-end;background:#dff0d8;border-color:#a8cf98}
+.cb-q{display:flex;gap:4px;overflow-x:auto;padding:4px 6px;border-top:1px solid #e3d6b4}.cb-q button{white-space:nowrap;font-size:.78rem;background:#fff;border:1px solid #c9b98f;border-radius:14px;padding:3px 8px;min-height:0;color:#22201a}
+.cb-f{display:flex;gap:6px;padding:6px;border-top:1px solid #e3d6b4}.cb-f input{flex:1;min-width:0;padding:7px;border:1px solid #c9b98f;font-size:16px}.cb-f button{background:var(--brass);border:0;padding:6px 12px;font-weight:700;color:#1a1408}
+
 #netpill{position:fixed;right:12px;bottom:12px;z-index:46;background:rgba(20,28,26,.92);color:var(--paper);border:1px solid var(--line);padding:6px 10px;font-size:.82rem;border-radius:20px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
 #netpill.ok{border-color:#5fbf7f}#netpill.bad{border-color:var(--seal)}#netpill button{background:none;border:0;color:inherit;font-size:1rem;cursor:pointer;min-height:0;padding:0 2px}
 
@@ -1666,9 +1675,10 @@ async function peerData(d){if(!d||!d.t)return;const c=NET.conn;
   else if(d.t==="ack")NET.acked=Math.max(NET.acked||0,d.ver||0);
   else if(d.t==="ready"&&state&&state.net&&state.net.sim&&netSeat()===0){if((d.bv||0)===(state.net.ver||0)&&!NET.guestReady){NET.guestReady=d.z;try{c.send({t:"rack",bv:d.bv});}catch(_){}toast("✅ 對方已準備好");render();if(NET.hostReady||(state.pending&&state.pending.kind==="wait2"))simResolve();}}
   else if(d.t==="rack")NET.racked=true;
+  else if(d.t==="chat"){chatRecv(d);}
   else if(d.t==="hrdy"&&state&&state.net&&(d.bv||0)===(state.net.ver||0)){NET.otherReady=true;toast(`✅ ${state.hs.names[0]} 已準備好`);}}
 async function peerStart(room,seat){try{await loadMQTT();}catch(_){toast("⚠ 連線元件載入失敗，請檢查網路");return false;}
-  (NET.cl||[]).forEach(c=>{try{c.end(true);}catch(_){}});NET.applyingVer=null;NET.room=room;NET.kind="peer";NET.seat=seat;
+  (NET.cl||[]).forEach(c=>{try{c.end(true);}catch(_){}});NET.applyingVer=null;NET.chat=null;NET.room=room;NET.kind="peer";NET.seat=seat;
   const base="lanzhou-pres-v1/"+room.toUpperCase(),T={me:base+"/to"+seat,other:base+"/to"+(1-seat),state:base+"/state",ready:base+"/ready"};NET.topics=T;
   const pub=(t,str,retain)=>NET.cl.forEach(c=>{if(c.connected)try{c.publish(t,str,{qos:1,retain:!!retain});}catch(_){}});
   NET.conn={get open(){return (NET.cl||[]).some(c=>c.connected);},
@@ -1720,12 +1730,29 @@ async function shareInvite(){const u=inviteUrl(),t=`來跟我對戰「總統模�
   try{if(navigator.share){await navigator.share({title:"總統模擬器 父子對戰",text:t,url:u});return;}}catch(_){}
   try{await navigator.clipboard.writeText(t+"\n"+u);toast("📋 邀請連結已複製，貼到 LINE 傳給對方");}catch(_){prompt("複製這個連結傳給對方：",u);}}
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#invBtn");if(b){e.preventDefault();shareInvite();}});
-function netPill(){let el=document.getElementById("netpill");if(!state||!state.net||state.net.kind!=="peer"||state.over){if(el)el.remove();return;}
+function netPill(){let el=document.getElementById("netpill");if(!state||!state.net||state.net.kind!=="peer"){if(el)el.remove();NET.chatOpen=false;chatRender();return;}
   if(!el){el=document.createElement("div");el.id="netpill";document.body.appendChild(el);}
   const on=NET.conn&&NET.conn.open,me=netSeat(),oth=state.hs.names[1-me];let st="";
   if(state.net.sim){const oR=me===0?!!NET.guestReady:!!NET.otherReady;st=`${esc(oth)}：${oR?"✅ 準備好了":"🤔 思考中"}`;}
-  el.className=on?"ok":"bad";el.innerHTML=`${on?"🟢 連線中":"🔴 斷線重連中…"}　${st}　<button type="button" id="invBtn" title="邀請連結">📤</button>`;}
+  el.className=on?"ok":"bad";el.innerHTML=`${on?"🟢 連線中":"🔴 斷線重連中…"}　${st}　<button type="button" id="chatBtn" title="聊天">💬${NET.unread?`<i class="cb-n">${NET.unread}</i>`:""}</button><button type="button" id="invBtn" title="邀請連結">📤</button>`;}
 setInterval(()=>{try{netPill();}catch(_){}},2000);
+
+/* ---- 聊天 ---- */
+const QUICK=["👍 好！","😂 哈哈","🤝 結盟嗎？","😡 你竟然打我！","🙏 拜託放過我","⏩ 快點啦～","🎉 太強了","😴 我先想一下"];
+function chatKey(){return "lanzhou-chat-"+(state&&state.net?state.net.room:NET.room);}
+function chatList(){if(!NET.chat){try{NET.chat=JSON.parse(localStorage.getItem(chatKey())||"[]");}catch(_){NET.chat=[];}}return NET.chat;}
+function chatSave(){try{localStorage.setItem(chatKey(),JSON.stringify(chatList().slice(-60)));}catch(_){}}
+function chatAdd(m){const L=chatList();if(L.some(x=>x.id===m.id))return false;L.push(m);if(L.length>60)L.splice(0,L.length-60);chatSave();return true;}
+function chatSend(txt){txt=String(txt||"").trim().slice(0,120);if(!txt||!state||!state.net)return;const me=netSeat(),m={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),s:me,n:state.hs.names[me],m:txt,ts:Date.now()};
+  chatAdd(m);try{NET.conn&&NET.conn.send({t:"chat",...m});}catch(_){}chatRender();}
+function chatRecv(d){if(!chatAdd({id:d.id,s:d.s,n:d.n,m:d.m,ts:d.ts}))return;if(!NET.chatOpen){NET.unread=(NET.unread||0)+1;toast(`💬 ${d.n}：${d.m}`);}try{sfx("letter");}catch(_){}chatRender();try{netPill();}catch(_){}}
+function chatRender(){let p=document.getElementById("chatbox");if(!NET.chatOpen||!state||!state.net){if(p)p.remove();return;}
+  if(!p){p=document.createElement("div");p.id="chatbox";document.body.appendChild(p);
+    p.innerHTML=`<div class="cb-h"><b>💬 聊天</b><button type="button" id="cbX" aria-label="關閉">✕</button></div><div class="cb-l" id="cbL"></div><div class="cb-q">${QUICK.map(q=>`<button type="button" data-q="${q}">${q}</button>`).join("")}</div><form class="cb-f" id="cbF"><input id="cbI" maxlength="120" placeholder="輸入訊息…" autocomplete="off"><button type="submit">送出</button></form>`;
+    p.querySelector("#cbX").onclick=()=>{NET.chatOpen=false;chatRender();};p.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>chatSend(b.dataset.q));
+    p.querySelector("#cbF").onsubmit=e=>{e.preventDefault();const i=p.querySelector("#cbI");chatSend(i.value);i.value="";i.focus();};}
+  const me=netSeat(),L=p.querySelector("#cbL");L.innerHTML=chatList().map(x=>`<div class="cb-m ${x.s===me?"me":""}"><span>${esc(x.n)}</span>${esc(x.m)}</div>`).join("")||`<p class="cb-e">還沒有訊息，打個招呼吧！</p>`;L.scrollTop=L.scrollHeight;}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#chatBtn");if(b){e.preventDefault();NET.chatOpen=!NET.chatOpen;NET.unread=0;chatRender();netPill();}});
 async function peerSendState(){if(!NET.conn||!NET.conn.open||!state)return false;const copy=JSON.parse(JSON.stringify(state));
   if(copy.net&&copy.net.local){const L=copy.net.local;delete copy.net.local;Object.assign(copy,L);}
   const sh=state.net.shared?JSON.parse(JSON.stringify(state.net.shared)):copy;delete sh.net.shared;NET.conn.send({t:"state",z:await netZip(JSON.stringify(sh)),ver:state.net.ver});return true;}
