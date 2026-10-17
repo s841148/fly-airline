@@ -1618,7 +1618,7 @@ function whatifAns(k){const p=state.pending,w=WHATIF.find(x=>x.id===p.id),W=stat
 
 /* ================= 線上連線對戰 ================= */
 const NET={db:null,unsub:null,room:null};
-function netSeat(){try{return +(localStorage.getItem("lanzhou-seat-"+state.net.room)||0);}catch(_){return 0;}}
+function netSeat(){if(NET.kind==="peer"&&NET.seat!=null)return NET.seat;try{return +(localStorage.getItem("lanzhou-seat-"+(state&&state.net?state.net.room:NET.room))||0);}catch(_){return 0;}}
 async function netDB(){if(NET.db)return NET.db;try{if(!window.claude||!window.claude.use)return null;NET.db=await window.claude.use("db");}catch(_){NET.db=null;}return NET.db;}
 async function netZip(str){try{if(typeof CompressionStream==="undefined")throw 0;const cs=new Blob([str]).stream().pipeThrough(new CompressionStream("gzip"));const buf=new Uint8Array(await new Response(cs).arrayBuffer());let bin="";for(let i=0;i<buf.length;i+=8192)bin+=String.fromCharCode.apply(null,buf.subarray(i,i+8192));return "z:"+btoa(bin);}catch(_){return "j:"+str;}}
 async function netUnzip(z){if(z.startsWith("j:"))return z.slice(2);const bin=atob(z.slice(2)),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);const ds=new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip"));return await new Response(ds).text();}
@@ -1629,7 +1629,7 @@ async function netPush(){if(!state||!state.net)return false;
   try{await db.doc("games/"+state.net.room).set({z:await netZip(JSON.stringify(copy)),ver:state.net.ver,cur:copy.hs.cur,turn:copy.turn,names:copy.hs.names,over:!!copy.over,ts:Date.now()});return true;}
   catch(e){toast("⚠ 連線失敗，請重新整理後按「繼續上次」再試");return false;}}
 function netLocalView(){const hs=state.hs,me=netSeat();state.net.turnOf=hs.cur;if(hs.result)return;if(hs.cur!==me){hsSwitch(me);state.pending={kind:"wait"};}}
-async function netApply(data){if(!data||!data.z)return;if(state&&state.net&&state.net.room===NET.room&&(data.ver||0)<=(state.net.ver||0))return;
+async function netApply(data){if(!data||!data.z)return;if(NET.applyingVer===data.ver)return;NET.applyingVer=data.ver;if(state&&state.net&&state.net.room===NET.room&&(data.ver||0)<=(state.net.ver||0))return;
   let st;try{st=JSON.parse(await netUnzip(data.z));}catch(_){return;}
   const room=NET.room,kind=NET.kind||st.net.kind;state=st;state.net.room=room;state.net.kind=kind;if(kind==="peer"){const c=JSON.parse(JSON.stringify(st));delete c.net.shared;state.net.shared=c;}ensureWar();const me=netSeat();state.net.turnOf=state.hs.cur;
   if(state.net.sim){simSetBase(st);NET.readyMsg=null;NET.racked=false;NET.guestReady=null;NET.hostReady=false;state.net.ready=false;
@@ -1654,31 +1654,31 @@ async function netJoin(code){code=(code||"").trim().toUpperCase();if(!/^[A-Z]{4}
 
 
 /* ---- 點對點連線（公開網站用，不需要帳號） ---- */
-function loadPeerJS(){return new Promise((ok,no)=>{if(window.Peer)return ok();const sc=document.createElement("script");sc.src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js";sc.onload=()=>ok();sc.onerror=()=>no();document.head.appendChild(sc);});}
-function peerId(code){return "lanzhou-pres-"+code.toLowerCase();}
-async function peerStart(room,seat,tries){tries=tries||0;try{await loadPeerJS();}catch(_){toast("⚠ 連線元件載入失敗，請檢查網路");return false;}
-  if(NET.peer){try{NET.peer.destroy();}catch(_){}}NET.room=room;NET.kind="peer";
-  const pr=NET.peer=seat===0?new window.Peer(peerId(room)):new window.Peer();
-  const wire=c=>{c.on("open",()=>{NET.conn=c;c.send({t:"hello",ver:state&&state.net?state.net.ver||0:0});toast("🔗 已和對方連線");});
-    c.on("data",async d=>{if(!d)return;if(d.t==="hello"){NET.acked=Math.max(NET.acked||0,d.ver||0);if(state&&state.net&&(state.net.ver||0)>(d.ver||0))peerSendState();}
-      else if(d.t==="state"){await netApply(d);try{c.send({t:"ack",ver:state&&state.net?state.net.ver:d.ver});}catch(_){}}
-      else if(d.t==="ack")NET.acked=Math.max(NET.acked||0,d.ver||0);
-      else if(d.t==="ready"&&state&&state.net&&state.net.sim&&netSeat()===0){if((d.bv||0)===(state.net.ver||0)){NET.guestReady=d.z;try{c.send({t:"rack",bv:d.bv});}catch(_){}toast("✅ 對方已準備好");render();if(NET.hostReady||(state.pending&&state.pending.kind==="wait2"))simResolve();}}
-      else if(d.t==="rack")NET.racked=true;
-      if(d.t==="hello"&&NET.readyMsg&&!NET.racked)simSendReady();});
-    c.on("close",()=>{if(NET.conn===c)NET.conn=null;toast("📴 和對方的連線中斷，正在自動重連…");});};
-  NET.wire=wire;
-  pr.on("error",e=>{const t=e&&e.type;if(t==="unavailable-id"&&tries<6){setTimeout(()=>peerStart(room,seat,tries+1),4000);}else if(t==="peer-unavailable"){toast("找不到房間，爸爸那邊的遊戲要先開著喔");setTimeout(()=>{if(!NET.conn)peerStart(room,seat,tries+1);},6000);}else if(t==="network"||t==="server-error"||t==="socket-error"){toast("⚠ 連線伺服器忙碌，稍後自動重試");if(tries<6)setTimeout(()=>peerStart(room,seat,tries+1),5000);}});
-  pr.on("disconnected",()=>{try{if(!pr.destroyed)pr.reconnect();}catch(_){}});
+/* ---- 線上連線：經由公共 MQTT 伺服器轉送（不用帳號、不受手機網路限制） ---- */
+const BROKERS=["wss://broker.hivemq.com:8884/mqtt","wss://broker.emqx.io:8084/mqtt"];
+function loadMQTT(){return new Promise((ok,no)=>{if(window.mqtt&&window.mqtt.connect)return ok();const sc=document.createElement("script");sc.src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js";sc.onload=()=>ok();sc.onerror=()=>no();document.head.appendChild(sc);});}
+async function peerData(d){if(!d||!d.t)return;const c=NET.conn;
+  if(d.t==="hello"){NET.acked=Math.max(NET.acked||0,d.ver||0);if(state&&state.net&&(state.net.ver||0)>(d.ver||0))peerSendState();if(NET.readyMsg&&!NET.racked)simSendReady();}
+  else if(d.t==="state"){if(netSeat()===0)return;await netApply(d);try{c.send({t:"ack",ver:state&&state.net?state.net.ver:d.ver});}catch(_){}}
+  else if(d.t==="ack")NET.acked=Math.max(NET.acked||0,d.ver||0);
+  else if(d.t==="ready"&&state&&state.net&&state.net.sim&&netSeat()===0){if((d.bv||0)===(state.net.ver||0)&&!NET.guestReady){NET.guestReady=d.z;try{c.send({t:"rack",bv:d.bv});}catch(_){}toast("✅ 對方已準備好");render();if(NET.hostReady||(state.pending&&state.pending.kind==="wait2"))simResolve();}}
+  else if(d.t==="rack")NET.racked=true;}
+async function peerStart(room,seat){try{await loadMQTT();}catch(_){toast("⚠ 連線元件載入失敗，請檢查網路");return false;}
+  (NET.cl||[]).forEach(c=>{try{c.end(true);}catch(_){}});NET.applyingVer=null;NET.room=room;NET.kind="peer";NET.seat=seat;
+  const base="lanzhou-pres-v1/"+room.toUpperCase(),T={me:base+"/to"+seat,other:base+"/to"+(1-seat),state:base+"/state",ready:base+"/ready"};NET.topics=T;
+  const pub=(t,str,retain)=>NET.cl.forEach(c=>{if(c.connected)try{c.publish(t,str,{qos:1,retain:!!retain});}catch(_){}});
+  NET.conn={get open(){return (NET.cl||[]).some(c=>c.connected);},
+    send(d){const str=JSON.stringify(d);pub(T.other,str);if(d.t==="state"&&seat===0)pub(T.state,str,true);if(d.t==="ready")pub(T.ready,str,true);},
+    clearReady(){pub(T.ready,"",true);}};
+  let hi=false;NET.cl=BROKERS.map(u=>{const c=window.mqtt.connect(u,{connectTimeout:10000,reconnectPeriod:3000,clean:true,clientId:"lzp_"+Math.random().toString(16).slice(2,12)});
+    c.on("connect",()=>{c.subscribe(seat===0?[T.me,T.ready]:[T.me,T.state],{qos:1});if(!hi){hi=true;toast("🔗 已連上連線伺服器");}try{NET.conn.send({t:"hello",ver:state&&state.net?state.net.ver||0:0});}catch(_){}});
+    c.on("message",(t,m)=>{const str=m&&m.toString?m.toString():"";if(!str)return;let d;try{d=JSON.parse(str);}catch(_){return;}peerData(d);});
+    c.on("error",()=>{});return c;});
+  if(seat===1)setTimeout(()=>{if(!state&&NET.room===room)toast("找不到房間：請確認代碼，而且爸爸那邊已經建好房間");},12000);
   if(!NET.tick){NET.tick=setInterval(peerTick,5000);}
-  if(seat===0)pr.on("connection",c=>wire(c));
-  else pr.on("open",()=>wire(pr.connect(peerId(room),{reliable:true})));
   return true;}
-
-function peerTick(){if(!state||!state.net||state.net.kind!=="peer"||!NET.peer)return;const pr=NET.peer,seat=netSeat();
-  if(pr.disconnected&&!pr.destroyed){try{pr.reconnect();}catch(_){}return;}
-  if(!NET.conn||!NET.conn.open){if(seat!==0&&pr.open){try{NET.wire(pr.connect(peerId(state.net.room),{reliable:true}));}catch(_){}}return;}
-  if((state.net.ver||0)>(NET.acked||0))peerSendState();if(NET.readyMsg&&!NET.racked)simSendReady();}
+function peerTick(){if(!state||!state.net||state.net.kind!=="peer"||!NET.conn||!NET.conn.open)return;
+  if(netSeat()===0&&(state.net.ver||0)>(NET.acked||0))peerSendState();if(NET.readyMsg&&!NET.racked)simSendReady();}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&state&&state.net&&state.net.kind==="peer"){try{peerTick();if(NET.conn&&NET.conn.open)NET.conn.send({t:"hello",ver:state.net.ver||0});}catch(_){}}});
 function netResync(){if(!state||!state.net)return;if(NET.readyMsg){NET.racked=false;simSendReady();}if(state.net.kind==="peer"){if(NET.conn&&NET.conn.open){NET.conn.send({t:"hello",ver:state.net.ver||0});if((state.net.ver||0)>(NET.acked||0))peerSendState();toast("🔄 已重新同步");}else{peerStart(state.net.room,netSeat());toast("🔄 重新連線中…");}}else{NET.unsub&&NET.unsub();NET.unsub=null;netSub(state.net.room);toast("🔄 已重新同步");}}
 
@@ -1706,7 +1706,7 @@ async function simResolve(){if(NET.resolving)return;NET.resolving=true;try{
   if(state.hs.result&&state.hs.cur!==0)hsSwitch(0);
   state.net.ver=(state.net.ver||0)+1;const copy=JSON.parse(JSON.stringify(state));delete copy.net.shared;copy.net.ready=false;
   if(state.hs.result)copy.pending={kind:"over"};state.net.shared=copy;simSetBase(copy);
-  if(NET.conn&&NET.conn.open)NET.conn.send({t:"state",z:await netZip(JSON.stringify(copy)),ver:state.net.ver});
+  if(NET.conn&&NET.conn.open){NET.conn.send({t:"state",z:await netZip(JSON.stringify(copy)),ver:state.net.ver});try{NET.conn.clearReady&&NET.conn.clearReady();}catch(_){}}
   NET.acked=NET.acked||0;toast("⚡ 新的一季開始！");try{sfx("turn");showSeason();}catch(_){}save();render();}
   finally{NET.resolving=false;}}
 async function peerSendState(){if(!NET.conn||!NET.conn.open||!state)return false;const copy=JSON.parse(JSON.stringify(state));
