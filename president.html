@@ -580,7 +580,7 @@ const DECS=[
  {id:"amnesty",tab:"gov",n:"大赦天下",d:"釋放輕罪犯人，民眾覺得政府寬厚，但治安稍差。",pp:10,cd:6,fx:{approval:3,stability:-2}},
  {id:"humanaid",tab:"world",n:"國際人道援助",d:"派醫療隊和物資去災區，全世界都在稱讚。",money:40,cd:3,fx:{prestige:4,tension:-2},dip:1},
  {id:"summit",tab:"world",n:"主辦國際高峰會",d:"各國領袖來首都開會，世界緊張度下降。",pp:25,money:40,cd:6,fx:{prestige:6,tension:-6},dip:1},
- {id:"armsale",tab:"world",n:"出口軍火",d:"把武器賣給別國，賺一大筆，但名聲變差、世界更緊張。",pp:10,cd:4,fx:{treasury:60,tension:4,prestige:-2},dip:1},
+ {id:"armsale",tab:"world",n:"出口軍火（自訂售價）",d:"選買家、自己定價格。價格越高賺越多，但對方越可能不買；正在打仗的國家最願意花大錢。",pp:10,cd:3,fx:{},dip:1},
  {id:"film",tab:"world",n:"文化輸出",d:"電影、音樂和偶像紅遍全球，和所有國家的關係 +5。",money:40,cd:4,fx:{prestige:4},dip:1},
  {id:"propaganda",tab:"world",n:"對外宣傳攻勢",d:"在國際媒體上大打廣告，聲望上升，但敵國反感。",pp:15,cd:3,fx:{prestige:3,tension:2},dip:1},
  {id:"rebuild",tab:"newland",n:"重建北方城市",d:"修復戰爭破壞的道路和學校。",money:40,cd:2,fx:{integ:10,econ:2}},
@@ -1179,7 +1179,7 @@ function aiAnswer(yes){const c=state.pending,W=state.W,me=W.me,o=c.o,n=c.s?GBY[c
     else if(c.k==="ask"){if(W.fac[c.f]&&!facOf(o))W.fac[c.f].push(o);rel(10);}
     else if(c.k==="buyMine"){if(W.own[c.s]===me){giveProv(c.s,o);state.stats.treasury+=c.pr;applyFx({approval:-2});news(`${tagName(me)}把「${n}」賣給${T}`);}}
     else if(c.k==="sell"){if(W.own[c.s]===o&&state.stats.treasury>=c.pr){giveProv(c.s,me);state.stats.treasury-=c.pr;state.mp+=Math.min(6,1+GBY[c.s].a/400);if(!state.newland)state.newland={integ:40};news(`${tagName(me)}向${T}買下「${n}」`);}}
-    else if(c.k==="armsBuy"){state.stats.treasury+=c.pr;rel(10);W.rel[c.foe]=clamp((W.rel[c.foe]||0)-10,-100,100);W.dv[o]=divs(o)+Math.max(1,base(o)[0]*.06);}
+    else if(c.k==="armsBuy"){const want=c.ask||c.pr;if(want>c.pr&&rng(1510+want)>clamp(1-(want-c.pr)/c.pr*1.4,0,1)){rel(-3);log(`${T}嫌 ${want} 億太貴，軍火交易取消`);toast(`${T} 嫌太貴，不買了`);save();render();return;}c.pr=want;state.stats.treasury+=c.pr;rel(10);W.rel[c.foe]=clamp((W.rel[c.foe]||0)-10,-100,100);W.dv[o]=divs(o)+Math.max(1,base(o)[0]*.06);}
     else if(c.k==="aidReq"){state.stats.treasury-=40;rel(20);mem(o).help++;W.dv[o]=divs(o)+Math.max(2,base(o)[0]*.1);}
     else if(c.k==="ult"){if(W.own[c.s]===me)giveProv(c.s,o);applyFx({prestige:-10,approval:-5});news(`${tagName(me)}屈服於${T}，交出「${n}」`);}
     log(`接受${T}的提議：${AIOFF[c.k](c)[1]}`);toast("✅ 已接受");}
@@ -1222,6 +1222,7 @@ function handleAct(a,s){const W=state.W;if(!state||state.over)return;if(state.pe
   else if(a==="arms"){if((W.rel[o]||0)>=30&&!atWar(W.me,o))state.pending={kind:"arms",tag:o};}
   else if(a==="pact"){if(!pactWith(o)&&state.pp>=20&&(W.rel[o]||0)>=0){state.pp-=20;const ag=scn().aggr.some(x=>x[0]===o&&x[1].some(y=>y[0]===W.me));if(rng(170+hashS(o))<clamp(.45+(W.rel[o]||0)/100-(ag?.3:0)+(persOf(o)==="timid"?.25:0)-grudge(o)*.08,.05,.95)){W.pact=W.pact||{};W.pact[o]=state.turn+20;applyFx({tension:-3});log(`與${tagName(o)}簽訂互不侵犯條約`);news(`${tagName(W.me)}與${tagName(o)}簽訂互不侵犯條約`);toast("📜 簽約成功");}else{toast(`${tagName(o)} 拒絕簽約`);}}}
   else if(a==="trade"){if(!(W.trade||{})[o]&&state.pp>=15&&(W.rel[o]||0)>=20){state.pp-=15;if(rng(171+hashS(o))<clamp(.5+(W.rel[o]||0)/150+(persOf(o)==="trade"?.3:0)-grudge(o)*.06,.05,.95)){W.trade=W.trade||{};W.trade[o]=1;W.rel[o]=clamp((W.rel[o]||0)+5,-100,100);log(`與${tagName(o)}簽訂貿易協定`);toast("📦 貿易協定生效");}else toast(`${tagName(o)} 拒絕貿易協定`);}}
+  else if(a==="armsale"){if(state.pp>=10&&(state.cd.armsale||0)<=state.turn&&!atWar(W.me,o))state.pending={kind:"armsale",buyer:o,price:60};}
   else if(a==="statevisit"){if(state.pp>=10){state.pp-=10;W.visCd=W.visCd||{};W.visCd[o]=state.turn+3;W.rel[o]=clamp((W.rel[o]||0)+12,-100,100);applyFx({prestige:1});log(`國事訪問${tagName(o)}，關係 +12`);toast(`🛬 出訪${tagName(o)}`);}}
   else if(a==="loan"){if(state.stats.treasury>=60){state.stats.treasury-=60;state.loans=state.loans||[];state.loans.push({o,due:state.turn+8,amt:75});W.rel[o]=clamp((W.rel[o]||0)+15,-100,100);try{mem(o).help++;}catch(_){}log(`借給${tagName(o)} 60 億`);toast("🏦 貸款已撥出");}}
   else if(a==="esanc"){if(state.pp>=15){state.pp-=15;if(!isHum(o))W.dv[o]=divs(o)*.95;W.rel[o]=clamp((W.rel[o]||0)-20,-100,100);applyFx({econ:-1,tension:2});if(W.trade)delete W.trade[o];log(`對${tagName(o)}實施經濟制裁`);news(`${tagName(W.me)}制裁${tagName(o)}`);toast("⛔ 制裁生效");}}
@@ -1799,6 +1800,18 @@ async function peerSendState(){if(!NET.conn||!NET.conn.open||!state)return false
   if(copy.net&&copy.net.local){const L=copy.net.local;delete copy.net.local;Object.assign(copy,L);}
   const sh=state.net.shared?JSON.parse(JSON.stringify(state.net.shared)):copy;delete sh.net.shared;NET.conn.send({t:"state",z:await netZip(JSON.stringify(sh)),ver:state.net.ver});return true;}
 
+
+/* ---- 軍火買賣（售價可調） ---- */
+function armBudget(o){return 30+base(o)[0]*4+(inWarAny(o)?60:0)+((state.W.rel[o]||0)>40?20:0);}
+function armChance(o,price){const r=state.W.rel[o]||0;return clamp(1.15-price/armBudget(o)*.65+r/250,.03,.97);}
+function armBuyers(){const me=state.W.me;return aiTags().filter(t=>!isHum(t)&&!atWar(me,t)).sort((a,b)=>(inWarAny(b)?1:0)-(inWarAny(a)?1:0)||(state.W.rel[b]||0)-(state.W.rel[a]||0));}
+function armSell(){const p=state.pending,W=state.W,o=p.buyer,price=p.price;if(!o||state.pp<10)return;state.armTry=state.armTry||{};const k=state.turn+"";state.armTry[k]=(state.armTry[k]||0)+1;
+  state.pp-=10;const ok=rng(1501+hashS(o)+price+state.armTry[k]*7)<armChance(o,price);
+  if(ok){state.stats.treasury+=price;W.dv[o]=divs(o)+price/25;W.rel[o]=clamp((W.rel[o]||0)+8,-100,100);const foe=inWarAny(o);if(foe&&foe!==W.me)W.rel[foe]=clamp((W.rel[foe]||0)-10,-100,100);
+    applyFx({tension:2,prestige:-1});state.cd.armsale=state.turn+3;state.pending=null;log(`以 ${price} 億把軍火賣給${tagName(o)}`);news(`${tagName(W.me)}賣軍火給${tagName(o)}`);toast(`💰 成交！收入 ${price} 億`);try{sfx("capture");}catch(_){}}
+  else{W.rel[o]=clamp((W.rel[o]||0)-3,-100,100);p.msg=`${tagName(o)}嫌太貴，不買。降價再試試？（這季還能談 ${Math.max(0,3-state.armTry[k])} 次）`;if(state.armTry[k]>=3){state.pending=null;toast(`${tagName(o)} 不想再談了`);}}
+  save();render();}
+
 /* ================= wonders & achievements ================= */
 const WONDERS=[
  {id:"museum",n:"國家歷史博物館",d:"記錄瀾洲的故事，凝聚全民認同。",cost:70,t:4,fx:{stability:8,approval:3}},
@@ -2164,7 +2177,8 @@ function decCard(d){const left=(state.cd[d.id]||0)-state.turn;const s=state.stat
   const cost=[pp?pp+" 點":"",d.money?d.money+" 億":""].filter(Boolean).join("・");
   return `<div class="dec"><h5>${d.n}</h5><span class="cost">${cost}　冷卻 ${d.cd} 季</span><div class="desc">${nm(d.d)}</div>${fxHtml(d.fx,true)}
     <button class="btn" type="button" data-dec="${d.id}" ${why||state.pending?"disabled":""}>${why||"執行"}</button></div>`;}
-function doDec(id){const d=DECS.find(x=>x.id===id)||natDecs().find(x=>x.id===id);const pp=decPP(d);if(pp)state.pp-=pp;if(d.money)state.stats.treasury-=d.money;
+function doDec(id){if(id==="armsale"){const L=armBuyers();if(!L.length)return toast("現在沒有國家想買軍火");state.pending={kind:"armsale",buyer:L[0],price:60};render();return;}
+const d=DECS.find(x=>x.id===id)||natDecs().find(x=>x.id===id);const pp=decPP(d);if(pp)state.pp-=pp;if(d.money)state.stats.treasury-=d.money;
   applyFx(d.fx);if(id==="arms")state.airBonus+=6;
   {const f=state.flags,W=state.W;if(id==="olympics")f.olymp=true;else if(id==="invest")state.ind.civ++;else if(id==="school"){state.res.slots.forEach(x=>{if(x)x.left=Math.max(1,x.left-2);});}
    else if(id==="satellite2")state.airBonus+=3;else if(id==="drill")W.org=Math.min(100,(W.org||0)+20);else if(id==="conscript")state.mp+=15;else if(id==="sf")f.sf=(f.sf||0)+1;else if(id==="carrier2")f.carrierX=true;
@@ -2330,6 +2344,7 @@ function renderSel(){const W=state.W,me=W.me,s=ui.ws||me,o=W.own[s],g=GBY[s],el=
     if(!mf&&!fac)A.push(`<button class="ghost" type="button" data-act="found" data-s="${s}" ${state.pp>=30?dis:"disabled"}>成立我國陣營（30 點）</button>`);
     A.push(`<button class="ghost" type="button" data-act="aid" data-s="${s}" ${state.stats.treasury>=40?dis:"disabled"}>軍事援助（40 億）</button>`);
     {const vc=(W.visCd||{})[o]||0;A.push(`<button class="ghost" type="button" data-act="statevisit" data-s="${s}" ${state.pp<10||vc>state.turn?"disabled":dis}>🛬 國事訪問（10 點${vc>state.turn?`・${vc-state.turn} 季後`:""}）</button>`);}
+    if(!isHum(o))A.push(`<button class="ghost" type="button" data-act="armsale" data-s="${s}" ${state.pp>=10&&(state.cd.armsale||0)<=state.turn?dis:"disabled"}>💼 賣軍火給${tagName(o)}（自訂售價）</button>`);
     A.push(`<button class="ghost" type="button" data-act="loan" data-s="${s}" ${state.stats.treasury>=60?dis:"disabled"}>🏦 借錢給${tagName(o)}（60 億，8 季後還 75）</button>`);
     if(!sameFac(o,me))A.push(`<button class="ghost" type="button" data-act="esanc" data-s="${s}" ${state.pp>=15?dis:"disabled"}>⛔ 經濟制裁（15 點）</button>`);
     if(!sameFac(o,me)&&fronts(me,o).length)A.push(`<button class="ghost" type="button" data-act="provoke" data-s="${s}" ${state.pp>=10?dis:"disabled"}>🔥 邊境挑釁（10 點）</button>`);
@@ -2375,6 +2390,17 @@ function renderModal(){const v=$("#veil");const p=state.pending;v.classList.togg
     v.innerHTML=`<div class="dispatch" role="status" style="width:min(460px,100%)"><div class="kicker"><span>⚡ 同時行動・房間 ${state.net.room}</span><span>${dateStr()}</span></div><h2 style="font-size:1.2rem">✅ 你已準備好！${oth?"對方也好了，結算中…":`等待 ${esc(hs.names[oi])} 按「準備好了」…`}</h2><p style="font-size:.85rem;margin:0 0 8px">兩人都準備好，這一季就會一起結算。</p><button class="pbtn" type="button" id="resync">🔄 等太久？重新同步</button></div>`;$("#resync").onclick=netResync;}
   else if(p.kind==="wait"){const hs=state.hs,o=hs.tags[state.net.turnOf];
     v.innerHTML=`<div class="dispatch" role="status" style="width:min(460px,100%)"><div class="kicker"><span>🌐 線上對戰・房間 ${state.net.room}</span><span>${dateStr()}</span></div><h2 style="font-size:1.2rem">⏳ 等待 ${esc(hs.names[state.net.turnOf])}（${tagName(o)}）下指令…</h2><p style="font-size:.85rem;margin:0 0 8px">你可以先看看地圖和各分頁。對方按「結束本季」後，這裡會自動換你。</p><button class="pbtn" type="button" id="resync">🔄 等太久？按這裡重新同步</button></div>`;$("#resync").onclick=netResync;}
+  else if(p.kind==="armsale"){const L=armBuyers(),o=p.buyer,ch=Math.round(armChance(o,p.price)*100),foe=inWarAny(o);
+    v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>國防部・軍火出口</span><span>每次談判 10 點</span></div><span class="stamp">議價</span><h2>💼 出口軍火</h2>
+     <p style="margin:0 0 6px">買家：<select id="arBuyer" style="font-size:1rem;padding:4px">${L.map(t=>`<option value="${t}" ${t===o?"selected":""}>${tagName(t)}${inWarAny(t)?"（戰爭中）":""}</option>`).join("")}</select></p>
+     <p style="font-size:.85rem;margin:0 0 8px">${foe&&foe!==state.W.me?`⚠ ${tagName(o)}正在和${tagName(foe)}打仗，願意出高價，但${tagName(foe)}會不高興。`:"這個國家沒在打仗，出價會比較保守。"}　預算約 ${armBudget(o)} 億</p>
+     <label style="display:block;font-weight:700">售價：<span id="arP" style="font-size:1.3rem;color:#8a5a00">${p.price}</span> 億</label>
+     <input id="arR" type="range" min="20" max="300" step="10" value="${p.price}" style="width:100%">
+     <div class="mrow" style="margin:6px 0"><span>對方會買的機會</span><div class="bar"><i id="arB" style="width:${ch}%;background:${ch>=60?"var(--good)":ch>=30?"var(--warn)":"var(--seal)"}"></i></div><span class="num" id="arC">${ch}%</span></div>
+     ${p.msg?`<p style="color:#b0332a;font-weight:700;margin:4px 0">${p.msg}</p>`:""}
+     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="pbtn" type="button" id="arGo" ${state.pp<10?"disabled":""}>🤝 開價成交</button><button class="pbtn" type="button" id="cancel">取消</button></div></div>`;
+    const upd=()=>{p.price=+$("#arR").value;const c=Math.round(armChance(p.buyer,p.price)*100);$("#arP").textContent=p.price;$("#arC").textContent=c+"%";const b=$("#arB");b.style.width=c+"%";b.style.background=c>=60?"var(--good)":c>=30?"var(--warn)":"var(--seal)";};
+    $("#arR").oninput=upd;$("#arBuyer").onchange=()=>{p.buyer=$("#arBuyer").value;p.msg="";render();};$("#arGo").onclick=armSell;$("#cancel").onclick=()=>{state.pending=null;render();};}
   else if(p.kind==="paper"){const L=state.papers||[],i=clamp(p.i||0,0,Math.max(0,L.length-1)),P=L[i];
     v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true" style="width:min(640px,100%);background:#efe6cf">${P?paperHtml(P):"<p>沒有報紙</p>"}
      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><button class="pbtn" type="button" id="ppPrev" ${i>=L.length-1?"disabled":""}>◀ 前一期</button><button class="pbtn" type="button" id="ppNext" ${i<=0?"disabled":""}>下一期 ▶</button><button class="pbtn" type="button" id="ok">看完了</button><span style="font-size:.8rem;color:#6b5b3e">共 ${L.length} 期</span></div></div>`;
@@ -2438,7 +2464,8 @@ function renderModal(){const v=$("#veil");const p=state.pending;v.classList.togg
     $("#hsY").onclick=()=>hsAnswer(true);$("#hsN").onclick=()=>hsAnswer(false);}
   else if(p.kind==="aioff"){const [cat,ti,tx,y,n]=AIOFF[p.k](p);
     v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>外交部・${cat}</span><span>${dateStr()}</span></div><span class="stamp">來函</span>
-     <h2>${tagName(p.o)}：${ti}</h2><p>${tx}</p><p style="font-size:.85rem;margin:0 0 10px">目前與${tagName(p.o)}的關係：${state.W.rel[p.o]||0}</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pbtn" type="button" id="aiY">${y}</button><button class="pbtn" type="button" id="aiN" style="background:#6b5b3e">${n}</button></div></div>`;
+     <h2>${tagName(p.o)}：${ti}</h2><p>${tx}</p><p style="font-size:.85rem;margin:0 0 10px">目前與${tagName(p.o)}的關係：${state.W.rel[p.o]||0}</p>${p.k==="armsBuy"?`<label style="display:block;font-weight:700;margin-bottom:4px">我方開價：<span id="akP" style="color:#8a5a00;font-size:1.2rem">${p.ask||p.pr}</span> 億（對方出價 ${p.pr} 億，開越高越可能談崩）</label><input id="akR" type="range" min="${Math.round(p.pr*.6/5)*5}" max="${p.pr*2}" step="5" value="${p.ask||p.pr}" style="width:100%;margin-bottom:8px">`:""}<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pbtn" type="button" id="aiY">${y}</button><button class="pbtn" type="button" id="aiN" style="background:#6b5b3e">${n}</button></div></div>`;
+    {const r=$("#akR");if(r)r.oninput=()=>{p.ask=+r.value;$("#akP").textContent=p.ask;};}
     $("#aiY").onclick=()=>aiAnswer(true);$("#aiN").onclick=()=>aiAnswer(false);$("#aiY").focus();}
   else if(p.kind==="msg"){v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>${p.kicker}</span><span>${dateStr()}</span></div><span class="stamp">${p.stamp}</span>
      <h2>${p.title}</h2><p>${p.text}</p><button class="pbtn" type="button" id="ok">知道了</button></div>`;
