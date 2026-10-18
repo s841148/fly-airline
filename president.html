@@ -562,6 +562,27 @@ const DECS=[
  {id:"trade",tab:"world",n:"擴大海商貿易",d:"增加和東方的貨運航線。",pp:15,cd:3,fx:{econ:3,treasury:10,prestige:2},dip:1},
  {id:"ngo",tab:"world",n:"爭取國際參與",d:"申請以觀察員身分參加國際會議。",pp:25,cd:4,fx:{prestige:6},dip:1},
  {id:"sanction",north:1,tab:"world",n:"制裁北方企業",d:"限制鐵冠企業來投資，國內叫好，北方氣炸。",pp:15,cd:3,fx:{tension:6,approval:3,econ:-1},dip:1},
+ {id:"parade",tab:"gov",n:"國慶閱兵",d:"坦克和戰機通過首都大道，全國熱血沸騰，鄰國有點緊張。",pp:15,money:20,cd:4,fx:{military:2,prestige:3,approval:2,tension:2}},
+ {id:"olympics",tab:"gov",n:"申辦奧運",d:"全世界的目光都會看向我們！花費很大，但只能辦一次。",money:150,cd:999,req:s=>!s.flags.olymp,reqT:"已經辦過了",fx:{prestige:10,econ:3,approval:4}},
+ {id:"invest",tab:"gov",n:"招商引資",d:"邀請外國大企業來設廠，多一座民用工廠。",pp:20,cd:4,fx:{econ:3}},
+ {id:"ftz",tab:"gov",n:"設立自由貿易區",d:"港口免稅，貨物和錢都流進來，但貧富差距變大。",pp:25,money:30,cd:6,fx:{econ:5,stability:-1}},
+ {id:"highway",tab:"gov",n:"興建高速公路",d:"南北交通更方便，物流變快。",money:70,cd:6,fx:{econ:3,stability:1}},
+ {id:"school",tab:"gov",n:"教育改革",d:"更新課本、增加科學課，正在研究的科技提早 2 季完成。",pp:20,money:30,cd:6,fx:{stability:2,approval:2}},
+ {id:"hospital",tab:"gov",n:"擴建醫院",d:"每個城市都有大醫院，看病更方便。",money:50,cd:4,fx:{approval:4,stability:2}},
+ {id:"festival",tab:"gov",n:"舉辦全國嘉年華",d:"音樂、煙火和美食，全國放假一天。",money:30,cd:3,fx:{approval:3,econ:1}},
+ {id:"green",tab:"gov",n:"推動綠色能源",d:"蓋風力和太陽能電廠，國際形象變好。",pp:15,money:40,cd:6,req:s=>s.W.sc==="m"||s.W.sc==="c",reqT:"這個年代還沒有",fx:{prestige:3,econ:1,stability:1}},
+ {id:"satellite2",tab:"gov",n:"發射偵察衛星",d:"從太空看清楚敵軍動向，空軍 +3。",money:80,cd:6,req:s=>s.W.sc==="m"||s.W.sc==="c",reqT:"這個年代還沒有火箭",fx:{prestige:5}},
+ {id:"drill",tab:"gov",n:"三軍聯合演習",d:"部隊組織度 +20、軍力上升，但鄰國會緊張。",pp:15,cd:3,fx:{military:3,tension:3}},
+ {id:"conscript",tab:"gov",n:"後備軍人點召",d:"召集退伍軍人回營訓練，人力 +15 萬。",pp:10,cd:3,fx:{approval:-2}},
+ {id:"sf",tab:"gov",n:"擴編特種部隊",d:"精銳中的精銳，部隊素質永久 +3%（最多 3 次）。",money:80,cd:6,req:s=>(s.flags.sf||0)<3,reqT:"已經擴編到上限",fx:{military:3}},
+ {id:"carrier2",tab:"gov",n:"建造航空母艦",d:"海上的移動機場，海軍登陸成功率永久 +15%。",money:200,cd:999,req:s=>s.W.sc!=="g"&&!s.flags.carrierX,reqT:"已經有了，或這個年代還沒有",fx:{military:4,prestige:4,tension:4}},
+ {id:"counterspy",tab:"gov",n:"國安大掃除",d:"抓出潛伏的外國間諜，社會更安定。",pp:15,cd:4,fx:{stability:3,prestige:1}},
+ {id:"amnesty",tab:"gov",n:"大赦天下",d:"釋放輕罪犯人，民眾覺得政府寬厚，但治安稍差。",pp:10,cd:6,fx:{approval:3,stability:-2}},
+ {id:"humanaid",tab:"world",n:"國際人道援助",d:"派醫療隊和物資去災區，全世界都在稱讚。",money:40,cd:3,fx:{prestige:4,tension:-2},dip:1},
+ {id:"summit",tab:"world",n:"主辦國際高峰會",d:"各國領袖來首都開會，世界緊張度下降。",pp:25,money:40,cd:6,fx:{prestige:6,tension:-6},dip:1},
+ {id:"armsale",tab:"world",n:"出口軍火",d:"把武器賣給別國，賺一大筆，但名聲變差、世界更緊張。",pp:10,cd:4,fx:{treasury:60,tension:4,prestige:-2},dip:1},
+ {id:"film",tab:"world",n:"文化輸出",d:"電影、音樂和偶像紅遍全球，和所有國家的關係 +5。",money:40,cd:4,fx:{prestige:4},dip:1},
+ {id:"propaganda",tab:"world",n:"對外宣傳攻勢",d:"在國際媒體上大打廣告，聲望上升，但敵國反感。",pp:15,cd:3,fx:{prestige:3,tension:2},dip:1},
  {id:"rebuild",tab:"newland",n:"重建北方城市",d:"修復戰爭破壞的道路和學校。",money:40,cd:2,fx:{integ:10,econ:2}},
  {id:"culture",tab:"newland",n:"文化交流計畫",d:"學生互訪、電視節目雙語播出。",pp:15,cd:2,fx:{integ:8}},
  {id:"garrison",tab:"newland",n:"加強駐軍維安",d:"治安變好，但當地人覺得被監視。",pp:10,cd:1,fx:{integ:2,stability:2,approval:-1}},
@@ -796,7 +817,7 @@ const FIXC={g:{"826":"#c25a52","250":"#5f7fd0","276":"#7d7d78","643":"#4f8a4f","
 const T36=[["國家 AI 運算中心","國家研究院"],["AI 運算中心","國家研究院"],["半導體聚落","重工業聚落"],["科技島計畫","工業化五年計畫"],["傳統產業升級","農業機械化"],["觀光與精緻農業","鐵路網擴建"],["綠能轉型","水力電氣化"],["自由經濟示範區","自由港"],["長照計畫","社會保險法"],["托育與生育補助","家庭津貼"],["社會住宅","國民住宅"],["全民健保永續","國家醫療制度"],["政府數位化","行政現代化"],["朝野協商平台","國會協商"],["打擊假訊息","宣傳部"],["國造潛艦","潛艇艦隊"],["無人機部隊","空軍擴編"],["全民防衛動員","後備動員"],["海岸要塞","防線工事"],["聯合作戰司令部","總參謀部"],["加入國際組織","加入國際聯盟"],["步兵武器","步兵裝備"],["現代化步兵","摩托化步兵"],["外骨骼步兵","機械化步兵"],["主力戰車","中型坦克"],["數位化裝甲","重型坦克"],["無人戰車","主力坦克"],["第四代戰機","單翼戰鬥機"],["匿蹤戰機","噴射戰鬥機"],["無人機蜂群","戰略轟炸機"],["自動化生產線","流水線生產"],["智慧工廠","工業合理化"],["3D 列印兵工廠","戰時大量生產"],["雷達網","雷達"],["電子作戰","密碼破譯"],["網路戰部隊","無線電情報"],["兩棲突擊艦","登陸艇"],["神盾艦隊","戰列艦隊"],["5G 通訊網","無線電廣播網"],["精準醫療","盤尼西林"],["量子電腦","電子計算機"],["太空發射中心","火箭研究中心"],["核融合實驗爐","原子能研究計畫"],["環島高速鐵路","全國高速公路"],["國際和平宮","國聯和平宮"],["電視演說","廣播演說"],["電視","廣播"]];
 const T36RE=new RegExp(T36.map(x=>x[0].replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|"));
 const MODERN=new Set(["chip","chipboom","fake","hack","aiboom","satellite","meme","ev","cyberwar","uav","nuke","aging","pandemic2","spacerace","cable"]);
-const NMRE=/北方|鐵冠|瀾|海商|群島|立法院|\{OFFER\}|\{PC\}/;
+const NMRE=/北方|鐵冠|瀾|海商|群島|立法院|颱風|縣長|立委|健保|捷運|軍公教|偏鄉|夜市|\{OFFER\}|\{PC\}/;
 function scn(){return SCN[state.W.sc];}
 function rivalAlive(){const W=state.W,r=scn().play[W.me][12];if(r&&r!==W.me&&alive(r))return r;
   if(W._rv&&W._rv.t===state.turn&&(W._rv.v===null||alive(W._rv.v)))return W._rv.v;
@@ -804,10 +825,17 @@ function rivalAlive(){const W=state.W,r=scn().play[W.me][12];if(r&&r!==W.me&&ali
   W._rv={t:state.turn,v:best};return best;}
 function rival(){return rivalAlive()||scn().play[state.W.me][12];}
 function tagName(t){if(!t)return"";if(state&&state.W&&t===state.W.me&&state.W.cname)return state.W.cname;if(state&&state.W&&state.W.rename&&state.W.rename[t])return state.W.rename[t];const n=state&&state.W?scn().nm[t]:null;return n||(GBY[t]?(GBY[t].cn||GBY[t].n):t);}
+
+const TYPH=new Set(["158","392","410","156","608","704","408","344","446"]),HURR=new Set(["840","484","192","124","214","332","388","044","320","340","558","188","591"]),CYCL=new Set(["356","050","104","144","586","036","554","450"]);
+const GOVT={"840":"州長","124":"省長","036":"州長","392":"縣知事","410":"道知事","408":"道知事","156":"省長","643":"州長","276":"邦總理","250":"省長","826":"郡長","380":"省長","724":"自治區主席","356":"邦首長","076":"州長","484":"州長"};
+function locTerms(t){const W=state.W,me=W.me;if(me==="158")return t;
+  const storm=TYPH.has(me)?"颱風":HURR.has(me)?"颶風":CYCL.has(me)?"氣旋":"暴風雨";
+  return t.replace(/颱風假/g,"防災停課").replace(/颱風/g,storm).replace(/縣長/g,GOVT[me]||"地方首長").replace(/立委/g,"國會議員").replace(/健保/g,"醫療保險").replace(/捷運/g,"地鐵").replace(/軍公教年金/g,"公務員退休金").replace(/偏鄉/g,"鄉下").replace(/夜市/g,"市集");}
 function nm(t){t=String(t);if(!state||!state.W)return t;const W=state.W,me=tagName(W.me),rv=tagName(rival()),al=tagName(scn().play[W.me][13]);
   t=t.replace(/\{OFFER\}/g,tagName(W.offer||rival())).replace(/\{PC\}/g,tagName(W.pc||rival())).replace(/鐵冠皇帝/g,rv+"領導人").replace(/鐵冠帝國/g,rv).replace(/鐵冠/g,rv).replace(/北方威脅/g,"世界緊張度").replace(/北方新領土/g,"新領土").replace(/北方大鐵路/g,"新領土大鐵路").replace(/北方/g,rv)
    .replace(/海商聯邦/g,al).replace(/群島同盟/g,"周邊國家").replace(/瀾洲共和國/g,me).replace(/瀾洲/g,me).replace(/瀾都/g,"首都").replace(/瀾元/g,"本國貨幣").replace(/瀾海/g,"海上");
   if(W.me!=="158")t=t.replace(/立法院/g,"國會");
+  t=locTerms(t);
   if(W.sc!=="m")for(const [a,b] of T36)if(t.includes(a))t=t.split(a).join(b);
   return t;}
 function nmDom(root){if(!state||!state.W||!root)return;const w36=state.W.sc!=="m";const tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
@@ -904,7 +932,7 @@ function B(){const W=state.W;if(!W._tb||W._tb.t!==state.turn||W._tb.n!==W.dead.l
 function mpCap(){return Math.floor((state.mp==null?B()*1.8:state.mp)/1.5);}
 function ourDivs(){const b=B();return Math.min(Math.round(b*(.4+state.stats.military/100))+(state.flags.reserve?Math.ceil(b*.15):0),mpCap())+(state.W.extra||0);}
 function allyDivs(){if(!myEnemies().length)return 0;const a=scn().play[state.W.me][13];if(!alive(a))return 0;return (state.flags.ally?Math.ceil(B()*.15):0)+(state.flags.jointex?Math.ceil(B()*.15):0);}
-function quality(){const f=state.flags;return (1+cardFx("q"))*resMul()*scn().play[state.W.me][1]*(1+(f.drone?.2:0)+(f.joint?.15:0)+(f.sub?.05:0)+(state.cab.def==="zhang"?.1:0)+(hasT("inf1")?.05:0)+(hasT("inf2")?.05:0)+(hasT("inf3")?.08:0)+(hasT("inf4")?.1:0)+(hasT("radar")?.05:0)+(hasT("carrier")?.05:0)+(hasT("aegis")?.05:0));}
+function quality(){const f=state.flags;return (1+(f.sf||0)*.03)*(1+cardFx("q"))*resMul()*scn().play[state.W.me][1]*(1+(f.drone?.2:0)+(f.joint?.15:0)+(f.sub?.05:0)+(state.cab.def==="zhang"?.1:0)+(hasT("inf1")?.05:0)+(hasT("inf2")?.05:0)+(hasT("inf3")?.08:0)+(hasT("inf4")?.1:0)+(hasT("radar")?.05:0)+(hasT("carrier")?.05:0)+(hasT("aegis")?.05:0));}
 function ourAir(){return Math.round((10+state.stats.military/5+(state.flags.drone?10:0)+(state.flags.joint?5:0)+state.airBonus+(hasT("jet")?6:0)+(hasT("stealth")?10:0)+(hasT("swarm")?12:0))*Math.sqrt(B()/15));}
 function enemyAir(t){return Math.round(qual(t)*Math.sqrt(divs(t))*4.5*(easy()?.8:1));}
 function bombMul(w){const a=w?w.air:50;return a>=60?.5:a<=40?.8:.65;}
@@ -1080,7 +1108,7 @@ function signTreaty(e,sel,rep){const W=state.W,me=W.me;if(!atWar(me,e))return;if
   else{state.pending=null;toast(`${tagName(e)} 拒絕了這份和約`);log(`${tagName(e)}拒絕和約條件`);}
   save();render();}
 function hasNavy(){return hasT("amph")||hasT("carrier")||state.flags.sub||["840","826","392"].includes(state.W.me);}
-function navalChance(s){const W=state.W,w=W.war[wk(W.me,W.own[s])];return clamp((hasNavy()?.35:.15)+((w?w.air:50)-50)/100+(state.flags.sub?.15:0)+(hasT("amph")?.1:0)+(hasT("carrier")?.1:0)+(hasT("aegis")?.05:0)+((W.comp||{}).mar||0)/100*.4,.1,.9);}
+function navalChance(s){const W=state.W,w=W.war[wk(W.me,W.own[s])];return clamp((state.flags.carrierX?.15:0)+(hasNavy()?.35:.15)+((w?w.air:50)-50)/100+(state.flags.sub?.15:0)+(hasT("amph")?.1:0)+(hasT("carrier")?.1:0)+(hasT("aegis")?.05:0)+((W.comp||{}).mar||0)/100*.4,.1,.9);}
 function navalOk(s){const W=state.W;return atWar(W.me,W.own[s])&&state.turn>=W.navCd&&state.pp>=40&&state.stats.treasury>=20&&!state.pending;}
 function doNaval(s){if(!navalOk(s))return;const W=state.W,o=W.own[s],n=GBY[s].n;state.pp-=40;state.stats.treasury-=20;W.navCd=state.turn+3;
   if(rng(70+hashS(s))<navalChance(s)){let P=W.prog[s];if(!P||P.by!==W.me)P=W.prog[s]={by:W.me,v:0};P.v+=40;if(!W.beach)W.beach={};W.beach[s]=state.turn+8;W.target[o]=s;applyFx({prestige:3});W.sup=clamp(W.sup+4,0,100);
@@ -1184,6 +1212,10 @@ function handleAct(a,s){const W=state.W;if(!state||state.over)return;if(state.pe
   else if(a==="arms"){if((W.rel[o]||0)>=30&&!atWar(W.me,o))state.pending={kind:"arms",tag:o};}
   else if(a==="pact"){if(!pactWith(o)&&state.pp>=20&&(W.rel[o]||0)>=0){state.pp-=20;const ag=scn().aggr.some(x=>x[0]===o&&x[1].some(y=>y[0]===W.me));if(rng(170+hashS(o))<clamp(.45+(W.rel[o]||0)/100-(ag?.3:0)+(persOf(o)==="timid"?.25:0)-grudge(o)*.08,.05,.95)){W.pact=W.pact||{};W.pact[o]=state.turn+20;applyFx({tension:-3});log(`與${tagName(o)}簽訂互不侵犯條約`);news(`${tagName(W.me)}與${tagName(o)}簽訂互不侵犯條約`);toast("📜 簽約成功");}else{toast(`${tagName(o)} 拒絕簽約`);}}}
   else if(a==="trade"){if(!(W.trade||{})[o]&&state.pp>=15&&(W.rel[o]||0)>=20){state.pp-=15;if(rng(171+hashS(o))<clamp(.5+(W.rel[o]||0)/150+(persOf(o)==="trade"?.3:0)-grudge(o)*.06,.05,.95)){W.trade=W.trade||{};W.trade[o]=1;W.rel[o]=clamp((W.rel[o]||0)+5,-100,100);log(`與${tagName(o)}簽訂貿易協定`);toast("📦 貿易協定生效");}else toast(`${tagName(o)} 拒絕貿易協定`);}}
+  else if(a==="statevisit"){if(state.pp>=10){state.pp-=10;W.visCd=W.visCd||{};W.visCd[o]=state.turn+3;W.rel[o]=clamp((W.rel[o]||0)+12,-100,100);applyFx({prestige:1});log(`國事訪問${tagName(o)}，關係 +12`);toast(`🛬 出訪${tagName(o)}`);}}
+  else if(a==="loan"){if(state.stats.treasury>=60){state.stats.treasury-=60;state.loans=state.loans||[];state.loans.push({o,due:state.turn+8,amt:75});W.rel[o]=clamp((W.rel[o]||0)+15,-100,100);try{mem(o).help++;}catch(_){}log(`借給${tagName(o)} 60 億`);toast("🏦 貸款已撥出");}}
+  else if(a==="esanc"){if(state.pp>=15){state.pp-=15;if(!isHum(o))W.dv[o]=divs(o)*.95;W.rel[o]=clamp((W.rel[o]||0)-20,-100,100);applyFx({econ:-1,tension:2});if(W.trade)delete W.trade[o];log(`對${tagName(o)}實施經濟制裁`);news(`${tagName(W.me)}制裁${tagName(o)}`);toast("⛔ 制裁生效");}}
+  else if(a==="provoke"){if(state.pp>=10){state.pp-=10;W.rel[o]=clamp((W.rel[o]||0)-15,-100,100);applyFx({tension:4});if((W.rel[o]||0)<=-30&&!W.cb){W.cb={tag:o,ready:state.turn};log(`邊境衝突升高，取得對${tagName(o)}的宣戰理由`);toast("🔥 取得宣戰理由！");}else{log(`在${tagName(o)}邊境挑釁`);toast(`🔥 ${tagName(o)} 很生氣（關係 −15）`);}}}
   else if(a==="cb"){makeCB(o);return;}
   else if(a==="war"){if(canDeclare(o))state.pending={kind:"declare",tag:o};}
   else if(a==="mob"){if(state.pp>=20&&state.stats.treasury>=20&&(W.extra||0)<Math.ceil(B()*.5)){state.pp-=20;state.stats.treasury-=20;W.extra=(W.extra||0)+mobN();log(`動員後備軍人，增加 ${mobN()} 個師`);}}
@@ -1946,6 +1978,7 @@ function endTurn0(){
     if(nl.integ<30&&rng(51)<.3){applyFx({stability:-2,approval:-1});log("北方新領土爆發抗議");}
     if(nl.integ>=100&&!f.integrated){f.integrated=true;applyFx({econ:8,prestige:5});log("北方新領土完全整合！");toast("北方新領土完全整合！經濟 +8");}}
   const prevEcon=state.lastEcon;state.lastEcon=s.econ;state.growth=r1((s.econ-prevEcon)*1.6+(s.econ-50)/12+1.6);
+  if(state.loans&&state.loans.length){state.loans=state.loans.filter(l=>{if(l.due>state.turn)return true;if(alive(l.o)&&!atWar(state.W.me,l.o)){s.treasury+=l.amt;log(`${tagName(l.o)}還款 ${l.amt} 億`);}else log(`${tagName(l.o)}的貸款收不回來了`);return false;});}
   worldStep();try{persStep();}catch(e){console.error(e);}alienStep();if(state.over)return;zbStep();if(state.over)return;meteorStep();marsTick();cardTick();if(state.volc&&state.volc>state.turn){s.econ=clamp(s.econ-1,0,100);}
   if(season()===0&&myEnemies().some(e=>fronts(state.W.me,e).some(([a,b])=>GBY[b]&&wxMul(b)<=.65))){state.mp=Math.max(0,state.mp-4);log("❄ 嚴冬造成前線部隊凍傷減員");}
   if(state.sanct&&state.sanct>state.turn){s.treasury-=Math.round(Math.max(0,budget(true).I)*.15);s.approval=clamp(s.approval-.5,0,100);}
@@ -1984,7 +2017,7 @@ function maybeEvent(){
   if(state.turn===18&&!state.war&&!state.flags.peace&&!era()){state.pending={kind:"event",ev:"ultimatum"};return;}
   if(state.turn%16===13&&state.turn+3<maxTurns()&&isDem()){state.pending={kind:"event",ev:"campaign"};return;}
   if(rng(1)>.7)return;
-  const pool=EVENTS.filter(e=>!e.special&&(e.rep||!state.used.includes(e.id))&&(!e.req||state.flags[e.req])&&(!e.north||era()<ERAS.length&&!!rivalAlive())&&!({tw_drill:"156",kr_missile:"408"}[e.id]&&!alive({tw_drill:"156",kr_missile:"408"}[e.id]))&&(!e.w||state.W.sc==="w")&&(!e.g||state.W.sc==="g")&&(!e.c||state.W.sc==="c")&&(!e.who||e.who.includes(state.W.me))&&(!MODERN.has(e.id)||state.W.sc==="m")&&(!e.cond||e.cond(state)));
+  const pool=EVENTS.filter(e=>!e.special&&(e.rep||!state.used.includes(e.id))&&(!e.req||state.flags[e.req])&&(!e.north||era()<ERAS.length&&!!rivalAlive())&&!({tw_drill:"156",kr_missile:"408"}[e.id]&&!alive({tw_drill:"156",kr_missile:"408"}[e.id]))&&(!["budget","defect"].includes(e.id)||isDem())&&(!e.w||state.W.sc==="w")&&(!e.g||state.W.sc==="g")&&(!e.c||state.W.sc==="c")&&(!e.who||e.who.includes(state.W.me))&&(!MODERN.has(e.id)||state.W.sc==="m")&&(!e.cond||e.cond(state)));
   if(!pool.length)return;
   const e=pool[Math.floor(rng(2)*pool.length)];
   state.used.push(e.id);state.pending={kind:"event",ev:e.id};}
@@ -2117,12 +2150,15 @@ function renderFocusDetail(){const f=FBY[ui.sel];const st=focusState(f);let why=
    <div><button class="btn" type="button" id="goFocus" ${can?"":"disabled"}>開始推動（${f.cost} 點・${f.t} 季）</button>${why&&!can?`<div class="why">${why}</div>`:""}</div>`;
   const b=$("#goFocus");if(b)b.onclick=()=>startFocus(f.id);}
 function decCard(d){const left=(state.cd[d.id]||0)-state.turn;const s=state.stats;const pp=decPP(d);let why="";
-  if(d.north&&(era()>=ERAS.length||!rivalAlive()))why="已經沒有對手國";else if(d.id==="cutgov"&&(state.cuts||0)>=16)why="已經精簡到底";else if(left>0)why=`冷卻中，${left} 季後可用`;else if(pp&&state.pp<pp)why="政治點數不夠";else if(d.money&&s.treasury<d.money)why="國庫不夠";
+  if(d.req&&!d.req(state))why=d.reqT||"條件不足";else if(d.north&&(era()>=ERAS.length||!rivalAlive()))why="已經沒有對手國";else if(d.id==="cutgov"&&(state.cuts||0)>=16)why="已經精簡到底";else if(left>0)why=`冷卻中，${left} 季後可用`;else if(pp&&state.pp<pp)why="政治點數不夠";else if(d.money&&s.treasury<d.money)why="國庫不夠";
   const cost=[pp?pp+" 點":"",d.money?d.money+" 億":""].filter(Boolean).join("・");
   return `<div class="dec"><h5>${d.n}</h5><span class="cost">${cost}　冷卻 ${d.cd} 季</span><div class="desc">${nm(d.d)}</div>${fxHtml(d.fx,true)}
     <button class="btn" type="button" data-dec="${d.id}" ${why||state.pending?"disabled":""}>${why||"執行"}</button></div>`;}
 function doDec(id){const d=DECS.find(x=>x.id===id)||natDecs().find(x=>x.id===id);const pp=decPP(d);if(pp)state.pp-=pp;if(d.money)state.stats.treasury-=d.money;
-  applyFx(d.fx);if(id==="arms")state.airBonus+=6;if(id==="cutgov")state.cuts=Math.min(16,(state.cuts||0)+4);state.cd[id]=state.turn+d.cd;log(`施政：${d.n}`);save();render();}
+  applyFx(d.fx);if(id==="arms")state.airBonus+=6;
+  {const f=state.flags,W=state.W;if(id==="olympics")f.olymp=true;else if(id==="invest")state.ind.civ++;else if(id==="school"){state.res.slots.forEach(x=>{if(x)x.left=Math.max(1,x.left-2);});}
+   else if(id==="satellite2")state.airBonus+=3;else if(id==="drill")W.org=Math.min(100,(W.org||0)+20);else if(id==="conscript")state.mp+=15;else if(id==="sf")f.sf=(f.sf||0)+1;else if(id==="carrier2")f.carrierX=true;
+   else if(id==="film")for(const t of aiTags())W.rel[t]=clamp((W.rel[t]||0)+5,-100,100);}if(id==="cutgov")state.cuts=Math.min(16,(state.cuts||0)+4);state.cd[id]=state.turn+d.cd;log(`施政：${d.n}`);save();render();}
 function renderGov(){
   $("#taxrow").innerHTML=[["low","低稅　民眾開心"],["mid","中稅　平衡"],["high","高稅　進帳多"]].map(([k,l])=>`<button type="button" data-tax="${k}" aria-pressed="${state.tax===k}">${l}</button>`).join("");
   {const B=budget();const row=([n,v],neg)=>v?`<div class="lrow"><span>${n}</span><b class="num">${neg?(v>0?"−":"+"):"+"}${Math.abs(Math.round(v))}</b></div>`:"";
@@ -2283,6 +2319,10 @@ function renderSel(){const W=state.W,me=W.me,s=ui.ws||me,o=W.own[s],g=GBY[s],el=
     if(mf&&!fac)A.push(`<button class="ghost" type="button" data-act="invite" data-s="${s}" ${rel>=60&&state.pp>=20?dis:"disabled"}>邀請加入${mf}（20 點${rel>=60?"":"・關係需 60"}）</button>`);
     if(!mf&&!fac)A.push(`<button class="ghost" type="button" data-act="found" data-s="${s}" ${state.pp>=30?dis:"disabled"}>成立我國陣營（30 點）</button>`);
     A.push(`<button class="ghost" type="button" data-act="aid" data-s="${s}" ${state.stats.treasury>=40?dis:"disabled"}>軍事援助（40 億）</button>`);
+    {const vc=(W.visCd||{})[o]||0;A.push(`<button class="ghost" type="button" data-act="statevisit" data-s="${s}" ${state.pp<10||vc>state.turn?"disabled":dis}>🛬 國事訪問（10 點${vc>state.turn?`・${vc-state.turn} 季後`:""}）</button>`);}
+    A.push(`<button class="ghost" type="button" data-act="loan" data-s="${s}" ${state.stats.treasury>=60?dis:"disabled"}>🏦 借錢給${tagName(o)}（60 億，8 季後還 75）</button>`);
+    if(!sameFac(o,me))A.push(`<button class="ghost" type="button" data-act="esanc" data-s="${s}" ${state.pp>=15?dis:"disabled"}>⛔ 經濟制裁（15 點）</button>`);
+    if(!sameFac(o,me)&&fronts(me,o).length)A.push(`<button class="ghost" type="button" data-act="provoke" data-s="${s}" ${state.pp>=10?dis:"disabled"}>🔥 邊境挑釁（10 點）</button>`);
     if(!sameFac(o,me))A.push(`<button class="ghost" type="button" data-act="spy" data-s="${s}" ${state.pp>=20?dis:"disabled"}>情報行動（20 點）</button>`);
     if(fronts(me,o).length&&!fac&&!sameFac(o,me))A.push(`<button class="ghost" type="button" data-act="demand" data-s="${s}" ${demandOk(o)?"":"disabled"}>最後通牒：要求併入（30 點）</button>`);
     if(true){A.push(`<button class="ghost" type="button" data-act="cb" data-s="${s}" ${state.pp<25||cs==="making"||cs==="ready"?"disabled":dis}>製造戰爭藉口（25 點・2 季）</button>`);
