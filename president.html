@@ -1342,6 +1342,8 @@ function hsAnswer(yes){const c=state.pending,W=state.W,me=W.me,o=c.from,hs=state
 function hsInbox(){const hs=state.hs;if(!hs||state.pending||state.over)return;const ib=hs.inbox[hs.cur];if(!ib||!ib.length)return;const c=ib.shift();
   const W=state.W;
   if(c.k==="gift")state.stats.treasury+=c.amt||0;
+  if(c.k==="armsPaid"){if(c.ok)state.stats.treasury+=c.amt||0;state.pending={kind:"msg",kicker:"父子對戰・軍火",stamp:c.ok?"成交":"拒絕",title:c.ok?`${c.name} 買了你的軍火！`:`${c.name} 不買你的軍火`,text:c.ok?`收到 ${c.amt} 億，已經存進國庫。`:"價格可能太高了，下次便宜一點？"};return;}
+  if(c.k==="arms"){if(alive(c.from))state.pending={kind:"hsarms",...c};return;}
   if(c.k==="reply"&&c.ok){W.pact=W.pact||{};W.trade=W.trade||{};if(c.what==="pact")W.pact[c.from]=state.turn+20;else if(c.what==="trade")W.trade[c.from]=1;else if(c.what==="peace"){W.pact[c.from]=state.turn+8;delete (W.target||{})[c.from];}W.rel[c.from]=clamp((W.rel[c.from]||0)+20,-100,100);}
   if(c.k==="spyx"&&c.ok){if(c.eff==="sab")W.extra=Math.max(0,(W.extra||0)-3);else if(c.eff==="kill"){state.gen=["shi"];W.org=Math.max(10,(W.org||100)-30);}}
   if(c.k==="gift")state.pending={kind:"msg",kicker:"父子對戰",stamp:"禮物",title:`${c.name} 送你 50 億！`,text:`${tagName(c.from)}把 50 億匯進我國國庫。記得道謝喔！`};
@@ -1804,8 +1806,9 @@ async function peerSendState(){if(!NET.conn||!NET.conn.open||!state)return false
 /* ---- 軍火買賣（售價可調） ---- */
 function armBudget(o){return 30+base(o)[0]*4+(inWarAny(o)?60:0)+((state.W.rel[o]||0)>40?20:0);}
 function armChance(o,price){const r=state.W.rel[o]||0;return clamp(1.15-price/armBudget(o)*.65+r/250,.03,.97);}
-function armBuyers(){const me=state.W.me;return aiTags().filter(t=>!isHum(t)&&!atWar(me,t)).sort((a,b)=>(inWarAny(b)?1:0)-(inWarAny(a)?1:0)||(state.W.rel[b]||0)-(state.W.rel[a]||0));}
-function armSell(){const p=state.pending,W=state.W,o=p.buyer,price=p.price;if(!o||state.pp<10)return;state.armTry=state.armTry||{};const k=state.turn+"";state.armTry[k]=(state.armTry[k]||0)+1;
+function armBuyers(){const me=state.W.me;return aiTags().filter(t=>!atWar(me,t)).sort((a,b)=>(isHum(b)?1:0)-(isHum(a)?1:0)||(inWarAny(b)?1:0)-(inWarAny(a)?1:0)||(state.W.rel[b]||0)-(state.W.rel[a]||0));}
+function armSell(){const p=state.pending,W=state.W,o=p.buyer,price=p.price;if(!o||state.pp<10)return;
+  if(isHum(o)){const hs=state.hs,oi=hsIdx(o);state.pp-=10;hs.inbox[oi].push({k:"arms",from:W.me,name:hs.names[hs.cur],price,divs:Math.max(1,Math.round(price/25))});state.cd.armsale=state.turn+3;state.pending=null;log(`向${tagName(o)}報價出售軍火 ${price} 億`);toast(`📨 已向 ${hs.names[oi]} 報價 ${price} 億，等他決定`);save();render();return;}state.armTry=state.armTry||{};const k=state.turn+"";state.armTry[k]=(state.armTry[k]||0)+1;
   state.pp-=10;const ok=rng(1501+hashS(o)+price+state.armTry[k]*7)<armChance(o,price);
   if(ok){state.stats.treasury+=price;W.dv[o]=divs(o)+price/25;W.rel[o]=clamp((W.rel[o]||0)+8,-100,100);const foe=inWarAny(o);if(foe&&foe!==W.me)W.rel[foe]=clamp((W.rel[foe]||0)-10,-100,100);
     applyFx({tension:2,prestige:-1});state.cd.armsale=state.turn+3;state.pending=null;log(`以 ${price} 億把軍火賣給${tagName(o)}`);news(`${tagName(W.me)}賣軍火給${tagName(o)}`);toast(`💰 成交！收入 ${price} 億`);try{sfx("capture");}catch(_){}}
@@ -2344,7 +2347,7 @@ function renderSel(){const W=state.W,me=W.me,s=ui.ws||me,o=W.own[s],g=GBY[s],el=
     if(!mf&&!fac)A.push(`<button class="ghost" type="button" data-act="found" data-s="${s}" ${state.pp>=30?dis:"disabled"}>成立我國陣營（30 點）</button>`);
     A.push(`<button class="ghost" type="button" data-act="aid" data-s="${s}" ${state.stats.treasury>=40?dis:"disabled"}>軍事援助（40 億）</button>`);
     {const vc=(W.visCd||{})[o]||0;A.push(`<button class="ghost" type="button" data-act="statevisit" data-s="${s}" ${state.pp<10||vc>state.turn?"disabled":dis}>🛬 國事訪問（10 點${vc>state.turn?`・${vc-state.turn} 季後`:""}）</button>`);}
-    if(!isHum(o))A.push(`<button class="ghost" type="button" data-act="armsale" data-s="${s}" ${state.pp>=10&&(state.cd.armsale||0)<=state.turn?dis:"disabled"}>💼 賣軍火給${tagName(o)}（自訂售價）</button>`);
+    A.push(`<button class="ghost" type="button" data-act="armsale" data-s="${s}" ${state.pp>=10&&(state.cd.armsale||0)<=state.turn?dis:"disabled"}>💼 賣軍火給${tagName(o)}（自訂售價）</button>`);
     A.push(`<button class="ghost" type="button" data-act="loan" data-s="${s}" ${state.stats.treasury>=60?dis:"disabled"}>🏦 借錢給${tagName(o)}（60 億，8 季後還 75）</button>`);
     if(!sameFac(o,me))A.push(`<button class="ghost" type="button" data-act="esanc" data-s="${s}" ${state.pp>=15?dis:"disabled"}>⛔ 經濟制裁（15 點）</button>`);
     if(!sameFac(o,me)&&fronts(me,o).length)A.push(`<button class="ghost" type="button" data-act="provoke" data-s="${s}" ${state.pp>=10?dis:"disabled"}>🔥 邊境挑釁（10 點）</button>`);
@@ -2390,16 +2393,23 @@ function renderModal(){const v=$("#veil");const p=state.pending;v.classList.togg
     v.innerHTML=`<div class="dispatch" role="status" style="width:min(460px,100%)"><div class="kicker"><span>⚡ 同時行動・房間 ${state.net.room}</span><span>${dateStr()}</span></div><h2 style="font-size:1.2rem">✅ 你已準備好！${oth?"對方也好了，結算中…":`等待 ${esc(hs.names[oi])} 按「準備好了」…`}</h2><p style="font-size:.85rem;margin:0 0 8px">兩人都準備好，這一季就會一起結算。</p><button class="pbtn" type="button" id="resync">🔄 等太久？重新同步</button></div>`;$("#resync").onclick=netResync;}
   else if(p.kind==="wait"){const hs=state.hs,o=hs.tags[state.net.turnOf];
     v.innerHTML=`<div class="dispatch" role="status" style="width:min(460px,100%)"><div class="kicker"><span>🌐 線上對戰・房間 ${state.net.room}</span><span>${dateStr()}</span></div><h2 style="font-size:1.2rem">⏳ 等待 ${esc(hs.names[state.net.turnOf])}（${tagName(o)}）下指令…</h2><p style="font-size:.85rem;margin:0 0 8px">你可以先看看地圖和各分頁。對方按「結束本季」後，這裡會自動換你。</p><button class="pbtn" type="button" id="resync">🔄 等太久？按這裡重新同步</button></div>`;$("#resync").onclick=netResync;}
-  else if(p.kind==="armsale"){const L=armBuyers(),o=p.buyer,ch=Math.round(armChance(o,p.price)*100),foe=inWarAny(o);
+  else if(p.kind==="hsarms"){const ok=state.stats.treasury>=p.price;
+    v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>父子對戰・軍火交易</span><span>${dateStr()}</span></div><span class="stamp">報價</span>
+     <h2>${esc(p.name)}（${tagName(p.from)}）想賣你軍火</h2><p>報價 <b style="font-size:1.3em">${p.price} 億</b>，買了可以多 <b>${p.divs} 個師</b>，軍力也會上升。你的國庫目前 ${Math.round(state.stats.treasury)} 億。</p>
+     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pbtn" type="button" id="haY" ${ok?"":"disabled"}>💰 買了（${p.price} 億）</button><button class="pbtn" type="button" id="haN" style="background:#6b5b3e">不買</button></div>${ok?"":`<p style="color:#b0332a;margin:8px 0 0">錢不夠，只能拒絕。</p>`}</div>`;
+    const done=yes=>{const W=state.W,hs=state.hs,oi=hsIdx(p.from);state.pending=null;if(yes){state.stats.treasury-=p.price;W.extra=(W.extra||0)+p.divs;applyFx({military:Math.round(p.price/20)});log(`向${tagName(p.from)}買軍火 ${p.price} 億，多了 ${p.divs} 個師`);}else log(`拒絕${tagName(p.from)}的軍火報價`);
+      hs.inbox[oi].push({k:"armsPaid",from:W.me,name:hs.names[hs.cur],ok:yes,amt:p.price});save();render();};
+    $("#haY").onclick=()=>done(true);$("#haN").onclick=()=>done(false);}
+  else if(p.kind==="armsale"){const L=armBuyers(),o=p.buyer,hum=isHum(o),ch=hum?0:Math.round(armChance(o,p.price)*100),foe=inWarAny(o);
     v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>國防部・軍火出口</span><span>每次談判 10 點</span></div><span class="stamp">議價</span><h2>💼 出口軍火</h2>
-     <p style="margin:0 0 6px">買家：<select id="arBuyer" style="font-size:1rem;padding:4px">${L.map(t=>`<option value="${t}" ${t===o?"selected":""}>${tagName(t)}${inWarAny(t)?"（戰爭中）":""}</option>`).join("")}</select></p>
+     <p style="margin:0 0 6px">買家：<select id="arBuyer" style="font-size:1rem;padding:4px">${L.map(t=>`<option value="${t}" ${t===o?"selected":""}>${isHum(t)?"👤 ":""}${tagName(t)}${isHum(t)?`（玩家 ${esc(state.hs.names[hsIdx(t)])}）`:inWarAny(t)?"（戰爭中）":""}</option>`).join("")}</select></p>
      <p style="font-size:.85rem;margin:0 0 8px">${foe&&foe!==state.W.me?`⚠ ${tagName(o)}正在和${tagName(foe)}打仗，願意出高價，但${tagName(foe)}會不高興。`:"這個國家沒在打仗，出價會比較保守。"}　預算約 ${armBudget(o)} 億</p>
      <label style="display:block;font-weight:700">售價：<span id="arP" style="font-size:1.3rem;color:#8a5a00">${p.price}</span> 億</label>
      <input id="arR" type="range" min="20" max="300" step="10" value="${p.price}" style="width:100%">
-     <div class="mrow" style="margin:6px 0"><span>對方會買的機會</span><div class="bar"><i id="arB" style="width:${ch}%;background:${ch>=60?"var(--good)":ch>=30?"var(--warn)":"var(--seal)"}"></i></div><span class="num" id="arC">${ch}%</span></div>
+     ${hum?`<p style="margin:6px 0;font-weight:700">👤 對方是玩家，會在他的回合看到你的報價，由他決定買不買。成交的話他會多 ${Math.max(1,Math.round(p.price/25))} 個師。</p>`:""}<div class="mrow" style="margin:6px 0;${hum?"display:none":""}"><span>對方會買的機會</span><div class="bar"><i id="arB" style="width:${ch}%;background:${ch>=60?"var(--good)":ch>=30?"var(--warn)":"var(--seal)"}"></i></div><span class="num" id="arC">${ch}%</span></div>
      ${p.msg?`<p style="color:#b0332a;font-weight:700;margin:4px 0">${p.msg}</p>`:""}
      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="pbtn" type="button" id="arGo" ${state.pp<10?"disabled":""}>🤝 開價成交</button><button class="pbtn" type="button" id="cancel">取消</button></div></div>`;
-    const upd=()=>{p.price=+$("#arR").value;const c=Math.round(armChance(p.buyer,p.price)*100);$("#arP").textContent=p.price;$("#arC").textContent=c+"%";const b=$("#arB");b.style.width=c+"%";b.style.background=c>=60?"var(--good)":c>=30?"var(--warn)":"var(--seal)";};
+    const upd=()=>{p.price=+$("#arR").value;if(hum){$("#arP").textContent=p.price;return;}const c=Math.round(armChance(p.buyer,p.price)*100);$("#arP").textContent=p.price;$("#arC").textContent=c+"%";const b=$("#arB");b.style.width=c+"%";b.style.background=c>=60?"var(--good)":c>=30?"var(--warn)":"var(--seal)";};
     $("#arR").oninput=upd;$("#arBuyer").onchange=()=>{p.buyer=$("#arBuyer").value;p.msg="";render();};$("#arGo").onclick=armSell;$("#cancel").onclick=()=>{state.pending=null;render();};}
   else if(p.kind==="paper"){const L=state.papers||[],i=clamp(p.i||0,0,Math.max(0,L.length-1)),P=L[i];
     v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true" style="width:min(640px,100%);background:#efe6cf">${P?paperHtml(P):"<p>沒有報紙</p>"}
