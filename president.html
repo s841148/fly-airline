@@ -1720,6 +1720,8 @@ async function peerData(d){if(!d||!d.t)return;const c=NET.conn;
   else if(d.t==="ack")NET.acked=Math.max(NET.acked||0,d.ver||0);
   else if(d.t==="ready"&&state&&state.net&&state.net.sim&&netSeat()===0){if((d.bv||0)===(state.net.ver||0)&&!NET.guestReady){NET.guestReady=d.z;try{c.send({t:"rack",bv:d.bv});}catch(_){}toast("✅ 對方已準備好");render();if(NET.hostReady||(state.pending&&state.pending.kind==="wait2"))simResolve();}}
   else if(d.t==="rack")NET.racked=true;
+  else if(d.t==="unready"&&state&&state.net&&netSeat()===0&&!NET.resolving&&(d.bv||0)===(state.net.ver||0)){if(NET.guestReady){NET.guestReady=null;toast(`↩ ${state.hs.names[1]} 取消了準備`);render();}}
+  else if(d.t==="hunready"&&state&&state.net&&(d.bv||0)===(state.net.ver||0)){NET.otherReady=false;toast(`↩ ${state.hs.names[0]} 取消了準備`);}
   else if(d.t==="chat"){chatRecv(d);}
   else if(d.t==="hrdy"&&state&&state.net&&(d.bv||0)===(state.net.ver||0)){NET.otherReady=true;toast(`✅ ${state.hs.names[0]} 已準備好`);}}
 async function peerStart(room,seat){try{await loadMQTT();}catch(_){toast("⚠ 連線元件載入失敗，請檢查網路");return false;}
@@ -1753,6 +1755,10 @@ function simMergeW(H,G,B){const skip=new Set(PWK),J=x=>JSON.stringify(x);
 async function simReady(){const seat=netSeat();state.net.ready=true;state.pending={kind:"wait2"};save();render();
   if(seat===1){const copy=JSON.parse(JSON.stringify(state));copy.pending=null;delete copy.net.shared;NET.readyMsg={t:"ready",z:await netZip(JSON.stringify(copy)),bv:state.net.ver||0};NET.racked=false;simSendReady();}
   else{NET.hostReady=true;try{NET.conn&&NET.conn.send({t:"hrdy",bv:state.net.ver||0});}catch(_){}if(NET.guestReady)simResolve();}}
+function simUnready(){if(!state||!state.pending||state.pending.kind!=="wait2"||NET.resolving)return;const seat=netSeat();state.net.ready=false;state.pending=null;
+  if(seat===1){NET.readyMsg=null;NET.racked=false;try{NET.conn&&NET.conn.send({t:"unready",bv:state.net.ver||0});NET.conn&&NET.conn.clearReady&&NET.conn.clearReady();}catch(_){}}
+  else{NET.hostReady=false;try{NET.conn&&NET.conn.send({t:"hunready",bv:state.net.ver||0});}catch(_){}}
+  toast("↩ 已取消準備，可以繼續下指令");save();render();}
 function simSendReady(){if(NET.readyMsg&&NET.conn&&NET.conn.open)try{NET.conn.send(NET.readyMsg);}catch(_){}}
 async function simResolve(){if(NET.resolving)return;NET.resolving=true;try{
   const G=JSON.parse(await netUnzip(NET.guestReady)),B=JSON.parse(NET.base||lsGet("lanzhou-base-"+state.net.room)||"null");if(!B){toast("⚠ 找不到這一季的起點資料，請重新同步");return;}
@@ -2390,7 +2396,7 @@ function renderModal(){const v=$("#veil");const p=state.pending;v.classList.togg
      ${easy()?"":'<p style="font-size:.75rem;color:#7a6a45;margin:12px 0 0">標準難度只顯示影響方向，不顯示數字。</p>'}</div>`;
     v.querySelectorAll("[data-ch]").forEach(b=>b.onclick=()=>choose(+b.dataset.ch));v.querySelector("button").focus();}
   else if(p.kind==="wait2"){const hs=state.hs,oi=1-netSeat(),oth=netSeat()===0&&NET.guestReady;
-    v.innerHTML=`<div class="dispatch" role="status" style="width:min(460px,100%)"><div class="kicker"><span>⚡ 同時行動・房間 ${state.net.room}</span><span>${dateStr()}</span></div><h2 style="font-size:1.2rem">✅ 你已準備好！${oth?"對方也好了，結算中…":`等待 ${esc(hs.names[oi])} 按「準備好了」…`}</h2><p style="font-size:.85rem;margin:0 0 8px">兩人都準備好，這一季就會一起結算。</p><button class="pbtn" type="button" id="resync">🔄 等太久？重新同步</button></div>`;$("#resync").onclick=netResync;}
+    v.innerHTML=`<div class="dispatch" role="status" style="width:min(460px,100%)"><div class="kicker"><span>⚡ 同時行動・房間 ${state.net.room}</span><span>${dateStr()}</span></div><h2 style="font-size:1.2rem">✅ 你已準備好！${oth?"對方也好了，結算中…":`等待 ${esc(hs.names[oi])} 按「準備好了」…`}</h2><p style="font-size:.85rem;margin:0 0 8px">兩人都準備好，這一季就會一起結算。</p><div style="display:flex;gap:8px;flex-wrap:wrap">${oth?"":`<button class="pbtn" type="button" id="unrdy">↩ 取消準備</button>`}<button class="pbtn" type="button" id="resync">🔄 等太久？重新同步</button></div></div>`;$("#resync").onclick=netResync;{const u=$("#unrdy");if(u)u.onclick=simUnready;}}
   else if(p.kind==="wait"){const hs=state.hs,o=hs.tags[state.net.turnOf];
     v.innerHTML=`<div class="dispatch" role="status" style="width:min(460px,100%)"><div class="kicker"><span>🌐 線上對戰・房間 ${state.net.room}</span><span>${dateStr()}</span></div><h2 style="font-size:1.2rem">⏳ 等待 ${esc(hs.names[state.net.turnOf])}（${tagName(o)}）下指令…</h2><p style="font-size:.85rem;margin:0 0 8px">你可以先看看地圖和各分頁。對方按「結束本季」後，這裡會自動換你。</p><button class="pbtn" type="button" id="resync">🔄 等太久？按這裡重新同步</button></div>`;$("#resync").onclick=netResync;}
   else if(p.kind==="hsarms"){const ok=state.stats.treasury>=p.price;
