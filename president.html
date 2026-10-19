@@ -1,6 +1,4 @@
-<!doctype html>
-<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
-<title>瀾洲總統</title>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><title>瀾洲總統</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -384,6 +382,7 @@ body{margin:0}
 .score-tbl{width:100%;border-collapse:collapse;font-size:.9rem;margin:6px 0 14px}
 .score-tbl td{padding:4px 0;border-bottom:1px dotted #c9bfa3}
 .score-tbl td:last-child{text-align:right;font-family:var(--f-num)}
+.facts{margin:.4rem 0;font-size:.85rem}.facts summary{cursor:pointer;color:var(--brass)}.facts p{margin:.3rem 0 0}
 </style>
 
 <header class="top">
@@ -719,6 +718,107 @@ const EVENTS=[
  {id:"depr",w:1,cat:"經濟",n:"大蕭條餘波",d:"經濟大蕭條的影響還沒結束，失業的人排隊領救濟。",cond:s=>s.turn<=8,ch:[{n:"推出大型公共工程",fx:{treasury:-30,econ:4,approval:3}},{n:"緊縮財政",fx:{econ:-2,treasury:20}}]},
  {id:"peace_offer",cat:"外交",special:1,n:"{OFFER}提議和談",d:"戰事膠著，{OFFER}透過第三國傳話，希望停戰談判。",ch:[{n:"接受和談",act:"treaty",hint:"結束戰爭",fx:{}},{n:"拒絕，繼續作戰",fx:{approval:-1,stability:-1}}]}
 ];
+
+// ===== 真實國家事件 =====
+const REAL_EV=[
+ {id:"r_us_fire",who:["840"],cat:"災害",n:"加州森林大火",d:"乾燥的聖塔安娜風讓野火一路燒進洛杉磯郊區。",ch:[{n:"派國民兵與空中消防",fx:{treasury:-20,approval:4}},{n:"推動防火林帶長期計畫",fx:{treasury:-10,stability:3}}]},
+ {id:"r_us_shut",who:["840"],cat:"政治",n:"聯邦政府關門危機",d:"國會兩黨吵不出預算，國家公園和部分公家機關可能停擺。",ch:[{n:"讓步，先通過臨時預算",fx:{approval:-2,stability:3}},{n:"堅持到底",fx:{approval:-5,econ:-2,pp:10}}]},
+ {id:"r_ca_fire",who:["124"],cat:"災害",n:"加拿大北方野火",d:"亞伯達省野火燒了好幾個月，濃煙連紐約都看得到。",ch:[{n:"全國動員救火",fx:{treasury:-20,approval:4}},{n:"請美國和澳洲支援消防員",fx:{prestige:2,treasury:-8}}]},
+ {id:"r_mx_cartel",who:["484"],cat:"國安",n:"販毒集團火拼",d:"北部邊境城市爆發槍戰，美國要求墨西哥加強掃毒。",ch:[{n:"派軍隊進駐",fx:{military:2,stability:3,approval:-2}},{n:"改善年輕人就業機會",fx:{treasury:-20,stability:2,approval:3}}]},
+ {id:"r_br_amazon",who:["076"],cat:"環境",n:"亞馬遜雨林砍伐爭議",d:"衛星照片顯示雨林大面積消失，歐洲威脅不買巴西牛肉和黃豆。",ch:[{n:"嚴格保護雨林",fx:{prestige:5,econ:-2}},{n:"經濟優先，繼續開發",fx:{econ:3,prestige:-5,tension:2}}]},
+ {id:"r_br_carn",who:["076"],cat:"文化",n:"里約嘉年華",d:"全世界觀光客湧進里約，森巴舞校準備了一整年。",ch:[{n:"大力宣傳觀光",fx:{treasury:15,approval:3}},{n:"加派警力維持治安",fx:{stability:3,treasury:-5}}]},
+ {id:"r_ar_infl",who:["032"],cat:"經濟",n:"披索崩跌、通膨失控",d:"物價一年漲了一倍，民眾搶著換美元。",ch:[{n:"大砍政府支出",fx:{econ:2,approval:-6,treasury:15}},{n:"印鈔補貼民眾",fx:{approval:4,econ:-4}}]},
+ {id:"r_cl_quake",who:["152"],cat:"災害",n:"智利強震",d:"智利位在環太平洋火山帶，規模 8 地震後海嘯警報響起。",ch:[{n:"啟動海嘯撤離",fx:{treasury:-15,approval:4,stability:2}},{n:"相信建築耐震，照常運作",fx:{econ:1,approval:-3}}]},
+ {id:"r_uk_brexit",who:["826"],cat:"外交",n:"脫歐後的貿易難題",d:"北愛爾蘭邊境檢查和歐盟關稅讓商人頭痛不已。",ch:[{n:"和歐盟重新談判",fx:{econ:2,prestige:-1}},{n:"轉向和美國、亞洲簽約",fx:{prestige:3,econ:-1}}]},
+ {id:"r_uk_royal",who:["826"],cat:"文化",n:"王室加冕大典",d:"西敏寺將舉行加冕典禮，全球數億人收看轉播。",ch:[{n:"盛大舉辦",fx:{treasury:-15,prestige:5,approval:3}},{n:"簡樸舉辦，省錢",fx:{approval:1,treasury:-3}}]},
+ {id:"r_fr_strike",who:["250"],cat:"政治",n:"全國大罷工",d:"退休年齡改革引爆抗議，巴黎地鐵停駛、垃圾堆滿街頭。",ch:[{n:"堅持改革",fx:{econ:3,approval:-6,stability:-3}},{n:"撤回改革",fx:{approval:4,treasury:-15}}]},
+ {id:"r_fr_tdf",who:["250"],cat:"文化",n:"環法自行車賽",d:"世界最有名的自行車賽繞行法國，沿途小鎮擠滿觀眾。",ch:[{n:"推廣自行車觀光",fx:{treasury:8,approval:2}},{n:"順便宣傳葡萄酒和起司",fx:{econ:2,prestige:1}}]},
+ {id:"r_de_energy",who:["276"],cat:"經濟",n:"能源轉型陣痛",d:"關閉核電廠後電價飆高，工廠抱怨競爭力下降。",ch:[{n:"加速蓋風電和太陽能",fx:{treasury:-25,econ:2,prestige:2}},{n:"延長燃煤電廠",fx:{econ:2,prestige:-3}}]},
+ {id:"r_de_car",who:["276"],cat:"經濟",n:"汽車業轉型電動車",d:"福斯、賓士、寶馬面對中國電動車的強力競爭。",ch:[{n:"補助電池工廠",fx:{treasury:-20,econ:4}},{n:"保護傳統引擎產業",fx:{approval:2,econ:-2}}]},
+ {id:"r_it_venice",who:["380"],cat:"災害",n:"威尼斯水患",d:"「高水位」淹進聖馬可廣場，古蹟泡在海水裡。",ch:[{n:"加速完成摩西防潮閘門",fx:{treasury:-20,prestige:3}},{n:"收觀光客入城費",fx:{treasury:10,approval:-2}}]},
+ {id:"r_it_etna",who:["380"],cat:"災害",n:"埃特納火山噴發",d:"西西里島的埃特納火山噴出岩漿，卡塔尼亞機場關閉。",ch:[{n:"撤離山腳村莊",fx:{treasury:-10,approval:3}},{n:"監測就好",fx:{approval:-2}}]},
+ {id:"r_es_heat",who:["724"],cat:"災害",n:"伊比利熱浪",d:"氣溫飆破 45 度，農作物乾枯，觀光客中暑。",ch:[{n:"開放冷氣避暑中心",fx:{treasury:-10,approval:3}},{n:"推動午休與節水",fx:{econ:-1,stability:2}}]},
+ {id:"r_nl_dike",who:["528"],cat:"環境",n:"海平面上升",d:"荷蘭有四分之一國土低於海平面，堤防工程師說要再加高。",ch:[{n:"投資三角洲計畫",fx:{treasury:-25,stability:4,prestige:2}},{n:"先觀察幾年",fx:{stability:-2}}]},
+ {id:"r_ru_wfire",who:["643"],cat:"災害",n:"西伯利亞野火與永凍土融化",d:"西伯利亞夏天變熱，永凍土下的甲烷冒出來，森林大火延燒。",ch:[{n:"空投消防隊",fx:{treasury:-15,approval:2}},{n:"偏遠地區就讓它燒",fx:{prestige:-3}}]},
+ {id:"r_ru_gas",who:["643"],cat:"經濟",n:"天然氣管線談判",d:"歐洲國家想減少依賴俄羅斯天然氣，中國願意買但要殺價。",ch:[{n:"降價賣給中國",fx:{econ:2,treasury:10,prestige:-1}},{n:"用天然氣施壓歐洲",fx:{treasury:15,tension:4}}]},
+ {id:"r_ua_grain",who:["804"],cat:"經濟",n:"世界糧倉出口",d:"烏克蘭的黑土種出大量小麥和玉米，非洲和中東等著進口。",ch:[{n:"開闢黑海糧食走廊",fx:{treasury:15,prestige:4,tension:2}},{n:"改走陸路經歐洲",fx:{treasury:6,econ:1}}]},
+ {id:"r_pl_ref",who:["616"],cat:"外交",n:"鄰國難民湧入",d:"幾百萬難民從東邊邊境逃進波蘭。",ch:[{n:"開門收容",fx:{treasury:-20,prestige:6,approval:2}},{n:"只收婦女兒童",fx:{prestige:1,approval:1}}]},
+ {id:"r_no_oil",who:["578"],cat:"經濟",n:"石油基金",d:"北海油田賺的錢存進主權基金，已經是全世界最大的國家基金。",ch:[{n:"繼續存起來給下一代",fx:{stability:4,econ:2}},{n:"拿一部分出來減稅",fx:{approval:5,treasury:20}}]},
+ {id:"r_is_volc",who:["352"],cat:"災害",n:"雷克雅內斯半島火山",d:"格林達維克小鎮旁的地面裂開，岩漿湧出。",ch:[{n:"全鎮撤離、築熔岩牆",fx:{treasury:-10,approval:4}},{n:"把火山變成觀光景點",fx:{treasury:8,approval:-1}}]},
+ {id:"r_gr_debt",who:["300"],cat:"經濟",n:"債務危機",d:"國債太高，歐盟要求刪減退休金才肯借錢。",ch:[{n:"接受撙節方案",fx:{treasury:30,approval:-7}},{n:"拒絕，舉行公投",fx:{approval:4,econ:-4,stability:-2}}]},
+ {id:"r_tr_quake",who:["792"],cat:"災害",n:"土耳其東南部大地震",d:"規模 7.8 強震，許多建商偷工減料的大樓倒塌。",ch:[{n:"重建並嚴查違法建商",fx:{treasury:-30,approval:5,stability:2}},{n:"盡快重建，不追究",fx:{treasury:-20,approval:-4}}]},
+ {id:"r_tr_strait",who:["792"],cat:"外交",n:"博斯普魯斯海峽通行",d:"黑海國家的軍艦都要經過伊斯坦堡，各大國都來施壓。",ch:[{n:"依公約限制軍艦通行",fx:{prestige:4,tension:-2}},{n:"收取高額通行費",fx:{treasury:20,tension:3}}]},
+ {id:"r_eg_nile",who:["818"],cat:"外交",n:"尼羅河水壩爭端",d:"上游衣索比亞蓋了超大水壩，埃及擔心尼羅河水變少。",ch:[{n:"國際調解",fx:{prestige:3,tension:-2}},{n:"強硬表態",fx:{approval:3,tension:5}}]},
+ {id:"r_eg_suez",who:["818"],cat:"經濟",n:"巨輪卡住蘇伊士運河",d:"一艘四百公尺長的貨櫃輪擱淺，全球貿易塞車一週。",ch:[{n:"全力挖沙救船",fx:{treasury:-10,prestige:3}},{n:"拓寬運河",fx:{treasury:-25,econ:3}}]},
+ {id:"r_ng_oil",who:["566"],cat:"經濟",n:"尼日河三角洲油管被偷油",d:"盜油集團在油管打洞，原油汙染漁村。",ch:[{n:"派軍保護油管",fx:{military:1,treasury:10,approval:-2}},{n:"清理汙染、補償漁民",fx:{treasury:-15,approval:4}}]},
+ {id:"r_ng_film",who:["566"],cat:"文化",n:"奈萊塢電影爆紅",d:"奈及利亞電影產量世界第二，非洲各地都在看。",ch:[{n:"扶植電影產業",fx:{treasury:-8,prestige:4,econ:1}},{n:"課娛樂稅",fx:{treasury:8}}]},
+ {id:"r_za_power",who:["710"],cat:"經濟",n:"輪流停電",d:"國營電力公司老舊，每天輪流停電好幾小時。",ch:[{n:"開放民間太陽能",fx:{econ:3,treasury:-10}},{n:"撥款修舊電廠",fx:{treasury:-25,approval:2}}]},
+ {id:"r_ke_run",who:["404"],cat:"文化",n:"長跑選手破世界紀錄",d:"肯亞選手在馬拉松跑出不可思議的成績。",ch:[{n:"蓋高原訓練中心",fx:{treasury:-8,prestige:4}},{n:"全國放假慶祝",fx:{approval:4,econ:-1}}]},
+ {id:"r_et_dam",who:["231"],cat:"經濟",n:"復興大壩完工",d:"非洲最大的水力發電廠開始發電。",ch:[{n:"賣電給鄰國",fx:{treasury:15,tension:2}},{n:"先供應國內鄉村",fx:{approval:5,econ:2}}]},
+ {id:"r_sa_vis",who:["682"],cat:"經濟",n:"2030 願景",d:"想擺脫只靠石油，要蓋未來城市、發展觀光。",ch:[{n:"砸大錢蓋新城",fx:{treasury:-30,econ:4,prestige:3}},{n:"穩穩來，先發展觀光",fx:{econ:2,treasury:-8}}]},
+ {id:"r_sa_opec",who:["682"],cat:"經濟",n:"OPEC 減產會議",d:"石油輸出國組織要決定減產還是增產。",ch:[{n:"減產撐油價",fx:{treasury:25,tension:2,prestige:-1}},{n:"增產搶市占",fx:{econ:3,treasury:5}}]},
+ {id:"r_ir_sanc",who:["364"],cat:"外交",n:"核協議與制裁",d:"西方國家要求停止濃縮鈾，否則加重制裁。",ch:[{n:"重返談判",fx:{econ:3,prestige:2,tension:-3}},{n:"繼續濃縮鈾",fx:{tension:6,econ:-3,military:2}}]},
+ {id:"r_il_tech",who:["376"],cat:"經濟",n:"新創國度",d:"人均新創公司全球最多，國際大廠排隊來收購。",ch:[{n:"給新創減稅",fx:{econ:4,treasury:-10}},{n:"把技術用在國防",fx:{military:3}}]},
+ {id:"r_in_moon",who:["356"],cat:"科技",n:"月球南極登陸",d:"印度探測器成功降落月球南極，成為第一個做到的國家！",ch:[{n:"加碼太空計畫",fx:{treasury:-15,prestige:6}},{n:"全國慶祝",fx:{approval:5,prestige:3}}]},
+ {id:"r_in_cric",who:["356","586"],cat:"文化",n:"印巴板球大戰",d:"世界盃板球賽印度對巴基斯坦，十幾億人守在電視前。",ch:[{n:"總理到場觀戰",fx:{approval:4,tension:1}},{n:"呼籲運動家精神",fx:{prestige:2,tension:-2}}]},
+ {id:"r_pk_flood",who:["586"],cat:"災害",n:"印度河大洪水",d:"冰川融化加上季風，全國三分之一淹水。",ch:[{n:"向國際求援",fx:{treasury:15,prestige:-1,approval:2}},{n:"自力救濟",fx:{treasury:-25,approval:-2}}]},
+ {id:"r_bd_cyc",who:["050"],cat:"災害",n:"孟加拉灣氣旋",d:"恆河三角洲地勢低，熱帶氣旋帶來暴潮。",ch:[{n:"蓋避難塔",fx:{treasury:-15,stability:3}},{n:"種紅樹林擋浪",fx:{treasury:-8,prestige:2}}]},
+ {id:"r_cn_flood",who:["156"],cat:"災害",n:"長江汛期",d:"長江水位暴漲，三峽大壩開閘洩洪。",rep:1,ch:[{n:"解放軍上堤搶險",fx:{treasury:-15,approval:4}},{n:"疏散下游居民",fx:{treasury:-20,stability:3}}]},
+ {id:"r_cn_ny",who:["156","158","702","704"],cat:"文化",n:"農曆新年返鄉潮",d:"幾億人搭火車、飛機回家過年，交通爆量。",ch:[{n:"加開班次",fx:{treasury:-8,approval:4}},{n:"推動錯峰放假",fx:{econ:1,approval:-1}}]},
+ {id:"r_tw_tsmc",who:["158"],cat:"經濟",n:"晶片護國神山",d:"全世界最先進的晶片都在台灣製造，各國搶著要設廠。",ch:[{n:"根留台灣，最先進製程留在國內",fx:{econ:3,prestige:2}},{n:"到美日設廠換取友誼",fx:{prestige:4,tension:-2,econ:-1}}]},
+ {id:"r_tw_mazu",who:["158"],cat:"文化",n:"大甲媽祖遶境",d:"九天八夜、走三百多公里，百萬信眾跟著媽祖鑾轎。",ch:[{n:"總統參與起駕",fx:{approval:4}},{n:"加強交通管制",fx:{stability:2,treasury:-3}}]},
+ {id:"r_jp_quake",who:["392"],cat:"災害",n:"南海海槽地震警報",d:"氣象廳發出巨大地震注意報，太平洋沿岸可能有海嘯。",ch:[{n:"全國防災演練",fx:{treasury:-10,stability:4}},{n:"新幹線和核電緊急停機",fx:{econ:-2,stability:2,approval:2}}]},
+ {id:"r_jp_age",who:["392","410"],cat:"社會",n:"少子高齡化",d:"出生數創新低，鄉下學校一間間關門。",ch:[{n:"大幅發育兒津貼",fx:{treasury:-25,approval:4,stability:2}},{n:"開放外籍勞工",fx:{econ:3,approval:-2}}]},
+ {id:"r_jp_sakura",who:["392"],cat:"文化",n:"櫻花季觀光潮",d:"外國遊客擠爆京都，當地居民抱怨公車擠不上。",ch:[{n:"大賺觀光財",fx:{treasury:15,approval:-1}},{n:"觀光客分流、加收住宿稅",fx:{treasury:6,approval:2}}]},
+ {id:"r_kr_kpop",who:["410"],cat:"文化",n:"韓流席捲全球",d:"K-pop 團體登上美國告示牌冠軍，韓劇在串流平台爆紅。",ch:[{n:"國家支持文化出口",fx:{prestige:5,treasury:-5}},{n:"順勢推廣韓國觀光",fx:{treasury:10,econ:1}}]},
+ {id:"r_kp_missile",who:["410","392"],cat:"國安",n:"北韓試射飛彈",d:"飛彈飛越日本上空落入太平洋，警報聲響徹北海道。",cond:s=>!!alive("408"),ch:[{n:"和盟國聯合軍演",fx:{military:2,tension:3}},{n:"聯合國譴責",fx:{prestige:2}}]},
+ {id:"r_vn_mek",who:["704"],cat:"環境",n:"湄公河乾旱",d:"上游水壩攔水，三角洲鹽水倒灌，稻田枯萎。",ch:[{n:"與上游國家協商",fx:{prestige:2,tension:-1}},{n:"改種耐鹽作物",fx:{treasury:-10,econ:1}}]},
+ {id:"r_th_tour",who:["764"],cat:"文化",n:"潑水節",d:"泰國新年到處潑水祝福，觀光客也加入。",ch:[{n:"盛大宣傳",fx:{treasury:10,approval:3}},{n:"推行節水潑水",fx:{prestige:2}}]},
+ {id:"r_ph_typh",who:["608"],cat:"災害",n:"超級颱風",d:"每年約有 20 個颱風經過菲律賓，這次風速破紀錄。",rep:1,ch:[{n:"提前撤離沿海居民",fx:{treasury:-12,approval:4}},{n:"災後再救援",fx:{approval:-4,treasury:-8}}]},
+ {id:"r_id_cap",who:["360"],cat:"政治",n:"遷都努山塔拉",d:"雅加達每年下陷好幾公分，政府決定在婆羅洲蓋新首都。",ch:[{n:"全速推動遷都",fx:{treasury:-30,prestige:3,stability:2}},{n:"放慢腳步",fx:{treasury:-5,approval:1}}]},
+ {id:"r_id_volc",who:["360"],cat:"災害",n:"火山噴發",d:"印尼有 130 座活火山，這次爪哇的火山灰讓峇里島機場關閉。",ch:[{n:"撤離並發口罩",fx:{treasury:-10,approval:3}},{n:"火山灰當肥料，鼓勵復耕",fx:{econ:1}}]},
+ {id:"r_au_reef",who:["036"],cat:"環境",n:"大堡礁白化",d:"海水變熱，珊瑚大量白化，觀光業擔心。",ch:[{n:"減碳並撥款保育",fx:{treasury:-15,prestige:4}},{n:"繼續出口煤礦",fx:{treasury:15,prestige:-4}}]},
+ {id:"r_au_fire",who:["036"],cat:"災害",n:"叢林大火",d:"乾燥夏天讓叢林大火延燒，無尾熊和袋鼠受害。",ch:[{n:"動員軍隊救火",fx:{treasury:-20,approval:4}},{n:"成立野生動物救援基金",fx:{treasury:-10,prestige:3}}]},
+ {id:"r_nz_sheep",who:["554"],cat:"經濟",n:"牛羊打嗝稅",d:"紐西蘭的溫室氣體一半來自牛羊，政府考慮課稅。",ch:[{n:"開徵",fx:{prestige:4,approval:-4}},{n:"不課，改研究飼料",fx:{treasury:-8,approval:2}}]},
+ {id:"r_g_oil",cat:"經濟",n:"國際油價暴漲",d:"中東局勢緊張，油價一個月漲了三成。",ch:[{n:"凍漲油價，政府吸收",fx:{treasury:-20,approval:3}},{n:"反映成本",fx:{econ:-2,approval:-3}}]},
+ {id:"r_g_chip",cat:"經濟",n:"全球晶片短缺",d:"汽車廠因為缺晶片停工，遊戲機也買不到。",ch:[{n:"補助本國晶片廠",fx:{treasury:-20,econ:3}},{n:"跟晶片大國簽供貨協議",fx:{prestige:2,econ:1}}]},
+ {id:"r_g_cup",cat:"文化",n:"世界盃足球賽",d:"四年一次的世界盃開打，全國熬夜看球。",ch:[{n:"包場轉播",fx:{approval:4,treasury:-5}},{n:"申辦下一屆主辦權",fx:{treasury:-25,prestige:5}}]},
+ {id:"r_g_elnino",cat:"環境",n:"聖嬰現象",d:"太平洋海水變暖，有的地方大旱、有的地方大雨。",ch:[{n:"提前調度糧食",fx:{treasury:-10,stability:3}},{n:"順其自然",fx:{econ:-2}}]},
+];
+EVENTS.push(...REAL_EV);
+const FACTS={
+"840":["華盛頓","3.4 億","英語","美元","國土橫跨 6 個時區，有 50 個州。"],"124":["渥太華","4000 萬","英語、法語","加幣","海岸線世界最長，湖泊數量世界第一。"],
+"484":["墨西哥城","1.3 億","西班牙語","披索","巧克力、玉米、辣椒都起源於這裡。"],"076":["巴西利亞","2.1 億","葡萄牙語","雷亞爾","亞馬遜雨林有六成在巴西，足球拿過 5 次世界盃冠軍。"],
+"032":["布宜諾斯艾利斯","4600 萬","西班牙語","披索","探戈的故鄉，梅西的祖國。"],"152":["聖地牙哥","1900 萬","西班牙語","披索","南北長 4300 公里，卻平均只有 177 公里寬。"],
+"170":["波哥大","5200 萬","西班牙語","披索","世界前幾大咖啡產地。"],"604":["利馬","3400 萬","西班牙語","索爾","印加古城馬丘比丘就在安地斯山上。"],
+"862":["卡拉卡斯","2800 萬","西班牙語","玻利瓦","石油蘊藏量世界第一，也有世界最高的瀑布。"],"826":["倫敦","6800 萬","英語","英鎊","工業革命的發源地，曾是「日不落帝國」。"],
+"250":["巴黎","6800 萬","法語","歐元","全世界觀光客最多的國家。"],"276":["柏林","8400 萬","德語","歐元","高速公路很多路段沒有速限。"],
+"380":["羅馬","5900 萬","義大利語","歐元","披薩的故鄉，世界遺產數量名列前茅。"],"724":["馬德里","4800 萬","西班牙語","歐元","西班牙語是世界第二多人說的母語。"],
+"620":["里斯本","1000 萬","葡萄牙語","歐元","大航海時代先驅，達伽馬從這裡出發繞過非洲。"],"528":["阿姆斯特丹","1800 萬","荷蘭語","歐元","腳踏車比人還多，四分之一土地低於海平面。"],
+"756":["伯恩","900 萬","德、法、義、羅曼什語","瑞士法郎","永久中立國，以鐘錶和巧克力聞名。"],"616":["華沙","3700 萬","波蘭語","茲羅提","居禮夫人和蕭邦的故鄉。"],
+"804":["基輔","3700 萬","烏克蘭語","格里夫納","歐洲面積最大的國家之一，被稱為「歐洲糧倉」。"],"643":["莫斯科","1.4 億","俄語","盧布","面積世界最大，橫跨 11 個時區。"],
+"752":["斯德哥爾摩","1000 萬","瑞典語","克朗","IKEA 和諾貝爾獎的故鄉。"],"578":["奧斯陸","550 萬","挪威語","克朗","有壯觀的峽灣，還能看到極光。"],
+"246":["赫爾辛基","560 萬","芬蘭語","歐元","有十八萬座湖，三溫暖比汽車還多。"],"352":["雷克雅維克","40 萬","冰島語","克朗","冰與火之國，用地熱發電和取暖。"],
+"300":["雅典","1000 萬","希臘語","歐元","民主制度和奧運會的發源地。"],"792":["安卡拉","8500 萬","土耳其語","里拉","伊斯坦堡橫跨歐洲和亞洲兩大洲。"],
+"818":["開羅","1.1 億","阿拉伯語","埃及鎊","有四千多年歷史的金字塔，九成人口住在尼羅河邊。"],"566":["阿布加","2.2 億","英語","奈拉","非洲人口最多的國家。"],
+"710":["普利托利亞","6200 萬","11 種官方語言","蘭特","有三個首都，曼德拉的故鄉。"],"404":["奈洛比","5500 萬","斯瓦希里語、英語","先令","動物大遷徙和長跑冠軍之國。"],
+"231":["阿迪斯阿貝巴","1.2 億","阿姆哈拉語","比爾","咖啡的發源地，從沒被長期殖民過。"],"504":["拉巴特","3700 萬","阿拉伯語、柏柏語","迪拉姆","離歐洲只隔 14 公里的直布羅陀海峽。"],
+"012":["阿爾及爾","4500 萬","阿拉伯語","第納爾","非洲面積最大的國家，大部分是撒哈拉沙漠。"],"682":["利雅德","3600 萬","阿拉伯語","里亞爾","沒有一條長年流動的河，石油出口世界第一。"],
+"364":["德黑蘭","8900 萬","波斯語","里亞爾","古波斯帝國的所在，波斯地毯世界聞名。"],"368":["巴格達","4500 萬","阿拉伯語","第納爾","兩河流域，人類最早的文明之一。"],
+"376":["耶路撒冷（爭議）","1000 萬","希伯來語","謝克爾","耶路撒冷是三大宗教的聖地。"],"784":["阿布達比","1000 萬","阿拉伯語","迪拉姆","杜拜有世界最高的大樓哈里發塔。"],
+"586":["伊斯蘭馬巴德","2.4 億","烏爾都語、英語","盧比","世界第二高峰 K2 在這裡。"],"356":["新德里","14 億","印地語、英語等","盧比","人口世界第一，有 22 種官方語言。"],
+"050":["達卡","1.7 億","孟加拉語","塔卡","世界人口密度最高的大國之一。"],"156":["北京","14 億","中文","人民幣","萬里長城總長超過兩萬公里。"],
+"158":["台北","2300 萬","中文","新台幣","全世界最先進的晶片在這裡製造，玉山是東亞第一高峰。"],"392":["東京","1.2 億","日語","日圓","由 1 萬 4 千多個島組成，地震很多。"],
+"410":["首爾","5100 萬","韓語","韓元","世界網速最快的國家之一，韓流風靡全球。"],"408":["平壤","2600 萬","韓語","朝鮮圓","世界上最封閉的國家之一。"],
+"496":["烏蘭巴托","350 萬","蒙古語","圖格里克","成吉思汗的故鄉，人口密度世界最低。"],"704":["河內","1 億","越南語","越南盾","世界第二大咖啡出口國。"],
+"764":["曼谷","7000 萬","泰語","泰銖","東南亞唯一沒被殖民過的國家。"],"608":["馬尼拉","1.2 億","菲律賓語、英語","披索","由七千多個島嶼組成。"],
+"360":["雅加達","2.8 億","印尼語","盧比","世界最大的群島國家，有一萬七千多個島。"],"458":["吉隆坡","3400 萬","馬來語","令吉","雙子星塔曾是世界最高的大樓。"],
+"702":["新加坡","600 萬","英、華、馬來、淡米爾語","新加坡幣","一個城市就是一個國家。"],"036":["坎培拉","2700 萬","英語","澳幣","一整塊大陸就是一個國家，有袋鼠和無尾熊。"],
+"554":["威靈頓","520 萬","英語、毛利語","紐幣","羊比人多，全世界最早讓女性投票的國家。"],"104":["奈比多","5400 萬","緬甸語","緬元","有上千座佛塔。"],
+"144":["可倫坡（斯里賈亞瓦德納普拉科特）","2200 萬","僧伽羅語、泰米爾語","盧比","錫蘭紅茶的產地。"],"834":["多多馬","6500 萬","斯瓦希里語","先令","非洲最高峰吉力馬札羅山在這裡。"],
+"040":["維也納","900 萬","德語","歐元","莫札特的故鄉，音樂之都。"],"056":["布魯塞爾","1200 萬","荷、法、德語","歐元","歐盟總部所在地，鬆餅和巧克力有名。"],"208":["哥本哈根","600 萬","丹麥語","克朗","樂高積木的故鄉。"],
+"191":["札格瑞布","390 萬","克羅埃西亞語","歐元","領帶的發源地。"],"068":["蘇克雷","1200 萬","西班牙語等","玻利維亞諾","有世界最大的鹽沼烏尤尼。"],"218":["基多","1800 萬","西班牙語","美元","赤道經過這裡，加拉巴哥群島啟發了演化論。"]};
+function factsHtml(s){const r=ROOTOF(s),f=FACTS[r];if(!f)return"";return `<details class="facts"><summary>📖 國家百科：${GBY[r]?(GBY[r].cn||GBY[r].n):""}</summary><div class="kv"><span>首都</span><b>${f[0]}</b><span>人口</span><b>約 ${f[1]}</b><span>語言</span><b>${f[2]}</b><span>貨幣</span><b>${f[3]}</b></div><p class="dir">💡 ${f[4]}</p></details>`;}
 const CAMPAIGN={id:"campaign",cat:"選舉",n:"總統大選辯論",d:"選舉快到了，今晚是電視辯論，全國都在看。",ch:[
  {n:"承諾減稅",fx:{approval:6,treasury:-20}},
  {n:"談經濟政績",dyn:s=>({approval:Math.round((s.stats.econ-45)/3)}),hint:"經濟越好，加分越多"},
@@ -817,7 +917,7 @@ const FIXC={g:{"826":"#c25a52","250":"#5f7fd0","276":"#7d7d78","643":"#4f8a4f","
  w:{"840":"#4f7cc4","826":"#c25a52","250":"#5f7fd0","276":"#7d7d78","643":"#9b2f2f","156":"#c9b458","392":"#e3d29a","380":"#5e9c5a","616":"#c96b8a","724":"#d9b65a","203":"#6aa6a0","688":"#9c7cb8","642":"#c9a24a"}};
 const T36=[["國家 AI 運算中心","國家研究院"],["AI 運算中心","國家研究院"],["半導體聚落","重工業聚落"],["科技島計畫","工業化五年計畫"],["傳統產業升級","農業機械化"],["觀光與精緻農業","鐵路網擴建"],["綠能轉型","水力電氣化"],["自由經濟示範區","自由港"],["長照計畫","社會保險法"],["托育與生育補助","家庭津貼"],["社會住宅","國民住宅"],["全民健保永續","國家醫療制度"],["政府數位化","行政現代化"],["朝野協商平台","國會協商"],["打擊假訊息","宣傳部"],["國造潛艦","潛艇艦隊"],["無人機部隊","空軍擴編"],["全民防衛動員","後備動員"],["海岸要塞","防線工事"],["聯合作戰司令部","總參謀部"],["加入國際組織","加入國際聯盟"],["步兵武器","步兵裝備"],["現代化步兵","摩托化步兵"],["外骨骼步兵","機械化步兵"],["主力戰車","中型坦克"],["數位化裝甲","重型坦克"],["無人戰車","主力坦克"],["第四代戰機","單翼戰鬥機"],["匿蹤戰機","噴射戰鬥機"],["無人機蜂群","戰略轟炸機"],["自動化生產線","流水線生產"],["智慧工廠","工業合理化"],["3D 列印兵工廠","戰時大量生產"],["雷達網","雷達"],["電子作戰","密碼破譯"],["網路戰部隊","無線電情報"],["兩棲突擊艦","登陸艇"],["神盾艦隊","戰列艦隊"],["5G 通訊網","無線電廣播網"],["精準醫療","盤尼西林"],["量子電腦","電子計算機"],["太空發射中心","火箭研究中心"],["核融合實驗爐","原子能研究計畫"],["環島高速鐵路","全國高速公路"],["國際和平宮","國聯和平宮"],["電視演說","廣播演說"],["電視","廣播"]];
 const T36RE=new RegExp(T36.map(x=>x[0].replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|"));
-const MODERN=new Set(["chip","chipboom","fake","hack","aiboom","satellite","meme","ev","cyberwar","uav","nuke","aging","pandemic2","spacerace","cable"]);
+const MODERN=new Set(["chip","chipboom","fake","hack","aiboom","satellite","meme","ev","cyberwar","uav","nuke","aging","pandemic2","spacerace","cable"]);["r_uk_brexit","r_de_energy","r_de_car","r_ru_gas","r_pl_ref","r_gr_debt","r_eg_suez","r_ng_film","r_za_power","r_et_dam","r_sa_vis","r_ir_sanc","r_il_tech","r_in_moon","r_tw_tsmc","r_kr_kpop","r_kp_missile","r_id_cap","r_au_reef","r_nz_sheep","r_g_chip","r_vn_mek","r_eg_nile","r_ar_infl"].forEach(x=>MODERN.add(x));
 const NMRE=/北方|鐵冠|瀾|海商|群島|立法院|颱風|縣長|立委|健保|捷運|軍公教|偏鄉|夜市|\{OFFER\}|\{PC\}/;
 function scn(){return SCN[state.W.sc];}
 function rivalAlive(){const W=state.W,r=scn().play[W.me][12];if(r&&r!==W.me&&alive(r))return r;
@@ -2085,7 +2185,7 @@ function maybeEvent(){
   if(rng(1)>.7)return;
   const pool=EVENTS.filter(e=>!e.special&&(e.rep||!state.used.includes(e.id))&&(!e.req||state.flags[e.req])&&(!e.north||era()<ERAS.length&&!!rivalAlive())&&!({tw_drill:"156",kr_missile:"408"}[e.id]&&!alive({tw_drill:"156",kr_missile:"408"}[e.id]))&&(!["budget","defect"].includes(e.id)||isDem())&&(!e.w||state.W.sc==="w")&&(!e.g||state.W.sc==="g")&&(!e.c||state.W.sc==="c")&&(!e.who||e.who.includes(state.W.me))&&(!MODERN.has(e.id)||state.W.sc==="m")&&(!e.cond||e.cond(state)));
   if(!pool.length)return;
-  const e=pool[Math.floor(rng(2)*pool.length)];
+  const own=pool.filter(x=>x.who),e=own.length&&rng(3)<.4?own[Math.floor(rng(4)*own.length)]:pool[Math.floor(rng(2)*pool.length)];
   state.used.push(e.id);state.pending={kind:"event",ev:e.id};}
 function getEvent(id){return id==="campaign"?CAMPAIGN:EVENTS.find(e=>e.id===id);}
 function visibleChoices(e){return e.ch.filter(c=>!c.req||state.flags[c.req]);}
@@ -2361,7 +2461,7 @@ function renderSel(){const W=state.W,me=W.me,s=ui.ws||me,o=W.own[s],g=GBY[s],el=
    ${!isMe&&!isHum(o)?(()=>{const P=persInfo(o);return `<div class="dir" title="${P[3]}">個性：${P[2]} ${P[1]}（${P[3]}）<br>記憶：${memTxt(o)}${grudge(o)>=3?" 😡":""}</div>`;})():""}
    <div class="kv"><span>陸軍</span><b>${exact?dv:"~"+dv} 師</b><span>部隊素質</span><b>×${qual(o).toFixed(2)}</b>
    <span>與我國關係</span><b style="color:${isMe?"inherit":rel>=40?"var(--good)":rel<=-30?"var(--seal)":"inherit"}">${isMe?"—":rel}</b><span>狀態</span><b>${isMe?"本國":war?"交戰中":sameFac(o,me)?"同陣營":"和平"}</b>
-   ${P?`<span>佔領進度</span><b style="color:${P.by===me?"var(--good)":"var(--seal)"}">${tagName(P.by)} ${Math.round(P.v)}%</b>`:""}${isMe&&state.forts[s]?`<span>工事</span><b>Lv${state.forts[s]}</b>`:""}</div>`;
+   ${P?`<span>佔領進度</span><b style="color:${P.by===me?"var(--good)":"var(--seal)"}">${tagName(P.by)} ${Math.round(P.v)}%</b>`:""}${isMe&&state.forts[s]?`<span>工事</span><b>Lv${state.forts[s]}</b>`:""}</div>`+factsHtml(s);
   const A=[],hint=[];
   if(isHum(o)&&!isMe){const hn=esc(state.hs.names[hsIdx(o)]);hint.push(`👤 這是玩家「${hn}」的國家。簽約、結盟、停戰的提議，要等 ${hn} 的回合由他決定。`);
     A.push(`<button class="btn" type="button" data-act="hgift" data-s="${s}" ${state.stats.treasury>=50?dis:"disabled"}>💰 送 ${hn} 50 億</button>`);
@@ -2710,5 +2810,4 @@ function start(data){if(data&&data.state&&data.state.v===3){state=data.state;ui=
 window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
 })();
 </script>
-
 </body></html>
