@@ -60,7 +60,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--brass);outline-
 .tree-scroll{overflow-x:auto;border:1px solid var(--line);background:
   repeating-linear-gradient(0deg,transparent 0 23px,color-mix(in srgb,var(--line) 35%,transparent) 23px 24px),
   repeating-linear-gradient(90deg,transparent 0 23px,color-mix(in srgb,var(--line) 35%,transparent) 23px 24px),var(--desk)}
-.tree{position:relative;width:1124px;height:660px;margin:10px auto}
+.tree{position:relative;width:1424px;height:660px;margin:10px auto}
 .tree svg.links{position:absolute;inset:0;pointer-events:none}
 .branch{position:absolute;top:0;font-size:.7rem;letter-spacing:.2em;color:var(--muted);transform:translateX(-50%)}
 .fnode{position:absolute;width:124px;height:60px;background:var(--panel2);border:1px solid var(--line);padding:6px 8px;text-align:left;
@@ -569,7 +569,40 @@ const FOCUS=[
  {id:"f5",n:"加入國際組織",c:6.5,r:5,cost:35,t:4,req:["f4"],fx:{prestige:12},cap:1,d:"終於成為正式會員國，國際地位大翻身。外交路線終點。"},
  {id:"final",n:"瀾洲新世紀",c:3.5,r:6,cost:40,t:4,req:[],reqN:{n:3,of:["e5","s5","p5","d5","f5"]},fx:{approval:6,econ:6,stability:6,prestige:6},d:"任三條路線推到底就能解鎖。瀾洲進入黃金年代，結算額外加 30 分！"}
 ];
-const FBY=Object.fromEntries(FOCUS.map(f=>[f.id,f]));
+const FBY=Object.fromEntries(FOCUS.map(f=>[f.id,f]));const NFOC={
+"840":[["民主兵工廠","全國工廠轉產軍火，供應全世界的盟友。",{milF:3,econ:2}],["太平洋艦隊","在夏威夷和關島部署強大艦隊。",{military:6,prestige:3}],["孤立主義","美國人只想管好自己家的事。",{stability:8,approval:5,tension:-10}],["世界警察","哪裡有危機，美軍就出現在哪裡。",{prestige:10,military:5,tension:8}],["超級強權","經濟、科技、軍事全都世界第一。",{econ:8,prestige:8,civ:3}]],
+"156":[["五年計畫","集中資源蓋工廠、修鐵路。",{civ:3,econ:3}],["人民解放軍改革","精簡部隊、換裝新武器。",{military:8}],["韜光養晦","低調發展，不跟強國硬碰硬。",{econ:6,tension:-10,stability:4}],["大國崛起","向世界展示新強權的實力。",{prestige:10,military:5,tension:8}],["民族復興","國力全面提升，萬里長城永不倒。",{econ:6,prestige:6,stability:6}]],
+"158":[["科學園區","新竹、台中、台南科學園區全面擴建。",{civ:2,econ:5}],["國防自主","國造潛艦、國造戰機一起來。",{military:7,milF:1}],["新南向政策","和東南亞、南亞國家做朋友。",{prestige:6,econ:3}],["強化美日同盟","和美國、日本一起守護和平。",{prestige:5,military:4,tension:4}],["矽盾","全世界都需要台灣晶片，沒人敢亂來。",{econ:6,prestige:8,tension:-8}]],
+"392":[["富國強兵","發展產業，同時建設現代軍隊。",{civ:2,military:4}],["新幹線網絡","高速鐵路連接全國。",{econ:5,stability:3}],["和平憲法","專守防衛，靠經濟和文化影響世界。",{prestige:6,approval:5,tension:-8}],["正常國家","修改憲法，擁有完整的軍隊。",{military:8,tension:6}],["日出之國","科技與文化輸出全球。",{econ:6,prestige:8}]],
+"410":[["漢江奇蹟","從戰爭廢墟變成工業強國。",{civ:3,econ:4}],["韓流","電視劇、K-pop 紅遍世界。",{prestige:6,approval:3}],["陽光政策","和北方握手言和，一起合作。",{tension:-12,prestige:4}],["自主國防","發展飛彈和戰機，靠自己保護自己。",{military:8,milF:1}],["半島統一夢","為南北統一做好一切準備。",{prestige:8,stability:5,military:4}]],
+"408":[["先軍政治","一切資源優先給軍隊。",{military:10,approval:-3}],["主體思想","自力更生，不靠任何外國。",{stability:8}],["核子威懾","研發核武，讓強國不敢靠近。",{military:6,tension:10,prestige:-3}],["改革開放試點","開放經濟特區，學習鄰國做生意。",{econ:6,tension:-6}],["強盛大國","宣布國家進入新時代。",{stability:6,military:5}]],
+"643":[["西伯利亞開發","開採西伯利亞的石油、天然氣和礦產。",{econ:5,treasury:60}],["紅軍改革","重新訓練將領，引進新戰術。",{military:8}],["歐亞聯盟","拉攏周邊國家組成經濟同盟。",{prestige:6,econ:3}],["大國威望","重振帝國榮光，讓西方害怕。",{military:6,prestige:4,tension:8}],["北極霸權","掌控北極航道和資源。",{econ:5,prestige:6}]],
+"276":[["高速公路網","全國修建高速公路，運輸更快速。",{econ:4,civ:2}],["工業 4.0","工廠全面自動化，品質世界第一。",{civ:3,econ:3}],["歐洲合作","和鄰國一起建立團結的歐洲。",{prestige:8,tension:-8}],["重整軍備","大規模擴軍，準備應付任何戰爭。",{military:10,milF:2,tension:8}],["歐洲中心","成為歐洲的經濟和政治中心。",{econ:6,prestige:6}]],
+"250":[["馬奇諾防線","沿著邊境建造堅固的防禦工事。",{military:5,stability:3}],["法國殖民帝國","從海外領地取得資源。",{econ:4,treasury:40}],["自由・平等・博愛","推廣人權與民主價值。",{prestige:8,approval:4}],["戴高樂主義","法國要走自己的路，擁有獨立核武。",{military:7,prestige:4}],["光明之城","巴黎成為世界文化之都。",{prestige:8,econ:4}]],
+"826":[["皇家海軍","日不落帝國的艦隊巡航七大洋。",{military:6,prestige:4}],["大英國協","和加拿大、澳洲、印度等國保持緊密關係。",{prestige:6,econ:3}],["光榮孤立","不捲入歐洲大陸的紛爭。",{stability:6,tension:-8}],["特殊關係","和美國結成最緊密的盟友。",{prestige:6,military:4}],["倫敦金融城","成為全世界的金融中心。",{econ:8,treasury:60}]],
+"380":[["地中海霸權","掌控地中海的海上航線。",{military:5,prestige:4}],["義大利設計","時尚、汽車和美食征服世界。",{econ:5,prestige:4}],["羅馬榮光","重建古羅馬帝國的偉大。",{military:6,tension:6,prestige:3}],["歐洲夥伴","和法國、德國一起建設歐洲。",{econ:5,tension:-6}],["文藝復興 2.0","藝術與科技再次領先世界。",{prestige:8,econ:4}]],
+"356":[["綠色革命","新品種稻麥讓糧食大豐收。",{stability:6,approval:4}],["數位印度","讓十四億人都能上網。",{econ:6,civ:2}],["不結盟運動","不加入任何一邊，當第三世界領袖。",{prestige:8,tension:-6}],["大國軍備","擁有航艦、核武和太空計畫。",{military:8,prestige:3}],["世界工廠","接替中國，成為全球製造中心。",{civ:4,econ:6}]],
+"076":[["亞馬遜開發","開發雨林資源，經濟快速成長。",{econ:6,prestige:-3}],["森巴足球","五星巴西，足球征服世界。",{prestige:6,approval:5}],["南美領袖","帶領南美洲國家團結合作。",{prestige:8,tension:-4}],["區域強權","建立南美最強的軍隊。",{military:8}],["未來之國","巴西終於實現大國夢想。",{econ:6,prestige:6}]],
+"036":[["礦業繁榮","鐵礦和煤礦大量出口。",{econ:5,treasury:50}],["澳紐同盟","和紐西蘭並肩作戰。",{military:5,prestige:3}],["亞洲夥伴","把亞洲當成最重要的鄰居。",{econ:5,tension:-5}],["太平洋守護者","打造強大海軍，守護南太平洋。",{military:7,prestige:3}],["幸運之國","陽光、海灘和好生活。",{approval:6,stability:6}]],
+"792":[["海峽守門人","控制博斯普魯斯海峽。",{prestige:5,treasury:30}],["國防工業","自己造無人機和戰車。",{milF:2,military:4}],["新鄂圖曼","重建在中東和巴爾幹的影響力。",{prestige:6,tension:6}],["加入歐洲","向歐洲靠攏，推動改革。",{econ:6,tension:-5}],["歐亞橋樑","連接東方和西方的貿易樞紐。",{econ:6,prestige:5}]],
+"724":[["無敵艦隊","重建西班牙海軍。",{military:6}],["觀光大國","陽光海灘吸引全世界的遊客。",{econ:5,treasury:30}],["伊比利聯合","和葡萄牙更緊密合作。",{prestige:5,econ:3}],["拉丁美洲兄弟","和中南美洲加強聯繫。",{prestige:6,econ:3}],["太陽王國","西班牙重返世界舞台。",{prestige:8,stability:4}]],
+"616":[["華沙重建","從廢墟中重建美麗首都。",{stability:5,civ:2}],["東方之盾","建立歐洲最強的陸軍之一。",{military:9}],["三海倡議","聯合中東歐國家共同發展。",{prestige:6,econ:4}],["西方同盟","緊緊抱住西方盟友。",{prestige:4,military:4,tension:3}],["波蘭不滅","波蘭人民團結，永不屈服。",{stability:8,approval:5}]],
+"804":[["歐洲糧倉","黑土地種出世界級的小麥。",{econ:5,treasury:30}],["國土防衛","全民一起保衛家園。",{military:8,stability:3}],["向西看","加入歐洲大家庭。",{prestige:6,econ:3}],["中立國","不選邊站，當東西方的橋樑。",{tension:-10,stability:3}],["自由的烏克蘭","國家獨立、人民自由。",{prestige:8,stability:6}]],
+"124":[["北方資源","開發石油砂、木材和礦產。",{econ:5,treasury:40}],["和平維持者","派兵參加聯合國維和。",{prestige:8,tension:-4}],["北極主權","守護北極的領土和航道。",{military:5,prestige:3}],["北美夥伴","和美國、墨西哥自由貿易。",{econ:6}],["楓葉之國","多元包容、和平富足。",{approval:6,stability:6}]],
+"484":[["石油國有化","石油公司收歸國有。",{treasury:60,econ:2}],["掃毒戰爭","全力打擊販毒集團。",{stability:6,military:3}],["北美工廠","工廠蓋到邊境，出口到美國。",{civ:3,econ:4}],["拉美領袖","在拉丁美洲發揮影響力。",{prestige:6}],["阿茲特克之鷹","墨西哥成為美洲強國。",{econ:5,prestige:6}]],
+"682":[["石油王國","掌控全世界最多的石油。",{treasury:80}],["2030 願景","不再只靠石油，發展觀光和科技。",{econ:7,civ:2}],["聖城守護者","成為伊斯蘭世界的領袖。",{prestige:8,stability:4}],["波灣軍備","購買最先進的武器。",{military:8,tension:4}],["沙漠綠洲","沙漠中建起未來城市。",{econ:6,prestige:5}]],
+"364":[["波斯帝國遺產","繼承數千年的古文明。",{prestige:5,stability:4}],["革命衛隊","建立強大的精銳部隊。",{military:8,tension:4}],["抵抗之軸","聯合中東的盟友。",{prestige:4,tension:8,military:3}],["重返國際","和世界談判，解除制裁。",{econ:7,tension:-8}],["地區強權","成為中東最有影響力的國家。",{prestige:7,military:4}]],
+"818":[["蘇伊士運河","收取全世界船隻的過路費。",{treasury:50,econ:3}],["尼羅河建設","蓋大水壩、新首都。",{civ:3,econ:3}],["阿拉伯領袖","帶領阿拉伯國家團結。",{prestige:8}],["軍事強國","建立非洲最強的軍隊。",{military:8}],["法老之國","古老文明再現光輝。",{prestige:6,stability:6}]],
+"360":[["千島之國","用船連接一萬七千個島。",{econ:4,stability:4}],["鎳礦大國","發展電動車電池產業。",{econ:5,civ:2}],["東協核心","帶領東南亞國家合作。",{prestige:7,tension:-5}],["群島防衛","建立海軍守護廣大海域。",{military:7}],["新首都努山塔拉","在婆羅洲建造未來首都。",{prestige:6,econ:5}]]};
+const NFOC_GEN=[["民族團結","凝聚全國人民的向心力。",{stability:6,approval:3}],["經濟起飛","吸引投資、建設工廠。",{civ:2,econ:5}],["區域合作","和鄰國當好朋友，一起發展。",{prestige:6,tension:-6}],["區域強權","擴充軍隊，成為這一帶最強的國家。",{military:8,tension:5}],["強國之路","國家全面崛起，世界刮目相看。",{econ:5,prestige:6,stability:4}]];
+
+const NFL=[[8.5,1,25,3],[8.5,2,30,3],[8,3,30,3],[9,3,30,3],[8.5,4,35,4]];
+function nfMake(key,L){const id=k=>`N${key}_${k}`;return L.map(([n,d,fx],k)=>({id:id(k),n,d,fx,c:NFL[k][0],r:NFL[k][1],cost:NFL[k][2],t:NFL[k][3],nat:1,
+  req:k===0?["root"]:k===4?[`${id(2)}|${id(3)}`]:[id(k===3?1:k-1)],ex:k===2?id(3):k===3?id(2):undefined}));}
+const NFALL={};Object.entries(NFOC).forEach(([t,L])=>NFALL[t]=nfMake(t,L));NFALL._g=nfMake("G",NFOC_GEN);
+Object.values(NFALL).flat().forEach(f=>FBY[f.id]=f);
+function natFocus(){const t=state&&state.W?state.W.me:null;return NFALL[t]||NFALL._g;}
+
 const BRANCHES=[["經濟",.5],["社會",2],["政治",3],["國防",4.5],["外交",6.5]];
 
 /* ================= cabinet ================= */
@@ -759,6 +792,26 @@ const EVENTS=[
  {id:"olym36",w:1,cat:"社會",n:"柏林奧運開幕",d:"奧運在柏林舉行，各國選手齊聚一堂，也成了各國的宣傳舞台。",cond:s=>s.turn<=3,ch:[{n:"派出大型代表團",fx:{treasury:-10,prestige:4,approval:3}},{n:"抵制奧運",fx:{prestige:-2,approval:1}}]},
  {id:"spain36",w:1,cat:"外交",n:"西班牙內戰爆發",d:"西班牙爆發內戰，各國都在考慮要不要派志願軍。",cond:s=>s.turn<=6&&s.W.me!=="724",ch:[{n:"派志願軍累積實戰經驗",fx:{military:3,tension:4,approval:-1}},{n:"不干涉",fx:{prestige:1}}]},
  {id:"hind37",w:1,cat:"災害",n:"巨型飛艇空難",d:"一艘巨型客運飛艇在降落時起火，全世界都在看新聞畫面。",cond:s=>s.turn>=3,ch:[{n:"改用飛機發展航空",fx:{econ:2}},{n:"加強安全檢查",fx:{stability:2}}]},
+ {id:"w_anschluss",w:1,cat:"外交",n:"德奧合併",d:"德軍開進維也納，奧地利被併入德國。歐洲各國震驚。",cond:s=>s.turn>=6&&s.turn<=10,ch:[{n:"強烈抗議",fx:{prestige:3,tension:4}},{n:"沉默觀望",fx:{tension:-2,prestige:-2}}]},
+ {id:"w_molotov",w:1,cat:"外交",n:"德蘇互不侵犯條約",d:"兩個死對頭竟然握手簽約，還偷偷瓜分東歐。",cond:s=>s.turn>=12&&s.turn<=15,ch:[{n:"加強東線防禦",fx:{military:4,treasury:-20}},{n:"派間諜查出秘密條款",fx:{prestige:2,treasury:-10}}]},
+ {id:"w_dunkirk",w:1,cat:"戰時",n:"敦克爾克大撤退",d:"幾十萬士兵被困在海灘上，漁船、遊艇全都出動去救人。",cond:s=>!!s.war&&s.turn>=14,ch:[{n:"全民動員救援",fx:{military:3,approval:5,treasury:-15}},{n:"保存海軍實力",fx:{military:-3,stability:-2}}]},
+ {id:"w_blitz",w:1,cat:"戰時",n:"城市大轟炸",d:"敵機每晚轟炸城市，民眾躲進地鐵站過夜。",cond:s=>!!s.war,ch:[{n:"部署雷達和防空砲",fx:{military:3,treasury:-25,stability:2}},{n:"報復性轟炸",fx:{military:1,tension:5,approval:2}}]},
+ {id:"w_lend",w:1,cat:"經濟",n:"租借法案",d:"一個工業大國提議把武器「借」給需要的國家，戰後再算帳。",cond:s=>s.turn>=16,ch:[{n:"接受援助",fx:{military:6,prestige:-1}},{n:"自力更生",fx:{stability:3,prestige:2}}]},
+ {id:"w_enigma",w:1,cat:"科技",n:"破解敵軍密碼機",d:"數學家們日夜不停，終於破解了敵人的密碼！",cond:s=>s.turn>=12,ch:[{n:"秘密使用情報",fx:{military:5}},{n:"公開宣傳勝利",fx:{approval:4,prestige:3}}]},
+ {id:"w_jet",w:1,cat:"科技",n:"噴射引擎試飛成功",d:"沒有螺旋槳的飛機飛得又快又高，所有人都看呆了。",cond:s=>s.turn>=14,ch:[{n:"立刻量產",fx:{military:5,treasury:-30}},{n:"繼續研究改良",fx:{econ:2,prestige:2}}]},
+ {id:"w_ration",w:1,cat:"社會",n:"糧食配給制",d:"戰時物資短缺，每個家庭都要拿配給券買食物。",cond:s=>!!s.war,ch:[{n:"實施配給",fx:{stability:4,approval:-3}},{n:"開放黑市",fx:{econ:2,stability:-4}}]},
+ {id:"g_sarajevo",g:1,cat:"外交",n:"薩拉耶佛事件",d:"奧匈帝國皇儲在薩拉耶佛被刺殺，整個歐洲像火藥桶一樣隨時會爆炸。",cond:s=>s.turn<=3,ch:[{n:"呼籲各國冷靜",fx:{tension:-5,prestige:3}},{n:"準備動員",fx:{military:5,tension:5}}]},
+ {id:"g_christmas",g:1,cat:"戰時",n:"聖誕節休戰",d:"聖誕夜，兩邊戰壕的士兵唱起聖誕歌，還走出來踢足球！",cond:s=>!!s.war,ch:[{n:"允許休戰一天",fx:{approval:4,stability:3}},{n:"下令繼續作戰",fx:{military:2,approval:-3}}]},
+ {id:"g_lusit",g:1,cat:"外交",n:"郵輪被潛艇擊沉",d:"一艘載滿平民的大型郵輪被潛艇擊沉，全世界憤怒。",cond:s=>s.turn>=4,ch:[{n:"譴責無限制潛艇戰",fx:{prestige:4,tension:3}},{n:"加強護航",fx:{military:3,treasury:-20}}]},
+ {id:"g_tank",g:1,cat:"科技",n:"「陸地戰艦」問世",d:"一種裝甲履帶車輛可以壓過鐵絲網和戰壕，士兵們叫它「坦克」。",cond:s=>s.turn>=6,ch:[{n:"大量生產",fx:{military:6,treasury:-35}},{n:"先小量測試",fx:{military:2}}]},
+ {id:"g_revolt",g:1,cat:"政治",n:"前線士兵譁變",d:"士兵受夠了無止盡的戰壕戰，拒絕再衝鋒。",cond:s=>!!s.war&&s.turn>=10,ch:[{n:"改善待遇、輪休",fx:{approval:3,treasury:-25,stability:2}},{n:"嚴厲軍法處置",fx:{stability:-3,military:1}}]},
+ {id:"g_14pts",g:1,cat:"外交",n:"十四點和平原則",d:"有人提出建立國際聯盟，讓世界不再打仗。",cond:s=>s.turn>=14,ch:[{n:"熱烈支持",fx:{prestige:6,tension:-8}},{n:"只顧本國利益",fx:{treasury:20,prestige:-3}}]},
+ {id:"c_cuba",c:1,cat:"國安",n:"古巴飛彈危機",d:"偵察機拍到古巴正在架設核子飛彈，世界離核戰只差一步！",cond:s=>s.turn>=2&&s.turn<=6,ch:[{n:"海上封鎖",fx:{tension:4,prestige:4}},{n:"秘密談判",fx:{tension:-8,prestige:1}},{n:"空襲飛彈基地",fx:{tension:15,military:3}}]},
+ {id:"c_moon",c:1,cat:"科技",n:"登月競賽",d:"兩個超級強權比賽誰先把人送上月球。",cond:s=>s.turn>=8,ch:[{n:"全力投入太空計畫",fx:{treasury:-50,prestige:10}},{n:"把錢留給民生",fx:{approval:4,econ:2}}]},
+ {id:"c_beatles",c:1,cat:"文化",n:"搖滾樂旋風",d:"四個英國年輕人的樂團紅遍全球，年輕人瘋狂尖叫。",ch:[{n:"邀請來開演唱會",fx:{approval:5,treasury:-5}},{n:"禁止「頹廢音樂」",fx:{stability:2,approval:-5}}]},
+ {id:"c_wall",c:1,cat:"外交",n:"柏林圍牆",d:"一道高牆把城市分成兩半，很多家庭從此分隔兩地。",cond:s=>s.turn<=10,ch:[{n:"發表「我是柏林人」演說",fx:{prestige:5,tension:3}},{n:"保持沉默",fx:{tension:-3,prestige:-2}}]},
+ {id:"c_hotline",c:1,cat:"外交",n:"熱線電話",d:"兩大強國之間裝了一條直通電話，避免誤會引發核戰。",cond:s=>s.turn>=6,ch:[{n:"支持設立",fx:{tension:-10,prestige:3}},{n:"不需要",fx:{tension:3}}]},
+ {id:"c_civil",c:1,cat:"社會",n:"民權運動",d:"數十萬人上街遊行，要求每個人不分膚色都有平等權利。",ch:[{n:"通過民權法案",fx:{approval:4,prestige:5,stability:-2}},{n:"拖延處理",fx:{stability:-4,approval:-3}}]},
  {id:"munich",w:1,cat:"外交",n:"慕尼黑會議",d:"列強在慕尼黑開會，討論德國對捷克斯洛伐克的領土要求。",cond:s=>s.turn>=8&&s.turn<=12,ch:[{n:"支持綏靖，避免戰爭",fx:{tension:-8,prestige:-3}},{n:"強硬反對",fx:{tension:6,prestige:3}}]},
  {id:"radar36",w:1,cat:"社會",n:"科學家展示雷達",d:"一種能看見遠方飛機的新發明，引起軍方高度興趣。",ch:[{n:"撥款研究",fx:{treasury:-15,military:3}},{n:"再觀察",fx:{}}]},
  {id:"women",w:1,cat:"社會",n:"女性大量投入工廠",d:"男性上了戰場，工廠由女性撐起生產線。",cond:s=>!!s.war,ch:[{n:"提供托兒與同工同酬",fx:{treasury:-15,econ:3,approval:3}},{n:"維持原樣",fx:{econ:1}}]},
@@ -2391,17 +2444,17 @@ function advice(){const s=state.stats;
   if(state.pp>=60)return"政治點數存很多了，可以多推幾項施政行動。";
   return"局勢穩定。繼續推動國策，按「結束本季」前進。";}
 function renderTree(){
-  const W=124,H=60,X=c=>c*140+10,Y=r=>r*92+28;let lines="";
-  for(const f of FOCUS){const parents=f.reqN?f.reqN.of:f.req.flatMap(r=>r.split("|"));
+  const W=124,H=60,X=c=>c*140+10,Y=r=>r*92+28;let lines="";const AF=[...FOCUS,...natFocus()];if(ui.sel&&FBY[ui.sel]&&FBY[ui.sel].nat&&!natFocus().includes(FBY[ui.sel]))ui.sel="root";
+  for(const f of AF){const parents=f.reqN?f.reqN.of:f.req.flatMap(r=>r.split("|"));
     for(const p of parents){const a=FBY[p];const x1=X(a.c)+W/2,y1=Y(a.r)+H,x2=X(f.c)+W/2,y2=Y(f.r),my=y2-14;
       const lit=state.done.includes(p);
       lines+=`<path d="M${x1} ${y1} V${my} H${x2} V${y2}" fill="none" stroke="${lit?"var(--brass)":"var(--line)"}" stroke-width="2" ${f.reqN?'stroke-dasharray="4 4"':""}/>`;}}
-  let html=`<svg class="links" viewBox="0 0 1124 660" width="1124" height="660">${lines}</svg>`;
-  html+=BRANCHES.map(([n,c])=>`<span class="branch" style="left:${X(c)+W/2}px">${n}</span>`).join("");
-  for(const f of FOCUS){const st=focusState(f);
+  let html=`<svg class="links" viewBox="0 0 1424 660" width="1424" height="660">${lines}</svg>`;
+  html+=[...BRANCHES,["🏳 "+tagName(state.W.me)+"特色",8.5]].map(([n,c])=>`<span class="branch" style="left:${X(c)+W/2}px">${n}</span>`).join("");
+  for(const f of AF){const st=focusState(f);
     const meta=st==="done"?"✓ 已完成":st==="active"?`推動中・剩 ${state.active.left} 季`:`${f.cost} 點・${f.t} 季`;
     html+=`<button type="button" class="fnode ${st} ${ui.sel===f.id?"sel":""}" data-f="${f.id}" style="left:${X(f.c)}px;top:${Y(f.r)}px"><span class="fn">${f.n}</span><span class="fm">${meta}</span></button>`;}
-  for(const c of[.5,6.5])html+=`<span class="xor" style="left:${X(c)+W/2}px;top:${Y(2)+22}px">二擇一</span>`;
+  for(const [c,r] of[[.5,2],[6.5,2],[8.5,3]])html+=`<span class="xor" style="left:${X(c)+W/2}px;top:${Y(r)+22}px">二擇一</span>`;
   $("#tree").innerHTML=html;}
 function renderFocusDetail(){const f=FBY[ui.sel];const st=focusState(f);let why="";
   if(st==="done")why="已完成。";else if(st==="active")why=`推動中，還要 ${state.active.left} 季。`;
