@@ -1225,7 +1225,7 @@ function declare(a,b){const W=state.W,me=W.me;if(a===b||atWar(a,b)||sameFac(a,b)
 function makePeace(e){const W=state.W;delete W.war[wk(W.me,e)];delete W.target[e];if(W.offer===e)W.offer=null;if(!myEnemies().length)W.extra=0;log(`與${tagName(e)}停戰`);syncWar();}
 function take(s,att,def){const W=state.W,me=W.me;if(W.beach)delete W.beach[s];if(W.orig[s]==null)W.orig[s]=def;W.own[s]=att;if(W.orig[s]===att)delete W.orig[s];delete state.forts[s];
   const n=GBY[s].n;
-  if(att===me){applyFx({approval:2,prestige:2});state.ind.civ+=1+Math.floor(GBY[s].a/1500);state.mp+=Math.min(6,1+GBY[s].a/400)*1.5;W.sup=clamp(W.sup+3,0,100);log(`我軍攻佔「${n}」！`);toast(`🚩 攻佔 ${n}`);}
+  if(att===me){applyFx({approval:2,prestige:2});state.ind.civ+=1+Math.floor(GBY[s].a/1500);state.mp+=Math.min(6,1+GBY[s].a/400)*1.5;W.sup=clamp(W.sup+3,0,100);{const lv=dlv();if(lv>0){state.stats.tension=clamp(state.stats.tension+.5*lv,0,100);for(const t in W.rel)if(t!==def&&!sameFac(t,me))W.rel[t]=clamp((W.rel[t]||0)-.6*lv,-100,100);}}log(`我軍攻佔「${n}」！`);toast(`🚩 攻佔 ${n}`);}
   else if(def===me){applyFx({approval:-3,stability:-2,econ:-2});W.sup=clamp(W.sup-4,0,100);log(`「${n}」被${tagName(att)}攻佔…`);toast(`⚠ ${n} 失守`);}
   else if(scn().play[att]||scn().play[def])news(`${tagName(att)}攻佔「${n}」`);
   if(s===def)capitulate(def,att);}
@@ -1254,6 +1254,7 @@ function attack(att,def,k,touched){const W=state.W,me=W.me;if(att===me&&W.stance
   if(!tgt){const sc=x=>(x===def?-3:0)+hp(x)*(1+fortL(x)*.3)*(land(x)?1:2.5)-(W.prog[x]&&W.prog[x].by===att?W.prog[x].v/25:0);cand.sort((x,y)=>sc(x)-sc(y));tgt=cand[0];if(att===me)W.target[def]=tgt;}
   const w=W.war[k];let A=pow(att),D=pow(def);const af=w&&w.air!=null&&(att===me||def===me)?(w.air>=60?1.1:w.air<=40?.9:1):1;
   if(!land(tgt)){A*=.35;D*=1.15;}
+  {const dm=[1,1,1.12,1.25][dlv()+1];if(att===me){D*=dm;A*=supplyMul(tgt);}else if(def===me)A*=dm;}
   if(att===me){A*=(W.stance==="atk"?1.25+(hasT("tank1")?.1:0)+(hasT("tank2")?.1:0)+(hasT("tank3")?.1:0):1)*af*(W.surprise===state.turn?1.3:1);if(W.bomb===tgt)D*=bombMul(w);D*=(hasT("ew")?.92:1)*(hasT("cyber")?.94:1);}
   else if(def===me){A/=af;A*=(hasT("ew")?.92:1)*(hasT("cyber")?.94:1)*(easy()?.85:1);D*=W.stance==="def"?1.35:W.stance==="atk"?.9:1;}
   {const X=armyFx();if(att===me)A*=1.06*X.atk*(1+(MTN.has(ROOTOF(tgt))?X.sh.mtn*.8:0)+(!land(tgt)?X.sh.mar*1.5:0));if(def===me)D*=1.28*X.def;}
@@ -1290,7 +1291,7 @@ function worldStep(){const W=state.W,s=state.stats,me=W.me,S=scn();W.rep=[];cons
   for(const sh in W.prog)if(!touched.has(sh)&&!(W.beach&&W.beach[sh]>=state.turn)){W.prog[sh].v-=8;if(W.prog[sh].v<=0)delete W.prog[sh];}
   W.bomb=null;
   const my=myEnemies();
-  if(my.length){W.org=clamp(W.org+({atk:-12,bal:-6,def:6}[W.stance])+army().sup.sig*4+(state.gen[0]==="he"?6:0),10,100);W.sup=clamp(r1(W.sup-1.5*(1-.4*army().sup.hos)),0,100);
+  if(my.length){W.org=clamp(W.org+({atk:-12,bal:-6,def:6}[W.stance])+army().sup.sig*4+(state.gen[0]==="he"?6:0),10,100);W.sup=clamp(r1(W.sup-1.5*(1-.4*army().sup.hos)-Math.max(0,dlv())*.5),0,100);{const c=casualty();if(c>0){state.mp=Math.max(0,r1(state.mp-c));W.lastCas=c;}}
     s.treasury-=Math.round(12*(state.cab.def==="liu"?.75:1));s.stability=clamp(s.stability-1,0,100);s.econ=clamp(s.econ-.6,0,100);
     if(W.sup<=8){my.forEach(e=>makePeace(e));applyFx({approval:-6,stability:-4,prestige:-4});log("民意厭戰，政府被迫停火");
       state.pending={kind:"msg",kicker:"停火協議",stamp:"厭戰",title:"民意厭戰，被迫停火",text:"戰爭支持度跌到谷底，國會強制停火，戰線維持現狀。下次開戰前，記得先把支持率拉高。"};}
@@ -2167,6 +2168,9 @@ function newState(opt){
 function rng(salt){let t=(state.seed^Math.imul(state.turn+1,2654435761)^Math.imul(salt+7,40503))>>>0;
   t=(t+0x6D2B79F5)|0;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;}
 const easy=()=>state.diff==="easy";
+const dlv=()=>({easy:-1,normal:0,hard:1,iron:2})[state.diff]??0;
+function supplyMul(tgt){const lv=dlv();if(lv<0)return 1;const a=GBY[state.W.me],b=GBY[tgt];if(!a||!b)return 1;let dx=Math.abs(a.c[0]-b.c[0]);dx=Math.min(dx,1000-dx);const d=Math.hypot(dx,a.c[1]-b.c[1]);return d<=100?1:Math.max(.55,1-(d-100)/600*(.5+.35*lv));}
+function casualty(){const lv=dlv();if(lv<0)return 0;return r1(ourDivs()*[0,.04,.06,.08][lv+1]*({atk:1.4,bal:1,def:.7}[state.W.stance]||1));}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const r1=v=>Math.round(v*10)/10;
 const hasT=id=>!!(state.res&&state.res.done.includes(id));
@@ -2194,10 +2198,11 @@ const BUILD={civ:["民用工廠",40],mil:["軍工廠",50]};
 function budget(forTurn){const s=state.stats,cab=state.cab;const rate={low:.5,mid:.7,high:.9}[state.tax];
   const scale=1+Math.min(state.turn,40)*.0075;
   const inc=[["稅收（經濟 × 稅率）",s.econ*rate*scale*Math.sqrt(B()/15)*(state.laws&&state.laws.econ==="war"?.8:1)],["民用工廠",state.ind?state.ind.civ*1.5*(state.laws.econ==="civil"?1.2:1)*(hasT("smart")?1.2:1):0],["新領土",state.newland?state.newland.integ/8:0],["佔領區",heldTiles()*3],["經濟部長招商",cab.econ==="chen"?6:0],["貿易協定",state.W?tradeInc():0],["資源出口",state.W?resExport():0]];
-  const exp=[["政府基本開銷",25],["軍費（軍力越高越貴）",s.military*.2*Math.sqrt(B()/15)*(cab.def==="liu"?.75:1)*(1+((state.W&&state.W.comp)||{arm:0}).arm/100)],["社福支出成長",Math.min(state.turn,24)*.5],["國策維持費",state.done.length*.4],["佔領區治安費",state.W?heldTiles()*4:0],["精簡政府省下",-(state.cuts||0)]];
+  const exp=[["政府基本開銷",25],["軍費（軍力越高越貴）",s.military*.2*Math.sqrt(B()/15)*(cab.def==="liu"?.75:1)*(1+((state.W&&state.W.comp)||{arm:0}).arm/100)],["社福支出成長",Math.min(state.turn,24)*.5],["國策維持費",state.done.length*.4],["佔領區治安費",state.W?heldTiles()*4*(1+Math.max(0,dlv())*.5):0],["精簡政府省下",-(state.cuts||0)]];
   if(!forTurn)exp.push(["國家級工程款",state.wonders&&state.wonders.active?wonderPer(WBY[state.wonders.active.id]):0],["戰爭開銷",state.war?Math.round(12*(cab.def==="liu"?.75:1)):0]);
+  {const lv=dlv();if(lv>0)exp.push(["官僚浪費與通膨（難度）",inc.reduce((a,b)=>a+b[1],0)*.06*lv]);}
   const I=inc.reduce((a,b)=>a+b[1],0),E=exp.reduce((a,b)=>a+b[1],0);return{inc,exp,I,E,net:Math.round(I-E)};}
-function ppGain(){return Math.round(cardFx("pp"))+(easy()?11:8)+(hasT("quantum")?1:0)+(state.flags.aiCenter?2:0)+(state.done.includes("root")?1:0)+(state.flags.digital?1:0)+(state.seats>=51?2:-2);}
+function ppGain(){return Math.round(cardFx("pp"))+(easy()?11:8-Math.max(0,dlv()))+(hasT("quantum")?1:0)+(state.flags.aiCenter?2:0)+(state.done.includes("root")?1:0)+(state.flags.digital?1:0)+(state.seats>=51?2:-2);}
 const CN=["一","二","三","四","五","六","七","八","九","十"];
 const maxTurns=()=>(state.maxTerms||2)*16;
 function yr(t,st){st=st||state;return ((st&&SCN[st.sc])?SCN[st.sc].y:2026)+Math.floor(t/4);}
@@ -2616,7 +2621,7 @@ function renderSel(){const W=state.W,me=W.me,s=ui.ws||me,o=W.own[s],g=GBY[s],el=
    ${!isMe&&!isHum(o)?(()=>{const P=persInfo(o);return `<div class="dir" title="${P[3]}">個性：${P[2]} ${P[1]}（${P[3]}）<br>記憶：${memTxt(o)}${grudge(o)>=3?" 😡":""}</div>`;})():""}
    <div class="kv"><span>陸軍</span><b>${exact?dv:"~"+dv} 師</b><span>部隊素質</span><b>×${qual(o).toFixed(2)}</b>
    <span>與我國關係</span><b style="color:${isMe?"inherit":rel>=40?"var(--good)":rel<=-30?"var(--seal)":"inherit"}">${isMe?"—":rel}</b><span>狀態</span><b>${isMe?"本國":war?"交戰中":sameFac(o,me)?"同陣營":"和平"}</b>
-   ${P?`<span>佔領進度</span><b style="color:${P.by===me?"var(--good)":"var(--seal)"}">${tagName(P.by)} ${Math.round(P.v)}%</b>`:""}${isMe&&state.forts[s]?`<span>工事</span><b>Lv${state.forts[s]}</b>`:""}</div>`+factsHtml(s);
+   ${war&&dlv()>=0&&supplyMul(s)<1?`<span>補給</span><b style="color:${supplyMul(s)<.8?"var(--seal)":"var(--warn)"}">${Math.round(supplyMul(s)*100)}%</b>`:""}${P?`<span>佔領進度</span><b style="color:${P.by===me?"var(--good)":"var(--seal)"}">${tagName(P.by)} ${Math.round(P.v)}%</b>`:""}${isMe&&state.forts[s]?`<span>工事</span><b>Lv${state.forts[s]}</b>`:""}</div>`+factsHtml(s);
   const A=[],hint=[];
   if(isHum(o)&&!isMe){const hn=esc(state.hs.names[hsIdx(o)]);hint.push(`👤 這是玩家「${hn}」的國家。簽約、結盟、停戰的提議，要等 ${hn} 的回合由他決定。`);
     A.push(`<button class="btn" type="button" data-act="hgift" data-s="${s}" ${state.stats.treasury>=50?dis:"disabled"}>💰 送 ${hn} 50 億</button>`);
@@ -2658,7 +2663,7 @@ function renderSel(){const W=state.W,me=W.me,s=ui.ws||me,o=W.own[s],g=GBY[s],el=
   el.innerHTML=h;}
 function renderWarPanel(){const W=state.W,me=W.me,en=myEnemies(),el=$("#wwar"),dis=state.pending?"disabled":"",g=GENERALS.find(x=>x.id===state.gen[0])||GENERALS[0];
   let h=alienCard()+zbCard()+`<h4>${en.length?"⚔ 戰爭指揮":"🛡 三軍狀態"}</h4>
-   <div class="kv"><span>我軍</span><b>${ourDivs()} 師${allyDivs()?` ＋盟軍 ${allyDivs()}`:""}</b><span>人力</span><b>${Math.round(state.mp)} 萬・上限 ${mpCap()} 師</b><span>空軍</span><b>${ourAir()}</b><span>部隊素質</span><b>×${quality().toFixed(2)}</b></div>${resCard()}
+   <div class="kv"><span>我軍</span><b>${ourDivs()} 師${allyDivs()?` ＋盟軍 ${allyDivs()}`:""}</b><span>人力</span><b>${Math.round(state.mp)} 萬・上限 ${mpCap()} 師</b><span>空軍</span><b>${ourAir()}</b><span>部隊素質</span><b>×${quality().toFixed(2)}</b></div>${en.length&&dlv()>=0?`<div class="ter">⚰ 打仗每季傷亡約 <b>${casualty()} 萬</b>人力（姿態「進攻」傷亡最重）。人力不夠，師數就會減少。📦 打離首都越遠的地方，補給越差、戰力越低。</div>`:""}${resCard()}
    <div class="mrow"><span>組織度</span><div class="bar"><i style="width:${W.org}%;background:${mcol(W.org)}"></i></div><span class="num">${Math.round(W.org)}</span></div>
    ${en.length?`<div class="mrow"><span>戰爭支持</span><div class="bar"><i style="width:${W.sup}%;background:${mcol(W.sup)}"></i></div><span class="num">${Math.round(W.sup)}</span></div>`:""}
    <div class="lane-c"><div class="seg" role="group" aria-label="作戰姿態">${STANCES.map(([k,n])=>`<button type="button" data-wst="${k}" aria-pressed="${W.stance===k}" ${dis}>${n}</button>`).join("")}</div>
@@ -2902,7 +2907,7 @@ function showStart(){const v=$("#veil");v.hidden=false;const sv=loadSave();const
      ${startOpt.net==="online"?`<div class="names" style="margin-top:8px"><input id="joinCode" maxlength="4" placeholder="輸入房間代碼（例如 ABCD）" aria-label="房間代碼" style="text-transform:uppercase"><button class="btn" type="button" id="joinBtn">加入房間</button></div><p class="hint" style="margin:6px 0 0">開房的人在下面選好兩國後按「建立房間」；加入的人只要輸入代碼。</p>`:""}</div>`:""}
    ${isC||startOpt.mode==="vs"?"":`<div class="opt-group"><span>新手教學</span><div class="opts">${opt("tut","on","開啟","小幫手一步一步教你玩")}${opt("tut","off","關閉","我已經會玩了")}</div></div>`}
    <div class="opt-group"><span>末日災難＆歷史假如</span><div class="opts">${opt("fan","on","開啟","隕石、殭屍、火山、時空裂縫……")}${opt("fan","off","關閉","只要正常的歷史")}</div></div>
-   <div class="opt-group"><span>難度</span><div class="opts">${opt("diff","easy","簡單","適合小朋友：點數多、敵人弱、顯示所有數字")}${opt("diff","normal","標準","事件只顯示方向、敵軍數量是估計值")}</div></div>
+   <div class="opt-group"><span>難度</span><div class="opts">${opt("diff","easy","簡單","適合小朋友：點數多、敵人弱、顯示所有數字")}${opt("diff","normal","標準","事件只顯示方向、敵軍數量是估計值；打仗會消耗人力、補給線太長會變弱")}${opt("diff","hard","寫實（困難）","敵軍強 12%、傷亡更重、補給更吃緊；擴張太快各國會敵視你、經濟有浪費")}${opt("diff","iron","鋼鐵（極難）","敵軍強 25%、政治點數更少、佔領區治安費加倍，給鋼4老手挑戰")}</div></div>
    ${isC?"":`<div class="opt-group"><span>遊戲長度</span><div class="opts" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${opt("terms","2","8 年","約 30 分鐘")}${opt("terms","3","12 年","約 45 分鐘")}${opt("terms","5","20 年","長期執政")}${opt("terms","99","無限","直到落選或戰敗")}</div></div>`}
    <div class="opt-group"><span>玩家</span><div class="names">${startOpt.mode==="duel"||startOpt.mode==="vs"?`<input id="n1" value="爸爸" maxlength="8" aria-label="玩家一名字"><input id="n2" value="麥麥" maxlength="8" aria-label="玩家二名字">`:`<input id="pn" value="麥麥" maxlength="8" aria-label="你的名字">`}</div></div>
    <div class="row"><button class="endturn" type="button" id="go">${isC?"開始挑戰":startOpt.mode==="vs"&&startOpt.net==="online"?"🌐 建立房間":"開始執政"} ▶</button>${sv&&!sv.over?`<button class="btn" type="button" id="cont">繼續上次（${esc(svName)}・${dateStr(sv.turn,sv)}）</button>`:""}${[1,2,3,4,5].some(n=>slotMeta(n))?`<button class="btn" type="button" id="loadmenu">讀取存檔</button>`:""}</div>
