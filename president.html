@@ -2291,7 +2291,7 @@ const BUILD={civ:["民用工廠",40],mil:["軍工廠",50]};
 function budget(forTurn){const s=state.stats,cab=state.cab;const rate={low:.5,mid:.7,high:.9}[state.tax];
   const scale=1+Math.min(state.turn,40)*.0075;
   const inc=[["稅收（經濟 × 稅率）",s.econ*rate*scale*Math.sqrt(B()/15)*(state.laws&&state.laws.econ==="war"?.8:1)],["民用工廠",state.ind?state.ind.civ*1.5*(state.laws.econ==="civil"?1.2:1)*(hasT("smart")?1.2:1):0],["新領土",state.newland?state.newland.integ/8:0],["佔領區",heldTiles()*3*(1-.3*hk())],["經濟部長招商",cab.econ==="chen"?6:0],["貿易協定",state.W?tradeInc():0],["資源出口",state.W?resExport():0]];
-  const exp=[["政府基本開銷",25],["軍費（軍力越高越貴）",s.military*.2*Math.sqrt(B()/15)*(cab.def==="liu"?.75:1)*(1+((state.W&&state.W.comp)||{arm:0}).arm/100)],["社福支出成長",Math.min(state.turn,24)*.5],["國策維持費",state.done.length*.4],["佔領區治安費",state.W?heldTiles()*4*(1+.4*hk()):0],["超額軍隊維持費",state.W&&state.ind?Math.max(0,ourDivs()-B()*.9)*.6*hk():0],["精簡政府省下",-(state.cuts||0)],["盟國借款還款",(state.debts||[]).reduce((a,d)=>a+d.per,0)]];
+  const exp=[["政府基本開銷",25],["軍費（軍力越高越貴）",s.military*.2*Math.sqrt(B()/15)*(cab.def==="liu"?.75:1)*(1+((state.W&&state.W.comp)||{arm:0}).arm/100)],["社福支出成長",Math.min(state.turn,24)*.5],["國策維持費",state.done.length*.4],["佔領區治安費",state.W?heldTiles()*4*(1+.4*hk()):0],["超額軍隊維持費",state.W&&state.ind?Math.max(0,ourDivs()-B()*.9)*.6*hk():0],["精簡政府省下",-(state.cuts||0)],["借款還款",(state.debts||[]).reduce((a,d)=>a+d.per,0)]];
   if(!forTurn)exp.push(["國家級工程款",state.wonders&&state.wonders.active?wonderPer(WBY[state.wonders.active.id]):0],["戰爭開銷",state.war?Math.round(12*(cab.def==="liu"?.75:1)):0]);
   {const lv=dlv();if(lv>0)exp.push(["官僚浪費與通膨（難度）",inc.reduce((a,b)=>a+b[1],0)*.06*lv]);}
   const I=inc.reduce((a,b)=>a+b[1],0),E=exp.reduce((a,b)=>a+b[1],0);return{inc,exp,I,E,net:Math.round(I-E)};}
@@ -2417,6 +2417,12 @@ function endTurn0(){
   checkMission();if(!state.mission&&state.turn%5===2)newMission();
   normAlloc();save();render();if(!state.hs){showReport(prev);showSeason();}
 }
+function bailout(k){const s=state.stats,b=Math.round(B()*5);state.pending=null;
+  if(k==="imf"){const amt=200+b;s.treasury+=amt;(state.debts=state.debts||[]).push({o:"IMF",per:Math.ceil(amt*1.2/10),left:10});applyFx({prestige:-5,stability:-3});log(`向國際貨幣基金借款 ${amt} 億紓困`);}
+  else if(k==="print"){s.treasury+=150+b;applyFx({econ:-8,approval:-5,stability:-4});log("央行大印鈔票，物價飆漲");}
+  else if(k==="cut"){const W=state.W;W.extra=0;s.treasury+=60+b;applyFx({military:-20});W.org=Math.max(10,(W.org||100)-20);log("緊急裁軍、變賣軍備");}
+  else if(k==="tax"){state.tax="high";s.treasury+=80+Math.round(b/2);applyFx({approval:-7});log("緊急加稅");}
+  state.bkT=state.turn-5;save();render();}
 function midterm(){const s=state.stats;const d=Math.round((s.approval-50)/2.5+(rng(30)*4-2));const before=state.seats;applyFx({seats:d});
   log(`地方選舉：執政黨國會席次 ${before} → ${state.seats}`);
   if(!state.pending)state.pending={kind:"msg",kicker:"中央選舉委員會",stamp:"開票",title:"地方選舉結果出爐",
@@ -2424,7 +2430,7 @@ function midterm(){const s=state.stats;const d=Math.round((s.approval-50)/2.5+(r
 function checkOver(){const s=state.stats;
   if(state.W&&state.W.own[state.W.me]!==state.W.me){state.over="war";return true;}
   if(s.approval<15){state.over="recall";return true;}
-  if(s.treasury<(easy()?-150:-100)){state.over="bankrupt";return true;}
+  {const thr=-(easy()?150:100)-Math.round(B()*3);if(s.treasury<thr){if(state.bkT===state.turn-1||state.bkT===state.turn){if(state.bkT===state.turn-1){state.over="bankrupt";return true;}}else{state.bkT=state.turn;state.pending={kind:"bkrisis",thr};}}else if(state.bkT&&state.bkT<state.turn-1)state.bkT=0;}
   return false;}
 function maybeEvent(){
   if(state.pending)return;
@@ -2877,6 +2883,14 @@ function renderModal(){const v=$("#veil");const p=state.pending;v.classList.togg
       if(yes&&!isL&&alive(p.tgt)&&!atWar(W.me,p.tgt)&&!sameFac(W.me,p.tgt)){declare(W.me,p.tgt);syncWar();log(`應盟友請求向${tagName(p.tgt)}宣戰`);}
       hs.inbox[oi].push({k:isL?"loanok":"note",ok:yes,amt:p.amt,from:W.me,name:hs.names[hs.cur],title:yes?`${hs.names[hs.cur]} 答應了！`:`${hs.names[hs.cur]} 拒絕了`,text:isL?(yes?`借到 ${p.amt} 億，之後 8 季每季自動還款。`:"對方不借。"):(yes?`${tagName(W.me)}已經向${tagName(p.tgt)}宣戰！`:`對方不想攻打${tagName(p.tgt)}。`)});save();render();};
     $("#hrY").onclick=()=>done(true);$("#hrN").onclick=()=>done(false);}
+  else if(p.kind==="bkrisis"){const b=Math.round(B()*5),D=(state.debts||[]).length;
+    v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>財政部・緊急</span><span>${dateStr()}</span></div><span class="stamp">赤字</span><h2>💸 國庫快破產了！（${Math.round(state.stats.treasury)} 億）</h2>
+     <p>赤字超過 ${-p.thr} 億。<b>如果下一季結束時還是這麼深，國家就會破產（遊戲結束）。</b>選一個救急辦法，然後記得：減少戰爭、降低軍費、提高稅率或蓋民用工廠。</p>
+     <div class="choices"><button class="choice" type="button" data-bk="imf"><strong>🏦 向國際貨幣基金借款（+${200+b} 億）</strong><small>分 10 季還、利息 20%；聲望 −5、穩定 −3</small></button>
+     <button class="choice" type="button" data-bk="print"><strong>🖨 大印鈔票（+${150+b} 億）</strong><small>物價飆漲：經濟 −8、支持率 −5、穩定 −4</small></button>
+     <button class="choice" type="button" data-bk="cut"><strong>✂ 緊急裁軍、變賣武器（+${60+b} 億）</strong><small>軍力 −20、後備動員取消、組織度 −20；之後軍費也變少</small></button>
+     <button class="choice" type="button" data-bk="tax"><strong>📈 緊急加稅（+${80+Math.round(b/2)} 億）</strong><small>稅率調成「高」，支持率 −7</small></button></div></div>`;
+    v.querySelectorAll("[data-bk]").forEach(x=>x.onclick=()=>bailout(x.dataset.bk));}
   else if(p.kind==="heroname"){const sug=HERONM.filter(n=>!(state.heroes||[]).some(h=>h.n===n));
     v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>參謀本部</span><span>授勳</span></div><span class="stamp">王牌</span><h2>🏅 第 ${p.no} 師戰功彪炳，升格為王牌部隊！</h2><p>幫這支部隊取個威風的名字吧！王牌部隊每顆星讓全軍戰力 +1.5%，打越多仗升越多星（最多 3 星）。</p>
      <input id="hrIn" maxlength="10" value="${sug[0]||"英雄第"+p.no+"師"}" style="width:100%;font-size:1.1rem;padding:8px;margin-bottom:8px;border:1px solid #b9a575">
@@ -3085,9 +3099,9 @@ function renderModal(){const v=$("#veil");const p=state.pending;v.classList.togg
     v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>歷史評價</span><span>${dateStr(Math.min(state.turn,maxTurns()-1))}</span></div><span class="stamp">${o[1]}</span>
       <h2>${o[0]}</h2><p>${o[2]}</p>${state.chal?(()=>{const C=CHAL.find(c=>c.id===state.chal);return `<p style="font-size:1.6rem;color:#b8860b;margin:0 0 6px">${"★".repeat(state.stars||0)}${"☆".repeat(3-(state.stars||0))}</p><p style="font-size:.85rem">★ 完成挑戰　★ ${C.t2}　★ ${C.t3}</p>${state.over==="chalfail"||state.over!=="chalwin"?`<p style="font-size:.85rem;background:#fffaf0;border:1px solid #c9bfa3;padding:8px">💡 下次試試：${CHINT[C.id]}</p>`:""}`;})():""}
       <table class="score-tbl">${sc.parts.map(p=>`<tr><td>${p[0]}</td><td>${p[1]}</td></tr>`).join("")}<tr><td><b>總分・${rankName(sc.total)}</b></td><td><b>${sc.total}</b></td></tr></table><details open style="margin-bottom:12px"><summary style="cursor:pointer;font-weight:700">🏆 排行榜</summary>${boardHtml(5)}</details>
-      ${extra}<div style="display:flex;gap:8px;flex-wrap:wrap">${btn}<button class="pbtn" type="button" id="rpOpen">▶ 歷史回放</button><button class="pbtn" type="button" id="again">回到開始畫面</button></div></div>`;
+      ${extra}<div style="display:flex;gap:8px;flex-wrap:wrap">${btn}${state.over==="bankrupt"&&!state.hs?`<button class="pbtn" type="button" id="bkCont" style="background:#e8bb5f">💸 申請國際紓困，繼續遊戲</button>`:""}<button class="pbtn" type="button" id="rpOpen">▶ 歷史回放</button><button class="pbtn" type="button" id="again">回到開始畫面</button></div></div>`;
     const n=$("#next");if(n)n.onclick=()=>{const dd=state.duel;dd.idx=1;state=newState({diff:state.diff,seed:dd.seed,mode:"duel",duel:dd,terms:state.maxTerms,sc:state.sc,nat:state.nat,cname:state.W.cname,ccolor:state.W.ccolor});ui={tab:"map",sel:"root",vb:[0,0,1000,500],mm:"pol",ws:null};log(`${dd.names[1]} 宣誓就任總統`);save();render();};
-    $("#again").onclick=()=>{try{localStorage.removeItem(SAVE_KEY);}catch(e){}state=null;render();};$("#rpOpen").onclick=openReplay;}
+    $("#again").onclick=()=>{try{localStorage.removeItem(SAVE_KEY);}catch(e){}state=null;render();};$("#rpOpen").onclick=openReplay;const bc=$("#bkCont");if(bc)bc.onclick=()=>{state.over=false;state.recorded=0;const amt=Math.max(0,-state.stats.treasury)+150+Math.round(B()*5);state.stats.treasury+=amt;(state.debts=state.debts||[]).push({o:"IMF",per:Math.ceil(amt*1.2/12),left:12});applyFx({prestige:-10,stability:-6,approval:-5});state.bkT=state.turn;log(`國家破產後向國際貨幣基金申請 ${amt} 億紓困`);state.pending={kind:"msg",kicker:"國際紓困",stamp:"紓困",title:"國際貨幣基金同意紓困",text:`借到 ${amt} 億，接下來 12 季每季要還 ${Math.ceil(amt*1.2/12)} 億。一定要減少開銷：結束戰爭、降低軍力、提高稅率或多蓋民用工廠！`};save();render();};}
 }
 
 let startOpt={vsk:"pvp",net:"local",fan:"on",mode:"single",diff:"easy",terms:"3",sc:"m",nat:"158",chal:"tw",tut:(()=>{try{return localStorage.getItem("lanzhou-tut-done")?"off":"on";}catch(_){return"on";}})()};
