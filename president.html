@@ -2466,7 +2466,7 @@ function renderTree(){
     const meta=st==="done"?"✓ 已完成":st==="active"?`推動中・剩 ${state.active.left} 季`:`${f.cost} 點・${f.t} 季`;
     html+=`<button type="button" class="fnode ${st} ${ui.sel===f.id?"sel":""}" data-f="${f.id}" style="left:${X(f.c)}px;top:${Y(f.r)}px"><span class="fn">${f.n}</span><span class="fm">${meta}</span></button>`;}
   for(const [c,r] of[[.5,2],[6.5,2],[8.5,3]])html+=`<span class="xor" style="left:${X(c)+W/2}px;top:${Y(r)+22}px">二擇一</span>`;
-  $("#tree").innerHTML=html;}
+  $("#tree").innerHTML=html;nmDom($("#tree"));}
 function renderFocusDetail(){const f=FBY[ui.sel];const st=focusState(f);let why="";
   if(st==="done")why="已完成。";else if(st==="active")why=`推動中，還要 ${state.active.left} 季。`;
   else if(st==="blocked")why="已經選了另一條路線，這個不能再選。";
@@ -2476,7 +2476,7 @@ function renderFocusDetail(){const f=FBY[ui.sel];const st=focusState(f);let why=
   const can=st==="avail"&&!state.active&&state.pp>=f.cost&&!state.pending;
   $("#fdetail").innerHTML=`<div class="txt"><h4>${f.n}</h4><p>${f.d}</p>${fxHtml(f.fx,true)}</div>
    <div><button class="btn" type="button" id="goFocus" ${can?"":"disabled"}>開始推動（${f.cost} 點・${f.t} 季）</button>${why&&!can?`<div class="why">${why}</div>`:""}</div>`;
-  const b=$("#goFocus");if(b)b.onclick=()=>startFocus(f.id);}
+  const b=$("#goFocus");if(b)b.onclick=()=>startFocus(f.id);nmDom($("#fdetail"));}
 function decCard(d){const left=(state.cd[d.id]||0)-state.turn;const s=state.stats;const pp=decPP(d);let why="";
   if(d.req&&!d.req(state))why=d.reqT||"條件不足";else if(d.north&&(era()>=ERAS.length||!rivalAlive()))why="已經沒有對手國";else if(d.id==="cutgov"&&(state.cuts||0)>=16)why="已經精簡到底";else if(left>0)why=`冷卻中，${left} 季後可用`;else if(pp&&state.pp<pp)why="政治點數不夠";else if(d.money&&s.treasury<d.money)why="國庫不夠";
   const cost=[pp?pp+" 點":"",d.money?d.money+" 億":""].filter(Boolean).join("・");
