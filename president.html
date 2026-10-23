@@ -1485,6 +1485,8 @@ function releaseNation(s,mode){const W=state.W,c=relCands(s);if(!c||state.pp<20)
   try{mem(X).help+=3;}catch(_){}
   W._tb=null;if(heldTiles()===0)state.newland=null;state.pending=null;save();render();}
 function handleAct(a,s){const W=state.W;if(!state||state.over)return;if(state.pending&&a!=="selc")return;const o=W.own[s];
+  if(a==="aloan"){state.pending={kind:"allyloan",o,amt:100};render();return;}
+  if(a==="awar"){state.pending={kind:"allywar",o};render();return;}
   if(isHum(o)&&o!==W.me){const m={pact:"pact",trade:"trade",join:"ally",invite:"ally",hally:"ally",peace:"peace",treaty:"peace",hgift:"gift"}[a];if(m){hsSend(m,o);save();render();return;}
     if(a==="hland"){const pv=Object.keys(W.own).filter(x=>W.own[x]===o&&x!==o).sort((x,y)=>provPrice(x)-provPrice(y));if(pv.length&&!atWar(W.me,o))state.pending={kind:"hlandpick",o,pv:pv.slice(0,40)};render();return;}
     if(a==="harms"){if(!atWar(W.me,o))state.pending={kind:"harmsreq",o,amt:6,price:50};else toast("交戰中不能買賣");render();return;}
@@ -1641,6 +1643,10 @@ function hsAnswer(yes){const c=state.pending,W=state.W,me=W.me,o=c.from,hs=state
 function hsInbox(){const hs=state.hs;if(!hs||state.pending||state.over)return;const ib=hs.inbox[hs.cur];if(!ib||!ib.length)return;const c=ib.shift();
   const W=state.W;
   if(c.k==="gift")state.stats.treasury+=c.amt||0;
+  if(c.k==="loanreq"){state.pending={kind:"hloan",...c};return;}
+  if(c.k==="warreq"){if(alive(c.tgt))state.pending={kind:"hwar",...c};return;}
+  if(c.k==="loanok"){if(c.ok){state.stats.treasury+=c.amt;(state.debts=state.debts||[]).push({o:c.from,per:Math.ceil(c.amt*1.15/8),left:8,hum:1});}state.pending={kind:"msg",kicker:"盟友回覆",stamp:c.ok?"答應":"拒絕",title:c.title,text:c.text};return;}
+  if(c.k==="note"){state.pending={kind:"msg",kicker:"盟友回覆",stamp:c.ok?"答應":"拒絕",title:c.title,text:c.text};return;}
   if(c.k==="armsPaid"){if(c.ok)state.stats.treasury+=c.amt||0;state.pending={kind:"msg",kicker:"父子對戰・軍火",stamp:c.ok?"成交":"拒絕",title:c.ok?`${c.name} 買了你的軍火！`:`${c.name} 不買你的軍火`,text:c.ok?`收到 ${c.amt} 億，已經存進國庫。`:"價格可能太高了，下次便宜一點？"};return;}
   if(c.k==="arms"){if(alive(c.from))state.pending={kind:"hsarms",...c};return;}
   if(c.k==="land"||c.k==="resreq"||c.k==="armsreq"){state.pending={kind:"hsdeal",...c};return;}
@@ -2284,7 +2290,7 @@ const BUILD={civ:["民用工廠",40],mil:["軍工廠",50]};
 function budget(forTurn){const s=state.stats,cab=state.cab;const rate={low:.5,mid:.7,high:.9}[state.tax];
   const scale=1+Math.min(state.turn,40)*.0075;
   const inc=[["稅收（經濟 × 稅率）",s.econ*rate*scale*Math.sqrt(B()/15)*(state.laws&&state.laws.econ==="war"?.8:1)],["民用工廠",state.ind?state.ind.civ*1.5*(state.laws.econ==="civil"?1.2:1)*(hasT("smart")?1.2:1):0],["新領土",state.newland?state.newland.integ/8:0],["佔領區",heldTiles()*3],["經濟部長招商",cab.econ==="chen"?6:0],["貿易協定",state.W?tradeInc():0],["資源出口",state.W?resExport():0]];
-  const exp=[["政府基本開銷",25],["軍費（軍力越高越貴）",s.military*.2*Math.sqrt(B()/15)*(cab.def==="liu"?.75:1)*(1+((state.W&&state.W.comp)||{arm:0}).arm/100)],["社福支出成長",Math.min(state.turn,24)*.5],["國策維持費",state.done.length*.4],["佔領區治安費",state.W?heldTiles()*4*(1+Math.max(0,dlv())*.5):0],["精簡政府省下",-(state.cuts||0)]];
+  const exp=[["政府基本開銷",25],["軍費（軍力越高越貴）",s.military*.2*Math.sqrt(B()/15)*(cab.def==="liu"?.75:1)*(1+((state.W&&state.W.comp)||{arm:0}).arm/100)],["社福支出成長",Math.min(state.turn,24)*.5],["國策維持費",state.done.length*.4],["佔領區治安費",state.W?heldTiles()*4*(1+Math.max(0,dlv())*.5):0],["精簡政府省下",-(state.cuts||0)],["盟國借款還款",(state.debts||[]).reduce((a,d)=>a+d.per,0)]];
   if(!forTurn)exp.push(["國家級工程款",state.wonders&&state.wonders.active?wonderPer(WBY[state.wonders.active.id]):0],["戰爭開銷",state.war?Math.round(12*(cab.def==="liu"?.75:1)):0]);
   {const lv=dlv();if(lv>0)exp.push(["官僚浪費與通膨（難度）",inc.reduce((a,b)=>a+b[1],0)*.06*lv]);}
   const I=inc.reduce((a,b)=>a+b[1],0),E=exp.reduce((a,b)=>a+b[1],0);return{inc,exp,I,E,net:Math.round(I-E)};}
@@ -2386,6 +2392,7 @@ function endTurn0(){
     if(nl.integ>=100&&!f.integrated){f.integrated=true;applyFx({econ:8,prestige:5});log("北方新領土完全整合！");toast("北方新領土完全整合！經濟 +8");}}
   const prevEcon=state.lastEcon;state.lastEcon=s.econ;state.growth=r1((s.econ-prevEcon)*1.6+(s.econ-50)/12+1.6);
   if(state.imports)state.imports=state.imports.filter(c=>{if(c.until>state.turn)return true;log(`${tagName(c.o)}的${resKeyName(c.k)[0]}合約到期`);return false;});
+  if(state.debts&&state.debts.length){state.debts=state.debts.filter(d=>{d.left--;if(d.hum&&state.hs&&isHum(d.o))state.hs.inbox[hsIdx(d.o)].push({k:"gift",from:state.W.me,name:state.hs.names[state.hs.cur],amt:d.per});if(d.left<=0){log(`還清${tagName(d.o)}的借款`);if(!isHum(d.o))state.W.rel[d.o]=clamp((state.W.rel[d.o]||0)+5,-100,100);return false;}return true;});}
   if(state.loans&&state.loans.length){state.loans=state.loans.filter(l=>{if(l.due>state.turn)return true;if(alive(l.o)&&!atWar(state.W.me,l.o)){s.treasury+=l.amt;log(`${tagName(l.o)}還款 ${l.amt} 億`);}else log(`${tagName(l.o)}的貸款收不回來了`);return false;});}
   worldStep();try{persStep();}catch(e){console.error(e);}alienStep();if(state.over)return;zbStep();if(state.over)return;meteorStep();marsTick();cardTick();if(state.volc&&state.volc>state.turn){s.econ=clamp(s.econ-1,0,100);}
   if(season()===0&&myEnemies().some(e=>fronts(state.W.me,e).some(([a,b])=>GBY[b]&&wxMul(b)<=.65))){state.mp=Math.max(0,state.mp-4);log("❄ 嚴冬造成前線部隊凍傷減員");}
@@ -2603,6 +2610,12 @@ function openCabinet(post){if(state.pending)return;const cost=state.turn===0?0:2
 function appoint(post,id){const p=state.pending;if(id===state.cab[post]){state.pending=null;render();return;}
   if(p.cost){if(state.pp<p.cost)return;state.pp-=p.cost;applyFx({approval:-1});}
   state.cab[post]=id;log(`任命 ${minister(post).n} 為${POSTS[post].title}`);state.pending=null;save();render();}
+function allyCard(){const W=state.W,me=W.me,f=facOf(me);if(!f)return"";const M=W.fac[f].filter(t=>t!==me&&alive(t));if(!M.length)return"";const dis=state.pending?"disabled":"",cd=state.askCd||{},D=state.debts||[];
+  return `<div class="nbr" style="grid-column:1/-1;border-color:var(--brass)"><h5>🤝 向「${f}」盟友求援</h5><p class="hint" style="margin:0 0 6px">可以跟盟友借錢（分 8 季還，利息 15%），或請盟友出兵攻打某個國家。關係越好越容易答應；被拒絕要等 3 季才能再問同一國。</p>
+   ${D.length?`<div style="font-size:.85rem;margin-bottom:6px">💳 欠款：${D.map(d=>`${tagName(d.o)} 每季還 ${d.per} 億（剩 ${d.left} 季）`).join("、")}</div>`:""}
+   <div style="display:flex;flex-direction:column;gap:6px">${M.map(t=>{const c=(cd[t]||0)>state.turn;return `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span style="min-width:7em"><span class="swatch" style="background:${colorOf(t)}"></span>${tagName(t)}${isHum(t)?"（玩家）":""} <small style="color:var(--muted)">關係 ${isHum(t)?"—":Math.round(W.rel[t]||0)}</small></span><button class="ghost sm" type="button" data-act="aloan" data-s="${t}" ${c?"disabled":dis}>💰 借錢</button><button class="ghost sm" type="button" data-act="awar" data-s="${t}" ${c?"disabled":dis}>⚔ 請求出兵</button>${c?`<small style="color:var(--muted)">（${cd[t]-state.turn} 季後可再問）</small>`:""}</div>`;}).join("")}</div></div>`;}
+function allyLoanOk(t,amt){const W=state.W,r=W.rel[t]||0,big=base(t)[0];return clamp(.35+r/150+big/150-amt/600-(state.debts||[]).length*.15,0,.95);}
+function allyWarOk(t,x){const W=state.W,r=W.rel[t]||0;if(atWar(t,x)||sameFac(t,x)||!alive(x))return 0;let p=.2+r/130+(atWar(W.me,x)?.3:0)+(fronts(t,x).length||fronts(x,t).length?.15:-.15)+(divs(t)*qual(t)>divs(x)*qual(x)?.15:-.2)-(enemies(t).length*.15);if(pactWith&&W.pact&&W.pact[x]>state.turn)p-=.1;return clamp(p,0,.9);}
 function worldWarsCard(){const W=state.W,me=W.me,L=Object.entries(W.war).map(([k,w])=>[k.split("|"),w]).filter(([[a,b]])=>a!==me&&b!==me&&alive(a)&&alive(b));if(!L.length)return"";
   return `<div class="nbr" style="grid-column:1/-1"><h5>🌍 世界戰況（${L.length} 場戰爭）</h5><div style="display:flex;flex-direction:column;gap:3px;font-size:.85rem">${L.slice(0,12).map(([[a,b],w])=>`<div>⚔ <span class="swatch" style="background:${colorOf(a)}"></span>${tagName(a)} 對 <span class="swatch" style="background:${colorOf(b)}"></span>${tagName(b)}　<span style="color:var(--muted)">第 ${(w.t||0)+1} 季・${Math.round(divs(a))} 師 vs ${Math.round(divs(b))} 師</span>${(W.guar||{})[b]>=state.turn||(W.guar||{})[a]>=state.turn?" 🛡":""}</div>`).join("")}${L.length>12?`<div style="color:var(--muted)">……還有 ${L.length-12} 場</div>`:""}</div><p class="hint" style="margin:6px 0 0">點交戰國，可以派志願軍或租借武器幫其中一方。</p></div>`;}
 function humTradeCard(){if(!state.hs)return"";const W=state.W,me=W.me,dis=state.pending?"disabled":"";return state.hs.tags.filter(t=>t!==me&&alive(t)).map(o=>{const hn=esc(state.hs.names[hsIdx(o)]),war=atWar(me,o),tr=tagRes(o),pv=Object.keys(W.own).filter(x=>W.own[x]===o&&x!==o);
@@ -2610,7 +2623,7 @@ function humTradeCard(){if(!state.hs)return"";const W=state.W,me=W.me,dis=state.
   <div class="waracts"><button class="btn" type="button" data-act="resbuy" data-s="${o}" ${tr.o+tr.st+tr.x>.2?dis:"disabled"}>🛢 買資源${tr.o+tr.st+tr.x>.2?"":"（對方沒有資源）"}</button><button class="btn" type="button" data-act="harms" data-s="${o}" ${state.stats.treasury>=20?dis:"disabled"}>🪖 買軍火</button><button class="btn" type="button" data-act="hland" data-s="${o}" ${pv.length?dis:"disabled"}>🗺 買土地</button><button class="ghost" type="button" data-act="hgift" data-s="${o}" ${state.stats.treasury>=50?dis:"disabled"}>💰 送 50 億</button>${!sameFac(o,me)?`<button class="ghost" type="button" data-act="hally" data-s="${o}" ${dis}>🤝 邀請結盟</button>`:""}${!pactWith(o)?`<button class="ghost" type="button" data-act="pact" data-s="${o}" ${state.pp>=20?dis:"disabled"}>📜 互不侵犯（20 點）</button>`:""}${!(W.trade||{})[o]?`<button class="ghost" type="button" data-act="trade" data-s="${o}" ${state.pp>=15?dis:"disabled"}>📦 貿易協定（15 點）</button>`:""}</div>`}</div>`;}).join("");}
 function renderWorld(){const W=state.W,me=W.me,f=state.flags,S=scn();
   const list=[...new Set([rival(),S.play[me][13],...Object.keys(S.play)])].filter(t=>t!==me),mf=facOf(me);
-  $("#nbrs").innerHTML=humTradeCard()+worldWarsCard()+`<div class="nbr" style="border-color:var(--brass)"><h5>我國陣營</h5><div class="dir">${mf||"沒有加入陣營"}</div><div style="font-size:.85rem">${mf?W.fac[mf].filter(alive).map(tagName).join("、"):"在地圖上點其他國家，可以申請加入他們的陣營，或成立自己的陣營。"}</div></div>`+
+  $("#nbrs").innerHTML=allyCard()+humTradeCard()+worldWarsCard()+`<div class="nbr" style="border-color:var(--brass)"><h5>我國陣營</h5><div class="dir">${mf||"沒有加入陣營"}</div><div style="font-size:.85rem">${mf?W.fac[mf].filter(alive).map(tagName).join("、"):"在地圖上點其他國家，可以申請加入他們的陣營，或成立自己的陣營。"}</div></div>`+
    list.map(t=>{const war=atWar(me,t),r=W.rel[t]||0,al=alive(t);const st=!al?["已投降","muted"]:war?["交戰中","seal"]:sameFac(t,me)?["同陣營","good"]:r>=40?["友好","good"]:r<=-30?["敵視","seal"]:["中立","muted"];
     return `<div class="nbr"><h5><span class="swatch" style="background:${colorOf(t)}"></span>${tagName(t)}</h5><div class="dir">${govOf(t)}・${facOf(t)||"無陣營"}${t===rival()?"・主要對手":""}</div><div style="font-size:.85rem">${al?`陸軍約 ${Math.round(divs(t))} 師・關係 ${r}`:"已經投降"}</div><span class="pill" style="color:var(--${st[1]})">${st[0]}</span>${al?`<button class="ghost sm" type="button" data-act="selc" data-s="${t}" style="width:max-content">在地圖上查看</button>`:""}</div>`;}).join("");
   $("#decs-world").innerHTML=DECS.filter(d=>d.tab==="world").map(decCard).join("");
@@ -2833,6 +2846,36 @@ function renderModal(){const v=$("#veil");const p=state.pending;v.classList.togg
     $("#haR").oninput=()=>{p.amt=+$("#haR").value;upd();};$("#haQ").oninput=()=>{p.price=+$("#haQ").value;upd();};
     $("#haGo").onclick=()=>{if(state.stats.treasury<p.price)return;const hs=state.hs,oi=hsIdx(o);state.stats.treasury-=p.price;hs.inbox[oi].push({k:"armsreq",from:state.W.me,name:hs.names[hs.cur],amt:p.amt,price:p.price});state.pending=null;log(`向${tagName(o)}訂購軍火（軍力 +${p.amt}，${p.price} 億，先付款）`);toast(`📨 訂單已送出，${hs.names[oi]} 不賣會退款`);save();render();};
     $("#cancel").onclick=()=>{state.pending=null;render();};}
+  else if(p.kind==="allyloan"){const o=p.o,hum=isHum(o),ch=hum?null:allyLoanOk(o,p.amt),per=Math.ceil(p.amt*1.15/8);
+    v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>財政部・盟國貸款</span><span>${dateStr()}</span></div><span class="stamp">借款</span><h2>💰 向${tagName(o)}借錢</h2>
+     <label style="font-weight:700">借多少：<span id="alA" style="font-size:1.3rem;color:#8a5a00">${p.amt}</span> 億</label><input id="alR" type="range" min="50" max="400" step="50" value="${p.amt}" style="width:100%">
+     <p>分 8 季還，每季還 <b>${per}</b> 億（總共 ${per*8} 億）。${hum?`👤 ${tagName(o)}是玩家，會在他的回合決定借不借。`:`對方答應的機會大約 <b>${Math.round(ch*100)}%</b>。`}</p>
+     <div style="display:flex;gap:8px"><button class="pbtn" type="button" id="alGo">📨 提出借款</button><button class="pbtn" type="button" id="cancel">取消</button></div></div>`;
+    $("#alR").oninput=()=>{p.amt=+$("#alR").value;render();};$("#cancel").onclick=()=>{state.pending=null;render();};
+    $("#alGo").onclick=()=>{const W=state.W;state.askCd=state.askCd||{};state.pending=null;
+      if(hum){const hs=state.hs;hs.inbox[hsIdx(o)].push({k:"loanreq",from:W.me,name:hs.names[hs.cur],amt:p.amt});state.askCd[o]=state.turn+1;log(`向${tagName(o)}申請借款 ${p.amt} 億`);toast("📨 已送出借款申請");}
+      else if(rng(800+hashS(o)+state.turn)<ch){state.stats.treasury+=p.amt;(state.debts=state.debts||[]).push({o,per,left:8});log(`向${tagName(o)}借到 ${p.amt} 億`);state.pending={kind:"msg",kicker:"盟國貸款",stamp:"成功",title:`${tagName(o)}借給我們 ${p.amt} 億！`,text:`接下來 8 季每季自動還 ${per} 億。`};}
+      else{state.askCd[o]=state.turn+3;W.rel[o]=clamp((W.rel[o]||0)-3,-100,100);state.pending={kind:"msg",kicker:"盟國貸款",stamp:"婉拒",title:`${tagName(o)}婉拒了借款`,text:"他們說自己手頭也很緊。先改善關係，或少借一點再試試。"};}
+      save();render();};}
+  else if(p.kind==="allywar"){const W=state.W,o=p.o,hum=isHum(o),me=W.me;const T=[...new Set([...myEnemies(),rival(),...Object.keys(W.target||{})])].filter(x=>x&&alive(x)&&x!==o&&x!==me&&!sameFac(x,o)&&!atWar(o,x));
+    v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>國防部・聯合作戰</span><span>${dateStr()}</span></div><span class="stamp">出兵</span><h2>⚔ 請${tagName(o)}出兵攻打哪一國？</h2><p>${hum?`👤 ${tagName(o)}是玩家，會在他的回合決定要不要開戰。`:"盟友會考慮關係、實力、有沒有接壤再決定。正在跟我們打仗的敵人，盟友比較願意幫忙。"}</p>
+     <div class="choices">${T.map(x=>`<button class="choice" type="button" data-aw="${x}"><strong>${tagName(x)}${atWar(me,x)?"（正在跟我們打仗）":""}</strong><small>${hum?"":`答應機會約 ${Math.round(allyWarOk(o,x)*100)}%・`}對方約 ${Math.round(divs(x))} 師</small></button>`).join("")||"<p>現在沒有可以請他攻打的國家（先跟某國開戰，或把某國設為主攻目標）。</p>"}</div>
+     <p style="margin:10px 0 0"><button class="pbtn" type="button" id="cancel">取消</button></p></div>`;
+    $("#cancel").onclick=()=>{state.pending=null;render();};
+    v.querySelectorAll("[data-aw]").forEach(b=>b.onclick=()=>{const x=b.dataset.aw;state.askCd=state.askCd||{};state.pending=null;
+      if(hum){const hs=state.hs;hs.inbox[hsIdx(o)].push({k:"warreq",from:me,name:hs.names[hs.cur],tgt:x});state.askCd[o]=state.turn+1;log(`請${tagName(o)}出兵攻打${tagName(x)}`);toast("📨 已送出出兵請求");}
+      else if(rng(810+hashS(o+x)+state.turn)<allyWarOk(o,x)){declare(o,x);W.rel[o]=clamp((W.rel[o]||0)-5,-100,100);log(`應我國請求，${tagName(o)}向${tagName(x)}宣戰`);state.pending={kind:"msg",kicker:"聯合作戰",stamp:"出兵",title:`${tagName(o)}答應出兵！`,text:`${tagName(o)}已經向${tagName(x)}宣戰。地圖上 ◆ 標記是盟軍的進攻。`};}
+      else{state.askCd[o]=state.turn+3;state.pending={kind:"msg",kicker:"聯合作戰",stamp:"婉拒",title:`${tagName(o)}不願意出兵`,text:`${tagName(o)}覺得現在攻打${tagName(x)}風險太高。改善關係、等我們先開戰，或請別的盟友試試。`};}
+      save();render();});}
+  else if(p.kind==="hloan"||p.kind==="hwar"){const isL=p.kind==="hloan";
+    v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>盟友請求</span><span>${dateStr()}</span></div><span class="stamp">${isL?"借款":"出兵"}</span><h2>${isL?`💰 ${esc(p.name)}想跟你借 ${p.amt} 億`:`⚔ ${esc(p.name)}請你出兵攻打${tagName(p.tgt)}`}</h2>
+     <p>${isL?`對方會分 8 季還你，總共 ${Math.ceil(p.amt*1.15/8)*8} 億（你的國庫有 ${Math.round(state.stats.treasury)} 億）。`:`同意的話，我們會立刻向${tagName(p.tgt)}宣戰（對方約 ${Math.round(divs(p.tgt))} 師）。`}</p>
+     <div style="display:flex;gap:8px"><button class="pbtn" type="button" id="hrY" ${isL&&state.stats.treasury<p.amt?"disabled":""}>🤝 同意</button><button class="pbtn" type="button" id="hrN">拒絕</button></div></div>`;
+    const done=yes=>{const W=state.W,hs=state.hs,oi=hsIdx(p.from);state.pending=null;
+      if(yes&&isL){state.stats.treasury-=p.amt;}
+      if(yes&&!isL&&alive(p.tgt)&&!atWar(W.me,p.tgt)&&!sameFac(W.me,p.tgt)){declare(W.me,p.tgt);syncWar();log(`應盟友請求向${tagName(p.tgt)}宣戰`);}
+      hs.inbox[oi].push({k:isL?"loanok":"note",ok:yes,amt:p.amt,from:W.me,name:hs.names[hs.cur],title:yes?`${hs.names[hs.cur]} 答應了！`:`${hs.names[hs.cur]} 拒絕了`,text:isL?(yes?`借到 ${p.amt} 億，之後 8 季每季自動還款。`:"對方不借。"):(yes?`${tagName(W.me)}已經向${tagName(p.tgt)}宣戰！`:`對方不想攻打${tagName(p.tgt)}。`)});save();render();};
+    $("#hrY").onclick=()=>done(true);$("#hrN").onclick=()=>done(false);}
   else if(p.kind==="heroname"){const sug=HERONM.filter(n=>!(state.heroes||[]).some(h=>h.n===n));
     v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>參謀本部</span><span>授勳</span></div><span class="stamp">王牌</span><h2>🏅 第 ${p.no} 師戰功彪炳，升格為王牌部隊！</h2><p>幫這支部隊取個威風的名字吧！王牌部隊每顆星讓全軍戰力 +1.5%，打越多仗升越多星（最多 3 星）。</p>
      <input id="hrIn" maxlength="10" value="${sug[0]||"英雄第"+p.no+"師"}" style="width:100%;font-size:1.1rem;padding:8px;margin-bottom:8px;border:1px solid #b9a575">
