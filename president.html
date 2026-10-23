@@ -1046,7 +1046,7 @@ function isDem(st){st=st||state;if(st&&st.W&&st.W.cplay)return st.W.cplay[10]===
 function govOf(t){const S=scn();if(S.play[t])return S.play[t][10]==="d"?"民主":"威權";return S.auth.includes(t)?"威權":"民主";}
 function colorOf(t){if(state.W.ccolor&&t===state.W.me)return state.W.ccolor;const f=FIXC[state.W.sc][t];if(f)return f;let h=7;for(const c of String(t))h=(h*31+c.charCodeAt(0))%3600;return `hsl(${h%360},${22+h%17}%,${44+(h>>3)%16}%)`;}
 function hashS(s){let h=7;for(const c of String(s))h=(h*31+c.charCodeAt(0))%997;return h;}
-function hp(s){const c=state.W.own[s]===s;return clamp(Math.sqrt((GBY[s]?GBY[s].a:AMED)/AMED),c?1:.6,5)*(c?1.6:1);}
+function hp(s){const c=state.W.own[s]===s;return clamp(Math.sqrt((GBY[s]?GBY[s].a:AMED)/AMED),c?1:.6,5)*(c?1.6*(1+(state.W.own[s]===state.W.me?0:.2*hk())):1);}
 
 const ERAS=[0];function era(){return 0;}
 const NATDEC={m:{
@@ -1255,7 +1255,7 @@ function declare(a,b){const W=state.W,me=W.me;if(a===b||atWar(a,b)||sameFac(a,b)
 function makePeace(e){const W=state.W;delete W.war[wk(W.me,e)];delete W.target[e];if(W.offer===e)W.offer=null;if(!myEnemies().length)W.extra=0;log(`與${tagName(e)}停戰`);syncWar();}
 function take(s,att,def){const W=state.W,me=W.me;if(W.beach)delete W.beach[s];if(W.orig[s]==null)W.orig[s]=def;W.own[s]=att;if(W.orig[s]===att)delete W.orig[s];delete state.forts[s];
   const n=GBY[s].n;
-  if(att===me){applyFx({approval:2,prestige:2});state.ind.civ+=1+Math.floor(GBY[s].a/1500);state.mp+=Math.min(6,1+GBY[s].a/400)*1.5;W.sup=clamp(W.sup+3,0,100);genXP(2);try{heroGain();}catch(_){}state.st2=state.st2||{};state.st2.taken=(state.st2.taken||0)+1;state.st2.tt=state.st2.tt||{};state.st2.tt[state.turn]=(state.st2.tt[state.turn]||0)+1;{const lv=dlv();if(lv>0){state.stats.tension=clamp(state.stats.tension+.5*lv,0,100);for(const t in W.rel)if(t!==def&&!sameFac(t,me))W.rel[t]=clamp((W.rel[t]||0)-.6*lv,-100,100);}}log(`我軍攻佔「${n}」！`);toast(`🚩 攻佔 ${n}`);}
+  if(att===me){applyFx({approval:2,prestige:2});state.ind.civ+=(hk()>=1?0:1)+Math.floor(GBY[s].a/1500);state.mp+=Math.min(6,1+GBY[s].a/400)*1.5*(1-.25*hk());if(!isHum(def)&&alive(def))W.dv[def]=divs(def)*(1+.04*hk());W.sup=clamp(W.sup+3,0,100);genXP(2);try{heroGain();}catch(_){}state.st2=state.st2||{};state.st2.taken=(state.st2.taken||0)+1;state.st2.tt=state.st2.tt||{};state.st2.tt[state.turn]=(state.st2.tt[state.turn]||0)+1;{const lv=dlv();if(lv>0){state.stats.tension=clamp(state.stats.tension+.5*lv,0,100);for(const t in W.rel)if(t!==def&&!sameFac(t,me))W.rel[t]=clamp((W.rel[t]||0)-.6*lv,-100,100);}}log(`我軍攻佔「${n}」！`);toast(`🚩 攻佔 ${n}`);}
   else if(def===me){try{heroHit();}catch(_){}applyFx({approval:-3,stability:-2,econ:-2});W.sup=clamp(W.sup-4,0,100);log(`「${n}」被${tagName(att)}攻佔…`);toast(`⚠ ${n} 失守`);}
   else if(scn().play[att]||scn().play[def])news(`${tagName(att)}攻佔「${n}」`);
   if(s===def)capitulate(def,att);}
@@ -1266,7 +1266,7 @@ function capitulate(def,by){const W=state.W,me=W.me;
   delete W.subj[def];if(!W.dead.includes(def))W.dead.push(def);state.stats.tension=clamp(state.stats.tension+5,0,100);
   if(def===me)return;
   log(`${tagName(def)}向${tagName(by)}投降！`);news(`${tagName(def)}向${tagName(by)}投降`);toast(`🏳 ${tagName(def)} 投降`);
-  if(by===me){for(const sh in W.own)if(W.own[sh]===me&&W.orig[sh]===def){state.ind.civ+=Math.floor(GBY[sh].a/1500);if(sh!==def)state.mp+=Math.min(6,1+GBY[sh].a/400)*1.5;}state.victories++;applyFx({prestige:10,approval:6,treasury:40});if(base(def)[0]>=20)state.flags.conquered=true;if(!isHum(def)){W.pc=def;state.queue.unshift({id:"peace_conf",turn:state.turn,pc:def});}}
+  if(by===me){for(const sh in W.own)if(W.own[sh]===me&&W.orig[sh]===def){state.ind.civ+=Math.floor(GBY[sh].a/1500/(1+.5*hk()));if(sh!==def)state.mp+=Math.min(6,1+GBY[sh].a/400)*1.5*(1-.25*hk());}state.victories++;applyFx({prestige:10,approval:6,treasury:40});if(base(def)[0]>=20)state.flags.conquered=true;if(!isHum(def)){W.pc=def;state.queue.unshift({id:"peace_conf",turn:state.turn,pc:def});}}
   if(myAreaShare()>=.3)state.flags.unified=true;syncWar();}
 function peaceTerms(k){const W=state.W,t=W.pc;if(!t)return;const mine=Object.keys(W.own).filter(s=>W.own[s]===W.me&&W.orig[s]===t);
   if(k==="keep"){applyFx({prestige:3*Math.min(mine.length,5)});state.stats.tension=clamp(state.stats.tension+8,0,100);log(`和約：併吞${tagName(t)}`);}
@@ -1276,7 +1276,7 @@ function peaceTerms(k){const W=state.W,t=W.pc;if(!t)return;const mine=Object.key
   W.pc=null;}
 function lose(t,frac,bad){const W=state.W;if(t===W.me){const c=((W.stance==="atk"?1.2:W.stance==="bal"?.8:.4)+(bad?.8:0))*(genT()==="log"?.7:1)*(hasTr("logi")?.75:1);
     state.stats.military=clamp(r1(state.stats.military-c),0,100);state.mp=Math.max(0,r1(state.mp-c*.8*B()/15));return;}
-  if(W.dv[t]==null)W.dv[t]=base(t)[0];W.dv[t]=Math.max(base(t)[0]*.25,W.dv[t]*(1-frac));}
+  if(W.dv[t]==null)W.dv[t]=base(t)[0];W.dv[t]=Math.max(base(t)[0]*(.25+.1*hk()),W.dv[t]*(1-frac));}
 function attack(att,def,k,touched){const W=state.W,me=W.me;if(att===me&&W.stance==="def")return null;
   const F=fronts(att,def);if(!F.length)return null;const cand=[...new Set(F.map(p=>p[1]))];
   const land=x=>F.some(p=>p[1]===x&&(p[0]==="BEACH"||(NL[p[0]]&&NL[p[0]].has(x))));
@@ -1284,7 +1284,7 @@ function attack(att,def,k,touched){const W=state.W,me=W.me;if(att===me&&W.stance
   if(!tgt){const sc=x=>(x===def?-3:0)+hp(x)*(1+fortL(x)*.3)*(land(x)?1:2.5)-(W.prog[x]&&!atWar(W.prog[x].by,att)?W.prog[x].v/25:0);cand.sort((x,y)=>sc(x)-sc(y));tgt=cand[0];if(att===me)W.target[def]=tgt;}
   const w=W.war[k];let A=pow(att,def),D=pow(def,att);const af=w&&w.air!=null&&(att===me||def===me)?(w.air>=60?1.1:w.air<=40?.9:1):1;
   if(!land(tgt)){A*=.35;D*=1.15;}
-  {const dm=[1,1,1.12,1.25][dlv()+1];if(att===me){D*=dm;A*=supplyMul(tgt);}else if(def===me)A*=dm;}
+  {const dm=[1,1.06,1.15,1.28][dlv()+1];if(att===me&&tgt===def)D*=1+.08*hk();if(att===me){D*=dm;A*=supplyMul(tgt);}else if(def===me)A*=dm;}
   if(att===me){A*=(W.stance==="atk"?1.25+(hasT("tank1")?.1:0)+(hasT("tank2")?.1:0)+(hasT("tank3")?.1:0):1)*af*(W.surprise===state.turn?1.3:1);if(W.bomb===tgt)D*=bombMul(w);D*=(hasT("ew")?.92:1)*(hasT("cyber")?.94:1);}
   else if(def===me){A/=af;A*=(hasT("ew")?.92:1)*(hasT("cyber")?.94:1)*(easy()?.85:1);D*=W.stance==="def"?1.35:W.stance==="atk"?.9:1;}
   {const X=armyFx();if(att===me)A*=1.06*X.atk*(1+(MTN.has(ROOTOF(tgt))?X.sh.mtn*.8:0)+(!land(tgt)?X.sh.mar*1.5:0));if(def===me)D*=1.28*X.def;}
@@ -1300,7 +1300,7 @@ function attack(att,def,k,touched){const W=state.W,me=W.me;if(att===me&&W.stance
 function worldStep(){const W=state.W,s=state.stats,me=W.me,S=scn();W.rep=[];const touched=new Set();
   const cnt={};for(const x in W.own)cnt[W.own[x]]=(cnt[W.own[x]]||0)+(x===W.own[x]?0:Math.min(6,1+GBY[x].a/400));
   for(const t in cnt)if(t!==me&&alive(t)&&W.dv[t]==null&&cnt[t]>0)W.dv[t]=base(t)[0];
-  if(hsLast())for(const t in W.dv){if(isHum(t))continue;const b=base(t)[0]+(cnt[t]||0)*2,cm=W.coal&&W.coal.m.includes(t);W.dv[t]=Math.min(b*2.2*(cm?1.4:1)*(W.boss===t?2.2:1),W.dv[t]+b*((W.boss===t?.03:0)+.006+(S.mil.includes(t)&&s.tension>60?.01:0)+(cm?.01:0)));}
+  if(hsLast())for(const t in W.dv){if(isHum(t))continue;const b=base(t)[0]+(cnt[t]||0)*2,cm=W.coal&&W.coal.m.includes(t);W.dv[t]=Math.min(b*2.2*(cm?1.4:1)*(W.boss===t?2.2:1),W.dv[t]+b*((W.boss===t?.03:0)+.006+.004*hk()+(S.mil.includes(t)&&s.tension>60?.01:0)+(cm?.01:0)));}
   endgame();
   if(hsLast()){W.aif=W.aif||{};for(const t of ORIGPLAY[W.sc]){if(t===me||isHum(t)||!alive(t))continue;const A=W.aif[t]=W.aif[t]||{i:0,left:3+Math.floor(rng(142+hashS(t))*5)};if(A.i>=5){if(rng(140+hashS(t))<.05){const f=AIFOC[Math.floor(rng(141+hashS(t))*AIFOC.length)];W.dv[t]=divs(t)*f[1];s.tension=clamp(s.tension+f[2],0,100);news(`${tagName(t)}完成國策「${f[0]}」`);}continue;}
     if(--A.left>0)continue;const L=NFALL[t]||NFALL._g;let k=A.i;if(k===2){const ag=["aggr","conq"].includes(persOf(t))||S.mil.includes(t);k=ag?3:2;const a2=L[2].fx.military||0,a3=L[3].fx.military||0;if(!ag&&a2>a3)k=3;}const f=L[k];
@@ -1347,13 +1347,13 @@ function worldStep(){const W=state.W,s=state.stats,me=W.me,S=scn();W.rep=[];cons
   if(myAreaShare()>=.3)state.flags.unified=true;
   syncWar();}
 function endgame(){const W=state.W,me=W.me,s=state.stats,share=myAreaShare(),nl=state.newland;
-  if(heldTiles()>0&&!myEnemies().length){const ratio=terrB()/Math.max(1,B0());const p=clamp(ratio*.04*(1-(nl?nl.integ:30)/100)*(state.flags.clean?.8:1),0,.3);
+  if(heldTiles()>0){const ratio=terrB()/Math.max(1,B0());const p=(myEnemies().length?.6:1)*(1+.5*hk())*clamp(ratio*.04*(1-(nl?nl.integ:30)/100)*(state.flags.clean?.8:1),0,.3);
     if(rng(130)<p){const list=Object.keys(W.own).filter(x=>W.own[x]===me&&!W.core.includes(x));const x=list[Math.floor(rng(131)*list.length)];
       if(x){if(!state.pending){state.pending={kind:"rebel",x};log(`「${GBY[x].n}」出現獨立運動`);return;}revolt(x);
         if(false)state.pending={kind:"msg",kicker:"緊急軍情",stamp:"叛亂",title:`${GBY[x].n}宣布獨立！`,text:`帝國太大、民心不夠歸附，${GBY[x].n}起兵反抗。到世界地圖把它打回來，或提議停戰讓它獨立。提高新領土民心可以減少叛亂。`};}}}
-  if(share>=.12&&!W.coal&&state.turn>=8){const pw=t=>divs(t)*qual(t);const cand=Object.keys(W.own).filter(t=>W.own[t]===t&&t!==me&&!isHum(t)&&!sameFac(t,me)&&!W.subj[t]).sort((a,b)=>pw(b)-pw(a));
+  if(share>=.12-.015*hk()&&!W.coal&&state.turn>=8){const pw=t=>divs(t)*qual(t);const cand=Object.keys(W.own).filter(t=>W.own[t]===t&&t!==me&&!isHum(t)&&!sameFac(t,me)&&!W.subj[t]).sort((a,b)=>pw(b)-pw(a));
     if(cand.length){const lead=cand[0],mem=cand.slice(0,6);const f=`反${tagName(me)}大同盟`;for(const t of mem)for(const l of Object.values(W.fac)){const i=l.indexOf(t);if(i>=0)l.splice(i,1);}
-      W.fac[f]=mem;W.coal={f,lead,m:mem,next:state.turn+6};mem.forEach(t=>{W.rel[t]=clamp((W.rel[t]||0)-50,-100,100);W.dv[t]=divs(t)*1.3;});applyFx({tension:15});log(`${tagName(lead)}號召成立${f}`);news(`${tagName(lead)}號召成立${f}`);
+      W.fac[f]=mem;W.coal={f,lead,m:mem,next:state.turn+6};mem.forEach(t=>{W.rel[t]=clamp((W.rel[t]||0)-50,-100,100);W.dv[t]=divs(t)*(1.2+.15*hk());});applyFx({tension:15});log(`${tagName(lead)}號召成立${f}`);news(`${tagName(lead)}號召成立${f}`);
       if(!state.pending)state.pending={kind:"msg",kicker:"國際局勢",stamp:"同盟",title:`${f}成立`,text:`我國太強大，引起各國恐慌。${mem.map(tagName).join("、")} 組成同盟，正在大舉擴軍，隨時可能聯手進攻。`};}}
   if(W.coal){const C=W.coal;C.m=C.m.filter(alive);if(!C.m.length){log(`${C.f}瓦解`);W.coal=null;if(!state.flags.coalBeat){state.flags.coalBeat=true;applyFx({prestige:10});}return;}
     if(!alive(C.lead))C.lead=C.m[0];
@@ -1407,7 +1407,7 @@ function doNaval(s){if(!navalOk(s))return;const W=state.W,o=W.own[s],n=GBY[s].n;
   else{applyFx({military:-6,approval:-3});W.sup=clamp(W.sup-6,0,100);W.org=clamp(W.org-30,10,100);
     state.pending={kind:"msg",kicker:"海軍陸戰隊",stamp:"失敗",title:"登陸作戰失敗",text:`登陸艇在${n}外海遭到重創，攻勢失敗，部隊組織度大降。`};}
   log(`對「${n}」發動海軍登陸`);syncWar();save();render();}
-function mobN(){return Math.ceil(B()*.12);}
+function mobN(){return Math.ceil(B()*.12*(1-.2*hk()));}
 
 /* ===== AI 主動提案 ===== */
 function aiTags(){const W=state.W;return GEO.filter(g=>!g.r&&g.id!==W.me&&W.own[g.id]===g.id).map(g=>g.id);}
@@ -1529,7 +1529,7 @@ function handleAct(a,s){const W=state.W;if(!state||state.over)return;if(state.pe
   else if(a==="provoke"){if(state.pp>=10){state.pp-=10;W.rel[o]=clamp((W.rel[o]||0)-15,-100,100);applyFx({tension:4});if((W.rel[o]||0)<=-30&&!W.cb){W.cb={tag:o,ready:state.turn};log(`邊境衝突升高，取得對${tagName(o)}的宣戰理由`);toast("🔥 取得宣戰理由！");}else{log(`在${tagName(o)}邊境挑釁`);toast(`🔥 ${tagName(o)} 很生氣（關係 −15）`);}}}
   else if(a==="cb"){makeCB(o);return;}
   else if(a==="war"){if(canDeclare(o))state.pending={kind:"declare",tag:o};}
-  else if(a==="mob"){if(state.pp>=20&&state.stats.treasury>=20&&(W.extra||0)<Math.ceil(B()*.5)){state.pp-=20;state.stats.treasury-=20;W.extra=(W.extra||0)+mobN();log(`動員後備軍人，增加 ${mobN()} 個師`);}}
+  else if(a==="mob"){if(state.pp>=20&&state.stats.treasury>=20+mobN()&&(W.extra||0)<Math.ceil(B()*.5/(1+.25*hk()))&&(W.mobCd||0)<=state.turn){state.pp-=20;state.stats.treasury-=20+mobN();W.mobCd=state.turn+Math.round(2*hk());W.extra=(W.extra||0)+mobN();log(`動員後備軍人，增加 ${mobN()} 個師`);}}
   save();render();}
 
 
@@ -2229,6 +2229,7 @@ function newState(opt){
 function rng(salt){let t=(state.seed^Math.imul(state.turn+1,2654435761)^Math.imul(salt+7,40503))>>>0;
   t=(t+0x6D2B79F5)|0;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;}
 const easy=()=>state.diff==="easy";
+const hk=()=>[.4,1,1.5,2][(({easy:-1,normal:0,hard:1,iron:2})[state.diff]??0)+1];
 const dlv=()=>({easy:-1,normal:0,hard:1,iron:2})[state.diff]??0;
 function supplyMul(tgt){const lv=dlv();if(lv<0)return 1;const a=GBY[state.W.me],b=GBY[tgt];if(!a||!b)return 1;let dx=Math.abs(a.c[0]-b.c[0]);dx=Math.min(dx,1000-dx);const d=Math.hypot(dx,a.c[1]-b.c[1]);return d<=100?1:Math.max(.55,1-(d-100)/600*(.5+.35*lv));}
 function casualty(){const lv=dlv();if(lv<0)return 0;return r1((hasTr("logi")?.75:1)*ourDivs()*[0,.04,.06,.08][lv+1]*({atk:1.4,bal:1,def:.7}[state.W.stance]||1));}
@@ -2281,7 +2282,7 @@ function gamesRun(i){const W=state.W,s=state.stats,P=state.pending,tp=P.tp,cost=
   log(tp==="oly"?`🏅 奧運：${tagName(W.me)}第 ${rank} 名，金牌 ${mg} 面`:`⚽ 世界盃：${tagName(W.me)}${rank<=5?RK[rank-1]:"小組賽出局"}`);
   state.pending={kind:"gamesres",tp,rank,mg,fx,tbl:L.slice(0,6).map(([t,v])=>[t,tp==="oly"?gold(v):0]),me:rank>6?[W.me,mg]:null};}
 function heldPop(){const W=state.W;let n=0;for(const x in W.own)if(W.own[x]===W.me&&!W.core.includes(x))n+=Math.min(4,.3+GBY[x].a/500);return r1(n);}
-function occMp(){const L=state.laws||{cons:"vol"},ig=state.newland?state.newland.integ/100:.5;return r1(heldPop()*{vol:.12,limited:.2,total:.32}[L.cons||"vol"]*(.4+ig));}
+function occMp(){const L=state.laws||{cons:"vol"},ig=state.newland?state.newland.integ/100:.5;return r1(heldPop()*{vol:.12,limited:.2,total:.32}[L.cons||"vol"]*(.4+ig)*(1-.3*hk()));}
 function milMul(){const L=state.laws;return (L.econ==="civil"?.7:L.econ==="war"?1.5:1)*(hasT("auto")?1.2:1)*(hasT("print3d")?1.3:1);}
 function slotsN(){return 2+(state.flags.tech?1:0);}
 function bq(){return state.bq||1;}
@@ -2289,8 +2290,8 @@ function buildTurns(n=1){return Math.max(1,Math.max(2,4-Math.floor(state.ind.civ
 const BUILD={civ:["民用工廠",40],mil:["軍工廠",50]};
 function budget(forTurn){const s=state.stats,cab=state.cab;const rate={low:.5,mid:.7,high:.9}[state.tax];
   const scale=1+Math.min(state.turn,40)*.0075;
-  const inc=[["稅收（經濟 × 稅率）",s.econ*rate*scale*Math.sqrt(B()/15)*(state.laws&&state.laws.econ==="war"?.8:1)],["民用工廠",state.ind?state.ind.civ*1.5*(state.laws.econ==="civil"?1.2:1)*(hasT("smart")?1.2:1):0],["新領土",state.newland?state.newland.integ/8:0],["佔領區",heldTiles()*3],["經濟部長招商",cab.econ==="chen"?6:0],["貿易協定",state.W?tradeInc():0],["資源出口",state.W?resExport():0]];
-  const exp=[["政府基本開銷",25],["軍費（軍力越高越貴）",s.military*.2*Math.sqrt(B()/15)*(cab.def==="liu"?.75:1)*(1+((state.W&&state.W.comp)||{arm:0}).arm/100)],["社福支出成長",Math.min(state.turn,24)*.5],["國策維持費",state.done.length*.4],["佔領區治安費",state.W?heldTiles()*4*(1+Math.max(0,dlv())*.5):0],["精簡政府省下",-(state.cuts||0)],["盟國借款還款",(state.debts||[]).reduce((a,d)=>a+d.per,0)]];
+  const inc=[["稅收（經濟 × 稅率）",s.econ*rate*scale*Math.sqrt(B()/15)*(state.laws&&state.laws.econ==="war"?.8:1)],["民用工廠",state.ind?state.ind.civ*1.5*(state.laws.econ==="civil"?1.2:1)*(hasT("smart")?1.2:1):0],["新領土",state.newland?state.newland.integ/8:0],["佔領區",heldTiles()*3*(1-.3*hk())],["經濟部長招商",cab.econ==="chen"?6:0],["貿易協定",state.W?tradeInc():0],["資源出口",state.W?resExport():0]];
+  const exp=[["政府基本開銷",25],["軍費（軍力越高越貴）",s.military*.2*Math.sqrt(B()/15)*(cab.def==="liu"?.75:1)*(1+((state.W&&state.W.comp)||{arm:0}).arm/100)],["社福支出成長",Math.min(state.turn,24)*.5],["國策維持費",state.done.length*.4],["佔領區治安費",state.W?heldTiles()*4*(1+.4*hk()):0],["超額軍隊維持費",state.W&&state.ind?Math.max(0,ourDivs()-B()*.9)*.6*hk():0],["精簡政府省下",-(state.cuts||0)],["盟國借款還款",(state.debts||[]).reduce((a,d)=>a+d.per,0)]];
   if(!forTurn)exp.push(["國家級工程款",state.wonders&&state.wonders.active?wonderPer(WBY[state.wonders.active.id]):0],["戰爭開銷",state.war?Math.round(12*(cab.def==="liu"?.75:1)):0]);
   {const lv=dlv();if(lv>0)exp.push(["官僚浪費與通膨（難度）",inc.reduce((a,b)=>a+b[1],0)*.06*lv]);}
   const I=inc.reduce((a,b)=>a+b[1],0),E=exp.reduce((a,b)=>a+b[1],0);return{inc,exp,I,E,net:Math.round(I-E)};}
@@ -2378,7 +2379,7 @@ function endTurn0(){
   {const I=state.ind,L=state.laws,PL=prodL(),EQ=eqS(),mm=milMul();s.military=clamp(r1(s.military+PL.inf*.12*mm*15/B()),0,100);
     EQ.arm=Math.min(400,r1(EQ.arm*(war?.9:1)+PL.arm*mm));EQ.air=Math.min(300,r1(EQ.air*(war?.94:1)+PL.air*mm*.8));EQ.nav=Math.min(200,r1(EQ.nav+PL.nav*mm*.5));
     if(L.econ==="war")s.stability=clamp(s.stability-1,0,100);
-    state.mp=Math.min(B()*4+heldPop()*6,r1(state.mp+{vol:.6,limited:1.2,total:2.4}[L.cons]*B()/15+occMp()));
+    state.mp=Math.min(B()*(4.4-.6*hk())+heldPop()*6,r1(state.mp+{vol:.6,limited:1.2,total:2.4}[L.cons]*B()/15+occMp()));
     if(L.cons==="vol")s.approval=clamp(s.approval+.3,0,100);
     if(L.cons==="total"){s.econ=clamp(s.econ-.4,0,100);s.approval=clamp(s.approval-.4,0,100);}
     if(I.q){I.q.left--;if(I.q.left<=0){const n=I.q.n||1;I[I.q.type]+=n;log(`${n} 座${BUILD[I.q.type][0]}完工（共 ${I[I.q.type]} 座）`);toast(`🏭 ${n} 座${BUILD[I.q.type][0]}完工`);I.q=null;}}
@@ -2800,7 +2801,7 @@ function renderWarPanel(){const W=state.W,me=W.me,en=myEnemies(),el=$("#wwar"),d
        <div>主攻目標：${t&&W.own[t]===e?GBY[t].n+(W.prog[t]&&!atWar(W.prog[t].by,me)?` ${progTxt(W.prog[t])}`:""):"自動選擇"}</div>${(()=>{const co=enemies(e).filter(x=>x!==me&&!atWar(x,me)&&alive(x));return co.length?`<div style="color:#8cc8ff;font-size:.85rem">🤝 一起攻打${tagName(e)}：${co.map(x=>`${tagName(x)}（~${Math.round(divs(x))} 師）`).join("、")}。地圖上 ▲ 是我軍、◆ 是盟軍的佔領進度；同一塊地誰出力多就歸誰。</div>`:"";})()}
        ${rt?`<div class="rep ${rt.cls}">上季：${rt.t}</div>`:""}
        <div class="waracts"><button class="ghost sm" type="button" data-act="selc" data-s="${t&&W.own[t]===e?t:e}">在地圖上查看</button><button class="ghost sm" type="button" data-act="treaty" data-s="${e}" ${dis}>📜 談判和約</button></div></div>`;}).join("")+`</div>`;
-    h+=`<div class="waracts"><button class="btn" type="button" data-act="mob" data-s="${me}" ${state.pp<20||state.stats.treasury<20||(W.extra||0)>=Math.ceil(B()*.5)?"disabled":dis}>動員後備軍人（20 點＋20 億，+${mobN()} 師）</button></div>`;}
+    h+=`<div class="waracts"><button class="btn" type="button" data-act="mob" data-s="${me}" ${state.pp<20||state.stats.treasury<20+mobN()||(W.extra||0)>=Math.ceil(B()*.5/(1+.25*hk()))||(W.mobCd||0)>state.turn?"disabled":dis}>${(W.mobCd||0)>state.turn?`動員冷卻中（${W.mobCd-state.turn} 季）`:`動員後備軍人（20 點＋${20+mobN()} 億，+${mobN()} 師）`}</button></div>`;}
   else h+=`<p class="hint" style="margin:0">點地圖上的國家，可以改善關係、加入陣營、製造戰爭藉口或宣戰。點自己的領土可以構築工事。滑鼠滾輪縮放、拖曳移動地圖。</p>`;
   el.innerHTML=h;}
 
