@@ -432,7 +432,7 @@ body{margin:0}
 <header class="top">
   <div class="top-in">
     <div class="nation">
-      <svg width="42" height="28" viewBox="0 0 42 28" aria-hidden="true"><rect id="flagbg" width="42" height="28" fill="#1f5c57"/><path d="M0 19 Q10 13 21 19 T42 19 V28 H0Z" fill="#d3a64f"/><circle cx="12" cy="10" r="4.5" fill="#ebe5d4"/></svg>
+      <svg id="hflag" width="42" height="28" viewBox="0 0 42 28" aria-hidden="true" style="cursor:pointer" title="點我設計國旗"><rect id="flagbg" width="42" height="28" fill="#1f5c57"/><path d="M0 19 Q10 13 21 19 T42 19 V28 H0Z" fill="#d3a64f"/><circle cx="12" cy="10" r="4.5" fill="#ebe5d4"/></svg>
       <div><h1 id="natname">瀾洲共和國</h1><div class="date" id="date"></div></div>
     </div>
     <div class="chips">
@@ -1185,7 +1185,7 @@ function B(){const W=state.W;if(!W._tb||W._tb.t!==state.turn||W._tb.n!==W.dead.l
 function mpCap(){return Math.floor((state.mp==null?B()*1.8:state.mp)/(1.5*(state.tpls?army().mp:1)));}
 function ourDivs(){const b=B();return Math.min(Math.round(b*(.4+state.stats.military/100))+(state.flags.reserve?Math.ceil(b*.15):0),mpCap())+(state.W.extra||0);}
 function allyDivs(){if(!myEnemies().length)return 0;const a=scn().play[state.W.me][13];if(!alive(a))return 0;return (state.flags.ally?Math.ceil(B()*.15):0)+(state.flags.jointex?Math.ceil(B()*.15):0);}
-function quality(){const f=state.flags;return (1+(state.volXp||0)*.01)*(.97+(state.W.sup||0)/1000)*(1+eqArmB())*(1+(f.sf||0)*.03)*(1+cardFx("q"))*resMul()*scn().play[state.W.me][1]*(1+(f.drone?.2:0)+(f.joint?.15:0)+(f.sub?.05:0)+(state.cab.def==="zhang"?.1:0)+(hasT("inf1")?.05:0)+(hasT("inf2")?.05:0)+(hasT("inf3")?.08:0)+(hasT("inf4")?.1:0)+(hasT("radar")?.05:0)+(hasT("carrier")?.05:0)+(hasT("aegis")?.05:0));}
+function quality(){const f=state.flags;return (1+heroB())*(1+(state.volXp||0)*.01)*(.97+(state.W.sup||0)/1000)*(1+eqArmB())*(1+(f.sf||0)*.03)*(1+cardFx("q"))*resMul()*scn().play[state.W.me][1]*(1+(f.drone?.2:0)+(f.joint?.15:0)+(f.sub?.05:0)+(state.cab.def==="zhang"?.1:0)+(hasT("inf1")?.05:0)+(hasT("inf2")?.05:0)+(hasT("inf3")?.08:0)+(hasT("inf4")?.1:0)+(hasT("radar")?.05:0)+(hasT("carrier")?.05:0)+(hasT("aegis")?.05:0));}
 function ourAir(){return Math.round((10+(state.tpls?army().sh.aa*40:0)+Math.min(30,((state.eq||{}).air||0)/4)+state.stats.military/5+(state.flags.drone?10:0)+(state.flags.joint?5:0)+state.airBonus+(hasT("jet")?6:0)+(hasT("stealth")?10:0)+(hasT("swarm")?12:0))*Math.sqrt(B()/15));}
 function enemyAir(t){return Math.round(qual(t)*Math.sqrt(divs(t))*4.5*(easy()?.8:1));}
 function bombMul(w){const a=w?w.air:50;return a>=60?.5:a<=40?.8:.65;}
@@ -1255,8 +1255,8 @@ function declare(a,b){const W=state.W,me=W.me;if(a===b||atWar(a,b)||sameFac(a,b)
 function makePeace(e){const W=state.W;delete W.war[wk(W.me,e)];delete W.target[e];if(W.offer===e)W.offer=null;if(!myEnemies().length)W.extra=0;log(`與${tagName(e)}停戰`);syncWar();}
 function take(s,att,def){const W=state.W,me=W.me;if(W.beach)delete W.beach[s];if(W.orig[s]==null)W.orig[s]=def;W.own[s]=att;if(W.orig[s]===att)delete W.orig[s];delete state.forts[s];
   const n=GBY[s].n;
-  if(att===me){applyFx({approval:2,prestige:2});state.ind.civ+=1+Math.floor(GBY[s].a/1500);state.mp+=Math.min(6,1+GBY[s].a/400)*1.5;W.sup=clamp(W.sup+3,0,100);genXP(2);state.st2=state.st2||{};state.st2.taken=(state.st2.taken||0)+1;state.st2.tt=state.st2.tt||{};state.st2.tt[state.turn]=(state.st2.tt[state.turn]||0)+1;{const lv=dlv();if(lv>0){state.stats.tension=clamp(state.stats.tension+.5*lv,0,100);for(const t in W.rel)if(t!==def&&!sameFac(t,me))W.rel[t]=clamp((W.rel[t]||0)-.6*lv,-100,100);}}log(`我軍攻佔「${n}」！`);toast(`🚩 攻佔 ${n}`);}
-  else if(def===me){applyFx({approval:-3,stability:-2,econ:-2});W.sup=clamp(W.sup-4,0,100);log(`「${n}」被${tagName(att)}攻佔…`);toast(`⚠ ${n} 失守`);}
+  if(att===me){applyFx({approval:2,prestige:2});state.ind.civ+=1+Math.floor(GBY[s].a/1500);state.mp+=Math.min(6,1+GBY[s].a/400)*1.5;W.sup=clamp(W.sup+3,0,100);genXP(2);try{heroGain();}catch(_){}state.st2=state.st2||{};state.st2.taken=(state.st2.taken||0)+1;state.st2.tt=state.st2.tt||{};state.st2.tt[state.turn]=(state.st2.tt[state.turn]||0)+1;{const lv=dlv();if(lv>0){state.stats.tension=clamp(state.stats.tension+.5*lv,0,100);for(const t in W.rel)if(t!==def&&!sameFac(t,me))W.rel[t]=clamp((W.rel[t]||0)-.6*lv,-100,100);}}log(`我軍攻佔「${n}」！`);toast(`🚩 攻佔 ${n}`);}
+  else if(def===me){try{heroHit();}catch(_){}applyFx({approval:-3,stability:-2,econ:-2});W.sup=clamp(W.sup-4,0,100);log(`「${n}」被${tagName(att)}攻佔…`);toast(`⚠ ${n} 失守`);}
   else if(scn().play[att]||scn().play[def])news(`${tagName(att)}攻佔「${n}」`);
   if(s===def)capitulate(def,att);}
 function capitulate(def,by){const W=state.W,me=W.me;
@@ -1607,7 +1607,7 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
 
 
 /* ================= 父子對戰：同一張地圖輪流下指令 ================= */
-const PWK=["alloc","airm","blk","guar","guarCall","me","mem","rel","relCd","cb","target","intel","pact","trade","extra","org","sup","stance","offer","pc","navCd","beach","bomb","nukeCd","buyTry","trTry","aiOffCd","aiNext","rep","core","cplay","cname","ccolor","comp","_rv"];
+const PWK=["cflag","alloc","airm","blk","guar","guarCall","me","mem","rel","relCd","cb","target","intel","pact","trade","extra","org","sup","stance","offer","pc","navCd","beach","bomb","nukeCd","buyTry","trTry","aiOffCd","aiNext","rep","core","cplay","cname","ccolor","comp","_rv"];
 function isHum(t){return !!(state&&state.hs&&state.hs.tags.includes(t));}
 function hsIdx(t){return state.hs.tags.indexOf(t);}
 function hsLast(){return !state.hs||state.hs.cur===state.hs.tags.length-1;}
@@ -1620,7 +1620,7 @@ function hsNext(){const hs=state.hs,o=hs.tags[1-hs.cur];
   hs.held=state.pending;state.pending={kind:"hand"};save();render();}
 function hsFinish(){const hs=state.hs,cur=hs.cur,res=[];
   for(const i of [cur,1-cur]){hsSwitch(i);const sc=score(),W=state.W,me=W.me,t2=(state.st2||{}).tt||{};res[i]={total:sc.total,nat:tagName(me),alive:W.own[me]===me,name:hs.names[i],
-    st:{prov:Object.values(W.own).filter(o=>o===me).length,earn:(state.st2||{}).earn||0,taken:(state.st2||{}).taken||0,best:Math.max(0,...Object.values(t2)),vic:state.victories||0,techs:(state.res&&state.res.done||[]).length,wars:state.wars||0,econ:Math.round(state.stats.econ),gen:Math.max(1,...Object.values(state.gx||{lv1:{lv:1}}).map(g=>g.lv||1))}};}
+    st:{prov:Object.values(W.own).filter(o=>o===me).length,earn:(state.st2||{}).earn||0,taken:(state.st2||{}).taken||0,best:Math.max(0,...Object.values(t2)),vic:state.victories||0,techs:(state.res&&state.res.done||[]).length,wars:state.wars||0,econ:Math.round(state.stats.econ),gen:Math.max(1,...Object.values(state.gx||{lv1:{lv:1}}).map(g=>g.lv||1)),gold:(state.st2||{}).gold||0,hero:(state.heroes||[]).length}};}
   hsSwitch(cur);let w=res[0].alive&&!res[1].alive?0:res[1].alive&&!res[0].alive?1:res[0].total===res[1].total?-1:(res[0].total>res[1].total?0:1);if(hs.coop)w=state.over==="coopwin"||!alive(hs.boss)?-2:-3;
   hs.result={res,w,coop:!!hs.coop,boss:hs.boss};if(state.net)setTimeout(()=>netPush(),0);if(!state.recorded){state.recorded=1;res.forEach(r=>addBoard({who:r.name,nat:r.nat,y:yr(state.turn),score:r.total,chal:"父子對戰"}));}
   state.pending={kind:"over"};save();render();}
@@ -2245,6 +2245,35 @@ function wsTarget(){const s=state.stats,sc=state.W.sc;return clamp(18+s.tension*
 function prodL(){const I=state.ind,P=state.prod=state.prod||{arm:0,air:0,nav:0};let sum=P.arm+P.air+P.nav;while(sum>I.mil){for(const k of["nav","air","arm"])if(P[k]>0&&sum>I.mil){P[k]--;sum--;}}return {inf:I.mil-sum,arm:P.arm,air:P.air,nav:P.nav};}
 function eqS(){return state.eq=state.eq||{arm:(state.ind?state.ind.mil:0)*4,air:0,nav:0};}
 function eqArmB(){const e=state.eq;if(state.tpls)return 0;if(!e||!e.arm)return 0;return .2*e.arm/(e.arm+ourDivs()*3+10);}
+const HERONM=["麥麥第一裝甲師","鐵血第七師","雷霆師","不死鳥師","飛虎師","黑豹師","閃電第九師","長城師","無敵海狼師","猛虎師"];
+function heroB(){return (state.heroes||[]).reduce((a,h)=>a+h.lv*.015,0);}
+function heroStars(h){return "★".repeat(h.lv)+"☆".repeat(3-h.lv);}
+function heroGain(){const H=state.heroes=state.heroes||[],t=(state.st2||{}).taken||0;
+  if(H.length&&rng(700+t)<.6){const h=H[Math.floor(rng(701+t)*H.length)];h.xp=(h.xp||0)+1;h.bt=(h.bt||0)+1;if(h.lv<3&&h.xp>=h.lv*4){h.lv++;h.xp=0;log(`🏅 王牌部隊「${h.n}」升到 ${h.lv} 星！`);toast(`🏅 ${h.n} 升到 ${h.lv} 星`);}}
+  if(H.length<5&&t>0&&t%3===0){(state.genQ=state.genQ||[]).push({kind:"heroname",no:Math.floor(rng(702+t)*90)+3});}}
+function heroHit(){const H=state.heroes||[];if(!H.length||rng(710+state.turn)>.2)return;const h=H[Math.floor(rng(711+state.turn)*H.length)];if(h.lv>1){h.lv--;log(`王牌部隊「${h.n}」受到重創，降為 ${h.lv} 星`);}else{state.heroes=H.filter(x=>x!==h);log(`💔 王牌部隊「${h.n}」在激戰中全軍覆沒`);toast(`💔 ${h.n} 全軍覆沒`);}}
+const FLAGP=[["h3","橫三色"],["v3","直三色"],["cross","十字旗"],["disc","圓日旗"],["canton","角星旗"],["diag","斜紋旗"]];
+const FLAGE=["","⭐","🦅","🐉","🦁","☀️","🌙","🍁","⚓","🐻","🌸","⚔️"];
+function defFlag(t){const c=colorOf(t),h=hashS(t||"x");return {p:FLAGP[h%FLAGP.length][0],c:[c,["#f6f1e3","#1f2a44","#c0392b","#2e7d32","#f2c94c"][h%5],["#1f2a44","#c0392b","#f6f1e3","#f2c94c"][(h>>3)%4]],e:""};}
+function flagSvg(f,w,h){w=w||42;h=h||28;const [a,b,c]=f.c;let g="";
+  if(f.p==="h3")g=`<rect width="${w}" height="${h/3}" fill="${a}"/><rect y="${h/3}" width="${w}" height="${h/3}" fill="${b}"/><rect y="${2*h/3}" width="${w}" height="${h/3+.5}" fill="${c}"/>`;
+  else if(f.p==="v3")g=`<rect width="${w/3}" height="${h}" fill="${a}"/><rect x="${w/3}" width="${w/3}" height="${h}" fill="${b}"/><rect x="${2*w/3}" width="${w/3+.5}" height="${h}" fill="${c}"/>`;
+  else if(f.p==="cross")g=`<rect width="${w}" height="${h}" fill="${a}"/><rect x="${w*.28}" width="${w*.16}" height="${h}" fill="${b}"/><rect y="${h*.4}" width="${w}" height="${h*.2}" fill="${b}"/><rect x="${w*.31}" width="${w*.1}" height="${h}" fill="${c}"/><rect y="${h*.44}" width="${w}" height="${h*.12}" fill="${c}"/>`;
+  else if(f.p==="disc")g=`<rect width="${w}" height="${h}" fill="${a}"/><circle cx="${w/2}" cy="${h/2}" r="${h*.3}" fill="${b}"/><circle cx="${w/2}" cy="${h/2}" r="${h*.14}" fill="${c}"/>`;
+  else if(f.p==="canton")g=`<rect width="${w}" height="${h}" fill="${a}"/><rect y="${h/2}" width="${w}" height="${h/2}" fill="${c}"/><rect width="${w*.45}" height="${h*.55}" fill="${b}"/>`;
+  else g=`<rect width="${w}" height="${h}" fill="${a}"/><path d="M0 ${h} L${w} 0 L${w} ${h*.35} L${w*.35} ${h}Z" fill="${b}"/><path d="M0 ${h} L${w*.18} ${h} L${w} ${h*.18} L${w} 0Z" fill="${c}"/>`;
+  return g+(f.e?`<text x="${f.p==="canton"?w*.225:w/2}" y="${f.p==="canton"?h*.29:h/2}" font-size="${h*(f.p==="canton"?.38:.5)}" text-anchor="middle" dominant-baseline="central">${f.e}</text>`:"");}
+function myFlag(){return state.W.cflag||defFlag(state.W.me);}
+function gamesRun(i){const W=state.W,s=state.stats,P=state.pending,tp=P.tp,cost=[0,30,80][i];s.treasury-=cost;
+  const sc=(t,b)=>b*(.8+rng(720+hashS(t)+state.turn)*.4);
+  const me=sc(W.me,(s.econ*.5+s.prestige*.35+Math.sqrt(B())*6)*[1,1.25,1.55][i]);
+  const L=ORIGPLAY[W.sc].filter(t=>t!==W.me&&alive(t)).map(t=>[t,sc(t,base(t)[0]*.55+qual(t)*30+25)]);L.push([W.me,me]);L.sort((a,b)=>b[1]-a[1]);
+  const rank=L.findIndex(x=>x[0]===W.me)+1,tot=L.reduce((a,x)=>a+x[1]*x[1],0),gold=x=>Math.max(0,Math.round(110*x*x/tot));
+  const fx=rank===1?{prestige:10,approval:6,stability:3}:rank<=3?{prestige:6,approval:4}:rank<=8?{prestige:3,approval:2}:{approval:1};applyFx(fx);
+  state.st2=state.st2||{};const mg=tp==="oly"?gold(me):0;state.st2.gold=(state.st2.gold||0)+mg;if(rank===1)state.st2.cups=(state.st2.cups||0)+1;
+  const RK=tp==="oly"?null:["🏆 冠軍","🥈 亞軍","🥉 季軍","四強","八強"];
+  log(tp==="oly"?`🏅 奧運：${tagName(W.me)}第 ${rank} 名，金牌 ${mg} 面`:`⚽ 世界盃：${tagName(W.me)}${rank<=5?RK[rank-1]:"小組賽出局"}`);
+  state.pending={kind:"gamesres",tp,rank,mg,fx,tbl:L.slice(0,6).map(([t,v])=>[t,tp==="oly"?gold(v):0]),me:rank>6?[W.me,mg]:null};}
 function heldPop(){const W=state.W;let n=0;for(const x in W.own)if(W.own[x]===W.me&&!W.core.includes(x))n+=Math.min(4,.3+GBY[x].a/500);return r1(n);}
 function occMp(){const L=state.laws||{cons:"vol"},ig=state.newland?state.newland.integ/100:.5;return r1(heldPop()*{vol:.12,limited:.2,total:.32}[L.cons||"vol"]*(.4+ig));}
 function milMul(){const L=state.laws;return (L.econ==="civil"?.7:L.econ==="war"?1.5:1)*(hasT("auto")?1.2:1)*(hasT("print3d")?1.3:1);}
@@ -2430,7 +2459,7 @@ const OVER={coopwin:["父子聯軍勝利","凱旋","超級帝國的首都被攻�
   recall:["總統遭罷免","罷免","支持率跌破 15%，國會通過罷免案。"],bankrupt:["國家破產","破產","國庫赤字太深，政府發不出薪水。"],war:["首都淪陷","戰敗","敵軍攻陷首都，政府被迫投降。"],war2:["北境淪陷","戰敗","汗國騎兵突破北方防線，長驅直入，政府被迫投降。"]};
 Object.assign(OVER,OVERX);
 function reportCard(R){if(!R.res[0].st||!R.res[1].st)return"";const A=R.res[0].st,B=R.res[1].st,n=R.res.map(r=>esc(r.name));
-  const rows=[["🗺","領土之王","最後領土",x=>x.prov,1,"塊"],["💰","最會賺錢總統","總收入",x=>x.earn,1,"億"],["⚡","閃電戰之王","一季最多攻下",x=>x.best,1,"塊"],["🚩","征服者","總共攻下",x=>x.taken,1,"塊"],["🎖","戰神","擊敗國家",x=>x.vic,1,"國"],["🔬","科技狂人","研發科技",x=>x.techs,1,"項"],["⭐","名將之家","最高將領",x=>x.gen,1,"星"],["🕊","和平使者","發動戰爭",x=>x.wars,-1,"次"]];
+  const rows=[["🗺","領土之王","最後領土",x=>x.prov,1,"塊"],["💰","最會賺錢總統","總收入",x=>x.earn,1,"億"],["⚡","閃電戰之王","一季最多攻下",x=>x.best,1,"塊"],["🚩","征服者","總共攻下",x=>x.taken,1,"塊"],["🎖","戰神","擊敗國家",x=>x.vic,1,"國"],["🔬","科技狂人","研發科技",x=>x.techs,1,"項"],["⭐","名將之家","最高將領",x=>x.gen,1,"星"],["🕊","和平使者","發動戰爭",x=>x.wars,-1,"次"],["🏅","奧運之星","奧運金牌",x=>x.gold,1,"面"],["🎖","英雄之師","王牌部隊",x=>x.hero,1,"支"]];
   const aw=[0,0];const tr=rows.map(([ic,t,lab,f,dir,u])=>{const a=f(A),b=f(B);let win=a===b?-1:((a>b)===(dir>0)?0:1);if(win>=0&&(a||b))aw[win]++;else win=-1;
     return `<tr><td>${ic} ${lab}</td><td style="text-align:right;${win===0?"font-weight:900;color:#2d7a4c":""}">${a} ${u}</td><td style="text-align:right;${win===1?"font-weight:900;color:#2d7a4c":""}">${b} ${u}</td><td style="font-size:.8rem">${win>=0?`<b>${t}</b>：${n[win]}`:"—"}</td></tr>`;}).join("");
   return `<h3 style="margin:10px 0 4px">📋 戰後成績單</h3><table class="score-tbl" style="font-size:.85rem"><tr><td></td><td style="text-align:right"><b>${n[0]}</b></td><td style="text-align:right"><b>${n[1]}</b></td><td>獎項</td></tr>${tr}</table><p style="margin:4px 0 10px;font-weight:700">🏅 獎盃數：${n[0]} ${aw[0]} 座・${n[1]} ${aw[1]} 座</p>`;}
@@ -2443,7 +2472,7 @@ function finish(kind){if(kind)state.over=kind;try{medAdd("games");medAdd("cards"
 
 /* ================= render ================= */
 function unstick(){const v=$("#veil");if(!v)return;if(!v.hidden&&!v.textContent.trim()){if(state)state.pending=null;v.hidden=true;v.innerHTML="";}}
-function render(){try{if(state&&state.hs&&state.hs.coop&&!state.over&&(!state.net||netSeat()===0)){const B=state.hs.boss;if(state.hs.bossT&&state.turn>=state.hs.bossT&&!state.pending){state.hs.bossT=0;if(alive(B)&&!atWar(B,state.W.me)){declare(B,state.W.me);for(const t of state.hs.tags)if(!atWar(B,t))state.W.war[wk(B,t)]={t:0,air:50};syncWar();state.pending={kind:"msg",kicker:"世界危機",stamp:"魔王",title:`👿 超級帝國「${tagName(B)}」向父子聯軍宣戰！`,text:`${tagName(B)}的軍隊是平常的 2.5 倍、素質更高，而且不會接受和談。兩人要互相支援：送錢、賣軍火、一起進攻它的首都。打下它的首都就贏了！`};}}
+function render(){try{if(state&&state.W&&!state.over&&!state.pending&&state.turn>=4&&state.turn%8===6&&state.gamesT!==state.turn){state.gamesT=state.turn;state.pending={kind:"games",tp:(state.turn/8|0)%2?"oly":"cup"};}if(state&&state.hs&&state.hs.coop&&!state.over&&(!state.net||netSeat()===0)){const B=state.hs.boss;if(state.hs.bossT&&state.turn>=state.hs.bossT&&!state.pending){state.hs.bossT=0;if(alive(B)&&!atWar(B,state.W.me)){declare(B,state.W.me);for(const t of state.hs.tags)if(!atWar(B,t))state.W.war[wk(B,t)]={t:0,air:50};syncWar();state.pending={kind:"msg",kicker:"世界危機",stamp:"魔王",title:`👿 超級帝國「${tagName(B)}」向父子聯軍宣戰！`,text:`${tagName(B)}的軍隊是平常的 2.5 倍、素質更高，而且不會接受和談。兩人要互相支援：送錢、賣軍火、一起進攻它的首都。打下它的首都就贏了！`};}}
     if(!state.hs.result&&!alive(B)&&!state.pending){state.over="coopwin";hsFinish();return;}}if(state&&!state.over&&!state.pending&&state.genQ&&state.genQ.length)state.pending=state.genQ.shift();if(state&&state.W&&!state.over&&!state.pending&&state.W.guarCall){const G=state.W.guarCall;if(alive(G.a)&&alive(G.b)&&!atWar(state.W.me,G.a))state.pending={kind:"guarcall",a:G.a,b:G.b};else state.W.guarCall=null;}if(state&&state.hs&&state.W&&!state.over){const W=state.W;try{unCheck();}catch(_){}if(!state.pending&&W.un&&!W.un.done&&!(W.unv||{})[W.me])state.pending={kind:"un",k:W.un.k,tgt:W.un.tgt,a:W.un.a,b:W.un.b,base:W.un.base,lob:0};try{unSeenCheck();}catch(_){}}{const eb=$("#endBtn");if(eb&&state)eb.textContent=state.net&&state.net.sim?"✅ 準備好了 ▶":"結束本季 ▶";}if(state&&state.paperNext&&!state.pending&&!state.over){const id=state.paperNext;state.paperNext=null;const i=(state.papers||[]).findIndex(p=>p.id===id);if(i>=0)state.pending={kind:"paper",i};}if(state&&ui.lastTurn!==state.turn+"|"+(state.hs?state.hs.cur:0)){if(ui.lastTurn!==undefined)ui.capUntil=Date.now()+3500;ui.lastTurn=state.turn+"|"+(state.hs?state.hs.cur:0);}auLabel();try{hsInbox();}catch(_){}if(state&&state.W&&!state.pending&&!state.over&&state.W.aiNext){const P=state.W.aiNext;state.W.aiNext=null;if(alive(P.o)&&(/^peace/.test(P.k)===atWar(state.W.me,P.o)))state.pending=P;}renderInner();try{audioHook();}catch(_){}try{tutRender();}catch(_){}if(state&&state.W)document.body.classList.toggle("bigmap",!!ui.big&&ui.tab==="map");else document.body.classList.remove("bigmap");}catch(e){console.error(e);
     if(state){state.pending=null;try{save();}catch(_){}}const v=$("#veil");if(v&&state){v.hidden=true;v.innerHTML="";}
     toast("剛才的畫面出錯，已自動修復，可以繼續玩");}
@@ -2451,7 +2480,7 @@ function render(){try{if(state&&state.hs&&state.hs.coop&&!state.over&&(!state.ne
 function renderInner(){
   if(!state){showStart();return;}
   ensureWar();checkAch();
-  const s=state.stats;$("#natname").textContent=tagName(state.W.me);{const nw=(state.W.news||[]).slice(0,6);const nt=nw.map(n=>`【${n.t}】${n.x}`).join("　　　")||"世界局勢暫時平靜。";if($("#newsT").textContent!==nt)$("#newsT").textContent=nt;}$("#flagbg").setAttribute("fill",colorOf(state.W.me));
+  const s=state.stats;$("#natname").textContent=tagName(state.W.me);{const hf=$("#hflag");if(hf){const fs=JSON.stringify(myFlag());if(hf.dataset.fl!==fs){hf.dataset.fl=fs;hf.innerHTML=flagSvg(myFlag());}}}{const nw=(state.W.news||[]).slice(0,6);const nt=nw.map(n=>`【${n.t}】${n.x}`).join("　　　")||"世界局勢暫時平靜。";if($("#newsT").textContent!==nt)$("#newsT").textContent=nt;}{const fb=$("#flagbg");if(fb)$("#flagbg").setAttribute("fill",colorOf(state.W.me));}
   $("#date").textContent=dateStr(Math.min(state.turn,maxTurns()-1))+(state.duel?`　·　${state.duel.names[state.duel.idx]} 執政中`:"")+(state.hs?(state.net&&state.net.sim?`　·　⚡ 同時行動（你是 ${state.hs.names[netSeat()]}）`:`　·　👤 ${state.hs.names[state.net?state.net.turnOf:state.hs.cur]} 的回合`):"")+(state.net?`　·　🌐 房間 ${state.net.room}`:"")+(()=>{try{const t=medalTitle(medalName());return t?`　·　🏅${t}`:"";}catch(_){return"";}})();
   $("#c-pp").textContent=Math.floor(state.pp)+` (${ppGain()>=0?"+":""}${ppGain()})`;$("#c-st").textContent=Math.round(s.stability)+"%";$("#c-ws").textContent=Math.round(state.W.sup||0)+"%";$("#c-mp").textContent=Math.round(state.mp)+"萬";$("#c-fa").textContent=`${state.ind.civ}/${state.ind.mil}`;
   const BN=budget().net;$("#c-tr").textContent=`${s.treasury} 億（${BN>=0?"+":""}${BN}/季）`;$("#chip-tr").classList.toggle("neg",s.treasury<0);
@@ -2747,7 +2776,7 @@ function renderWarPanel(){const W=state.W,me=W.me,en=myEnemies(),el=$("#wwar"),d
    <div class="lane-c"><div class="seg" role="group" aria-label="作戰姿態">${STANCES.map(([k,n])=>`<button type="button" data-wst="${k}" aria-pressed="${W.stance===k}" ${dis}>${n}</button>`).join("")}</div>
    <button class="ghost sm" type="button" data-gen="0" ${dis}>總司令：${g.n} <span style="color:var(--brass)">${genStars(g.id)}</span> ▾</button></div>
    <div class="ter">${STANCE_TIP[W.stance]}。${g.perk}${gx().tr.length?"・"+gx().tr.map(k=>GTRAITS[k][0]+"（"+GTRAITS[k][1]+"）").join("、"):""}。經驗 ${gx().xp}${gx().lv<5?" / "+GLV[gx().lv+1]:"（滿級）"}</div>
-   <div class="sec-t" style="margin:4px 0 0">部隊編制</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.85rem">${tplS().filter(t=>t.w).map(t=>`<span class="pill">${esc(t.n)}</span>`).join(" ")}<button class="ghost sm" type="button" data-tab="army">🪖 自己組師 ▶</button></div>`;
+   ${(state.heroes||[]).length?`<div class="sec-t" style="margin:4px 0 0">🏅 王牌部隊（全軍戰力 +${Math.round(heroB()*100)}%）</div><div style="display:flex;gap:6px;flex-wrap:wrap">${state.heroes.map(h=>`<span class="pill" title="參戰 ${h.bt||0} 次">${esc(h.n)} <span style="color:var(--brass)">${heroStars(h)}</span></span>`).join("")}</div>`:`<div class="ter" style="font-size:.78rem">🏅 每攻下 3 塊土地，就有一個師可以升格為王牌部隊，由你命名。</div>`}<div class="sec-t" style="margin:4px 0 0">部隊編制</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.85rem">${tplS().filter(t=>t.w).map(t=>`<span class="pill">${esc(t.n)}</span>`).join(" ")}<button class="ghost sm" type="button" data-tab="army">🪖 自己組師 ▶</button></div>`;
   if(en.length){h+=`<div class="wlist">`+en.map(e=>{const w=W.war[wk(me,e)]||{air:50,t:0},F=fronts(me,e),t=W.target[e],r=(W.rep||[]).find(x=>x.e===e),rt=r?repText(r):null,ex=easy()||W.intel[e]===state.turn;
       return `<div class="wrow"><b><span class="swatch" style="background:${colorOf(e)}"></span>${tagName(e)}　<span style="font-weight:400;color:var(--muted)">${ex?"":"~"}${Math.round(divs(e))} 師・第 ${w.t+1} 季</span></b>
        <div>制空權 <b class="num" style="color:${mcol(w.air)}">${w.air}</b>・接壤 ${new Set(F.map(p=>p[1])).size} 處${F.length?"":"（沒有接壤，只能海軍登陸）"}</div>
@@ -2804,6 +2833,31 @@ function renderModal(){const v=$("#veil");const p=state.pending;v.classList.togg
     $("#haR").oninput=()=>{p.amt=+$("#haR").value;upd();};$("#haQ").oninput=()=>{p.price=+$("#haQ").value;upd();};
     $("#haGo").onclick=()=>{if(state.stats.treasury<p.price)return;const hs=state.hs,oi=hsIdx(o);state.stats.treasury-=p.price;hs.inbox[oi].push({k:"armsreq",from:state.W.me,name:hs.names[hs.cur],amt:p.amt,price:p.price});state.pending=null;log(`向${tagName(o)}訂購軍火（軍力 +${p.amt}，${p.price} 億，先付款）`);toast(`📨 訂單已送出，${hs.names[oi]} 不賣會退款`);save();render();};
     $("#cancel").onclick=()=>{state.pending=null;render();};}
+  else if(p.kind==="heroname"){const sug=HERONM.filter(n=>!(state.heroes||[]).some(h=>h.n===n));
+    v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>參謀本部</span><span>授勳</span></div><span class="stamp">王牌</span><h2>🏅 第 ${p.no} 師戰功彪炳，升格為王牌部隊！</h2><p>幫這支部隊取個威風的名字吧！王牌部隊每顆星讓全軍戰力 +1.5%，打越多仗升越多星（最多 3 星）。</p>
+     <input id="hrIn" maxlength="10" value="${sug[0]||"英雄第"+p.no+"師"}" style="width:100%;font-size:1.1rem;padding:8px;margin-bottom:8px;border:1px solid #b9a575">
+     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${sug.slice(0,5).map(n=>`<button class="pbtn" type="button" data-hs="${n}" style="font-size:.8rem;padding:4px 8px">${n}</button>`).join("")}</div><button class="pbtn" type="button" id="hrGo">🎖 授旗</button></div>`;
+    v.querySelectorAll("[data-hs]").forEach(b=>b.onclick=()=>{$("#hrIn").value=b.dataset.hs;});
+    $("#hrGo").onclick=()=>{const n=($("#hrIn").value||"").trim().slice(0,10)||("英雄第"+p.no+"師");(state.heroes=state.heroes||[]).push({n,lv:1,xp:0,bt:0});log(`🏅 第 ${p.no} 師升格為王牌部隊「${n}」`);state.pending=null;save();render();};}
+  else if(p.kind==="flag"){const f=p.f;
+    v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>國家象徵</span><span>設計國旗</span></div><h2>🎌 設計 ${esc(tagName(state.W.me))} 的國旗</h2>
+     <div style="display:flex;justify-content:center;margin:8px 0 12px"><svg id="flPrev" width="210" height="140" viewBox="0 0 42 28" style="border:2px solid #7a6a45">${flagSvg(f)}</svg></div>
+     <div class="taxrow" style="margin-bottom:8px;flex-wrap:wrap;width:auto">${FLAGP.map(([k,n])=>`<button type="button" data-fp="${k}" aria-pressed="${f.p===k}">${n}</button>`).join("")}</div>
+     <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">顏色：${[0,1,2].map(i=>`<input type="color" data-fc="${i}" value="${f.c[i]}" style="width:52px;height:36px;padding:2px">`).join("")}</div>
+     <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">圖案：${FLAGE.map(e=>`<button class="pbtn" type="button" data-fe="${e}" style="min-width:2.4em;padding:4px 6px;${f.e===e?"background:#e8bb5f":""}">${e||"無"}</button>`).join("")}</div>
+     <div style="display:flex;gap:8px"><button class="pbtn" type="button" id="flGo">✅ 升起國旗</button><button class="pbtn" type="button" id="cancel">取消</button></div></div>`;
+    v.querySelectorAll("[data-fp]").forEach(b=>b.onclick=()=>{f.p=b.dataset.fp;render();});v.querySelectorAll("[data-fe]").forEach(b=>b.onclick=()=>{f.e=b.dataset.fe;render();});
+    v.querySelectorAll("[data-fc]").forEach(b=>b.oninput=()=>{f.c[+b.dataset.fc]=b.value;$("#flPrev").innerHTML=flagSvg(f);});
+    $("#flGo").onclick=()=>{state.W.cflag=JSON.parse(JSON.stringify(f));log("🎌 新國旗升起！");state.pending=null;save();render();};$("#cancel").onclick=()=>{state.pending=null;render();};}
+  else if(p.kind==="games"){const oly=p.tp==="oly";
+    v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>體育部</span><span>${dateStr()}</span></div><span class="stamp">${oly?"奧運":"世界盃"}</span><h2>${oly?"🏅 奧林匹克運動會開幕！":"⚽ 世界盃足球賽開踢！"}</h2><p>${oly?"全世界的運動員齊聚一堂。國家越富強、越有名，選手越容易拿金牌。要投資多少培訓選手？":"各國國家隊爭奪金盃。要投資多少在國家隊身上？"}</p>
+     <div class="choices"><button class="choice" type="button" data-gm="0"><strong>順其自然</strong><small>不花錢，靠實力</small></button><button class="choice" type="button" data-gm="1" ${state.stats.treasury<30?"disabled":""}><strong>正常培訓（30 億）</strong><small>實力 +25%</small></button><button class="choice" type="button" data-gm="2" ${state.stats.treasury<80?"disabled":""}><strong>舉國體制（80 億）</strong><small>實力 +55%，全力爭第一</small></button></div></div>`;
+    v.querySelectorAll("[data-gm]").forEach(b=>b.onclick=()=>{gamesRun(+b.dataset.gm);save();render();});}
+  else if(p.kind==="gamesres"){const oly=p.tp==="oly",RK=["🏆 冠軍","🥈 亞軍","🥉 季軍","四強","八強"];
+    v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>體育部</span><span>${dateStr()}</span></div><span class="stamp">${p.rank===1?"第一":"成績"}</span><h2>${oly?`🏅 奧運閉幕：${esc(tagName(state.W.me))}第 ${p.rank} 名，${p.mg} 面金牌`:`⚽ 世界盃：${esc(tagName(state.W.me))}${p.rank<=5?RK[p.rank-1]:"小組賽出局"}`}</h2>
+     <table class="score-tbl">${p.tbl.map(([t,g],i)=>`<tr style="${t===state.W.me?"font-weight:900;color:#2d7a4c":""}"><td>${i+1}. ${tagName(t)}</td><td>${oly?g+" 金":(RK[i]||"")}</td></tr>`).join("")}${p.me?`<tr style="font-weight:900;color:#2d7a4c"><td>${p.rank}. ${tagName(state.W.me)}</td><td>${oly?p.mg+" 金":""}</td></tr>`:""}</table>
+     <div class="fxs" style="margin-bottom:10px">${Object.entries(p.fx).map(([k,x])=>`<span class="fx up">${LABEL[k]} +${x}</span>`).join("")}</div><button class="pbtn" type="button" id="ok">太棒了</button></div>`;
+    $("#ok").onclick=()=>{state.pending=null;save();render();};}
   else if(p.kind==="gentrait"){const g=genObj(p.id);
     v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>參謀本部</span><span>晉升</span></div><span class="stamp">升星</span><h2>🎖 ${g.n} 升到 ${gx(p.id).lv} 星！選一個新特技</h2><div class="choices">${p.opts.map(k=>`<button class="choice" type="button" data-tr="${k}"><strong>${GTRAITS[k][0]}</strong><small>${GTRAITS[k][1]}</small></button>`).join("")}</div></div>`;
     v.querySelectorAll("[data-tr]").forEach(b=>b.onclick=()=>{const x=gx(p.id);if(!x.tr.includes(b.dataset.tr))x.tr.push(b.dataset.tr);log(`${g.n} 學會特技「${GTRAITS[b.dataset.tr][0]}」`);state.pending=null;save();render();});}
@@ -3051,6 +3105,7 @@ function showStart(){const v=$("#veil");v.hidden=false;const sv=loadSave();const
     $("#imp2").onclick=()=>{if(!importCode($("#savecode2").value))$("#cm2").textContent="代碼格式不對";};$("#bk").onclick=showStart;};}
 
 /* ================= wiring ================= */
+document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest("#hflag")&&state&&!state.pending&&!state.over){state.pending={kind:"flag",f:JSON.parse(JSON.stringify(myFlag()))};render();}});
 document.addEventListener("change",e=>{if(e.target&&e.target.id==="bqIn"&&state){state.bq=clamp(Math.round(+e.target.value)||1,1,40);save();render();}});
 document.addEventListener("click",e=>{const t=e.target.closest("[data-f],[data-mars],[data-alien],[data-zb],[data-dec],[data-tax],[data-tab],[data-post],[data-wonder],[data-law],[data-build],[data-tech],[data-bq],[data-pl],[data-tb],[data-ts],[data-tw],[data-tdel],[data-tadd],[data-dep],[data-airm],[data-blk],[data-act],[data-wst],[data-gen],[data-z],[data-mm],[data-comp]");if(!t||!state||t.disabled)return;
   if(t.dataset.f){ui.sel=t.dataset.f;renderTree();renderFocusDetail();}
