@@ -328,7 +328,7 @@ ARMOR.forEach(sl=>ATIERS.forEach(([k,,c])=>icon(`i_${sl}_${k}`,g=>{g.fillStyle=c
   g.fillStyle=shade(c,0.7);g.fillRect(3,13,10,1);})));
 // ---- 方塊定義 ----
 const BL=[];const B={};
-function defB(key,o){const id=BL.length;B[key]=id;o.key=key;o.id=id;if(o.solid===undefined) o.solid=true;if(!o.tex){const t=T[key.toLowerCase()];o.tex=[t,t,t];}BL.push(o);return id;}
+function defB(key,o){const id=BL.length;B[key]=id;o.key=key;o.id=id;if(o.tool!==undefined){o.btool=o.tool;delete o.tool;}if(o.solid===undefined) o.solid=true;if(!o.tex){const t=T[key.toLowerCase()];o.tex=[t,t,t];}BL.push(o);return id;}
 const tx3=(t,s,b)=>[T[t],T[s||t],T[b||t]];
 defB('AIR',{n:'空氣',solid:false,tex:[0,0,0],h:0});
 defB('GRASS',{n:'草方塊',tex:tx3('grass_top','grass_side','dirt'),h:0.6,tool:'shovel',drop:'DIRT',snd:'grass'});
@@ -679,7 +679,7 @@ function selectSlot(i){P.sel=(i+9)%9;if(typeof renderHotbar==='function') render
 const MINE={key:'',t:0,need:0,cool:0};
 function canHarvest(id,s){const b=BL[id];if(!b.tier) return true;const t=s&&DEF(s.id).tool;return !!(t&&t.type==='pick'&&t.tier>=b.tier);}
 function breakTime(id,s){const b=BL[id];if(b.h<0) return Infinity;if(W.mode==='creative') return 0;if(b.h===0) return 0.05;const t=s&&DEF(s.id).tool;let sp=1;
-  if(t&&(t.type===b.tool||(t.type==='sword'&&id===B.OAK_LEAVES)||(t.type==='shears'&&(BL[id].drop==='_leaves'||id===B.TALLGRASS)))){sp=t.sp;const ef=s.ench&&s.ench.eff;if(ef) sp+=ef*ef+1;}
+  if(t&&(t.type===b.btool||(t.type==='sword'&&id===B.OAK_LEAVES)||(t.type==='shears'&&(BL[id].drop==='_leaves'||id===B.TALLGRASS)))){sp=t.sp;const ef=s.ench&&s.ench.eff;if(ef) sp+=ef*ef+1;}
   if(P.inWater&&!P.onGround) sp/=5;else if(!P.onGround&&!P.fly) sp/=5;else if(P.inWater) sp/=5;
   return canHarvest(id,s)?b.h*1.5/sp:b.h*5/sp;}
 const crackMats=[];{for(let i=0;i<10;i++){const c=document.createElement('canvas');c.width=c.height=16;const g=c.getContext('2d');const r=prng(i*99+3);g.strokeStyle='rgba(0,0,0,.75)';g.lineWidth=1;for(let k=0;k<=i;k++){g.beginPath();let x=8,y=8;g.moveTo(x,y);for(let j=0;j<3+i/2;j++){x+=r()*8-4;y+=r()*8-4;g.lineTo(x,y);}g.stroke();}
@@ -1214,7 +1214,7 @@ function useItem(){if(P.dead||uiOpen) return;const s=held();const d=s&&DEF(s.id)
   if(d.tool&&d.tool.type==='hoe'){if((h.id===B.GRASS||h.id===B.DIRT)&&h.ny>=0&&!getB(h.x,h.y+1,h.z)){setB(h.x,h.y,h.z,B.FARMLAND);useTool(s);playSnd('grass');}return;}
   if(s.id===IT.I_SEEDS){if(h.id===B.FARMLAND&&!getB(h.x,h.y+1,h.z)){setB(h.x,h.y+1,h.z,B.WHEAT0);consumeHeld(1);playSnd('grass');}return;}
   if(s.id===IT.I_BONEMEAL){if(boneMeal(h)){consumeHeld(1);puff(h.x+0.5,h.y+1,h.z+0.5,0x7aff7a,6);}return;}
-  if(d.food||d.tool||d.armor&&false) {if(d.armor){}return;}
+  if(d.food||d.tool) return;
   if(d.armor){const sl=d.armor.slot;const old=P.armor[sl];P.armor[sl]=s;P.inv[P.sel]=old||null;renderHotbar();playSnd('equip');return;}
   // 放方塊
   let id=isItem(s.id)?(d.place?B[d.place]:0):s.id;if(!id) return;
