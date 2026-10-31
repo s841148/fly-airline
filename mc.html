@@ -1219,15 +1219,26 @@ function players(){const L=[{id:myId(),x:P.x,y:P.y,z:P.z,dead:P.dead,mode:W.mode
 function hurtPlayer(pl,dmg,why,kx,kz){if(pl.local){if(W.mode==='creative'||P.dead) return;const before=P.hp;hurt(dmg,why,false,'mob');if(P.hp<before){P.vx=kx;P.vz=kz;P.kbT=0.25;P.vy=Math.max(P.vy,5);}}else NET.sendTo(pl.id,{t:'hurt',dmg,why,kx,kz});}
 function damageMob(e,dmg,src){if(e.dead||e.hurtT>0.4) return false;const T2=MOBS[e.type];e.hp-=dmg;e.hurtT=0.5;playSnd('hit');
   if(src&&src.kx!==undefined){e.vx+=src.kx;e.vz+=src.kz;e.vy=Math.max(e.vy,4.5);}if(src&&src.fire) e.fire=src.fire*4;
-  if(T2.pass){e.ai.flee=5;}if((T2.neutral||T2.hostile)&&src&&src.by){e.ai.target=src.by;e.ai.anger=30;if(e.type==='zpig') for(const m of mobs()) if(m.type==='zpig'&&Math.hypot(m.x-e.x,m.z-e.z)<16){m.ai.target=src.by;m.ai.anger=30;}}
+  if(T2.pass){let fx=null;if(src&&src.by!==undefined){const pl=players().find(p=>p.id===src.by);if(pl) fx=[pl.x,pl.z];}if(!fx&&src&&src.kx!==undefined) fx=[e.x-src.kx,e.z-src.kz];
+    for(const m of mobs()){if(m.dim!==e.dim||!MOBS[m.type].pass||m.type==='villager'&&e.type!=='villager') continue;const d=Math.hypot(m.x-e.x,m.z-e.z);if(d>12) continue;m.ai.flee=m===e?5:4+Math.random()*2;m.ai.from=fx||[e.x,e.z];m.ai.t=0;}}if((T2.neutral||T2.hostile)&&src&&src.by){e.ai.target=src.by;e.ai.anger=30;if(e.type==='zpig') for(const m of mobs()) if(m.type==='zpig'&&Math.hypot(m.x-e.x,m.z-e.z)<16){m.ai.target=src.by;m.ai.anger=30;}}
   if(e.type==='wolf'&&e.tamed&&src&&src.by===e.tamed){e.ai.target=null;}
   if(e.hp<=0) killMob(e,src);return true;}
-function killMob(e,src){e.dead=true;const T2=MOBS[e.type];playSnd('pop');puff(e.x,e.y+e.h/2,e.z,0xdddddd,8);
+function killMob(e,src){e.dead=true;const T2=MOBS[e.type];playSnd('pop');bloodFx(e,true);puff(e.x,e.y+e.h/2,e.z,0xdddddd,8);
   if(src&&src.by&&!e.baby){const list=[];for(const [k,a,b,ch] of T2.drops||[]){if(ch&&Math.random()>ch) continue;let n=irand(a,b);if(ch) n=Math.max(1,n);if(e.fire>0&&IT[k]&&ITL[IT[k]].cook) list.push([IT[ITL[IT[k]].cook],n]);else if(n>0) list.push([IT[k]||B[k],n]);}
     if(e.type==='sheep'&&!e.sheared) list.push([B['WOOL_'+WOOLC[e.wool][0].toUpperCase()],1]);
     const xp=irand(T2.xp[0],T2.xp[1]);
     if(src.by===myId()){for(const [id,n] of list) spawnDrop(id,n,e.x,e.y+0.5,e.z);spawnXP(e.x,e.y+0.5,e.z,xp);}else if(typeof NET!=='undefined'&&NET.on) NET.sendTo(src.by,{t:'loot',list,xp,x:e.x,y:e.y+0.5,z:e.z});}
   if(T2.split&&e.size>1) for(let k=0;k<irand(2,3);k++) spawnMob(e.type,e.x+rand(-.4,.4),e.y+0.3,e.z+rand(-.4,.4),{size:e.size/2,dim:e.dim});}
+// ---- 血跡模組（不會太血腥：小紅點，幾秒後就消失）----
+const BLOODC={skel:0xe8e8e0,stray:0xd8e0e8,slime:0x6ac84a,magma:0xff8a20,jelly:0xffa040,boomer:0xd8c8a0,bat:0x8a2020};
+const DECALS=[];let decalTex=null;
+function bloodTex(){if(decalTex) return decalTex;const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d');const r=prng(77);
+  for(let k=0;k<9;k++){const x=8+r()*16,y=8+r()*16,R=2+r()*5;g.fillStyle='rgba(140,10,10,.85)';g.beginPath();g.arc(x,y,R,0,7);g.fill();}decalTex=new THREE.CanvasTexture(c);decalTex.magFilter=THREE.NearestFilter;return decalTex;}
+function bloodFx(e,big){if(!SET.blood) return;const col=BLOODC[e.type]||0x9a1010;puff(e.x,e.y+e.h*0.6,e.z,col,big?10:5,0.6);
+  if(BLOODC[e.type]) return;// 骷髏、史萊姆不留血跡
+  const gy=Math.floor(e.y);if(!BL[getB(e.x,gy-1,e.z)].solid) return;const m=new THREE.Mesh(new THREE.PlaneGeometry(0.7+(big?0.4:0),0.7+(big?0.4:0)),new THREE.MeshBasicMaterial({map:bloodTex(),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-3}));
+  m.rotation.x=-Math.PI/2;m.rotation.z=rand(0,6.28);m.position.set(e.x+rand(-.2,.2),gy+0.02,e.z+rand(-.2,.2));scene.add(m);DECALS.push({m,t:0,dim:W.dim});while(DECALS.length>40){const d=DECALS.shift();scene.remove(d.m);d.m.material.dispose();d.m.geometry.dispose();}}
+function decalTick(dt){for(let i=DECALS.length-1;i>=0;i--){const d=DECALS[i];d.t+=dt;if(d.t>8) d.m.material.opacity=Math.max(0,1-(d.t-8)/4);if(d.t>12||d.dim!==W.dim){scene.remove(d.m);d.m.material.dispose();d.m.geometry.dispose();DECALS.splice(i,1);}}}
 // 粒子
 const PARTS=[];const puffGeo=new THREE.BoxGeometry(0.1,0.1,0.1);
 function puff(x,y,z,col,n,sp){for(let i=0;i<(n||6);i++){const m=new THREE.Mesh(puffGeo,new THREE.MeshBasicMaterial({color:col,transparent:true}));m.position.set(x+rand(-.3,.3),y+rand(-.3,.3),z+rand(-.3,.3));scene.add(m);PARTS.push({m,vx:rand(-1,1)*(sp||1),vy:rand(0.5,2)*(sp||1),vz:rand(-1,1)*(sp||1),t:0,life:rand(0.5,1)});}}
@@ -1258,7 +1269,7 @@ function mobAI(e,dt){const T2=MOBS[e.type];const a=e.ai;a.t-=dt;a.cool-=dt;if(a.
     else if(T2.boom){goal=[tgt.x,tgt.z,1];const d3=Math.hypot(dx,dy,dz);if(d3<3||a.fuse>0){a.fuse+=dt*(d3<5?1:-1);goal=null;if(a.fuse<=0) a.fuse=0;if(a.fuse>1.5){e.dead=true;explode(e.x,e.y+0.8,e.z,3,true);}}}
     else{goal=[tgt.x,tgt.z,T2.hop?1:1];if(tgt.mob){if(d<1.4&&a.cool<=0){a.cool=1;damageMob(tgt.mob,T2.dmg||2,{by:e.eid,kx:dx/d*3,kz:dz/d*3});}}
       else if(d<1.1+e.w&&Math.abs(dy)<1.8&&a.cool<=0&&T2.dmg){a.cool=1;const dmg=T2.split?Math.max(1,Math.floor(e.size*(T2.dmg/2))):T2.dmg;hurtPlayer(tgt,dmg,`被${T2.n}殺死了`,dx/d*7,dz/d*7);}}}
-  else if(a.flee>0){if(a.t<=0){a.t=1;const ang=rand(0,6.28);a.tx=e.x+Math.cos(ang)*8;a.tz=e.z+Math.sin(ang)*8;}goal=[a.tx,a.tz,1.8];}
+  else if(a.flee>0){if(a.t<=0){a.t=0.8;let ang=rand(0,6.28);if(a.from){ang=Math.atan2(e.z-a.from[1],e.x-a.from[0])+rand(-0.6,0.6);}a.tx=e.x+Math.cos(ang)*9;a.tz=e.z+Math.sin(ang)*9;}goal=[a.tx,a.tz,2.1];}
   else if(!goal){if(a.t<=0){a.t=rand(3,8);if(Math.random()<0.5){const ang=rand(0,6.28);a.tx=e.x+Math.cos(ang)*rand(3,8);a.tz=e.z+Math.sin(ang)*rand(3,8);}else{a.tx=null;}}if(a.tx!==null) goal=[a.tx,a.tz,0.6];}
   // 移動
   let mx=0,mz=0;if(goal&&speed>0){const dx=goal[0]-e.x,dz=goal[1]-e.z,d=Math.hypot(dx,dz);if(d>0.5){mx=dx/d;mz=dz/d;e.yaw=Math.atan2(mx,mz);}else if(a.tx!==null&&!tgt) a.tx=null;}
@@ -1499,12 +1510,12 @@ function entitiesTick(dt){const host=isHost();
       else if(e.kind==='egg'){e.vy-=20*dt;e.x+=e.vx*dt;e.y+=e.vy*dt;e.z+=e.vz*dt;e.mesh.position.set(e.x,e.y,e.z);if(BL[getB(e.x,e.y,e.z)].solid||e.y<0){e.dead=true;puff(e.x,e.y,e.z,0xf8f0d8,6);if(Math.random()<0.125){if(host) spawnMob('chicken',e.x,Math.floor(e.y)+1,e.z,{baby:true});else NET.send({t:'egg',x:e.x,y:Math.floor(e.y)+1,z:e.z});}}}
       else if(e.kind==='tnt'){e.fuse-=dt;entPhys(e,dt);e.mesh.position.set(e.x,e.y+0.5,e.z);const fl=Math.sin(e.fuse*12)>0.3;e.mesh.scale.setScalar(e.fuse<0.6?1+(0.6-e.fuse)*0.3:1);e.mesh.traverse(o=>{if(o.material&&o.material.forEach) o.material.forEach(m=>m.emissive&&m.emissive.setRGB(fl?0.6:0,fl?0.6:0,fl?0.6:0));});
         if(e.fuse<=0){e.dead=true;if(!e.ghost) explode(e.x,e.y+0.5,e.z,4,true);}}
-      else if(e.kind==='mob'){e.mesh.visible=true;if(e.hurtT>0) e.hurtT-=dt;
+      else if(e.kind==='mob'){e.mesh.visible=true;if(e.hurtT>0.4&&!e._bled){e._bled=true;bloodFx(e,e.hp<=0);}if(e.hurtT<=0.3) e._bled=false;if(e.hurtT>0) e.hurtT-=dt;
         if(e.remote){const k=Math.min(1,dt*10);if(e.tx!==undefined){e.vx=(e.tx-e.x)/0.12;e.vz=(e.tz-e.z)/0.12;e.x+=(e.tx-e.x)*k;e.y+=(e.ty-e.y)*k;e.z+=(e.tz-e.z)*k;}e.onGround=true;}
         else if(host){mobAI(e,dt);entPhys(e,dt);if(e.y<-30) e.dead=true;}
         mobAnim(e,dt);}}
     if(e.dead){if(e.mesh){scene.remove(e.mesh);if(e.kind==='mob'){e.mesh.traverse(o=>{if(o.geometry) o.geometry.dispose();});for(const m of e.model.mats) m.dispose();}else if(e.kind==='arrow'||e.kind==='fireball'||e.kind==='egg'){}}ENTS.splice(i,1);}}
-  partsTick(dt);remoteTick(dt);selfTick(dt);}
+  partsTick(dt);decalTick(dt);remoteTick(dt);selfTick(dt);}
 // ---- 音效（程式產生）----
 let AC=null;
 function playSnd(name,vol){if(!SET.sound) return;try{if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}if(AC.state==='suspended') AC.resume();vol=(vol||1)*SET.vol;const t=AC.currentTime;
@@ -1732,7 +1743,7 @@ function netUI(){const el=$('#netInfo');if(!el) return;if(!NET.on){el.hidden=tru
   el.innerHTML=`${NET.host?`房間代碼 <b>${NET.code}</b>`:'已連線'} · ${names.length}/4 人`;}
 
 // ================= 設定、存檔、選單、HUD、觸控、聊天指令 =================
-const SET=Object.assign({sens:1,rd:isTouch?3:5,fov:72,vol:0.7,sound:true,name:'玩家'+Math.floor(Math.random()*900+100),color:'#3d8b6b',fps:false,bob:true,btn:1,look:true,shader:isTouch?0:1,vein:0,pack:0},(()=>{try{return JSON.parse(localStorage.getItem('mmvox_set')||'{}');}catch(e){return {};}})());
+const SET=Object.assign({sens:1,rd:isTouch?3:5,fov:72,vol:0.7,sound:true,name:'玩家'+Math.floor(Math.random()*900+100),color:'#3d8b6b',fps:false,bob:true,btn:1,look:true,shader:isTouch?0:1,vein:0,pack:0,blood:1},(()=>{try{return JSON.parse(localStorage.getItem('mmvox_set')||'{}');}catch(e){return {};}})());
 function saveSet(){try{localStorage.setItem('mmvox_set',JSON.stringify(SET));}catch(e){}}
 P.color=SET.color;RD=SET.rd;
 // ---- 像素圖示（愛心、雞腿、盔甲、氣泡）----
@@ -1851,9 +1862,9 @@ let SETBACK='title';
 const SETS=[['sens','滑鼠靈敏度',0.2,3,0.1,v=>Math.round(v*100)+'%'],['fov','視野',50,110,1,v=>v+'°'],['rd','顯示距離',2,isTouch?6:9,1,v=>v+' 區塊'],['vol','音量',0,1,0.05,v=>Math.round(v*100)+'%'],['btn','觸控按鈕大小',0.7,1.5,0.05,v=>Math.round(v*100)+'%']];
 function renderSettings(){$('#setList').innerHTML=SETS.map(([k,n,a,b,s,f])=>`<label class="slider"><span>${n}：<b id="sv_${k}">${f(SET[k])}</b></span><input type="range" min="${a}" max="${b}" step="${s}" value="${SET[k]}" data-k="${k}"></label>`).join('')+
   `<label class="field">名字<input id="s_name" maxlength="16" value="${esc(SET.name)}"></label><div class="colors">${['#3d8b6b','#3a6aa8','#a83a3a','#d8a020','#8a3aa8','#e07aa0','#5a5a5a','#e8e8e8'].map(c=>`<button class="cb ${SET.color===c?'on':''}" data-col="${c}" style="background:${c}" aria-label="衣服顏色"></button>`).join('')}</div>
-  <button class="mcb" id="s_bob">走路晃動：${SET.bob?'開':'關'}</button><button class="mcb" id="s_fps">顯示 FPS：${SET.fps?'開':'關'}</button><button class="mcb" id="s_shader">光影包：${['關','開','高畫質（較吃效能）'][SET.shader]}</button><button class="mcb" id="s_vein">連鎖挖掘模組：${['關','開（蹲下時挖才連鎖）','開（一直連鎖）'][SET.vein]}</button><button class="mcb" id="s_pack">背包模組：${SET.pack?'開':'關'}</button><button class="mcb" id="s_look">顯示模組（看方塊資訊）：${SET.look?'開':'關'}</button>`;}
+  <button class="mcb" id="s_bob">走路晃動：${SET.bob?'開':'關'}</button><button class="mcb" id="s_fps">顯示 FPS：${SET.fps?'開':'關'}</button><button class="mcb" id="s_shader">光影包：${['關','開','高畫質（較吃效能）'][SET.shader]}</button><button class="mcb" id="s_vein">連鎖挖掘模組：${['關','開（蹲下時挖才連鎖）','開（一直連鎖）'][SET.vein]}</button><button class="mcb" id="s_blood">血跡模組：${SET.blood?'開':'關'}</button><button class="mcb" id="s_pack">背包模組：${SET.pack?'開':'關'}</button><button class="mcb" id="s_look">顯示模組（看方塊資訊）：${SET.look?'開':'關'}</button>`;}
 $('#setList').addEventListener('input',e=>{const k=e.target.dataset.k;if(!k) return;SET[k]=+e.target.value;const d=SETS.find(x=>x[0]===k);$('#sv_'+k).textContent=d[5](SET[k]);if(k==='rd'){RD=SET.rd;scene.fog.far=W.dim==='nether'?60:RD*16;}if(k==='btn') document.documentElement.style.setProperty('--tb',SET.btn);saveSet();});
-$('#setList').addEventListener('click',e=>{const c=e.target.closest('[data-col]');if(c){SET.color=c.dataset.col;P.color=SET.color;if(selfModel){scene.remove(selfModel.g);selfModel=null;}renderSettings();saveSet();}if(e.target.id==='s_bob'){SET.bob=!SET.bob;renderSettings();saveSet();}if(e.target.id==='s_shader'){SET.shader=(SET.shader+1)%3;applyShader();renderSettings();saveSet();}if(e.target.id==='s_vein'){SET.vein=(SET.vein+1)%3;renderSettings();saveSet();}if(e.target.id==='s_pack'){SET.pack=SET.pack?0:1;renderSettings();saveSet();toast(SET.pack?'背包模組已開啟：用皮革和箱子合成背包，拿在手上按右鍵（或按 B）打開':'背包模組已關閉');}if(e.target.id==='s_look'){SET.look=!SET.look;renderSettings();saveSet();}if(e.target.id==='s_fps'){SET.fps=!SET.fps;$('#fps').hidden=!SET.fps;renderSettings();saveSet();}});
+$('#setList').addEventListener('click',e=>{const c=e.target.closest('[data-col]');if(c){SET.color=c.dataset.col;P.color=SET.color;if(selfModel){scene.remove(selfModel.g);selfModel=null;}renderSettings();saveSet();}if(e.target.id==='s_bob'){SET.bob=!SET.bob;renderSettings();saveSet();}if(e.target.id==='s_shader'){SET.shader=(SET.shader+1)%3;applyShader();renderSettings();saveSet();}if(e.target.id==='s_vein'){SET.vein=(SET.vein+1)%3;renderSettings();saveSet();}if(e.target.id==='s_blood'){SET.blood=SET.blood?0:1;renderSettings();saveSet();}if(e.target.id==='s_pack'){SET.pack=SET.pack?0:1;renderSettings();saveSet();toast(SET.pack?'背包模組已開啟：用皮革和箱子合成背包，拿在手上按右鍵（或按 B）打開':'背包模組已關閉');}if(e.target.id==='s_look'){SET.look=!SET.look;renderSettings();saveSet();}if(e.target.id==='s_fps'){SET.fps=!SET.fps;$('#fps').hidden=!SET.fps;renderSettings();saveSet();}});
 $('#setList').addEventListener('change',e=>{if(e.target.id==='s_name'){SET.name=e.target.value.trim().slice(0,16)||SET.name;saveSet();}});
 on('set_back',()=>showScreen(SETBACK));
 document.documentElement.style.setProperty('--tb',SET.btn);
