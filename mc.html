@@ -35,6 +35,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#fff;font-f
 #debug{position:absolute;left:6px;top:6px;white-space:pre;font-size:14px;line-height:1.4;background:rgba(0,0,0,.4);padding:4px 8px;font-family:monospace}
 #fps{position:absolute;right:8px;top:6px;font:12px monospace;background:rgba(0,0,0,.4);padding:2px 6px}
 #netInfo{position:absolute;right:8px;top:28px;font-size:13px;background:rgba(0,0,0,.45);padding:3px 8px}
+#look{position:absolute;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);display:flex;gap:10px;align-items:center;background:rgba(16,1,16,.86);padding:6px 14px 6px 8px;border:2px solid #28005e;max-width:min(92vw,440px);font-size:14px;line-height:1.35}
+#look .li{width:32px;height:32px;flex:none;display:flex;align-items:center;justify-content:center}#look b{display:block;font-size:16px;color:#fff}#look small{display:block;color:#bbb}#look .ok{color:#7cff6a}#look .no{color:#ff7070}#look .mod{color:#6a8cff;font-style:italic;font-size:12px}
+#look .bar{height:4px;background:#333;margin-top:3px}#look .bar i{display:block;height:100%;background:#fff}
+@media (pointer:coarse){#look{top:auto;bottom:150px}}
 #hurtFlash{position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(255,0,0,.7));opacity:0;transition:opacity .25s;pointer-events:none}
 #portalFx{position:fixed;inset:0;background:rgba(150,40,220,.9);opacity:0;pointer-events:none;mix-blend-mode:screen}
 #underwater{position:fixed;inset:0;opacity:0;pointer-events:none}
@@ -126,6 +130,7 @@ h2{margin:0 0 6px;font-size:22px;text-shadow:2px 2px 0 #3f3f3f}
 <div id="vig"></div><div id="underwater"></div><div id="portalFx"></div><div id="hurtFlash"></div><div id="sleep" hidden></div>
 <div id="hud" hidden>
   <div id="cross"></div>
+  <div id="look" hidden></div>
   <pre id="debug" hidden></pre><div id="fps" hidden></div><div id="netInfo" hidden></div>
   <div id="chatLog"></div><input id="chatIn" hidden maxlength="200" placeholder="輸入訊息，或 / 開頭的指令" autocomplete="off">
   <div id="heldName"></div>
@@ -1549,7 +1554,7 @@ function netUI(){const el=$('#netInfo');if(!el) return;if(!NET.on){el.hidden=tru
   el.innerHTML=`${NET.host?`房間代碼 <b>${NET.code}</b>`:'已連線'} · ${names.length}/4 人`;}
 
 // ================= 設定、存檔、選單、HUD、觸控、聊天指令 =================
-const SET=Object.assign({sens:1,rd:isTouch?3:5,fov:72,vol:0.7,sound:true,name:'玩家'+Math.floor(Math.random()*900+100),color:'#3d8b6b',fps:false,bob:true,btn:1},(()=>{try{return JSON.parse(localStorage.getItem('mmvox_set')||'{}');}catch(e){return {};}})());
+const SET=Object.assign({sens:1,rd:isTouch?3:5,fov:72,vol:0.7,sound:true,name:'玩家'+Math.floor(Math.random()*900+100),color:'#3d8b6b',fps:false,bob:true,btn:1,look:true},(()=>{try{return JSON.parse(localStorage.getItem('mmvox_set')||'{}');}catch(e){return {};}})());
 function saveSet(){try{localStorage.setItem('mmvox_set',JSON.stringify(SET));}catch(e){}}
 P.color=SET.color;RD=SET.rd;
 // ---- 像素圖示（愛心、雞腿、盔甲、氣泡）----
@@ -1664,9 +1669,9 @@ let SETBACK='title';
 const SETS=[['sens','滑鼠靈敏度',0.2,3,0.1,v=>Math.round(v*100)+'%'],['fov','視野',50,110,1,v=>v+'°'],['rd','顯示距離',2,isTouch?6:9,1,v=>v+' 區塊'],['vol','音量',0,1,0.05,v=>Math.round(v*100)+'%'],['btn','觸控按鈕大小',0.7,1.5,0.05,v=>Math.round(v*100)+'%']];
 function renderSettings(){$('#setList').innerHTML=SETS.map(([k,n,a,b,s,f])=>`<label class="slider"><span>${n}：<b id="sv_${k}">${f(SET[k])}</b></span><input type="range" min="${a}" max="${b}" step="${s}" value="${SET[k]}" data-k="${k}"></label>`).join('')+
   `<label class="field">名字<input id="s_name" maxlength="16" value="${esc(SET.name)}"></label><div class="colors">${['#3d8b6b','#3a6aa8','#a83a3a','#d8a020','#8a3aa8','#e07aa0','#5a5a5a','#e8e8e8'].map(c=>`<button class="cb ${SET.color===c?'on':''}" data-col="${c}" style="background:${c}" aria-label="衣服顏色"></button>`).join('')}</div>
-  <button class="mcb" id="s_bob">走路晃動：${SET.bob?'開':'關'}</button><button class="mcb" id="s_fps">顯示 FPS：${SET.fps?'開':'關'}</button>`;}
+  <button class="mcb" id="s_bob">走路晃動：${SET.bob?'開':'關'}</button><button class="mcb" id="s_fps">顯示 FPS：${SET.fps?'開':'關'}</button><button class="mcb" id="s_look">顯示模組（看方塊資訊）：${SET.look?'開':'關'}</button>`;}
 $('#setList').addEventListener('input',e=>{const k=e.target.dataset.k;if(!k) return;SET[k]=+e.target.value;const d=SETS.find(x=>x[0]===k);$('#sv_'+k).textContent=d[5](SET[k]);if(k==='rd'){RD=SET.rd;scene.fog.far=W.dim==='nether'?60:RD*16;}if(k==='btn') document.documentElement.style.setProperty('--tb',SET.btn);saveSet();});
-$('#setList').addEventListener('click',e=>{const c=e.target.closest('[data-col]');if(c){SET.color=c.dataset.col;P.color=SET.color;if(selfModel){scene.remove(selfModel.g);selfModel=null;}renderSettings();saveSet();}if(e.target.id==='s_bob'){SET.bob=!SET.bob;renderSettings();saveSet();}if(e.target.id==='s_fps'){SET.fps=!SET.fps;$('#fps').hidden=!SET.fps;renderSettings();saveSet();}});
+$('#setList').addEventListener('click',e=>{const c=e.target.closest('[data-col]');if(c){SET.color=c.dataset.col;P.color=SET.color;if(selfModel){scene.remove(selfModel.g);selfModel=null;}renderSettings();saveSet();}if(e.target.id==='s_bob'){SET.bob=!SET.bob;renderSettings();saveSet();}if(e.target.id==='s_look'){SET.look=!SET.look;renderSettings();saveSet();}if(e.target.id==='s_fps'){SET.fps=!SET.fps;$('#fps').hidden=!SET.fps;renderSettings();saveSet();}});
 $('#setList').addEventListener('change',e=>{if(e.target.id==='s_name'){SET.name=e.target.value.trim().slice(0,16)||SET.name;saveSet();}});
 on('set_back',()=>showScreen(SETBACK));
 document.documentElement.style.setProperty('--tb',SET.btn);
@@ -1752,6 +1757,27 @@ function cameraTick(dt){const fly=P.fly&&W.mode==='creative';let ey=P.y+EYE-(P.s
   const hw=getB(cx,cyy,cz);$('#underwater').style.opacity=hw===B.WATER?0.55:hw===B.LAVA?0.9:0;$('#underwater').style.background=hw===B.LAVA?'rgba(255,90,0,.85)':'rgba(30,70,170,.5)';
   if(hw===B.WATER){scene.fog.near=1;scene.fog.far=18;scene.fog.color.set(0x1a3a8a);}else if(W.dim!=='nether'){scene.fog.near=RD*16*0.55;scene.fog.far=RD*16;}}
 function aimTick(){const reach=W.mode==='creative'?5:4.5;const r=rayCast(eyePos(),lookDir(),reach);AIM=r;if(r.id&&!P.dead&&!uiOpen){const b=BL[r.id];selBox.visible=true;const h=b.half||1;selBox.scale.set(1,b.cross?0.9:b.flat?0.08:h,1);selBox.position.set(r.x+0.5,r.y+(b.flat?0.04:(b.cross?0.45:h/2)),r.z+0.5);}else selBox.visible=false;}
+
+// ---- 顯示模組：準心指到的方塊／生物資訊 ----
+let lookT=0,lookKey='';
+const TOOLZH={pick:'鎬',axe:'斧頭',shovel:'鏟子',sword:'劍',hoe:'鋤頭'},TIERZH=['','木','石','鐵','鐵','鑽石'];
+const MOBDOT={cow:'#4b3621',pig:'#f0a0a0',chicken:'#f4f4f4',sheep:'#eaeaea',wolf:'#c8c8c8',bat:'#3a2a1a',zombie:'#5a9a4a',husk:'#9a8a5a',skel:'#c8c8c8',stray:'#a8b8c0',spider:'#2a2420',boomer:'#d02a2a',slime:'#6ec85a',magma:'#5a1a08',jelly:'#ff9a3c',zpig:'#e89a9a'};
+function lookTick(dt){lookT+=dt;if(lookT<0.1) return;lookT=0;const el=$('#look');if(!SET.look||P.dead||uiOpen||paused){el.hidden=true;lookKey='';return;}
+  const hm=rayMob(5);let h='';
+  if(hm&&(!AIM.id||hm.t<AIM.t)){const m=hm.m,T2=MOBS[m.type];const kind=m.tamed?(m.tamed===myId()?'你馴服的':'別人馴服的'):T2.hostile?'敵對':T2.neutral?'中立（打牠會生氣）':'友善';
+    const hp=Math.max(0,Math.ceil(m.hp));h=`<span class="li"><i style="width:24px;height:24px;background:${MOBDOT[m.type]||'#888'};border:2px solid #000;display:block"></i></span><span><b>${T2.n}${m.baby?'（寶寶）':''}</b><small>❤ ${hp/2} / ${m.maxHp/2}　${kind}</small>${m.type==='sheep'?`<small>${m.sheared?'已經剪過毛了':'可以用剪刀剪毛'}</small>`:''}${m.type==='wolf'&&!m.tamed?'<small>給牠骨頭可以馴服</small>':''}${T2.pass&&!m.baby?`<small>餵${nameOf(IT[T2.food])}可以繁殖</small>`:''}<small class="mod">麥麥方塊世界</small></span>`;}
+  else if(AIM.id){const id=AIM.id,b=BL[id],s=held();const t=s&&isItem(s.id)?ITL[s.id].tool:null;let line='';
+    if(b.h<0) line='<small class="no">挖不動</small>';
+    else if(W.mode==='creative') line='<small class="ok">創造模式：一下就挖掉</small>';
+    else{const ok=canHarvest(id,s);const need=b.tier?`需要${TIERZH[b.tier]}${TOOLZH.pick}以上`:b.btool?`適合用${TOOLZH[b.btool]}`:'空手就能挖';
+      const fast=t&&t.type===b.btool;line=`<small class="${ok?'ok':'no'}">${ok?'✔':'✘'} ${need}${ok&&!fast&&b.btool?'（用對工具會更快）':''}${!ok?'，現在挖不會掉東西':''}</small>`;}
+    let extra='';if(b.crop!==undefined) extra=`<small>成長：${Math.round(b.crop/3*100)}%${b.crop===3?'（可以收成了）':''}</small>`;
+    const k=W.dim+':'+AIM.x+','+AIM.y+','+AIM.z;if(W.cont[k]) extra=`<small>裡面有 ${W.cont[k].filter(Boolean).length} 格東西</small>`;
+    if(W.furn[k]){const f=W.furn[k];extra=`<small>${f.burn>0?'🔥 燒著':'沒在燒'}${f.in?'・正在燒：'+nameOf(f.in.id):''}${f.out?'・成品：'+nameOf(f.out.id)+'×'+f.out.n:''}</small>`;}
+    if(b.rs) extra+=`<small>紅石元件${b.power||id===B.LAMP_ON||id===B.WIRE_ON?'（有電）':''}</small>`;
+    const prog=MINE.key&&MINE.need>0&&MINE.need<Infinity?Math.min(1,MINE.t/MINE.need):0;
+    h=`<span class="li">${icHTML(id===B.WIRE||id===B.WIRE_ON?IT.I_REDSTONE:id,28)}</span><span><b>${b.n}</b>${line}${extra}${prog?`<div class="bar"><i style="width:${Math.round(prog*100)}%"></i></div>`:''}<small class="mod">麥麥方塊世界</small></span>`;}
+  if(h!==lookKey){lookKey=h;el.innerHTML=h;el.hidden=!h;}}
 let last=performance.now(),fpsN=0,fpsT=0,saveT=0,lastSim=performance.now();
 function simStep(dt){lastSim=performance.now();
     W.time+=dt*20;if(W.time%24000<dt*20) W.day++;
@@ -1767,7 +1793,7 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(0.05,(now-last)
   if(title.on){title.a+=dt*0.05;P.yaw=title.a;P.pitch=-0.15;camera.rotation.set(P.pitch,P.yaw,0);camera.position.set(P.x,P.y,P.z);W.time=4000;streamChunks(P.x,P.z,2);updateSky();renderer.render(scene,camera);return;}
   if(!running){renderer.render(scene,camera);return;}
   if(!paused||NET.on) simStep(dt);
-  cameraTick(dt);streamChunks(P.x,P.z,isTouch?1:2);updateSky();vmTick(dt);hudTick(dt);
+  cameraTick(dt);streamChunks(P.x,P.z,isTouch?1:2);updateSky();vmTick(dt);hudTick(dt);lookTick(dt);
   if(P.hurtT>0) P.hurtT-=dt;
   if(!$('#debug').hidden) $('#debug').textContent=`麥麥方塊世界\nXYZ: ${P.x.toFixed(1)} / ${P.y.toFixed(1)} / ${P.z.toFixed(1)}\n區塊: ${Math.floor(P.x)>>4}, ${Math.floor(P.z)>>4}\n生態域: ${BIOME_ZH[biomeAt(P.x,P.z)]||''}\n維度: ${W.dim==='nether'?'地獄':'主世界'}\n時間: 第 ${W.day} 天 ${Math.floor((W.time%24000)/1000+6)%24} 點\n實體: ${ENTS.length}\n看著: ${AIM.id?nameOf(AIM.id)+` (${AIM.x},${AIM.y},${AIM.z})`:'—'}${NET.on?'\n連線: '+(NET.host?'主機 '+NET.code:'客人'):''}`;
   renderer.autoClear=true;renderer.render(scene,camera);
