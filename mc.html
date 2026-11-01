@@ -31,7 +31,13 @@ html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#fff;font-f
 #heldName{position:absolute;left:50%;bottom:130px;transform:translateX(-50%);font-weight:700;transition:opacity .5s;text-shadow:2px 2px 0 #3f3f3f;white-space:nowrap}
 #chatLog{position:absolute;left:8px;bottom:150px;width:min(560px,70vw);display:flex;flex-direction:column;gap:2px}
 .cl{background:rgba(0,0,0,.45);padding:3px 8px;font-size:15px;transition:opacity 1.5s;text-shadow:1px 1px 0 #222}.cl.fade{opacity:0}#chatLog.open .cl{opacity:1!important}
-#chatIn{position:absolute;left:8px;bottom:116px;width:min(560px,80vw);background:rgba(0,0,0,.6);color:#fff;border:0;font-size:16px;padding:8px;pointer-events:auto;outline:none}
+#chatBox{position:absolute;left:8px;bottom:112px;width:min(620px,92vw);pointer-events:auto;display:flex;flex-direction:column;gap:4px}
+.chat-row{display:flex;gap:4px}#chatIn{flex:1;background:rgba(0,0,0,.7);color:#fff;border:2px solid #777;font-size:16px;padding:8px;outline:none;min-width:0}
+.cbtn{background:rgba(0,0,0,.7);color:#fff;border:2px solid #777;font:inherit;font-size:16px;padding:4px 10px;cursor:pointer}
+#chatQuick{display:flex;flex-wrap:wrap;gap:4px}.cq{background:rgba(40,40,60,.8);color:#fff;border:1px solid #888;border-radius:12px;font:inherit;font-size:13px;padding:3px 10px;cursor:pointer}.cq.at{background:rgba(30,80,140,.85)}
+#chatEmoP{display:flex;flex-wrap:wrap;gap:2px;background:rgba(0,0,0,.75);padding:4px;max-width:420px}.ce{background:none;border:0;font-size:22px;cursor:pointer;padding:2px}
+#chatLog.open{pointer-events:auto;max-height:42vh;overflow-y:auto;bottom:232px}#chatLog.open .cl{opacity:1!important}
+.c-sys{color:#ffe066}.c-death{color:#ff8080}.c-adv{color:#9aff7a}.c-adv u{text-decoration:none;color:#c8ff60}.c-me{color:#e0a0ff;font-style:italic}.c-w{color:#b0b0b0;font-style:italic}.c-ping{color:#7ad8ff;cursor:pointer;text-decoration:underline}.ment{color:#ffd040;font-weight:700}.cl.hl{background:rgba(120,90,0,.6)}.c-t{color:#999;font-style:normal;font-size:12px;margin-right:6px}
 #debug{position:absolute;left:6px;top:6px;white-space:pre;font-size:14px;line-height:1.4;background:rgba(0,0,0,.4);padding:4px 8px;font-family:monospace}
 #fps{position:absolute;right:8px;top:6px;font:12px monospace;background:rgba(0,0,0,.4);padding:2px 6px}
 #netInfo{position:absolute;right:8px;top:28px;font-size:13px;background:rgba(0,0,0,.45);padding:3px 8px}
@@ -132,7 +138,7 @@ h2{margin:0 0 6px;font-size:22px;text-shadow:2px 2px 0 #3f3f3f}
 #tb_inv{right:calc(24px + env(safe-area-inset-right));bottom:12px;width:44px;height:44px}
 #tb_drop{right:76px;bottom:12px;width:44px;height:44px}
 #tb_pause{right:calc(10px + env(safe-area-inset-right));top:10px;width:40px;height:40px}#tb_chat{right:58px;top:10px;width:40px;height:40px}#tb_view{right:106px;top:10px;width:40px;height:40px}
-@media (pointer:coarse){.hs{width:36px;height:36px}#stats,#xpbar{width:328px}#stats img{width:14px;height:14px}#stats .row{height:14px}#bottom{bottom:6px}#heldName{bottom:104px}#chatLog{bottom:auto;top:56px;left:8px;width:min(480px,60vw);font-size:13px}#chatIn{bottom:auto;top:10px}#netInfo{top:56px}}
+@media (pointer:coarse){.hs{width:36px;height:36px}#stats,#xpbar{width:328px}#stats img{width:14px;height:14px}#stats .row{height:14px}#bottom{bottom:6px}#heldName{bottom:104px}#chatLog{bottom:auto;top:56px;left:8px;width:min(480px,60vw);font-size:13px}#chatBox{bottom:auto;top:56px}#chatLog.open{top:150px;bottom:auto}#netInfo{top:56px}}
 @media (max-width:440px){.g9{grid-template-columns:repeat(9,34px)}.sl{width:34px;height:34px}.g2{grid-template-columns:repeat(2,34px)}.g3{grid-template-columns:repeat(3,34px)}.g1{grid-template-columns:repeat(1,34px)}.hs{width:32px;height:32px}#stats,#xpbar{width:292px}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -145,7 +151,7 @@ h2{margin:0 0 6px;font-size:22px;text-shadow:2px 2px 0 #3f3f3f}
   <div id="look" hidden></div>
   <canvas id="mini" width="128" height="128" hidden></canvas><div id="plist" hidden></div>
   <pre id="debug" hidden></pre><div id="fps" hidden></div><div id="netInfo" hidden></div>
-  <div id="chatLog"></div><input id="chatIn" hidden maxlength="200" placeholder="輸入訊息，或 / 開頭的指令" autocomplete="off">
+  <div id="chatLog"></div><div id="chatBox" hidden><div id="chatQuick"></div><div id="chatEmoP" hidden></div><div class="chat-row"><button id="chatEmo" class="cbtn">😀</button><input id="chatIn" maxlength="200" placeholder="輸入訊息（/help 看指令，@名字 叫人）" autocomplete="off"><button id="chatSend" class="cbtn">送出</button></div></div>
   <div id="heldName"></div>
   <div id="bottom"><div id="stats"><div class="row" id="armorRow"></div><div class="row" id="bubbles"></div><div class="row" id="hearts"></div><div class="row" id="food"></div></div>
     <div id="xpbar"><div id="xpfill"></div><span id="xplv"></span></div><div id="hotbar"></div></div>
@@ -1040,7 +1046,7 @@ function hurt(dmg,why,ignoreArmor,src){if(P.dead||W.mode==='creative'||P.invul>0
   P.hp=Math.max(0,P.hp-dmg);P.hurtT=0.5;P.invul=0.45;playSnd('hurt');const f=$('#hurtFlash');if(f){f.style.opacity=0.45;setTimeout(()=>f.style.opacity=0,120);}
   if(P.hp<=0) die(why);}
 function heal(n){P.hp=Math.min(20,P.hp+n);}
-function die(why){P.dead=true;P.deathMsg=why;if(document.pointerLockElement) document.exitPointerLock();
+function die(why){P.dead=true;P.deathMsg=why;if(typeof sysAll==='function') sysAll(SET.name+' '+why,'death');if(document.pointerLockElement) document.exitPointerLock();
   for(const s of P.inv.concat(P.armor)) if(s) spawnDrop(s.id,s.n,P.x,P.y+1,P.z,s,true);P.inv=Array(36).fill(null);P.armor=Array(4).fill(null);
   if(P.xpTot>0) spawnXP(P.x,P.y+1,P.z,Math.min(100,P.level*7));P.xp=0;P.level=0;P.xpTot=0;renderHotbar();if(typeof showDeath==='function') showDeath(why);}
 function respawn(){P.dead=false;P.hp=20;P.food=20;P.sat=5;P.air=300;P.fire=0;P.vy=0;P.fallStart=null;
@@ -1108,7 +1114,7 @@ function matchRecipe(grid,w){const cells=[];for(let i=0;i<grid.length;i++) if(gr
     for(const mir of [false,true]){let ok=true;for(let y=0;y<rh&&ok;y++)for(let x=0;x<rw&&ok;x++){const ch=(r.rows[y][mir?rw-1-x:x]||' ');const want=ch===' '?0:r.key[ch];const s=grid[(y0+y)*w+x0+x];if((s?s.id:0)!==want) ok=false;}if(ok) return r;}}
   return null;}
 // ---- 物品欄操作 ----
-function addItem(id,n,extra){const inv=P.inv;const ms=maxStack(id);if(ms>1&&!(extra&&extra.ench)) for(let i=0;i<36&&n>0;i++){const s=inv[i];if(s&&s.id===id&&!s.ench&&s.n<ms){const k=Math.min(n,ms-s.n);s.n+=k;n-=k;}}
+function addItem(id,n,extra){if(typeof advItem==='function') advItem(id);const inv=P.inv;const ms=maxStack(id);if(ms>1&&!(extra&&extra.ench)) for(let i=0;i<36&&n>0;i++){const s=inv[i];if(s&&s.id===id&&!s.ench&&s.n<ms){const k=Math.min(n,ms-s.n);s.n+=k;n-=k;}}
   for(let i=0;i<36&&n>0;i++) if(!inv[i]){const k=Math.min(n,ms);inv[i]=Object.assign({id,n:k},extra&&extra.d?{d:extra.d}:{},extra&&extra.ench?{ench:{...extra.ench}}:{},extra&&extra.bag?{bag:extra.bag}:{});n-=k;}
   if(typeof renderHotbar==='function') renderHotbar();return n;}
 function countItem(id){return P.inv.reduce((a,s)=>a+(s&&s.id===id?s.n:0),0);}
@@ -1201,7 +1207,7 @@ $('#mcBody').addEventListener('contextmenu',e=>e.preventDefault());
 $('#mcBody').addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('mc-book')) UI.bookOpen=e.target.open;},true);
 function doTrade(i){const t=(TRADES[UI.trade.prof]||TRADES[0])[i];if(!t) return;const g=tid(t[0]),o=tid(t[2]);if(W.mode!=='creative'){if(countItem(g)<t[1]){uiMsg(`需要 ${nameOf(g)} ×${t[1]}`);return;}takeItem(g,t[1]);}
   let extra=null;if(o===IT.I_EBOOK){const ks=Object.keys(ENCH);const k=ks[irand(0,ks.length-1)];extra={ench:{[k]:irand(1,ENCH[k].max)}};}
-  const left=addItem(o,t[3],extra);if(left) spawnDrop(o,left,P.x,P.y+1.2,P.z,extra);playSnd('level',0.6);addXP(irand(1,3));uiMsg(`交易成功：得到 ${nameOf(o)} ×${t[3]}`);}
+  const left=addItem(o,t[3],extra);if(left) spawnDrop(o,left,P.x,P.y+1.2,P.z,extra);playSnd('level',0.6);addXP(irand(1,3));advGet('villager');uiMsg(`交易成功：得到 ${nameOf(o)} ×${t[3]}`);}
 // 自然生成的箱子：第一次打開時放戰利品
 function ensureLoot(key){if(W.cont[key]) return;const [dim,pos]=key.split(':');const [x,y,z]=pos.split(',').map(Number);const ck=CK(x>>4,z>>4);const m=W.mods[dim]&&W.mods[dim][ck];if(m&&m[IDX(x&15,y,z&15)]!==undefined) return;
   const r=prng((x*73856093^y*19349663^z*83492791^SEED)>>>0);const dungeon=y<SEA-4;const inv=Array(27).fill(null);
@@ -1425,7 +1431,7 @@ function killMob(e,src){e.dead=true;const T2=MOBS[e.type];playSnd('pop');bloodFx
   if(src&&src.by&&!e.baby){const list=[];for(const [k,a,b,ch] of T2.drops||[]){if(ch&&Math.random()>ch) continue;let n=irand(a,b);if(ch) n=Math.max(1,n);if(e.fire>0&&IT[k]&&ITL[IT[k]].cook) list.push([IT[ITL[IT[k]].cook],n]);else if(n>0) list.push([IT[k]||B[k],n]);}
     if(e.type==='sheep'&&!e.sheared) list.push([B['WOOL_'+WOOLC[e.wool][0].toUpperCase()],1]);
     const xp=irand(T2.xp[0],T2.xp[1]);
-    if(src.by===myId()){for(const [id,n] of list) spawnDrop(id,n,e.x,e.y+0.5,e.z);spawnXP(e.x,e.y+0.5,e.z,xp);}else if(typeof NET!=='undefined'&&NET.on) NET.sendTo(src.by,{t:'loot',list,xp,x:e.x,y:e.y+0.5,z:e.z});}
+    if(src.by===myId()){for(const [id,n] of list) spawnDrop(id,n,e.x,e.y+0.5,e.z);spawnXP(e.x,e.y+0.5,e.z,xp);if(T2.hostile) advGet('kill');}else if(typeof NET!=='undefined'&&NET.on) NET.sendTo(src.by,{t:'loot',list,xp,x:e.x,y:e.y+0.5,z:e.z});}
   if(T2.split&&e.size>1) for(let k=0;k<irand(2,3);k++) spawnMob(e.type,e.x+rand(-.4,.4),e.y+0.3,e.z+rand(-.4,.4),{size:e.size/2,dim:e.dim});}
 // ---- 血跡模組（不會太血腥：小紅點，幾秒後就消失）----
 const BLOODC={skel:0xe8e8e0,stray:0xd8e0e8,slime:0x6ac84a,magma:0xff8a20,jelly:0xffa040,boomer:0xd8c8a0,bat:0x8a2020};
@@ -1651,7 +1657,7 @@ function mobUse(m,s){const T2=MOBS[m.type];const id=s&&s.id;
 function hostAct(m,act){if(!isHost()){NET.send({t:'mobuse',id:m.eid,act});return;}mobAct(m,act,myId());}
 function mobAct(m,act,by){if(!m||m.dead) return;
   if(act==='shear'&&!m.sheared){m.sheared=true;sheepLook(m);const wool=B['WOOL_'+WOOLC[m.wool][0].toUpperCase()];const n=irand(1,3);if(by===myId()) spawnDrop(wool,n,m.x,m.y+1,m.z);else NET.sendTo(by,{t:'loot',list:[[wool,n]],xp:0,x:m.x,y:m.y+1,z:m.z});playSnd('shear');}
-  if(act==='tame'){if(Math.random()<0.34){m.tamed=by;m.ai.target=null;m.ai.anger=0;m.hp=20;m.maxHp=20;wolfLook(m);puff(m.x,m.y+1,m.z,0xff6a8a,8);toastTo(by,'狼被你馴服了！');}else{puff(m.x,m.y+1,m.z,0x666666,5);}}
+  if(act==='tame'){if(Math.random()<0.34){m.tamed=by;m.ai.target=null;m.ai.anger=0;m.hp=20;m.maxHp=20;wolfLook(m);puff(m.x,m.y+1,m.z,0xff6a8a,8);toastTo(by,'狼被你馴服了！');if(by===myId()) advGet('tame');else if(NET.on) NET.sendTo(by,{t:'adv',k:'tame'});}else{puff(m.x,m.y+1,m.z,0x666666,5);}}
   if(act==='sit'&&m.tamed===by) m.ai.sit=!m.ai.sit;
   if(act==='heal'){m.hp=Math.min(m.maxHp,m.hp+4);puff(m.x,m.y+1,m.z,0xff6a8a,4);}
   if(act==='love'){m.ai.love=30;puff(m.x,m.y+1,m.z,0xff6a8a,5);}}
@@ -1742,7 +1748,6 @@ function playSnd(name,vol){if(!SET.sound) return;try{if(!AC) AC=new (window.Audi
     case 'bark':tone(500,250,0.1,0.25,'sawtooth');break;case 'groan':tone(110,80,0.8,0.22,'sawtooth');break;case 'rattle':for(let i=0;i<4;i++) tone(1200,900,0.03,0.1,'square',i*0.05);break;case 'squish':noise(0.15,500,200,4,0.4,'lowpass');break;case 'wail':tone(700,300,0.9,0.15,'sine');tone(720,320,0.9,0.1,'triangle');break;
     case 'hmm':tone(220,170,0.25,0.15,'sawtooth');tone(260,200,0.2,0.1,'triangle',0.12);break;case 'grunt':tone(160,100,0.3,0.25,'sawtooth');break;case 'squeak':tone(3000,2500,0.05,0.06,'sine');break;case 'lever':tone(500,400,0.04,0.2,'square');break;}}
 // ---- 提示訊息 ----
-function toast(t){const el=$('#chatLog');if(!el) return;const d=document.createElement('div');d.className='cl';d.textContent=t;el.appendChild(d);while(el.children.length>8) el.firstChild.remove();setTimeout(()=>d.classList.add('fade'),7000);setTimeout(()=>d.remove(),9000);}
 
 // ---- 釣魚 ----
 let BOB=null;const lineMat=new THREE.LineBasicMaterial({color:0x222222});
@@ -1851,6 +1856,7 @@ function switchDim(to,respawn){if(to===W.dim) return;const from=W.dim;clearMeshe
   if(!respawn){let tx=P.x,tz=P.z;const kind=(to==='sky'||from==='sky')?'sky':'nether';if(kind==='nether'){if(to==='nether'){tx/=8;tz/=8;}else{tx*=8;tz*=8;}}
     const pid=kind==='sky'?B.SKY_PORTAL:B.PORTAL;let p=findPortal(tx,tz,to==='nether'?16:kind==='sky'?24:96,pid);if(!p) p=buildPortal(tx,tz,kind);P.x=p[0]+0.5;P.y=p[1];P.z=p[2]+0.5;P.vy=0;P.portalCool=3;}
   P.fallStart=null;scene.fog.near=to==='nether'?10:40;scene.fog.far=to==='nether'?60:RD*16;W.meta=W.meta||{};
+  if(typeof advGet==='function'){if(to==='nether') advGet('nether');if(to==='sky') advGet('sky');}
   if(typeof netDim==='function') netDim();toast(to==='nether'?'你進入了地獄':to==='sky'?'你來到了天空島！小心別掉下去（掉下去會回到主世界）':'你回到了主世界');playSnd('portal');}
 function portalTick(dt){if(P.dead) return;P.portalCool=Math.max(0,(P.portalCool||0)-dt);const q1=getB(P.x,P.y+0.5,P.z),q2=getB(P.x,P.y+1.4,P.z);const pt=BL[q1].portal||BL[q2].portal;const inP=!!pt;
   if(inP&&P.portalCool<=0){P.portalT+=dt;$('#portalFx').style.opacity=Math.min(0.8,P.portalT/4);if(P.portalT>=(W.mode==='creative'||pt==='sky'?0.8:4)){P.portalT=0;$('#portalFx').style.opacity=0;switchDim(pt==='sky'?(W.dim==='sky'?'over':'sky'):(W.dim==='nether'?'over':'nether'));}}
@@ -1934,7 +1940,7 @@ function netLeave(quiet){if(NET.on&&!NET.host&&NET.hc){try{NET.hc.send({t:'pinv'
   NET.conns.clear();NET.hc=null;NET.on=false;NET.host=false;NET.myId='me';NET.status='';
   for(const e of ENTS) if(e.remote) e.dead=true;netUI();}
 addEventListener('beforeunload',()=>{if(NET.on) netLeave(true);});
-function myPack(){return {inv:P.inv,armor:P.armor,x:P.x,y:P.y,z:P.z,xp:P.xp,level:P.level,xpTot:P.xpTot,hp:P.hp,food:P.food,dim:W.dim,spawn:P.spawn};}
+function myPack(){return {adv:P.adv||{},inv:P.inv,armor:P.armor,x:P.x,y:P.y,z:P.z,xp:P.xp,level:P.level,xpTot:P.xpTot,hp:P.hp,food:P.food,dim:W.dim,spawn:P.spawn};}
 // ---- 客人收到的訊息 ----
 function clientRecv(o){switch(o.t){
   case 'p':{let p=NET.peers.get(o.id);if(!p){p={name:o.name||'玩家',color:'#3a6aa8'};NET.peers.set(o.id,p);}p.st=o.st;if(o.st.sw) p.swing=1;if(o.name) p.name=o.name;if(o.color) p.color=o.color;break;}
@@ -1955,7 +1961,8 @@ function commonRecv(o,from){switch(o.t){
   case 'cont':W.cont[o.k]=o.v;if(UI.kind==='chest'&&UI.key===o.k) renderUI();break;
   case 'meta':W.meta[o.k]=o.v;break;
   case 'furn':W.furn[o.k]=o.v;if(UI.kind==='furnace'&&UI.key===o.k) renderUI();break;
-  case 'chat':chatLine(o.name,o.msg);break;
+  case 'chat':chatRecv(Object.assign({},o,{from:o.from||from}));break;
+  case 'adv':advGet(o.k);break;
   case 'boom':if(o.dim===W.dim) explode(o.x,o.y,o.z,o.p,false,o.list);else for(let i=0;i<o.list.length;i+=3) setB(o.list[i],o.list[i+1],o.list[i+2],0,{local:true,dim:o.dim});break;
   case 'tnt':if(o.dim===W.dim) igniteTNT(o.x,o.y,o.z,o.fuse,true);break;
   case 'btn':if(o.dim===W.dim) pressButton(o.x,o.y,o.z);break;
@@ -1978,8 +1985,6 @@ NET.sendTo=(id,o)=>{if(!NET.on) return;if(NET.host){const c=NET.conns.get(id);if
 NET.bcast=o=>{if(!NET.on) return;if(NET.host) hostBcast(o);else NET.hc&&NET.hc.send(o);};
 function netSendState(){const s=held();const st={x:+P.x.toFixed(2),y:+P.y.toFixed(2),z:+P.z.toFixed(2),yaw:+P.yaw.toFixed(3),pitch:+P.pitch.toFixed(3),dim:W.dim,dead:P.dead,mode:W.mode,sneak:P.sneak,held:s?s.id:0,veh:P.ride?P.ride.type:0,vyaw:P.ride?+P.ride.yaw.toFixed(2):0,sw:VM.swing>0.75?1:0};
   if(NET.host) hostBcast({t:'p',id:NET.myId,st,name:SET.name,color:P.color});else NET.hc&&NET.hc.send({t:'p',st});}
-function sendChat(msg){msg=String(msg).slice(0,200);if(!msg.trim()) return;if(msg[0]==='/'){chatCmd(msg);return;}chatLine(SET.name,msg);if(NET.on) NET.bcast({t:'chat',name:SET.name,msg});}
-function chatLine(name,msg){const el=$('#chatLog');const d=document.createElement('div');d.className='cl';d.innerHTML=`<b>&lt;${esc(name)}&gt;</b> ${esc(msg)}`;el.appendChild(d);while(el.children.length>10) el.firstChild.remove();setTimeout(()=>d.classList.add('fade'),9000);setTimeout(()=>d.remove(),11000);playSnd('click',0.3);}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function netTick(dt){if(!NET.on) return;
   if(NET.outSets.length){const o={t:'sets',a:NET.outSets.splice(0)};if(NET.host) hostBcast(o);else NET.hc&&NET.hc.send(o);}
@@ -1994,7 +1999,7 @@ function netUI(){const el=$('#netInfo');if(!el) return;if(!NET.on){el.hidden=tru
   el.innerHTML=`${NET.host?`房間代碼 <b>${NET.code}</b>`:'已連線'} · ${names.length}/4 人`;}
 
 // ================= 設定、存檔、選單、HUD、觸控、聊天指令 =================
-const SET=Object.assign({sens:1,rd:isTouch?3:5,fov:72,vol:0.7,sound:true,name:'玩家'+Math.floor(Math.random()*900+100),color:'#3d8b6b',fps:false,bob:true,btn:1,look:true,shader:isTouch?0:1,vein:0,pack:0,blood:1,mini:1},(()=>{try{return JSON.parse(localStorage.getItem('mmvox_set')||'{}');}catch(e){return {};}})());
+const SET=Object.assign({sens:1,rd:isTouch?3:5,fov:72,vol:0.7,sound:true,name:'玩家'+Math.floor(Math.random()*900+100),color:'#3d8b6b',fps:false,bob:true,btn:1,look:true,shader:isTouch?0:1,vein:0,pack:0,blood:1,mini:1,bubble:1,chatTime:0},(()=>{try{return JSON.parse(localStorage.getItem('mmvox_set')||'{}');}catch(e){return {};}})());
 function saveSet(){try{localStorage.setItem('mmvox_set',JSON.stringify(SET));}catch(e){}}
 P.color=SET.color;RD=SET.rd;
 // ---- 像素圖示（愛心、雞腿、盔甲、氣泡）----
@@ -2022,7 +2027,7 @@ const SAVE_IDX='mmvox_worlds';
 function worldList(){try{return JSON.parse(localStorage.getItem(SAVE_IDX)||'[]');}catch(e){return [];}}
 function setWorldList(L){try{localStorage.setItem(SAVE_IDX,JSON.stringify(L));}catch(e){}}
 function packWorld(){const mobsS=mobs().filter(m=>!m.remote&&(MOBS[m.type].pass||m.tamed)).slice(0,120).map(m=>[m.type,+m.x.toFixed(1),+m.y.toFixed(1),+m.z.toFixed(1),m.dim,{tamed:m.tamed,sheared:m.sheared,wool:m.wool,baby:m.baby}]);
-  return {v:2,pal:palNow(),id:W.id,name:W.name,seed:W.seed,mode:W.mode,diff:W.diff,cheats:W.cheats,time:W.time,day:W.day,rain:WX.rain,spawn:W.spawn,mods:W.mods,cont:W.cont,furn:W.furn,meta:W.meta,island:W.island,vehs:typeof vehPack==='function'?vehPack():[],pinv:W.pinv||{},mobs:mobsS,player:Object.assign(myPack(),{yaw:P.yaw,pitch:P.pitch,sel:P.sel}),saved:Date.now()};}
+  return {v:2,pal:palNow(),id:W.id,name:W.name,seed:W.seed,mode:W.mode,diff:W.diff,cheats:W.cheats,time:W.time,day:W.day,rain:WX.rain,spawn:W.spawn,mods:W.mods,cont:W.cont,furn:W.furn,meta:W.meta,island:W.island,vehs:typeof vehPack==='function'?vehPack():[],pinv:W.pinv||{},mobs:mobsS,player:Object.assign(myPack(),{yaw:P.yaw,pitch:P.pitch,sel:P.sel,adv:P.adv||{}}),saved:Date.now()};}
 function saveWorld(quiet){if(!W.id||(NET.on&&!NET.host)) return;try{const s=JSON.stringify(packWorld());localStorage.setItem('mmvox_w_'+W.id,s);const L=worldList();const it=L.find(x=>x.id===W.id);const meta={id:W.id,name:W.name,mode:W.mode,diff:W.diff,saved:Date.now(),size:s.length,seed:W.seed};if(it) Object.assign(it,meta);else L.unshift(meta);L.sort((a,b)=>b.saved-a.saved);setWorldList(L);if(!quiet) toast('已儲存世界');}
   catch(e){toast('⚠ 儲存失敗：瀏覽器空間不夠了。可以在世界清單「匯出」備份');}}
 
@@ -2069,7 +2074,7 @@ function startWorld(save,opts){resetWorld();if(save){W.id=save.id;W.name=save.na
   if(save&&save.vehs&&typeof vehLoad==='function') vehLoad(save.vehs);
   if(save&&save.mobs) for(const [t,x,y,z,dim,ex] of save.mobs) if(dim===W.dim) spawnMob(t,x,y,z,Object.assign({dim},ex||{}));
   beginPlay();saveWorld(true);}
-function applyPack(pl){P.inv=(pl.inv||[]).slice(0,36);while(P.inv.length<36) P.inv.push(null);P.armor=(pl.armor||[null,null,null,null]).slice(0,4);P.xp=pl.xp||0;P.level=pl.level||0;P.xpTot=pl.xpTot||0;P.hp=pl.hp||20;P.food=pl.food===undefined?20:pl.food;P.spawn=pl.spawn||null;
+function applyPack(pl){P.adv=pl.adv||{};P.inv=(pl.inv||[]).slice(0,36);while(P.inv.length<36) P.inv.push(null);P.armor=(pl.armor||[null,null,null,null]).slice(0,4);P.xp=pl.xp||0;P.level=pl.level||0;P.xpTot=pl.xpTot||0;P.hp=pl.hp||20;P.food=pl.food===undefined?20:pl.food;P.spawn=pl.spawn||null;
   if(pl.dim&&pl.dim!==W.dim){W.dim=pl.dim;}P.x=pl.x;P.y=pl.y;P.z=pl.z;scene.fog.near=W.dim==='nether'?10:40;}
 function startFromNet(m){resetWorld();W.id='';W.name=m.wname;W.seed=m.seed;SEED=m.seed;W.mode=m.mode;W.diff=m.diff;W.cheats=false;W.time=m.time;W.day=m.day;WX.rain=m.rain;W.spawn=m.spawn;W.mods=m.mods;if(!W.mods.sky) W.mods.sky={};W.cont=m.cont||{};W.furn=m.furn||{};W.meta=m.meta||{};W.island=!!m.island;rsRebuild();
   NET.peers.set('H',{name:m.host.name,color:m.host.color,st:null});for(const p of m.players) NET.peers.set(p.id,{name:p.name,color:p.color,st:p.st});
@@ -2139,16 +2144,13 @@ let SETBACK='title';
 const SETS=[['sens','滑鼠靈敏度',0.2,3,0.1,v=>Math.round(v*100)+'%'],['fov','視野',50,110,1,v=>v+'°'],['rd','顯示距離',2,isTouch?6:9,1,v=>v+' 區塊'],['vol','音量',0,1,0.05,v=>Math.round(v*100)+'%'],['btn','觸控按鈕大小',0.7,1.5,0.05,v=>Math.round(v*100)+'%']];
 function renderSettings(){$('#setList').innerHTML=SETS.map(([k,n,a,b,s,f])=>`<label class="slider"><span>${n}：<b id="sv_${k}">${f(SET[k])}</b></span><input type="range" min="${a}" max="${b}" step="${s}" value="${SET[k]}" data-k="${k}"></label>`).join('')+
   `<label class="field">名字<input id="s_name" maxlength="16" value="${esc(SET.name)}"></label><div class="colors">${['#3d8b6b','#3a6aa8','#a83a3a','#d8a020','#8a3aa8','#e07aa0','#5a5a5a','#e8e8e8'].map(c=>`<button class="cb ${SET.color===c?'on':''}" data-col="${c}" style="background:${c}" aria-label="衣服顏色"></button>`).join('')}</div>
-  <button class="mcb" id="s_bob">走路晃動：${SET.bob?'開':'關'}</button><button class="mcb" id="s_fps">顯示 FPS：${SET.fps?'開':'關'}</button><button class="mcb" id="s_shader">光影包：${['關','開','高畫質（較吃效能）'][SET.shader]}</button><button class="mcb" id="s_vein">連鎖挖掘模組：${['關','開（蹲下時挖才連鎖）','開（一直連鎖）'][SET.vein]}</button><button class="mcb" id="s_mini">小地圖：${SET.mini?'開':'關'}</button><button class="mcb" id="s_keys">快捷鍵說明（H）</button><button class="mcb" id="s_blood">血跡模組：${SET.blood?'開':'關'}</button><button class="mcb" id="s_pack">背包模組：${SET.pack?'開':'關'}</button><button class="mcb" id="s_look">顯示模組（看方塊資訊）：${SET.look?'開':'關'}</button>`;}
+  <button class="mcb" id="s_bob">走路晃動：${SET.bob?'開':'關'}</button><button class="mcb" id="s_fps">顯示 FPS：${SET.fps?'開':'關'}</button><button class="mcb" id="s_shader">光影包：${['關','開','高畫質（較吃效能）'][SET.shader]}</button><button class="mcb" id="s_vein">連鎖挖掘模組：${['關','開（蹲下時挖才連鎖）','開（一直連鎖）'][SET.vein]}</button><button class="mcb" id="s_bubble">聊天泡泡：${SET.bubble?'開':'關'}</button><button class="mcb" id="s_ctime">聊天顯示時間：${SET.chatTime?'開':'關'}</button><button class="mcb" id="s_mini">小地圖：${SET.mini?'開':'關'}</button><button class="mcb" id="s_keys">快捷鍵說明（H）</button><button class="mcb" id="s_blood">血跡模組：${SET.blood?'開':'關'}</button><button class="mcb" id="s_pack">背包模組：${SET.pack?'開':'關'}</button><button class="mcb" id="s_look">顯示模組（看方塊資訊）：${SET.look?'開':'關'}</button>`;}
 $('#setList').addEventListener('input',e=>{const k=e.target.dataset.k;if(!k) return;SET[k]=+e.target.value;const d=SETS.find(x=>x[0]===k);$('#sv_'+k).textContent=d[5](SET[k]);if(k==='rd'){RD=SET.rd;scene.fog.far=W.dim==='nether'?60:RD*16;}if(k==='btn') document.documentElement.style.setProperty('--tb',SET.btn);saveSet();});
-$('#setList').addEventListener('click',e=>{const c=e.target.closest('[data-col]');if(c){SET.color=c.dataset.col;P.color=SET.color;if(selfModel){scene.remove(selfModel.g);selfModel=null;}renderSettings();saveSet();}if(e.target.id==='s_bob'){SET.bob=!SET.bob;renderSettings();saveSet();}if(e.target.id==='s_shader'){SET.shader=(SET.shader+1)%3;applyShader();renderSettings();saveSet();}if(e.target.id==='s_vein'){SET.vein=(SET.vein+1)%3;renderSettings();saveSet();}if(e.target.id==='s_mini'){SET.mini=SET.mini?0:1;$('#mini').hidden=!SET.mini||!running;renderSettings();saveSet();}if(e.target.id==='s_keys'){toggleHelp(true);}if(e.target.id==='s_blood'){SET.blood=SET.blood?0:1;renderSettings();saveSet();}if(e.target.id==='s_pack'){SET.pack=SET.pack?0:1;renderSettings();saveSet();toast(SET.pack?'背包模組已開啟：用皮革和箱子合成背包，拿在手上按右鍵（或按 B）打開':'背包模組已關閉');}if(e.target.id==='s_look'){SET.look=!SET.look;renderSettings();saveSet();}if(e.target.id==='s_fps'){SET.fps=!SET.fps;$('#fps').hidden=!SET.fps;renderSettings();saveSet();}});
+$('#setList').addEventListener('click',e=>{const c=e.target.closest('[data-col]');if(c){SET.color=c.dataset.col;P.color=SET.color;if(selfModel){scene.remove(selfModel.g);selfModel=null;}renderSettings();saveSet();}if(e.target.id==='s_bob'){SET.bob=!SET.bob;renderSettings();saveSet();}if(e.target.id==='s_shader'){SET.shader=(SET.shader+1)%3;applyShader();renderSettings();saveSet();}if(e.target.id==='s_vein'){SET.vein=(SET.vein+1)%3;renderSettings();saveSet();}if(e.target.id==='s_bubble'){SET.bubble=SET.bubble?0:1;renderSettings();saveSet();}if(e.target.id==='s_ctime'){SET.chatTime=SET.chatTime?0:1;renderSettings();saveSet();}if(e.target.id==='s_mini'){SET.mini=SET.mini?0:1;$('#mini').hidden=!SET.mini||!running;renderSettings();saveSet();}if(e.target.id==='s_keys'){toggleHelp(true);}if(e.target.id==='s_blood'){SET.blood=SET.blood?0:1;renderSettings();saveSet();}if(e.target.id==='s_pack'){SET.pack=SET.pack?0:1;renderSettings();saveSet();toast(SET.pack?'背包模組已開啟：用皮革和箱子合成背包，拿在手上按右鍵（或按 B）打開':'背包模組已關閉');}if(e.target.id==='s_look'){SET.look=!SET.look;renderSettings();saveSet();}if(e.target.id==='s_fps'){SET.fps=!SET.fps;$('#fps').hidden=!SET.fps;renderSettings();saveSet();}});
 $('#setList').addEventListener('change',e=>{if(e.target.id==='s_name'){SET.name=e.target.value.trim().slice(0,16)||SET.name;saveSet();}});
 on('set_back',()=>showScreen(SETBACK));
 document.documentElement.style.setProperty('--tb',SET.btn);
 // ---- 聊天 ----
-function openChat(prefix){if(!running) return;uiOpen='chat';if(document.pointerLockElement) document.exitPointerLock();const i=$('#chatIn');i.hidden=false;i.value=prefix||'';setTimeout(()=>i.focus(),10);$('#chatLog').classList.add('open');for(const k in keys) keys[k]=false;}
-function closeChat(){$('#chatIn').hidden=true;$('#chatIn').blur();uiOpen=null;$('#chatLog').classList.remove('open');if(!paused) lockPointer();}
-$('#chatIn').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter'){sendChat(e.target.value);closeChat();}else if(e.key==='Escape'){closeChat();}});
 function findItem(q){q=q.toLowerCase();const all=BL.filter(b=>b.id).map(b=>[b.id,b.n,b.key]).concat(Object.entries(IT).map(([k,id])=>[id,ITL[id].n,k]));return (all.find(x=>x[1]===q||x[2].toLowerCase()===q)||all.find(x=>x[1].includes(q)||x[2].toLowerCase().includes(q))||[])[0];}
 function chatCmd(msg){const a=msg.slice(1).trim().split(/\s+/);const c=a[0];const ok=W.cheats||W.mode==='creative';const say=t=>toast(t);
   if(c==='help'){say('指令：/time set day|night、/gamemode survival|creative、/give 物品名 數量、/tp x y z、/weather clear|rain、/difficulty 0-3、/summon 生物、/seed、/kill、/spawnpoint');return;}
@@ -2322,6 +2324,78 @@ function islandTick(dt){if(!W.island||W.dim!=='over'||P.dead) return;driftT-=dt;
 // ---- 每幀 ----
 function modTick(dt){vehTick(dt);islandTick(dt);elevatorTick();machineTick(dt);remoteVehTick();}
 
+// ================= 聊天系統 =================
+const CHAT={log:[],sent:[],sentI:-1,pings:[]};
+const QUICK=['嗨 👋','來這裡！','跟我來','等我一下','救命啊！','謝謝 🙏','好喔 👍','我找到鑽石了 💎','天黑了，回家吧 🌙','要不要一起蓋房子？','📍 我在這裡'];
+const EMOJI='😀😂🥰😎🤔😴😱😭😡👍👎👏🙏💪🎉❤️🔥⭐💎⛏️🗡️🏹🛡️🍖🍞🐑🐄🐔🐺🧟💀🌙☀️🌧️🏠🏝️🚤⚠️✅❌❓'.match(/\p{Extended_Pictographic}️?/gu);
+const BAD=['笨蛋','白癡','白痴','智障','去死','幹你','王八蛋','垃圾人'];
+const clean=t=>{let s=String(t);for(const w of BAD) s=s.split(w).join('＊'.repeat(w.length));return s;};
+const hhmm=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
+// 顯示一行
+function chatAdd(m){m.at=m.at||hhmm();CHAT.log.push(m);if(CHAT.log.length>120) CHAT.log.shift();renderChatLine(m,true);}
+function lineHTML(m){const nm=m.name?`<b style="color:${m.color||'#fff'}">${esc(m.name)}</b>`:'';const tx=esc(m.text).replace(/@(\S+)/g,(a,n)=>`<span class="ment">@${n}</span>`);
+  switch(m.kind){case 'sys':return `<span class="c-sys">${tx}</span>`;case 'death':return `<span class="c-death">💀 ${tx}</span>`;case 'adv':return `${nm} <span class="c-adv">獲得了成就 <u>[${tx}]</u> 🏆</span>`;
+    case 'me':return `<span class="c-me">* ${nm} ${tx}</span>`;case 'wto':return `<span class="c-w">你悄悄對 ${esc(m.to)} 說：${tx}</span>`;case 'wfrom':return `<span class="c-w">${nm} 悄悄對你說：${tx}</span>`;
+    case 'ping':return `${nm} <span class="c-ping" data-ping="${m.x},${m.y},${m.z}">📍 ${m.dimN} (${m.x}, ${m.y}, ${m.z})</span>${tx?' '+tx:''}`;
+    default:return `&lt;${nm}&gt; ${tx}`;}}
+function renderChatLine(m,fresh){const el=$('#chatLog');const d=document.createElement('div');d.className='cl'+(m.kind==='me2'?'':'')+(m.hl?' hl':'');d.innerHTML=(SET.chatTime?`<i class="c-t">${m.at}</i>`:'')+lineHTML(m);el.appendChild(d);
+  while(el.children.length>(el.classList.contains('open')?120:8)) el.firstChild.remove();if(fresh&&!el.classList.contains('open')){setTimeout(()=>d.classList.add('fade'),9000);}
+  if(el.classList.contains('open')) el.scrollTop=el.scrollHeight;}
+function toast(t){chatAdd({kind:'sys',text:t});}
+// 收到別人的訊息
+function chatRecv(o){const k=o.kind||'chat';if(k==='wto'||k==='w'){if(o.to!==SET.name) return;chatAdd({kind:'wfrom',name:o.name,color:o.color,text:o.msg});playSnd('xp',0.5);return;}
+  const m={kind:k,name:o.name,color:o.color,text:o.msg,x:o.x,y:o.y,z:o.z,dimN:o.dimN};if(k==='chat'&&new RegExp('@'+SET.name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).test(o.msg||'')){m.hl=true;playSnd('level',0.5);}else playSnd('click',0.3);
+  chatAdd(m);if(k==='ping') addPing(o.x,o.y,o.z,o.dim,o.name,o.color);if(k==='chat'||k==='me') bubble(o.from||'H',o.msg);}
+function bubble(id,text){if(!SET.bubble||!NET.on) return;const p=NET.peers.get(id);if(!p||!p.model) return;if(p.bub){p.model.g.remove(p.bub);}const sp=bubbleSprite(text);sp.position.y=2.55;p.model.g.add(sp);p.bub=sp;clearTimeout(p.bubT);p.bubT=setTimeout(()=>{if(p.model) p.model.g.remove(sp);p.bub=null;},6000);}
+function bubbleSprite(text){text=String(text).slice(0,40);const c=document.createElement('canvas');const g=c.getContext('2d');g.font='bold 30px sans-serif';const w=Math.min(700,Math.ceil(g.measureText(text).width)+28);c.width=w;c.height=56;
+  g.fillStyle='rgba(255,255,255,.92)';g.beginPath();g.roundRect?g.roundRect(0,0,w,46,12):g.rect(0,0,w,46);g.fill();g.beginPath();g.moveTo(w/2-8,46);g.lineTo(w/2,56);g.lineTo(w/2+8,46);g.fill();g.fillStyle='#222';g.font='bold 30px sans-serif';g.textBaseline='middle';g.fillText(text,14,24);
+  const t=new THREE.CanvasTexture(c);const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:false,transparent:true}));sp.scale.set(w/56*0.42,0.42,1);sp.renderOrder=6;return sp;}
+// 送出
+const DIMN={over:'主世界',nether:'地獄',sky:'天空島'};
+function sendChat(msg){msg=clean(String(msg).slice(0,200));if(!msg.trim()) return;CHAT.sent.push(msg);if(CHAT.sent.length>30) CHAT.sent.shift();CHAT.sentI=-1;
+  if(msg==='📍 我在這裡'){sendPing('');return;}if(msg[0]==='/'){chatCmd(msg);return;}
+  chatAdd({kind:'chat',name:SET.name,color:P.color,text:msg});if(NET.on) NET.bcast({t:'chat',name:SET.name,color:P.color,msg,kind:'chat'});selfBubble(msg);}
+let selfBub=null;function selfBubble(msg){if(!SET.bubble||!selfModel) return;if(selfBub) selfModel.g.remove(selfBub);selfBub=bubbleSprite(msg);selfBub.position.y=2.25;selfModel.g.add(selfBub);const b=selfBub;setTimeout(()=>{if(selfModel) selfModel.g.remove(b);},6000);}
+function sendPing(text){const x=Math.floor(P.x),y=Math.floor(P.y),z=Math.floor(P.z);const o={t:'chat',kind:'ping',name:SET.name,color:P.color,msg:text,x,y,z,dim:W.dim,dimN:DIMN[W.dim]};chatAdd({kind:'ping',name:SET.name,color:P.color,text,x,y,z,dimN:DIMN[W.dim]});addPing(x,y,z,W.dim,SET.name,P.color);if(NET.on) NET.bcast(o);}
+function sysAll(text,kind){chatAdd({kind:kind||'sys',text,name:SET.name,color:P.color});if(NET.on) NET.bcast({t:'chat',kind:kind||'sys',name:SET.name,color:P.color,msg:text});}
+// 座標標記（地圖上和世界裡都看得到）
+function addPing(x,y,z,dim,name,color){const g=new THREE.Group();const beam=new THREE.Mesh(new THREE.BoxGeometry(0.35,40,0.35),new THREE.MeshBasicMaterial({color:new THREE.Color(color||'#40c0ff'),transparent:true,opacity:0.35,depthWrite:false,fog:false}));beam.position.y=20;g.add(beam);
+  const tag=nameTag('📍 '+name);tag.position.y=2.6;tag.scale.multiplyScalar(1.3);g.add(tag);g.position.set(x+0.5,y,z+0.5);scene.add(g);CHAT.pings.push({x,y,z,dim,name,color,g,t:60});playSnd('level',0.4);}
+function pingTick(dt){for(let i=CHAT.pings.length-1;i>=0;i--){const p=CHAT.pings[i];p.t-=dt;p.g.visible=p.dim===W.dim;if(p.t<=0){scene.remove(p.g);CHAT.pings.splice(i,1);}}}
+// 開關聊天框
+function openChat(prefix){if(!running) return;uiOpen='chat';if(document.pointerLockElement) document.exitPointerLock();$('#chatBox').hidden=false;const i=$('#chatIn');i.value=prefix||'';setTimeout(()=>i.focus(),10);
+  const L=$('#chatLog');L.classList.add('open');L.innerHTML='';for(const m of CHAT.log.slice(-120)) renderChatLine(m,false);L.scrollTop=L.scrollHeight;for(const k in keys) keys[k]=false;renderQuick();}
+function closeChat(){$('#chatBox').hidden=true;$('#chatEmoP').hidden=true;$('#chatIn').blur();uiOpen=null;const L=$('#chatLog');L.classList.remove('open');L.innerHTML='';for(const m of CHAT.log.slice(-8)) renderChatLine(m,false);[...L.children].forEach(d=>d.classList.add('fade'));if(!paused) lockPointer();}
+function renderQuick(){$('#chatQuick').innerHTML=QUICK.map(q=>`<button class="cq" data-q="${esc(q)}">${esc(q)}</button>`).join('')+(NET.on?[...NET.peers.values()].map(p=>`<button class="cq at" data-at="${esc(p.name)}">@${esc(p.name)}</button>`).join(''):'');}
+$('#chatQuick').addEventListener('click',e=>{const b=e.target.closest('.cq');if(!b) return;if(b.dataset.at){const i=$('#chatIn');i.value+='@'+b.dataset.at+' ';i.focus();return;}sendChat(b.dataset.q);closeChat();});
+$('#chatEmo').addEventListener('click',()=>{const p=$('#chatEmoP');p.hidden=!p.hidden;if(!p.hidden) p.innerHTML=EMOJI.map(e=>`<button class="ce">${e}</button>`).join('');});
+$('#chatEmoP').addEventListener('click',e=>{const b=e.target.closest('.ce');if(!b) return;const i=$('#chatIn');i.value+=b.textContent;i.focus();});
+$('#chatSend').addEventListener('click',()=>{sendChat($('#chatIn').value);closeChat();});
+$('#chatLog').addEventListener('click',e=>{const p=e.target.closest('[data-ping]');if(!p) return;const [x,y,z]=p.dataset.ping.split(',').map(Number);addPing(x,y,z,W.dim,'標記',  '#ffd040');});
+$('#chatIn').addEventListener('keydown',e=>{e.stopPropagation();const i=e.target;
+  if(e.key==='Enter'){sendChat(i.value);closeChat();}else if(e.key==='Escape'){closeChat();}
+  else if(e.key==='ArrowUp'){if(!CHAT.sent.length) return;CHAT.sentI=CHAT.sentI<0?CHAT.sent.length-1:Math.max(0,CHAT.sentI-1);i.value=CHAT.sent[CHAT.sentI];e.preventDefault();}
+  else if(e.key==='ArrowDown'){if(CHAT.sentI<0) return;CHAT.sentI++;if(CHAT.sentI>=CHAT.sent.length){CHAT.sentI=-1;i.value='';}else i.value=CHAT.sent[CHAT.sentI];e.preventDefault();}
+  else if(e.key==='Tab'){e.preventDefault();const v=i.value;if(v[0]==='/'){const cmds=['/help','/msg ','/me ','/here','/clear','/time set day','/time set night','/gamemode creative','/gamemode survival','/give ','/tp ','/weather clear','/weather rain','/summon ','/seed','/kill','/spawnpoint','/adv'];const m=cmds.find(c=>c.startsWith(v)&&c!==v);if(m) i.value=m;}
+    else{const w=v.split(' ').pop();if(w.startsWith('@')){const n=[...NET.peers.values()].map(p=>p.name).find(n=>n.startsWith(w.slice(1)));if(n) i.value=v.slice(0,v.length-w.length)+'@'+n+' ';}}}});
+// ---- 聊天指令（新的）----
+const _oldCmd=chatCmd;
+chatCmd=function(msg){const a=msg.slice(1).trim().split(/\s+/);const c=a[0];
+  if(c==='msg'||c==='w'||c==='tell'){const to=a[1],text=a.slice(2).join(' ');if(!to||!text){toast('用法：/msg 名字 內容');return;}if(!NET.on){toast('要在多人遊戲才有人收得到喔');return;}chatAdd({kind:'wto',to,text});NET.bcast({t:'chat',kind:'w',to,name:SET.name,color:P.color,msg:text});return;}
+  if(c==='me'){const text=a.slice(1).join(' ');if(!text) return;chatAdd({kind:'me',name:SET.name,color:P.color,text});if(NET.on) NET.bcast({t:'chat',kind:'me',name:SET.name,color:P.color,msg:text});return;}
+  if(c==='here'||c==='ping'){sendPing(a.slice(1).join(' '));return;}
+  if(c==='clear'){CHAT.log.length=0;$('#chatLog').innerHTML='';return;}
+  if(c==='adv'){const got=Object.keys(P.adv||{});toast(`成就 ${got.length}/${ADV.length}：`+ADV.map(x=>(P.adv&&P.adv[x[0]]?'✅':'⬜')+x[1]).join('、'));return;}
+  if(c==='help'){toast('聊天指令：/msg 名字 內容（悄悄話）、/me 動作、/here 分享座標、/clear 清除聊天、/adv 看成就。按 ↑↓ 叫出之前打過的話，Tab 自動完成');}
+  return _oldCmd(msg);};
+// ---- 成就 ----
+const ADV=[['wood','砍下第一根木頭'],['table','做出工作台'],['stone','石器時代'],['iron','來點鐵吧'],['diamond','鑽石！'],['bread','烤麵包師'],['fish','釣魚高手'],['emerald','生意人'],['nether','前往地獄'],['sky','天空之旅'],['tame','最好的朋友'],['boat','揚帆出海'],['ench','附魔師'],['kill','怪物獵人'],['villager','村莊之友']];
+const ADV_ITEM={};
+function advInit(){const set=(k,ids)=>ids.forEach(id=>{if(id!==undefined) ADV_ITEM[id]=k;});set('wood',[B.OAK_LOG,B.BIRCH_LOG,B.SPRUCE_LOG,B.PALM_LOG,B.SKY_LOG]);set('table',[B.TABLE]);set('stone',[IT.T_pick_stone]);set('iron',[IT.I_IRON]);set('diamond',[IT.I_DIAMOND]);set('bread',[IT.I_BREAD]);set('fish',[IT.I_COD,IT.I_SALMON,IT.I_PUFFER]);set('emerald',[IT.I_EMERALD]);set('boat',[IT.I_BOAT]);set('ench',[IT.I_EBOOK]);}
+advInit();
+function advItem(id){const k=ADV_ITEM[id];if(k) advGet(k);}
+function advGet(k){P.adv=P.adv||{};if(P.adv[k]) return;const a=ADV.find(x=>x[0]===k);if(!a) return;P.adv[k]=1;sysAll(a[1],'adv');playSnd('level');}
+
 // ================= 主迴圈 =================
 const rainG=(()=>{const n=600,p=new Float32Array(n*6);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));const m=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x9ab0d8,transparent:true,opacity:0.5}));m.frustumCulled=false;m.visible=false;scene.add(m);
   const d=[];for(let i=0;i<n;i++) d.push([rand(-16,16),rand(0,24),rand(-16,16),rand(14,20)]);return {m,p,d,n};})();
@@ -2400,6 +2474,7 @@ function miniTick(dt){const cv=$('#mini');if(!SET.mini||!running){cv.hidden=true
       D[o]=Math.min(255,col[0]*f);D[o+1]=Math.min(255,col[1]*f);D[o+2]=Math.min(255,col[2]*f);D[o+3]=255;}}
   g.putImageData(MINI.img,0,0);
   for(const m of mobs()){const dx=m.x-px0,dz=m.z-pz0;if(dx<0||dz<0||dx>=N||dz>=N) continue;g.fillStyle=MOBS[m.type].hostile?'#ff3030':MOBS[m.type].villager?'#40ff60':'#ffffff';g.fillRect(dx-1,dz-1,2,2);}
+  for(const pg of CHAT.pings){if(pg.dim!==W.dim) continue;const dx=pg.x-px0,dz=pg.z-pz0;if(dx<0||dz<0||dx>=N||dz>=N) continue;g.fillStyle='#ffd040';g.font='12px sans-serif';g.fillText('📍',dx-6,dz+4);}
   if(NET.on) for(const p of NET.peers.values()){if(!p.st||(p.st.dim||'over')!==W.dim) continue;const dx=p.st.x-px0,dz=p.st.z-pz0;if(dx<0||dz<0||dx>=N||dz>=N) continue;g.fillStyle='#40c0ff';g.fillRect(dx-2,dz-2,4,4);}
   g.save();g.translate(64,64);g.rotate(-P.yaw);g.fillStyle='#fff';g.strokeStyle='#000';g.lineWidth=1;g.beginPath();g.moveTo(0,-6);g.lineTo(4,5);g.lineTo(0,3);g.lineTo(-4,5);g.closePath();g.fill();g.stroke();g.restore();
   g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,N-12,N,12);g.fillStyle='#fff';g.font='10px sans-serif';g.fillText(`${Math.floor(P.x)}, ${Math.floor(P.y)}, ${Math.floor(P.z)}`,4,N-3);g.fillText('北',60,10);}
@@ -2472,7 +2547,7 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(0.05,(now-last)
   if(title.on){title.a+=dt*0.05;P.yaw=title.a;P.pitch=-0.15;camera.rotation.set(P.pitch,P.yaw,0);camera.position.set(P.x,P.y,P.z);W.time=4000;streamChunks(P.x,P.z,2);updateSky();renderer.render(scene,camera);return;}
   if(!running){renderer.render(scene,camera);return;}
   if(!paused||NET.on) simStep(dt);
-  cameraTick(dt);shaderTick(dt);streamChunks(P.x,P.z,isTouch?1:2);updateSky();vmTick(dt);hudTick(dt);lookTick(dt);miniTick(dt);ambTick(dt);toolInfoTick();$('#spyO').hidden=!(USE.mode==='spy'||keys.KeyZ);
+  cameraTick(dt);shaderTick(dt);streamChunks(P.x,P.z,isTouch?1:2);updateSky();vmTick(dt);hudTick(dt);lookTick(dt);pingTick(dt);miniTick(dt);ambTick(dt);toolInfoTick();$('#spyO').hidden=!(USE.mode==='spy'||keys.KeyZ);
   if(P.hurtT>0) P.hurtT-=dt;
   if(!$('#debug').hidden) $('#debug').textContent=`麥麥方塊世界\nXYZ: ${P.x.toFixed(1)} / ${P.y.toFixed(1)} / ${P.z.toFixed(1)}\n區塊: ${Math.floor(P.x)>>4}, ${Math.floor(P.z)>>4}\n生態域: ${BIOME_ZH[biomeAt(P.x,P.z)]||''}\n維度: ${W.dim==='nether'?'地獄':'主世界'}\n時間: 第 ${W.day} 天 ${Math.floor((W.time%24000)/1000+6)%24} 點\n實體: ${ENTS.length}\n看著: ${AIM.id?nameOf(AIM.id)+` (${AIM.x},${AIM.y},${AIM.z})`:'—'}${NET.on?'\n連線: '+(NET.host?'主機 '+NET.code:'客人'):''}`;
   renderer.autoClear=true;renderer.render(scene,camera);
