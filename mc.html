@@ -48,6 +48,7 @@ body:not(.nohud) #fps{right:160px}#netInfo{right:160px!important}
 .help-grid{display:grid;grid-template-columns:1fr auto;gap:5px 18px;margin:8px 0 14px;font-size:15px}.help-grid kbd{background:#3a3a3a;border:1px solid #777;border-bottom-width:3px;padding:1px 8px;font:inherit;font-size:13px;color:#ffe066;white-space:nowrap}
 body.nohud #hud,body.nohud #vig{display:none}
 @media (pointer:coarse){#mini{top:58px;width:110px;height:110px}#look{bottom:150px}}
+.rp{background:rgba(0,0,0,.5);padding:8px;margin:6px 0}.rp-inv{display:grid;grid-template-columns:repeat(10,26px);gap:2px;margin:6px 0}.rp-s{width:26px;height:26px;background:#555;position:relative;display:flex;align-items:center;justify-content:center}.rp-s i{position:absolute;right:0;bottom:-2px;font-size:10px;font-style:normal;text-shadow:1px 1px 0 #000}
 #hurtFlash{position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(255,0,0,.7));opacity:0;transition:opacity .25s;pointer-events:none}
 #portalFx{position:fixed;inset:0;background:rgba(150,40,220,.9);opacity:0;pointer-events:none;mix-blend-mode:screen}
 #underwater{position:fixed;inset:0;opacity:0;pointer-events:none}
@@ -165,7 +166,7 @@ h2{margin:0 0 6px;font-size:22px;text-shadow:2px 2px 0 #3f3f3f}
 </section>
 <section class="scr dim" id="s_worlds" hidden><h2>選擇世界</h2><div id="wl"></div>
   <div class="row2"><button class="mcb" id="w_play">進入選擇的世界</button><button class="mcb" id="w_new">建立新世界</button></div>
-  <div class="row2"><button class="mcb" id="w_del">刪除</button><button class="mcb" id="w_exp">匯出</button><button class="mcb" id="w_imp">匯入</button><button class="mcb" id="w_back">返回</button></div><input type="file" id="w_file" accept=".json" hidden></section>
+  <div class="row2"><button class="mcb" id="w_del">刪除</button><button class="mcb" id="w_exp">匯出</button><button class="mcb" id="w_imp">匯入</button><button class="mcb" id="w_fix">修復物品</button><button class="mcb" id="w_back">返回</button></div><input type="file" id="w_file" accept=".json" hidden></section>
 <section class="scr dim" id="s_create" hidden><h2>建立新世界</h2>
   <label class="field">世界名稱<input id="c_name" maxlength="32"></label>
   <button class="mcb" id="c_mode"></button><p class="muted" id="c_mdesc"></p><button class="mcb" id="c_diff"></button><button class="mcb" id="c_cheat"></button>
@@ -183,6 +184,7 @@ h2{margin:0 0 6px;font-size:22px;text-shadow:2px 2px 0 #3f3f3f}
   <button class="mcb" id="p_set">設定…</button><button class="mcb" id="p_keys">快捷鍵說明</button><button class="mcb" id="p_quit">儲存並回到標題畫面</button></section>
 <section class="scr death" id="s_death" hidden><h1>你死了！</h1><p id="d_msg"></p><p id="d_score"></p><button class="mcb" id="d_respawn">重生</button><button class="mcb" id="d_title">回到標題畫面</button></section>
 <section class="scr dim" id="s_disc" hidden><h2>連線中斷</h2><p class="muted" id="disc_msg"></p><button class="mcb" id="disc_ok">回到標題畫面</button></section>
+<section class="scr dim" id="s_repair" hidden><h2>修復存檔物品</h2><div id="rpList" style="max-width:640px;width:94vw;max-height:70vh;overflow:auto"></div><button class="mcb" id="rp_back">返回</button></section>
 <section class="scr dim" id="s_loading" hidden><h2>正在生成世界…</h2><p class="muted">建造地形中</p></section>
 <section class="scr dim" id="s_confirm" hidden><h2 id="cf_msg"></h2><div class="row2"><button class="mcb" id="cf_yes">是</button><button class="mcb" id="cf_no">取消</button></div></section>
 <script>
@@ -1901,10 +1903,32 @@ const SAVE_IDX='mmvox_worlds';
 function worldList(){try{return JSON.parse(localStorage.getItem(SAVE_IDX)||'[]');}catch(e){return [];}}
 function setWorldList(L){try{localStorage.setItem(SAVE_IDX,JSON.stringify(L));}catch(e){}}
 function packWorld(){const mobsS=mobs().filter(m=>!m.remote&&(MOBS[m.type].pass||m.tamed)).slice(0,120).map(m=>[m.type,+m.x.toFixed(1),+m.y.toFixed(1),+m.z.toFixed(1),m.dim,{tamed:m.tamed,sheared:m.sheared,wool:m.wool,baby:m.baby}]);
-  return {v:1,id:W.id,name:W.name,seed:W.seed,mode:W.mode,diff:W.diff,cheats:W.cheats,time:W.time,day:W.day,rain:WX.rain,spawn:W.spawn,mods:W.mods,cont:W.cont,furn:W.furn,pinv:W.pinv||{},mobs:mobsS,player:Object.assign(myPack(),{yaw:P.yaw,pitch:P.pitch,sel:P.sel}),saved:Date.now()};}
+  return {v:2,pal:palNow(),id:W.id,name:W.name,seed:W.seed,mode:W.mode,diff:W.diff,cheats:W.cheats,time:W.time,day:W.day,rain:WX.rain,spawn:W.spawn,mods:W.mods,cont:W.cont,furn:W.furn,pinv:W.pinv||{},mobs:mobsS,player:Object.assign(myPack(),{yaw:P.yaw,pitch:P.pitch,sel:P.sel}),saved:Date.now()};}
 function saveWorld(quiet){if(!W.id||(NET.on&&!NET.host)) return;try{const s=JSON.stringify(packWorld());localStorage.setItem('mmvox_w_'+W.id,s);const L=worldList();const it=L.find(x=>x.id===W.id);const meta={id:W.id,name:W.name,mode:W.mode,diff:W.diff,saved:Date.now(),size:s.length,seed:W.seed};if(it) Object.assign(it,meta);else L.unshift(meta);L.sort((a,b)=>b.saved-a.saved);setWorldList(L);if(!quiet) toast('已儲存世界');}
   catch(e){toast('⚠ 儲存失敗：瀏覽器空間不夠了。可以在世界清單「匯出」備份');}}
-function loadSave(id){try{return JSON.parse(localStorage.getItem('mmvox_w_'+id));}catch(e){return null;}}
+
+// ================= 存檔用名字記錄（不會因為新增物品而錯亂）=================
+function palNow(){const items=[];for(let id=256;id<NID;id++) items.push(ITL[id]?ITL[id].key:'');return {b:BL.map(b=>b.key),i:items};}
+function makeRemap(pal){const bm=pal.b.map(k=>B[k]!==undefined?B[k]:0);const im=pal.i.map(k=>IT[k]!==undefined?IT[k]:null);
+  return {b:id=>id<bm.length?bm[id]:0,i:id=>id>=256?(im[id-256]??null):(id<bm.length?bm[id]:0)};}
+function remapStack(s,R){if(!s) return s;const n=R.i(s.id);if(n===null||n===undefined) return null;const o={...s,id:n};if(s.bag) o.bag=s.bag.map(x=>remapStack(x,R));return o;}
+function convertSave(sv,pal){const R=makeRemap(pal);const o=JSON.parse(JSON.stringify(sv));const st=a=>a&&a.map(x=>remapStack(x,R));
+  for(const d in o.mods||{}) for(const ck in o.mods[d]) for(const i in o.mods[d][ck]) o.mods[d][ck][i]=R.b(o.mods[d][ck][i]);
+  for(const k in o.cont||{}) o.cont[k]=st(o.cont[k]);for(const k in o.furn||{}){const f=o.furn[k];for(const q of ['in','fuel','out']) f[q]=remapStack(f[q],R);}
+  const pk=p=>{if(!p) return;p.inv=st(p.inv);p.armor=st(p.armor);};pk(o.player);for(const n in o.pinv||{}) pk(o.pinv[n]);o.pal=palNow();return o;}
+function samePal(a,b){return a.b.length===b.b.length&&a.i.length===b.i.length&&a.b.every((k,i)=>k===b.b[i])&&a.i.every((k,i)=>k===b.i[i]);}
+// 以前版本的編號表（用來修復舊存檔）
+function legacyPals(){const now=palNow();const today=['I_CARROT','I_GCARROT','I_POTATO','I_BPOTATO','I_BEET','I_BEETSEED','I_BEETSOUP','I_BOWL','I_STEW','I_MELON','I_PIE','I_CAKE','I_COOKIE','I_ROD','I_COD','I_CCOD','I_SALMON','I_CSALMON','I_PUFFER','I_COMPASS','I_CLOCK','I_SPYGLASS','I_SNOWBALL'];
+  const i2=now.i.filter(k=>!today.includes(k));const i1=i2.filter(k=>k!=='I_BACKPACK'&&k!=='I_BIGPACK');const i0=i1.filter(k=>k!=='I_EMERALD');
+  const b0=now.b.filter(k=>!['WOOL_GRAY','WOOL_LGRAY','WOOL_BROWN'].includes(k));
+  return [{n:'10/30～10/31 傍晚（第一版）',b:b0,i:i0},{n:'10/31 晚上（有村莊之後）',b:now.b,i:i1},{n:'10/31 深夜～11/1（有背包模組之後）',b:now.b,i:i2},{n:'現在的樣子（不修）',b:now.b,i:now.i}];}
+function repairScreen(){const raw=loadSave(selWorld);if(!raw){toast('讀取失敗');return;}const L=legacyPals();
+  const row=(pal,k)=>{const sv=convertSave(raw,pal);const inv=(sv.player&&sv.player.inv)||[];const arm=(sv.player&&sv.player.armor)||[];
+    return `<div class="rp"><b>${pal.n}</b><div class="rp-inv">${inv.concat(arm).map(x=>`<span class="rp-s" title="${x?nameOf(x.id):''}">${x?icHTML(x.id,22)+(x.n>1?`<i>${x.n}</i>`:''):''}</span>`).join('')}</div><button class="mcb" data-rp="${k}">就是這個，用它</button></div>`;};
+  $('#rpList').innerHTML=`<p class="muted">每一排是「你的背包如果是那個版本存的，應該長怎樣」。挑看起來對的那排（例如你記得有鑽石鎬、鐵甲…）。世界上放過的方塊也會一起修。</p>`+L.map((p,k)=>row(p,k)).join('');showScreen('repair');
+  $('#rpList').onclick=e=>{const b=e.target.closest('[data-rp]');if(!b) return;const pal=L[+b.dataset.rp];const sv=convertSave(raw,pal);try{localStorage.setItem('mmvox_w_'+selWorld,JSON.stringify(sv));toast('已修復！');}catch(err){toast('存檔失敗');}renderWorlds();showScreen('worlds');};}
+
+function loadSave(id){let sv;try{sv=JSON.parse(localStorage.getItem('mmvox_w_'+id));}catch(e){return null;}if(sv&&sv.pal&&!samePal(sv.pal,palNow())) sv=convertSave(sv,sv.pal);return sv;}
 // ---- 開始世界 ----
 function resetWorld(){for(const d of ['over','nether']){clearMeshes(d);W.chunks[d].clear();}for(const e of ENTS){if(e.mesh) scene.remove(e.mesh);}ENTS.length=0;for(const p of PARTS) scene.remove(p.m);PARTS.length=0;
   RS.pulse.clear();RS.plates.clear();RS.dirty.length=0;if(RS.doorPow) RS.doorPow.clear();W.dim='over';W.mods={over:{},nether:{}};W.cont={};W.furn={};W.pinv={};W.spawn=null;
@@ -1937,7 +1961,7 @@ function beginPlay(){showScreen(null);$('#hud').hidden=false;running=true;paused
 function lockPointer(){if(isTouch) return;try{const r=canvas.requestPointerLock();if(r&&r.catch) r.catch(()=>{});}catch(e){}}
 function quitToTitle(){if(NET.on&&NET.host) saveWorld(true);if(!NET.on||NET.host) saveWorld(true);if(NET.on) netLeave();closeUI();running=false;paused=true;$('#hud').hidden=true;$('#touch').hidden=true;resetWorld();startTitle();}
 // ---- 畫面切換 ----
-const SCR=['title','worlds','create','multi','settings','pause','death','disc','loading','confirm'];
+const SCR=['title','worlds','create','multi','settings','pause','death','disc','loading','confirm','repair'];
 function showScreen(n){for(const s of SCR) $('#s_'+s).hidden=s!==n;$('#menuBg').hidden=!n||n==='pause'||n==='death'||n==='disc';}
 function openPause(){if(!running||P.dead||uiOpen) return;paused=true;showScreen('pause');renderPause();}
 function renderPause(){$('#p_lan').textContent=NET.on?(NET.host?`房間代碼：${NET.code}（給同學輸入）`:'中斷連線'):'開放多人連線';$('#p_lan').classList.toggle('code',NET.on&&NET.host);
@@ -1953,7 +1977,7 @@ const SPL=['跟同學一起玩！','也試試紅石！','地獄很熱！','附�
 // ---- 世界清單 ----
 let selWorld=null;
 function renderWorlds(){const L=worldList();const el=$('#wl');el.innerHTML=L.length?L.map(w=>`<button class="wrow ${w.id===selWorld?'on':''}" data-w="${w.id}"><b>${esc(w.name)}</b><small>${new Date(w.saved).toLocaleString('zh-TW')} · ${w.mode==='creative'?'創造':'生存'}模式 · ${['和平','簡單','普通','困難'][w.diff]}</small></button>`).join(''):'<p class="muted">還沒有世界，按「建立新世界」開始吧！</p>';
-  for(const id of ['w_play','w_del','w_exp']) $('#'+id).disabled=!selWorld;}
+  for(const id of ['w_play','w_del','w_exp','w_fix']) $('#'+id).disabled=!selWorld;}
 $('#wl').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(!b) return;if(selWorld===b.dataset.w&&e.detail>1){playSel();return;}selWorld=b.dataset.w;renderWorlds();});
 $('#wl').addEventListener('dblclick',e=>{const b=e.target.closest('[data-w]');if(b){selWorld=b.dataset.w;playSel();}});
 function playSel(){const s=loadSave(selWorld);if(!s){toast('讀取失敗');return;}showScreen('loading');lockPointer();setTimeout(()=>startWorld(s),30);}
@@ -1968,7 +1992,7 @@ on('w_play',playSel);on('w_new',()=>{$('#c_name').value='新的世界';$('#c_see
 on('w_del',()=>{const w=worldList().find(x=>x.id===selWorld);if(!w) return;confirmBox(`真的要刪除「${w.name}」嗎？刪掉就救不回來了！`,()=>{try{localStorage.removeItem('mmvox_w_'+selWorld);}catch(e){}setWorldList(worldList().filter(x=>x.id!==selWorld));selWorld=null;renderWorlds();showScreen('worlds');});});
 on('cf_no',()=>showScreen(running?'pause':'worlds'));
 on('w_exp',()=>{const s=localStorage.getItem('mmvox_w_'+selWorld);if(!s) return;const w=worldList().find(x=>x.id===selWorld);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([s],{type:'application/json'}));a.download=(w?w.name:'world')+'.mmworld.json';document.body.appendChild(a);a.click();a.remove();});
-on('w_imp',()=>$('#w_file').click());
+on('w_fix',()=>repairScreen());on('rp_back',()=>showScreen('worlds'));on('w_imp',()=>$('#w_file').click());
 $('#w_file').addEventListener('change',e=>{const f=e.target.files[0];if(!f) return;f.text().then(t=>{const s=JSON.parse(t);if(!s.seed&&s.seed!==0) throw 0;s.id='w'+Date.now().toString(36);localStorage.setItem('mmvox_w_'+s.id,JSON.stringify(s));const L=worldList();L.unshift({id:s.id,name:s.name+'（匯入）',mode:s.mode,diff:s.diff,saved:Date.now(),seed:s.seed});setWorldList(L);selWorld=s.id;renderWorlds();}).catch(()=>toast('這不是世界存檔檔案'));e.target.value='';});
 on('w_back',()=>showScreen('title'));
 const CR={mode:'survival',diff:2,cheats:false};
