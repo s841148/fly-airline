@@ -169,7 +169,7 @@ h2{margin:0 0 6px;font-size:22px;text-shadow:2px 2px 0 #3f3f3f}
   <div class="row2"><button class="mcb" id="w_del">刪除</button><button class="mcb" id="w_exp">匯出</button><button class="mcb" id="w_imp">匯入</button><button class="mcb" id="w_fix">修復物品</button><button class="mcb" id="w_back">返回</button></div><input type="file" id="w_file" accept=".json" hidden></section>
 <section class="scr dim" id="s_create" hidden><h2>建立新世界</h2>
   <label class="field">世界名稱<input id="c_name" maxlength="32"></label>
-  <button class="mcb" id="c_mode"></button><p class="muted" id="c_mdesc"></p><button class="mcb" id="c_diff"></button><button class="mcb" id="c_cheat"></button>
+  <button class="mcb" id="c_mode"></button><p class="muted" id="c_mdesc"></p><button class="mcb" id="c_diff"></button><button class="mcb" id="c_cheat"></button><button class="mcb" id="c_island"></button>
   <label class="field">世界種子碼（空白＝隨機）<input id="c_seed" maxlength="32" placeholder="例如：麥麥"></label>
   <div class="row2"><button class="mcb" id="c_go">建立新世界</button><button class="mcb" id="c_back">取消</button></div></section>
 <section class="scr dim" id="s_multi" hidden><h2>多人遊戲</h2>
@@ -404,6 +404,41 @@ IC('i_clock',P=>{P(3,3,'#c8a030',10,10);P(4,4,'#2a3a6a',8,4);P(4,8,'#5a8ad8',8,4
 IC('i_spyglass',P=>{for(let k=0;k<9;k++) P(3+k,12-k,'#c8803a',3,3);P(11,2,'#7a5a3a',4,4);P(12,3,'#a8d8f8',2,2);});
 IC('i_snowball',P=>{P(4,4,'#f8f8ff',8,8);P(3,6,'#f8f8ff',10,4);P(5,5,'#fff',2,2);P(9,10,'#d0d8e8',2,1);});
 IC('i_bowl',P=>{P(2,8,'#8a5a2a',12,6);P(3,7,'#a8703a',10,1);});
+
+// ---- 模組材質（科技、交通、天空島、荒島）----
+tile('rail',(g,r)=>{g.clearRect(0,0,16,16);for(let y=1;y<16;y+=4){g.fillStyle='#7a5a32';g.fillRect(1,y,14,2);}g.fillStyle='#a8a8b0';g.fillRect(3,0,2,16);g.fillRect(11,0,2,16);g.fillStyle='#d8d8e0';g.fillRect(3,0,1,16);g.fillRect(11,0,1,16);});
+tile('grail',(g,r)=>{g.clearRect(0,0,16,16);for(let y=1;y<16;y+=4){g.fillStyle='#7a5a32';g.fillRect(1,y,14,2);}g.fillStyle='#e8c030';g.fillRect(3,0,2,16);g.fillRect(11,0,2,16);g.fillStyle='#d83020';g.fillRect(6,0,4,16);});
+tile('hopper_top',(g,r)=>{vary(g,r,'#4a4a52',0.85,1.1);g.fillStyle='#1a1a1e';g.fillRect(3,3,10,10);g.fillStyle='#5a5a62';g.fillRect(0,0,16,2);});
+tile('hopper_side',(g,r)=>{g.clearRect(0,0,16,16);g.fillStyle='#4a4a52';g.fillRect(0,0,16,7);g.fillRect(3,7,10,5);g.fillRect(6,12,4,4);g.fillStyle='#6a6a72';g.fillRect(0,0,16,1);});
+tile('piston_face',(g,r)=>{planksP(g,r,'#b4895a','#6e5030');g.fillStyle='#8a8a8a';g.fillRect(6,6,4,4);});
+tile('piston_side',(g,r)=>{stoneP(g,r);g.fillStyle='#b4895a';g.fillRect(0,0,16,4);g.fillStyle='#a8a8a8';g.fillRect(7,4,2,12);});
+tile('piston_sticky',(g,r)=>{planksP(g,r,'#b4895a','#6e5030');g.fillStyle='#6ac84a';g.fillRect(3,3,10,10);g.fillStyle='#9ae87a';g.fillRect(4,4,3,3);});
+tile('elevator',(g,r)=>{vary(g,r,'#c8c8d0',0.92,1.04);g.fillStyle='#3a8ad8';g.fillRect(6,2,4,2);g.fillRect(5,4,6,2);g.fillRect(5,10,6,2);g.fillRect(6,12,4,2);g.fillStyle='#8a8a92';g.fillRect(0,0,16,1);g.fillRect(0,15,16,1);});
+tile('harvester',(g,r)=>{vary(g,r,'#9a9aa2',0.9,1.05);g.fillStyle='#3a8a2a';g.fillRect(3,3,10,10);g.fillStyle='#e8c84a';for(let x=4;x<12;x+=2) g.fillRect(x,5,1,6);g.fillStyle='#d83020';g.fillRect(7,1,2,2);});
+tile('drill_top',(g,r)=>{vary(g,r,'#5a5a62',0.9,1.08);g.fillStyle='#e8a020';g.fillRect(2,2,12,2);g.fillRect(2,12,12,2);g.fillStyle='#2a2a2e';g.fillRect(5,5,6,6);});
+tile('drill_side',(g,r)=>{vary(g,r,'#6a6a72',0.9,1.08);for(let x=0;x<16;x+=4){g.fillStyle='#e8a020';g.fillRect(x,0,2,3);g.fillStyle='#1a1a1a';g.fillRect(x+2,0,2,3);}g.fillStyle='#d83020';g.fillRect(7,7,2,2);});
+tile('sky_grass',(g,r)=>{noiseFill(g,r,['#7ad8c8','#6ac8b8','#8ae8d8','#62c0b0']);});
+tile('sky_grass_side',(g,r)=>{noiseFill(g,r,['#d8d8e8','#c8c8d8','#e4e4f0']);for(let x=0;x<16;x++){const h=2+Math.floor(r()*3);for(let y=0;y<h;y++) px(g,x,y,['#7ad8c8','#6ac8b8'][Math.floor(r()*2)]);}});
+tile('sky_dirt',(g,r)=>noiseFill(g,r,['#d8d8e8','#c8c8d8','#e4e4f0','#bcbccc']));
+tile('sky_stone',(g,r)=>{noiseFill(g,r,['#e8e8f0','#d8d8e4','#f0f0f8','#cfcfdc']);for(let k=0;k<4;k++) px(g,Math.floor(r()*16),Math.floor(r()*16),'#a8a8c0');});
+tile('sky_bricks',(g,r)=>{noiseFill(g,r,['#e8e8f0','#dcdce8']);g.fillStyle='#a8a8c0';g.fillRect(0,7,16,1);g.fillRect(0,15,16,1);g.fillRect(7,0,1,7);g.fillRect(3,8,1,7);g.fillRect(12,8,1,7);});
+tile('cloud',(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++) px(g,x,y,`rgba(255,255,255,${0.75+r()*0.2})`);});
+tile('gcloud',(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++) px(g,x,y,`rgba(255,${220+Math.floor(r()*30)},120,${0.8+r()*0.15})`);});
+tile('bcloud',(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++) px(g,x,y,`rgba(${150+Math.floor(r()*30)},200,255,${0.8+r()*0.15})`);});
+tile('sky_log',(g,r)=>logSide(g,r,'#c8c0a8','#9a9078'));tile('sky_log_top',(g,r)=>logTop(g,r,'#9a9078','#e8e0c8'));
+tile('sky_leaves',(g,r)=>leavesP(g,r,['#f8e070','#f0d060','#ffe890','#e8c850']));
+tile('crystal',(g,r)=>{g.clearRect(0,0,16,16);g.fillStyle='#7ae8ff';g.fillRect(6,1,4,14);g.fillRect(3,5,3,9);g.fillRect(10,4,3,10);g.fillStyle='#e0fbff';g.fillRect(7,2,1,10);g.fillRect(4,6,1,6);});
+tile('sky_ore',(g,r)=>{noiseFill(g,r,['#e8e8f0','#d8d8e4','#f0f0f8']);for(let k=0;k<5;k++){const x=1+Math.floor(r()*12),y=1+Math.floor(r()*12);g.fillStyle='#4ad8f8';g.fillRect(x,y,2,2);g.fillStyle='#c0f8ff';g.fillRect(x,y,1,1);}});
+tile('sky_portal',(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++) px(g,x,y,`rgba(${90+Math.floor(r()*60)},${170+Math.floor(r()*60)},255,0.78)`);});
+tile('palm_log',(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++) px(g,x,y,shade(y%4===0?'#8a6a42':'#a8845a',0.9+r()*0.12));});
+tile('palm_top',(g,r)=>logTop(g,r,'#8a6a42','#c8a878'));
+tile('palm_leaves',(g,r)=>leavesP(g,r,['#3aa83a','#2a9a2a','#4ab84a','#5ac85a']));
+IC('i_boat',P=>{P(1,8,'#8a5a2a',14,4);P(2,12,'#6a4220',12,2);P(1,6,'#a8703a',2,3);P(13,6,'#a8703a',2,3);P(4,9,'#c89a5a',8,1);});
+IC('i_minecart',P=>{P(2,5,'#7a7a82',12,7);P(3,6,'#3a3a42',10,4);P(3,12,'#2a2a2a',3,3);P(10,12,'#2a2a2a',3,3);});
+IC('i_skygem',P=>{P(6,2,'#4ad8f8',4,12);P(3,5,'#4ad8f8',10,6);P(6,4,'#c0f8ff',2,4);});
+IC('i_coconut',P=>{P(4,4,'#6a4a2a',8,9);P(3,6,'#6a4a2a',10,5);P(6,6,'#3a2a1a',1,1);P(9,6,'#3a2a1a',1,1);P(7,9,'#3a2a1a',1,1);});
+IC('i_slimeball',P=>{P(4,4,'#6ac84a',8,8);P(3,6,'#6ac84a',10,4);P(5,5,'#b0f0a0',3,2);});
+IC('i_skyhoney',P=>{P(5,2,'#e8e8f0',6,3);P(4,5,'#f8d040',8,9);P(6,6,'#fff0a0',2,3);});
 const BL=[];const B={};
 function defB(key,o){const id=BL.length;B[key]=id;o.key=key;o.id=id;if(o.tool!==undefined){o.btool=o.tool;delete o.tool;}if(o.solid===undefined) o.solid=true;if(!o.tex){const t=T[key.toLowerCase()];o.tex=[t,t,t];}BL.push(o);return id;}
 const tx3=(t,s,b)=>[T[t],T[s||t],T[b||t]];
@@ -506,6 +541,31 @@ defB('MUSH_B',{n:'棕蘑菇',solid:false,cross:true,tex:tx3('mush_b'),h:0,light:
 defB('CAMPFIRE',{n:'營火',solid:false,cross:true,glow:true,tex:tx3('campfire'),h:2,tool:'axe',light:15,hurt:1});
 defB('COBWEB',{n:'蜘蛛網',solid:false,cross:true,tex:tx3('cobweb'),h:4,drop:'I_STRING',web:true});
 defB('NETHER_BRICKS',{n:'地獄磚',tex:tx3('bricks_n'),h:2,tool:'pick',tier:1});
+
+// ---- 模組方塊（只能加在最後面）----
+defB('RAIL',{n:'鐵軌',solid:false,flat:true,rail:1,tex:tx3('rail'),h:0.7,tool:'pick'});
+defB('GRAIL',{n:'動力鐵軌',solid:false,flat:true,rail:2,tex:tx3('grail'),h:0.7,tool:'pick'});
+defB('HOPPER',{n:'漏斗',tex:tx3('hopper_top','hopper_side','hopper_side'),h:3,tool:'pick',tier:1,use:'hopper',mach:'hopper',cut:true});
+defB('PISTON',{n:'活塞',tex:tx3('piston_face','piston_side','piston_side'),h:1.5,tool:'pick',rs:'piston'});
+defB('STICKY_PISTON',{n:'黏性活塞',tex:tx3('piston_sticky','piston_side','piston_side'),h:1.5,tool:'pick',rs:'piston'});
+defB('PISTON_HEAD',{n:'活塞頭',tex:tx3('piston_face'),h:-1,drop:'_none'});
+defB('ELEVATOR',{n:'電梯方塊',tex:tx3('elevator'),h:2,tool:'pick'});
+defB('HARVESTER',{n:'自動收成機',tex:tx3('harvester','drill_side','drill_top'),h:3,tool:'pick',mach:'harvest'});
+defB('DRILL',{n:'自動挖礦機',tex:tx3('drill_top','drill_side','drill_top'),h:3,tool:'pick',mach:'drill'});
+defB('SKY_GRASS',{n:'天空草地',tex:tx3('sky_grass','sky_grass_side','sky_dirt'),h:0.6,tool:'shovel',drop:'SKY_DIRT',snd:'grass'});
+defB('SKY_DIRT',{n:'天空土',tex:tx3('sky_dirt'),h:0.5,tool:'shovel',snd:'grass'});
+defB('SKY_STONE',{n:'天空石',tex:tx3('sky_stone'),h:1.5,tool:'pick',tier:1});
+defB('SKY_BRICKS',{n:'天空石磚',tex:tx3('sky_bricks'),h:1.5,tool:'pick',tier:1});
+defB('CLOUD',{n:'雲朵',solid:false,cut:true,cloud:1,tex:tx3('cloud'),h:0.2,snd:'snow'});
+defB('GCLOUD',{n:'金色雲朵',solid:false,cut:true,cloud:2,tex:tx3('gcloud'),h:0.2,snd:'snow'});
+defB('BCLOUD',{n:'彈跳雲朵',cut:true,bounce:true,tex:tx3('bcloud'),h:0.2,snd:'snow'});
+defB('SKY_LOG',{n:'天空樹原木',tex:tx3('sky_log_top','sky_log','sky_log_top'),h:2,tool:'axe',fuel:15,snd:'wood'});
+defB('SKY_LEAVES',{n:'金黃樹葉',tex:tx3('sky_leaves'),h:0.2,cut:true,drop:'_skyleaves',snd:'grass'});
+defB('CRYSTAL',{n:'天空水晶',solid:false,cross:true,glow:true,tex:tx3('crystal'),h:0.5,tool:'pick',light:12,snd:'glass'});
+defB('SKY_ORE',{n:'天藍礦',tex:tx3('sky_ore'),h:3,tool:'pick',tier:2,drop:'I_SKYGEM',xp:[2,6]});
+defB('SKY_PORTAL',{n:'天空傳送門',solid:false,cut:true,glow:true,portal:'sky',tex:tx3('sky_portal'),h:-1,light:11});
+defB('PALM_LOG',{n:'棕櫚原木',tex:tx3('palm_top','palm_log','palm_top'),h:2,tool:'axe',fuel:15,snd:'wood'});
+defB('PALM_LEAVES',{n:'棕櫚葉',tex:tx3('palm_leaves'),h:0.2,cut:true,drop:'_palm',snd:'grass'});
 // ---- 物品 ----
 const IT={};const ITL={};let NID=256;
 function defI(key,o){const id=NID++;o.key=key;o.id=id;o.item=true;o.stack=o.stack||64;IT[key]=id;ITL[id]=o;return id;}
@@ -542,6 +602,9 @@ const TOOL_SP=[2,4,6,12,8],TOOL_DUR=[59,131,250,32,1561],TOOL_DMG={sword:[4,5,6,
 TOOLS.forEach(tp=>TIERS.forEach(([k,zh],ti)=>defI(`T_${tp}_${k}`,{n:`${zh}${TOOL_ZH[tp]}`,ic:T[`i_${tp}_${k}`],stack:1,tool:{type:tp,tier:[1,2,3,1,4][ti],sp:TOOL_SP[ti],dmg:TOOL_DMG[tp][ti],dur:TOOL_DUR[ti]}})));
 const ARMOR_PTS={leather:[1,3,2,1],iron:[2,6,5,2],gold:[2,5,3,1],diamond:[3,8,6,3]},ARMOR_DUR={leather:55,iron:165,gold:77,diamond:363};
 ARMOR.forEach((sl,si)=>ATIERS.forEach(([k,zh])=>defI(`A_${sl}_${k}`,{n:`${zh}${ARMOR_ZH[sl]}`,ic:T[`i_${sl}_${k}`],stack:1,armor:{slot:si,def:ARMOR_PTS[k][si],dur:Math.round(ARMOR_DUR[k]*[1.1,1.6,1.5,1.3][si])}})));
+// ---- 模組物品（只能加在最後面）----
+defI('I_BOAT',{n:'木船',ic:T.i_boat,stack:1,vehicle:'boat'});defI('I_MINECART',{n:'礦車',ic:T.i_minecart,stack:1,vehicle:'cart'});
+defI('I_SKYGEM',{n:'天藍寶石',ic:T.i_skygem});defI('I_COCONUT',{n:'椰子',ic:T.i_coconut,food:4,sat:3});defI('I_SLIMEBALL',{n:'黏液球',ic:T.i_slimeball});defI('I_SKYHONEY',{n:'雲朵蜂蜜',ic:T.i_skyhoney,food:6,sat:8,heal:4});
 const isItem=id=>id>=256;
 const DEF=id=>isItem(id)?ITL[id]:BL[id];
 const nameOf=id=>{const d=DEF(id);return d?d.n:'？';};
@@ -554,6 +617,7 @@ function dropOf(id,ok,s){const b=BL[id];if(!ok) return [];const d=b.drop;const e
   if(d==='_grass') return Math.random()<0.125?[[IT.I_SEEDS,1]]:[];if(d==='_gravel') return Math.random()<0.1?[[IT.I_FLINT,1]]:[[B.GRAVEL,1]];
   if(d==='_wheat') return b.crop===3?[[IT.I_WHEAT,1],[IT.I_SEEDS,irand(1,3)]]:[[IT.I_SEEDS,1]];
   if(d==='_snow') return [[IT.I_SNOWBALL,4]];
+  if(d==='_palm'){const r=Math.random();return r<0.1?[[IT.I_COCONUT,1]]:r<0.15?[[B.SAPLING,1]]:[];}if(d==='_skyleaves'){const r=Math.random();return r<0.08?[[IT.I_SKYHONEY,1]]:[];}
   if(d==='_carrot') return b.crop===3?[[IT.I_CARROT,irand(2,4)]]:[[IT.I_CARROT,1]];if(d==='_potato') return b.crop===3?[[IT.I_POTATO,irand(2,4)]]:[[IT.I_POTATO,1]];
   if(d==='_beet') return b.crop===3?[[IT.I_BEET,1],[IT.I_BEETSEED,irand(1,3)]]:[[IT.I_BEETSEED,1]];if(d==='_melon') return [[IT.I_MELON,irand(3,7)]];
   if(d==='_redstone') return [[IT.I_REDSTONE,irand(4,5)+(ench.fortune?irand(0,ench.fortune):0)]];if(d==='_lapis') return [[IT.I_LAPIS,irand(4,8)]];
@@ -568,7 +632,7 @@ function enchList(s){return s&&s.ench?Object.entries(s.ench).map(([k,v])=>ENCH[k
 
 // ================= 世界：地形生成、區塊、網格、光照 =================
 const H=96,SEA=40,CS=16;
-const W={seed:1,dim:'over',chunks:{over:new Map(),nether:new Map()},mods:{over:{},nether:{}},cont:{},furn:{},time:6000,day:1,diff:2,mode:'survival',name:'新世界',id:'',spawn:[0,0,0]};
+const W={seed:1,dim:'over',chunks:{over:new Map(),nether:new Map(),sky:new Map()},mods:{over:{},nether:{},sky:{}},meta:{},island:false,cont:{},furn:{},time:6000,day:1,diff:2,mode:'survival',name:'新世界',id:'',spawn:[0,0,0]};
 const CK=(cx,cz)=>cx+','+cz;
 const IDX=(lx,y,lz)=>(y*16+lz)*16+lx;
 let SEED=1;
@@ -579,13 +643,19 @@ function fbm(x,z,o){o=o||4;let s=0,a=1,f=1,t=0;for(let i=0;i<o;i++){s+=vn2(x*f+i
 function vn3(x,y,z){const xi=Math.floor(x),yi=Math.floor(y),zi=Math.floor(z),xf=x-xi,yf=y-yi,zf=z-zi;const u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf),w=zf*zf*(3-2*zf);const L=(a,b,t)=>a+(b-a)*t;const c=(i,j,k)=>h3(xi+i,yi+j,zi+k);
   return L(L(L(c(0,0,0),c(1,0,0),u),L(c(0,1,0),c(1,1,0),u),v),L(L(c(0,0,1),c(1,0,1),u),L(c(0,1,1),c(1,1,1),u),v),w);}
 const ss=(e0,e1,v)=>{const t=Math.max(0,Math.min(1,(v-e0)/(e1-e0)));return t*t*(3-2*t);};
-function climate(x,z){return [fbm(x/320+300,z/320-300,3),fbm(x/260-700,z/260+500,3),fbm(x/500+90,z/500-40,3),fbm(x/240-150,z/240+220,3)];}
-function biomeOf(t,m,c,mt){if(c<0.36) return 'ocean';if(mt>0.64) return t<0.45?'snowpeak':'mountain';if(t<0.38) return 'snowy';if(t>0.62&&m<0.5) return 'desert';if(m>0.57) return t>0.5?'birch':'forest';return 'plains';}
-function heightOf(x,z){const [t,m,c,mt]=climate(x,z);let h=SEA+3+(fbm(x/90,z/90)-0.5)*22+(fbm(x/28,z/28)-0.5)*6;
+function climate(x,z){if(W.island){const h=islandH(x,z);return [-1,0.5,h<SEA?0.2:h<=SEA+1?0.4:0.6,0.3];}return [fbm(x/320+300,z/320-300,3),fbm(x/260-700,z/260+500,3),fbm(x/500+90,z/500-40,3),fbm(x/240-150,z/240+220,3)];}
+function biomeOf(t,m,c,mt){if(t<-0.5) return c<0.36?'ocean':'island';if(c<0.36) return 'ocean';if(mt>0.64) return t<0.45?'snowpeak':'mountain';if(t<0.38) return 'snowy';if(t>0.62&&m<0.5) return 'desert';if(m>0.57) return t>0.5?'birch':'forest';return 'plains';}
+function heightOf(x,z){if(W.island) return islandH(x,z);const [t,m,c,mt]=climate(x,z);let h=SEA+3+(fbm(x/90,z/90)-0.5)*22+(fbm(x/28,z/28)-0.5)*6;
   h=h*(1-ss(0.42,0.33,c))+ss(0.42,0.33,c)*(SEA-10+(fbm(x/40,z/40)-0.5)*8);
   h+=ss(0.58,0.72,mt)*(fbm(x/60+33,z/60-21)*46);if(ss(0.55,0.68,t)*(1-ss(0.5,0.6,m))>0) h=h-ss(0.55,0.68,t)*(1-ss(0.5,0.6,m))*((h-SEA-3)*0.6);
   return Math.max(4,Math.min(H-10,Math.round(h)));}
-const BIOME_ZH={ocean:'海洋',mountain:'山地',snowpeak:'雪峰',snowy:'雪原',desert:'沙漠',forest:'森林',birch:'白樺森林',plains:'平原',nether:'地獄'};
+// ---- 荒島求生：到處是海，只有零星小島 ----
+const ISC=80;
+function islandAt(gx,gz){if(gx===0&&gz===0) return [6,5,13];if(h2(gx*7+13,gz*11+5)>0.42) return null;return [gx*ISC+10+Math.floor(h2(gx,gz*5+2)*(ISC-20)),gz*ISC+10+Math.floor(h2(gx*5+1,gz)*(ISC-20)),5+Math.floor(h2(gx*3+9,gz*3+4)*18)];}
+function islandH(x,z){const gx=Math.floor(x/ISC),gz=Math.floor(z/ISC);let best=1e9,R=0;for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const I=islandAt(gx+a,gz+b);if(!I) continue;const d=Math.hypot(x-I[0],z-I[1])-I[2]*(0.85+0.3*vn2(x/9+I[0],z/9));if(d<best){best=d;R=I[2];}}
+  if(best<0){const t=Math.min(1,-best/(R*0.8));return Math.round(SEA+1+Math.pow(t,0.7)*(2+R*0.28)+(fbm(x/14,z/14)-0.5)*2);}
+  return Math.round(Math.max(SEA-24+(fbm(x/40,z/40)-0.5)*6,SEA-1-best*0.9));}
+const BIOME_ZH={island:'小島',sky:'天空島',ocean:'海洋',mountain:'山地',snowpeak:'雪峰',snowy:'雪原',desert:'沙漠',forest:'森林',birch:'白樺森林',plains:'平原',nether:'地獄'};
 function biomeAt(x,z){if(W.dim==='nether') return 'nether';const [t,m,c,mt]=climate(x,z);return biomeOf(t,m,c,mt);}
 function genOver(cx,cz){const data=new Uint8Array(16*16*H);const X0=cx*16,Z0=cz*16;const hs=new Int16Array(256),bs=[];
   for(let lz=0;lz<16;lz++)for(let lx=0;lx<16;lx++){const x=X0+lx,z=Z0+lz;const h=heightOf(x,z);const [t,m,c,mt]=climate(x,z);const bi=biomeOf(t,m,c,mt);hs[lz*16+lx]=h;bs.push(bi);
@@ -613,15 +683,17 @@ function genOver(cx,cz){const data=new Uint8Array(16*16*H);const X0=cx*16,Z0=cz*
       if(below===B.STONE&&q<0.006) data[i]=q<0.003?B.MUSH_B:B.MUSH_R;else if(q>0.9975&&y<30) data[i]=B.COBWEB;}}
   // 樹
   for(let tz=Z0-3;tz<Z0+19;tz++)for(let tx=X0-3;tx<X0+19;tx++){const r=h2(tx*7+3,tz*13-5);if(r>0.04) continue;const [t,m,c,mt]=climate(tx,tz);const bi=biomeOf(t,m,c,mt);
-    const dens={forest:0.035,birch:0.03,snowy:0.012,plains:0.003,mountain:0.008,snowpeak:0.004}[bi]||0;if(r>dens) continue;const h=heightOf(tx,tz);if(h<SEA+1) continue;
+    const dens={forest:0.035,birch:0.03,snowy:0.012,plains:0.003,mountain:0.008,snowpeak:0.004,island:0.012}[bi]||0;if(r>dens) continue;const h=heightOf(tx,tz);if(h<SEA+1) continue;
     const put=(x,y,z,id,soft)=>{const lx=x-X0,lz=z-Z0;if(lx<0||lx>15||lz<0||lz>15||y<0||y>=H) return;const i=IDX(lx,y,lz);if(soft&&data[i]&&!BL[data[i]].replace&&!BL[data[i]].cross) return;data[i]=id;};
     const gl=tx-X0,gz=tz-Z0;if(gl>=0&&gl<16&&gz>=0&&gz<16){const g=data[IDX(gl,h-1,gz)];if(g!==B.GRASS&&g!==B.SNOW_GRASS&&g!==B.STONE) continue;}
+    if(bi==='island'){const ph=5+Math.floor(h2(tx,tz)*3);const lean=h2(tx+1,tz)<0.5?1:-1;let px2=tx;for(let y=0;y<ph;y++){if(y===ph-2) px2+=lean;put(px2,h+y,tz,B.PALM_LOG);}
+      const top=h+ph;put(px2,top,tz,B.PALM_LEAVES,true);for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){put(px2+a,top,tz+b,B.PALM_LEAVES,true);put(px2+a*2,top,tz+b*2,B.PALM_LEAVES,true);put(px2+a*3,top-1,tz+b*3,B.PALM_LEAVES,true);}continue;}
     if(bi==='snowy'||bi==='snowpeak'||(bi==='mountain'&&h2(tx,tz+5)<0.6)){const ph=6+Math.floor(h2(tx,tz)*4);for(let y=0;y<ph;y++) put(tx,h+y,tz,B.SPRUCE_LOG);
       for(let y=2;y<=ph;y++){const rr=y>=ph-1?(y===ph?0:1):((ph-y)%2===0?2:1);for(let a=-rr;a<=rr;a++)for(let b=-rr;b<=rr;b++){if(Math.abs(a)+Math.abs(b)>rr+(rr>1?1:0)) continue;if(a===0&&b===0&&y<ph) continue;put(tx+a,h+y,tz+b,B.SPRUCE_LEAVES,true);}}put(tx,h+ph,tz,B.SPRUCE_LEAVES,true);continue;}
     const birch=bi==='birch'||(bi==='forest'&&h2(tx+9,tz)<0.25);const log=birch?B.BIRCH_LOG:B.OAK_LOG,lv=birch?B.BIRCH_LEAVES:B.OAK_LEAVES;const hgt=4+Math.floor(h2(tx,tz)*3)+(birch?1:0);
     for(let y=0;y<hgt;y++) put(tx,h+y,tz,log);
     for(let y=hgt-2;y<=hgt+1;y++){const rr=y>=hgt?1:2;for(let a=-rr;a<=rr;a++)for(let b=-rr;b<=rr;b++){if(Math.abs(a)===rr&&Math.abs(b)===rr&&(y>=hgt||h2(tx+a,tz+b+y)<0.5)) continue;if(a===0&&b===0&&y<hgt) continue;put(tx+a,h+y,tz+b,lv,true);}}}
-  genDungeon(data,cx,cz,hs);genVillages(data,cx,cz);
+  genDungeon(data,cx,cz,hs);if(W.island) genWreck(data,cx,cz,hs);else genVillages(data,cx,cz);
   return data;}
 function genNether(cx,cz){const data=new Uint8Array(16*16*H);const X0=cx*16,Z0=cz*16;
   for(let lz=0;lz<16;lz++)for(let lx=0;lx<16;lx++){const x=X0+lx,z=Z0+lz;
@@ -633,7 +705,7 @@ function genNether(cx,cz){const data=new Uint8Array(16*16*H);const X0=cx*16,Z0=c
   for(let lz=0;lz<16;lz++)for(let lx=0;lx<16;lx++){const x=X0+lx,z=Z0+lz;if(h2(x*5+1,z*3+7)>0.006) continue;for(let y=H-5;y>40;y--){if(data[IDX(lx,y,lz)]===B.NETHERRACK&&!data[IDX(lx,y-1,lz)]){for(let k=1;k<=4;k++) for(const [a,b] of [[0,0],[1,0],[0,1],[-1,0],[0,-1]]){const xx=lx+a,zz=lz+b;if(xx<0||xx>15||zz<0||zz>15) continue;if(h3(x+a,y-k,z+b)<0.75-k*0.12&&!data[IDX(xx,y-k,zz)]) data[IDX(xx,y-k,zz)]=B.GLOWSTONE;}break;}}}
   return data;}
 function topOf(data,lx,lz){for(let y=H-1;y>=0;y--){const b=data[IDX(lx,y,lz)];if(b&&BL[b].solid&&!BL[b].cut) return y;}return -1;}
-function genChunk(dim,cx,cz){const data=dim==='nether'?genNether(cx,cz):genOver(cx,cz);const mods=W.mods[dim][CK(cx,cz)];if(mods) for(const k in mods) data[+k]=mods[k];
+function genChunk(dim,cx,cz){const data=dim==='nether'?genNether(cx,cz):dim==='sky'?genSky(cx,cz):genOver(cx,cz);const mods=W.mods[dim][CK(cx,cz)];if(mods) for(const k in mods) data[+k]=mods[k];
   const top=new Int16Array(256);for(let lz=0;lz<16;lz++)for(let lx=0;lx<16;lx++) top[lz*16+lx]=topOf(data,lx,lz);
   const c={cx,cz,dim,data,top,mesh:null,dirty:true,lights:[]};scanLights(c);return c;}
 function scanLights(c){c.lights=[];c.spawners=[];const d=c.data;for(let i=0;i<d.length;i++){const id=d[i];if(id===B.SPAWNER) c.spawners.push([c.cx*16+(i&15),i>>8,c.cz*16+((i>>4)&15)]);if(id&&BL[id].light){const lx=i%16,lz=(i>>4)%16,y=i>>8;c.lights.push([c.cx*16+lx,y,c.cz*16+lz,BL[id].light]);}}}
@@ -706,7 +778,8 @@ function meshChunk(c){const dim=c.dim;const A={o:[[],[],[],[]],c:[[],[],[],[]],w
       const base=arr[0].length/3;for(let k=0;k<4;k++){arr[0].push(x+q[k][0],y+q[k][1],z+q[k][2]);arr[1].push(UVC[k][0]?uv[1]:uv[0],UVC[k][1]?uv[3]:uv[2]);arr[2].push(s*0.9,bl*0.9,0.9);}(arr.i=arr.i||[]).push(base,base+1,base+2,base,base+2,base+3);continue;}
     if(b.cross||b.flat){const arr=b.glow?A.g:A.c;const uv=UVT[b.tex[1]];const [s,bl]=light(lx,y,lz);
       const quads=b.flat?[[[0,0.03,1],[0,0.03,0],[1,0.03,0],[1,0.03,1]]]:[[[0.15,0,0.15],[0.15,1,0.15],[0.85,1,0.85],[0.85,0,0.85]],[[0.15,0,0.85],[0.15,1,0.85],[0.85,1,0.15],[0.85,0,0.15]]];
-      for(const q of quads){const base=arr[0].length/3;for(let k=0;k<4;k++){arr[0].push(x+q[k][0],y+q[k][1],z+q[k][2]);arr[1].push(UVC[k][0]?uv[1]:uv[0],UVC[k][1]?uv[3]:uv[2]);arr[2].push(s,bl,1);}(arr.i=arr.i||[]).push(base,base+1,base+2,base,base+2,base+3);}
+      const rot=b.rail&&(BL[at(lx+1,y,lz)].rail||BL[at(lx-1,y,lz)].rail)&&!(BL[at(lx,y,lz+1)].rail||BL[at(lx,y,lz-1)].rail)?1:0;
+      for(const q of quads){const base=arr[0].length/3;for(let k=0;k<4;k++){const kk=(k+rot)%4;arr[0].push(x+q[k][0],y+q[k][1],z+q[k][2]);arr[1].push(UVC[kk][0]?uv[1]:uv[0],UVC[kk][1]?uv[3]:uv[2]);arr[2].push(s,bl,1);}(arr.i=arr.i||[]).push(base,base+1,base+2,base,base+2,base+3);}
       continue;}
     const arr=b.liquid&&!b.glow?A.w:b.glow&&!b.liquid?A.g:b.liquid?A.g:b.cut?A.c:A.o;const ht=b.half||1;
     for(let f=0;f<6;f++){const F=FACES[f];const nid=at(lx+F.d[0],y+F.d[1],lz+F.d[2]);
@@ -798,6 +871,23 @@ function stampVillage(data,X0,Z0,v){const inC=(x,z)=>x>=X0&&x<X0+16&&z>=Z0&&z<Z0
     if(pc.t==='smith'){S(pc.x+2,y,pc.z+1,B.ANVIL);}if(pc.t==='big'){S(pc.x+2,y,pc.z+d-2,B.BOOKSHELF);S(pc.x+3,y,pc.z+d-2,B.BOOKSHELF);S(pc.x+3,y,pc.z+1,B.HAY);}}}
 function villageNear(x,z,r){const gx=Math.floor(x/VCELL),gz=Math.floor(z/VCELL);let best=null;for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const v=villageAt(gx+a,gz+b);if(v&&Math.hypot(v.x-x,v.z-z)<(r||64)) best=v;}return best;}
 
+// ---- 荒島：海底沉船 ----
+function genWreck(data,cx,cz,hs){if(h2(cx*13+5,cz*7+11)>0.05) return;let mx=0;for(const v of hs) mx=Math.max(mx,v);if(mx>SEA-6) return;const y0=hs[8*16+8];const L=9,ox=3,oz=6;
+  for(let a=0;a<L;a++)for(let b=0;b<4;b++){const side=b===0||b===3;const lx=ox+a,lz=oz+b;if(lz>15) continue;data[IDX(lx,y0,lz)]=B.PLANKS;if(side||a===0||a===L-1){data[IDX(lx,y0+1,lz)]=h2(cx+a,cz+b)<0.7?B.PLANKS:B.WATER;if(h2(cx*2+a,cz+b)<0.4) data[IDX(lx,y0+2,lz)]=B.OAK_LOG;}}
+  for(let y=1;y<6;y++) data[IDX(ox+4,y0+y,oz+1)]=B.OAK_LOG;data[IDX(ox+2,y0+1,oz+1)]=B.CHEST;if(h2(cx,cz+3)<0.5) data[IDX(ox+6,y0+1,oz+2)]=B.CHEST;}
+// ---- 天空島維度 ----
+function genSky(cx,cz){const data=new Uint8Array(16*16*H);const X0=cx*16,Z0=cz*16;
+  for(let lz=0;lz<16;lz++)for(let lx=0;lx<16;lx++){const x=X0+lx,z=Z0+lz;let above=0;
+    for(let y=H-6;y>=12;y--){const fall=Math.abs(y-56)/34;const d=vn3(x/44,y/22,z/44)*0.68+vn3(x/14+50,y/9,z/14)*0.32-fall*0.55;let id=0;
+      if(d>0.5){id=above===0?B.SKY_GRASS:above<3?B.SKY_DIRT:(h3(x,y,z)<0.012&&above>3?B.SKY_ORE:B.SKY_STONE);above++;}
+      else{above=0;if((y>=26&&y<=31)||(y>=78&&y<=82)){const c=vn3(x/26+9,y/5,z/26);if(c>0.74) id=c>0.86&&y<40?B.BCLOUD:h3(x,y,z+5)<0.08?B.GCLOUD:B.CLOUD;}}
+      data[IDX(lx,y,lz)]=id;}}
+  // 樹和水晶
+  for(let lz=2;lz<14;lz++)for(let lx=2;lx<14;lx++){const x=X0+lx,z=Z0+lz;const r=h2(x*5+3,z*7+1);if(r>0.03) continue;let y=H-7;while(y>12&&data[IDX(lx,y,lz)]!==B.SKY_GRASS) y--;if(y<=12) continue;
+    if(r<0.01){data[IDX(lx,y+1,lz)]=B.CRYSTAL;continue;}const th=4+Math.floor(h2(x,z)*3);for(let k=1;k<=th;k++) data[IDX(lx,y+k,lz)]=B.SKY_LOG;
+    for(let a=-2;a<=2;a++)for(let b=-2;b<=2;b++)for(let c=-1;c<=2;c++){if(Math.abs(a)+Math.abs(b)+Math.max(0,c)>3) continue;const i=IDX(lx+a,y+th+c,lz+b);if(!data[i]) data[i]=B.SKY_LEAVES;}}
+  return data;}
+
 // ================= 畫面、玩家、操作、物理 =================
 const canvas=$('#c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:!isTouch,powerPreference:'high-performance'});
@@ -854,6 +944,8 @@ function physics(dt,mx,mz,jump){const fly=P.fly&&W.mode==='creative';const inW=B
   else if(P.wasInW&&jump&&P.hitWall){P.vy=Math.max(P.vy,7.5);}
   else{P.vy-=28*dt;if(P.vy<-55) P.vy=-55;if(jump&&P.onGround){P.vy=8.9;P.onGround=false;P.exh+=P.sprint?0.2:0.05;}}
   const web=getB(P.x,P.y+0.2,P.z)===B.COBWEB||getB(P.x,P.y+1.2,P.z)===B.COBWEB;if(web){P.vy=clamp(P.vy,-1,1);P.fallStart=null;}
+  const cl=BL[getB(P.x,P.y+0.1,P.z)].cloud||BL[getB(P.x,P.y-0.2,P.z)].cloud;if(cl&&!fly){P.fallStart=null;P.vy=Math.max(P.vy,jump?3:-1.4);}
+  if(getB(P.x,P.y-0.1,P.z)===B.BCLOUD&&P.vy<=0.1&&!P.sneak){P.vy=15;P.fallStart=null;playSnd('squish',0.5);}
   const slow=(inW?0.5:1)*(feetBlock()===B.SOUL_SAND?0.45:1)*(web?0.15:1);
   // x
   P.wasInW=inW;P.hitWall=false;const step=(x,z)=>{if(!(P.onGround||P.inWater)||fly) return false;for(let l=0.0625;l<=0.61;l+=0.0625){if(!collides(x,P.y+l,z)){P.y+=l;return true;}}return false;};
@@ -864,7 +956,8 @@ function physics(dt,mx,mz,jump){const fly=P.fly&&W.mode==='creative';const inW=B
   let ny=P.y+P.vy*dt;const wasG=P.onGround;
   if(!collides(P.x,ny,P.z)){P.y=ny;P.onGround=false;}else{if(P.vy<0){P.onGround=true;let top=-1;const by=Math.floor(ny);for(let bx=Math.floor(P.x-PW);bx<=Math.floor(P.x+PW);bx++)for(let bz=Math.floor(P.z-PW);bz<=Math.floor(P.z+PW);bz++){const hh=blockBox(getB(bx,by,bz));if(hh&&by+hh>top) top=by+hh;}P.y=top>=0&&top<=P.y+0.001?top:Math.ceil(ny-0.001);let k=0;while(collides(P.x,P.y,P.z)&&k++<8) P.y+=0.0625;}P.vy=0;}
   if(!P.onGround&&!fly&&!inW){if(P.fallStart===null||P.y>P.fallStart) P.fallStart=P.y;}
-  if((P.onGround||inW||fly)&&P.fallStart!==null){const d=P.fallStart-P.y;P.fallStart=null;if(!inW&&!fly&&d>3.4&&W.mode==='survival'){let dmg=Math.floor(d-3);const ff=P.armor[3]&&P.armor[3].ench&&P.armor[3].ench.feather;if(ff) dmg=Math.max(0,Math.round(dmg*(1-ff*0.12)));if(dmg>0) hurt(dmg,'摔死了',true);}}
+  if((P.onGround||inW||fly)&&P.fallStart!==null){const d=P.fallStart-P.y;P.fallStart=null;if(P.skyDrop){P.skyDrop=false;}else if(!inW&&!fly&&d>3.4&&W.mode==='survival'){let dmg=Math.floor(d-3);const ff=P.armor[3]&&P.armor[3].ench&&P.armor[3].ench.feather;if(ff) dmg=Math.max(0,Math.round(dmg*(1-ff*0.12)));if(dmg>0) hurt(dmg,'摔死了',true);}}
+  if(W.dim==='sky'&&P.y<4&&!P.dead){switchDim('over',true);P.y=H-3;P.vy=0;P.skyDrop=true;P.fallStart=null;toast('你從天空島掉回主世界了！');return;}
   if(P.y<-30) hurt(4,'掉出了世界',true);}
 const autoStep=false;
 function solidUnder(x,y,z){for(const [a,b] of [[-PW,-PW],[PW,-PW],[-PW,PW],[PW,PW]]) if(BL[getB(x+a,y-0.1,z+b)].solid) return true;return false;}
@@ -1050,7 +1143,7 @@ function clickSlot(c,i,btn,shift){
 function putInto(arr,from,to,s){const ms=maxStack(s.id);if(ms>1) for(let i=from;i<to&&s.n;i++){const t=arr[i];if(sameStack(t,s)&&t.n<ms){const k=Math.min(s.n,ms-t.n);t.n+=k;s.n-=k;}}for(let i=from;i<to&&s.n;i++) if(!arr[i]){arr[i]={...s};s.n=0;}return s.n;}
 function quickMove(c,i){const s=slotGet(c,i);if(!s) return;let left;
   if(c==='inv'){const k=UI.kind;
-    if(k==='chest'){left=putInto(W.cont[UI.key],0,27,s);netCont(UI.key);}
+    if(k==='chest'||k==='hopper'){left=putInto(W.cont[UI.key],0,W.cont[UI.key].length,s);netCont(UI.key);}
     else if(k==='bag'&&!DEF(s.id).bag){left=putInto(UI.bag,0,UI.bag.length,s);}
     else if(k==='furnace'){const f=W.furn[UI.key];const tgt=SMELT[s.id]?'in':fuelOf(s.id)?'fuel':null;left=s.n;if(tgt){if(!f[tgt]){f[tgt]={...s};left=0;}else if(sameStack(f[tgt],s)){const k2=Math.min(s.n,64-f[tgt].n);f[tgt].n+=k2;left=s.n-k2;}netFurn(UI.key);}}
     else if(DEF(s.id).armor&&!P.armor[DEF(s.id).armor.slot]){P.armor[DEF(s.id).armor.slot]={...s};left=0;}
@@ -1064,7 +1157,7 @@ function craftTake(shift){const w=UI.kind==='table'?3:2;let r=matchRecipe(UI.cg,
   playSnd('click');}
 function craftHTML(w){const r=matchRecipe(UI.cg,w);return `<div class="mc-craft"><div class="mc-grid g${w}">${UI.cg.map((s,k)=>slotHTML(s,'cg',k)).join('')}</div><span class="mc-arrow"></span>${slotHTML(r?{id:r.out,n:r.n}:null,'co',0,'out')}</div>`;}
 function invGrid(){return `<div class="mc-lab">物品欄</div><div class="mc-grid g9">${P.inv.slice(9).map((s,k)=>slotHTML(s,'inv',k+9)).join('')}</div><div class="mc-grid g9 hot">${P.inv.slice(0,9).map((s,k)=>slotHTML(s,'inv',k)).join('')}</div>`;}
-const CTABS=[['方塊',()=>BL.filter(b=>b.id&&!['WATER','LAVA','PORTAL','FURNACE_ON','LEVER_ON','WIRE','WIRE_ON','LAMP_ON','DOOR_OPEN','BEDROCK','FARMLAND'].includes(b.key)&&!/^(WHEAT|CARROT|POTATO|BEET)/.test(b.key)).map(b=>b.id)],
+const CTABS=[['方塊',()=>BL.filter(b=>b.id&&!['WATER','LAVA','PORTAL','FURNACE_ON','LEVER_ON','WIRE','WIRE_ON','LAMP_ON','DOOR_OPEN','BEDROCK','FARMLAND','PISTON_HEAD','SKY_PORTAL'].includes(b.key)&&!/^(WHEAT|CARROT|POTATO|BEET)/.test(b.key)).map(b=>b.id)],
   ['工具戰鬥',()=>Object.keys(IT).filter(k=>/^(T_|A_)/.test(k)||['I_BOW','I_ARROW','I_FLINTSTEEL','I_SHEARS','I_BUCKET','I_WBUCKET','I_LBUCKET'].includes(k)).map(k=>IT[k])],
   ['材料食物',()=>Object.keys(IT).filter(k=>!/^(T_|A_)/.test(k)&&!['I_BOW','I_ARROW','I_FLINTSTEEL','I_SHEARS','I_BUCKET','I_WBUCKET','I_LBUCKET'].includes(k)).map(k=>IT[k])]];
 function recipeBook(w){const seen=new Set(),list=[];for(const r of RECIPES){if(r.mod&&!SET[r.mod]) continue;if(seen.has(r.out)) continue;if(!r.shapeless&&(r.rows.length>w||Math.max(...r.rows.map(x=>x.length))>w)) continue;if(r.shapeless&&r.shapeless.length>w*w) continue;seen.add(r.out);list.push(r);}
@@ -1087,11 +1180,12 @@ function renderUI(){if(!UI.kind) return;const k=UI.kind;let h='';
   else if(k==='creative'){const ids=CTABS[UI.ctab][1]();h+=`<div class="tabs">${CTABS.map(([n],i)=>`<button class="tab" data-ct="${i}" aria-pressed="${i===UI.ctab}">${n}</button>`).join('')}<button class="tab" data-ct="inv">生存物品欄</button></div><div class="mc-grid g9 pal">${ids.map(id=>`<div class="sl" data-c="cr" data-i="${id}" data-tip="${nameOf(id)}">${icHTML(id)}</div>`).join('')}</div><div class="mc-row"><div class="sl trash" data-c="trash" data-i="0">🗑</div></div>`;}
   else if(k==='furnace'){const f=W.furn[UI.key];h+=`<div class="mc-lab">熔爐</div><div class="mc-furn"><div class="fcol">${slotHTML(f.in,'fi',0)}<div class="mc-fire"><i style="height:${f.burn>0&&f.in?Math.round(f.burn/(f.burnMax||1)*100):0}%"></i></div>${slotHTML(f.fuel,'ff',0)}</div><span class="mc-arrow big"><i style="width:${Math.round((f.prog||0)/10*100)}%"></i></span>${slotHTML(f.out,'fo',0,'out')}</div>`;}
   else if(k==='bag') h+=`<div class="mc-lab">${nameOf(UI.bagItem.id)}</div><div class="mc-grid g9">${UI.bag.map((s,i)=>slotHTML(s,'bp',i)).join('')}</div>`;
+  else if(k==='hopper') h+=`<div class="mc-lab">漏斗（上面的箱子、掉在上面的東西會被吸進來，再送到下面或旁邊的箱子、熔爐）</div><div class="mc-grid g9" style="grid-template-columns:repeat(5,40px)">${W.cont[UI.key].map((s,i)=>slotHTML(s,'ch',i)).join('')}</div>`;
   else if(k==='chest') h+=`<div class="mc-lab">箱子</div><div class="mc-grid g9">${W.cont[UI.key].map((s,i)=>slotHTML(s,'ch',i)).join('')}</div>`;
   else if(k==='ench') h+=enchHTML();else if(k==='anvil') h+=anvilHTML();
   else if(k==='trade'){const T3=TRADES[UI.trade.prof]||TRADES[0];h+=`<div class="mc-lab">${PROFS[UI.trade.prof][0]}想跟你交易：</div><div class="trades">${T3.map((t,i)=>{const g=tid(t[0]),o=tid(t[2]);const can=W.mode==='creative'||countItem(g)>=t[1];
     return `<button class="trd ${can?'':'no'}" data-tr="${i}"><span class="ti">${icHTML(g,28)}<b>${t[1]}</b></span><small>${nameOf(g)}</small><span class="tarr">➜</span><span class="ti">${icHTML(o,28)}${t[3]>1?`<b>${t[3]}</b>`:''}</span><small>${nameOf(o)}</small></button>`;}).join('')}</div><p class="muted">點一下就交易。綠寶石可以挖礦（山裡）或賣東西給村民賺。</p>`;}
-  h+=invGrid();$('#mcBody').innerHTML=h;$('#mcTitle').textContent={inv:'物品欄',table:'工作台',furnace:'熔爐',chest:'箱子',creative:'創造模式物品',ench:'附魔台',anvil:'鐵砧',trade:'村民交易',bag:'背包'}[k];
+  h+=invGrid();$('#mcBody').innerHTML=h;$('#mcTitle').textContent={inv:'物品欄',table:'工作台',furnace:'熔爐',chest:'箱子',creative:'創造模式物品',ench:'附魔台',anvil:'鐵砧',trade:'村民交易',bag:'背包',hopper:'漏斗'}[k];
   const dl=$('#mcDoll');if(dl) dl.appendChild(dollCanvas());renderCursor();$('#mcTip').hidden=true;}
 function renderCursor(e){const el=$('#mcCursor');if(!UI.cursor){el.hidden=true;return;}el.hidden=false;el.innerHTML=icHTML(UI.cursor.id)+(UI.cursor.n>1?`<b>${UI.cursor.n}</b>`:'');if(e){el.style.left=(e.clientX-16)+'px';el.style.top=(e.clientY-16)+'px';}}
 addEventListener('pointermove',e=>{if(UI.kind&&UI.cursor){const el=$('#mcCursor');el.style.left=(e.clientX-16)+'px';el.style.top=(e.clientY-16)+'px';}const t=$('#mcTip');if(t&&!t.hidden){t.style.left=Math.min(innerWidth-t.offsetWidth-4,e.clientX+14)+'px';t.style.top=Math.max(4,e.clientY-34)+'px';}});
@@ -1117,7 +1211,7 @@ function ensureLoot(key){if(W.cont[key]) return;const [dim,pos]=key.split(':');c
   for(let k=0;k<n;k++){let q=r()*tot;let p2=pool[0];for(const p of pool){q-=p[3];if(q<=0){p2=p;break;}}const id=tid(p2[0]);const cnt=p2[1]+Math.floor(r()*(p2[2]-p2[1]+1));
     let slot=Math.floor(r()*27);while(inv[slot]) slot=(slot+1)%27;inv[slot]={id,n:cnt};if(id===IT.I_EBOOK){const ks=Object.keys(ENCH);const kk=ks[Math.floor(r()*ks.length)];inv[slot].ench={[kk]:1+Math.floor(r()*ENCH[kk].max)};}}
   W.cont[key]=inv;if(typeof netCont==='function') netCont(key);}
-function openUI(kind,key){if(kind==='chest') ensureLoot(key);if(kind==='chest'&&!W.cont[key]) W.cont[key]=Array(27).fill(null);if(kind==='furnace'&&!W.furn[key]) W.furn[key]={in:null,fuel:null,out:null,burn:0,prog:0};
+function openUI(kind,key){if(kind==='chest') ensureLoot(key);if(kind==='hopper'&&!W.cont[key]) W.cont[key]=Array(5).fill(null);if(kind==='chest'&&!W.cont[key]) W.cont[key]=Array(27).fill(null);if(kind==='furnace'&&!W.furn[key]) W.furn[key]={in:null,fuel:null,out:null,burn:0,prog:0};
   UI.kind=kind;UI.key=key;UI.cg=Array(kind==='table'?9:4).fill(null);if(kind==='ench') UI.ench={item:null,lapis:null,opts:null};if(kind==='anvil') UI.anvil=[null,null];
   uiOpen=kind;if(document.pointerLockElement) document.exitPointerLock();$('#mcui').hidden=false;$('#mcOne').hidden=!isTouch;renderUI();for(const k in keys) keys[k]=false;M.left=false;}
 function closeUI(){if(!UI.kind) return;for(const s of UI.cg||[]) if(s) addOrDrop(s);UI.cg=null;if(UI.ench){for(const s of [UI.ench.item,UI.ench.lapis]) if(s) addOrDrop(s);UI.ench=null;}if(UI.anvil){for(const s of UI.anvil) if(s) addOrDrop(s);UI.anvil=null;}
@@ -1260,7 +1354,7 @@ const MOBS={
       ...[0,1,2,3].flatMap(k=>[['sL'+k,[16,2,2],[-9,9,-3+k*3],'#1a1410'],['sR'+k,[16,2,2],[9,9,-3+k*3],'#1a1410']])]},
   boomer:{n:'蘑菇炸彈',hp:20,w:0.3,h:1.6,sp:1.4,hostile:true,boom:true,drops:[['I_POWDER',0,2]],xp:[5,5],snd:'hiss',
     parts:[['body',[8,12,6],[0,10,0],'#e8dcc0','boomer'],['cap',[14,6,14],[0,19,0],'#d02a2a'],['cap2',[10,2,10],[0,23,0],'#d02a2a'],['dot1',[3,1,3],[-3,22.6,-3],'#fff'],['dot2',[3,1,3],[4,22.6,2],'#fff'],['dot3',[2,1,2],[-2,24.1,3],'#fff'],['l0',[3,4,3],[-2.5,2,-2],'#c8b890'],['l1',[3,4,3],[2.5,2,-2],'#c8b890'],['l2',[3,4,3],[-2.5,2,2],'#c8b890'],['l3',[3,4,3],[2.5,2,2],'#c8b890']]},
-  slime:{n:'史萊姆',hp:8,w:0.5,h:1,sp:1.6,hostile:true,dmg:2,hop:true,split:true,drops:[],xp:[1,4],snd:'squish',
+  slime:{n:'史萊姆',hp:8,w:0.5,h:1,sp:1.6,hostile:true,dmg:2,hop:true,split:true,drops:[['I_SLIMEBALL',0,2]],xp:[1,4],snd:'squish',
     parts:[['outer',[16,16,16],[0,8,0],'rgba(110,200,90,0.6)'],['inner',[10,10,10],[0,6,0],'#4a9a3a'],['face',[12,12,0.2],[0,9,8.1],'#000','slime']]},
   magma:{n:'岩漿怪',hp:8,w:0.5,h:1,sp:1.8,hostile:true,dmg:3,hop:true,split:true,nether:true,fireproof:true,drops:[['I_POWDER',0,1]],xp:[1,4],snd:'squish',
     parts:[['outer',[16,16,16],[0,8,0],MAGTEX,'magma']]},
@@ -1269,6 +1363,10 @@ const MOBS={
   villager:{n:'村民',hp:20,w:0.3,h:1.95,sp:1.0,pass:true,villager:true,drops:[],xp:[0,0],snd:'hmm',parts:[]},
   rabbit:{n:'兔子',hp:3,w:0.2,h:0.5,sp:2.4,pass:true,food:'I_SEEDS',hopper:true,drops:[['I_LEATHER',0,1]],xp:[1,3],snd:'squeak',
     parts:[['body',[5,5,7],[0,4,0],'#a88a6a'],['head',[5,5,5],[0,7,4],'#a88a6a','rabbit'],['eL',[1,5,2],[-1.5,12,4],'#a88a6a'],['eR',[1,5,2],[1.5,12,4],'#a88a6a'],['tail',[2,2,2],[0,5,-4],'#f0f0f0'],['l0',[2,2,4],[-2,1,-2],'#987a5a'],['l1',[2,2,4],[2,1,-2],'#987a5a']]},
+  cloudsheep:{n:'雲朵羊',hp:8,w:0.45,h:1.3,sp:1.0,pass:true,food:'I_WHEAT',drops:[['I_MUTTON',1,2],['I_STRING',0,2]],xp:[1,3],snd:'baa',sky:true,
+    parts:[['body',[12,11,16],[0,17,0],'#e8f4ff'],['puff',[14,6,12],[0,23,0],'#ffffff'],['head',[6,6,8],[0,22,10],'#a8c8e8','sheep'],['l0',[4,12,4],[-3,6,-5],'#c8d8f0'],['l1',[4,12,4],[3,6,-5],'#c8d8f0'],['l2',[4,12,4],[-3,6,5],'#c8d8f0'],['l3',[4,12,4],[3,6,5],'#c8d8f0']]},
+  skybird:{n:'天空鳥',hp:10,w:0.35,h:1.0,sp:2.2,pass:true,fly:true,drops:[['I_FEATHER',1,3]],xp:[1,3],snd:'cluck',sky:true,
+    parts:[['body',[6,6,10],[0,9,0],'#f8d070'],['head',[5,5,5],[0,13,6],'#f8e090','chicken'],['wL',[10,2,6],[-8,10,0],'#e8b040'],['wR',[10,2,6],[8,10,0],'#e8b040'],['tail',[4,2,6],[0,10,-7],'#d89830']]},
   zpig:{n:'豬靈守衛',hp:20,w:0.3,h:1.9,sp:1.7,neutral:true,dmg:5,nether:true,fireproof:true,drops:[['I_FLESH',0,1],['I_GOLD',0,1,0.3]],xp:[5,5],snd:'grunt',
     parts:[['body',[8,12,4],[0,18,0],'#8a6a4a'],['head',[8,8,8],[0,28,0],'#e89a9a','zpig'],['aL',[4,12,4],[-6,18,0],'#e89a9a'],['aR',[4,4,12],[6,22,5],'#e89a9a'],['sw',[1,2,12],[6,22,13],'#f0d040'],['l0',[4,12,4],[-2,6,0],'#5a4a3a'],['l1',[4,12,4],[2,6,0],'#5a4a3a']]},
 };
@@ -1414,6 +1512,7 @@ function spawnTick(dt){spawnerT-=dt;if(spawnerT<=0){spawnerT=2;spawnerTick();}sp
   for(const p of PL){const dim=p.dim;const nearM=all.filter(m=>m.dim===dim&&Math.hypot(m.x-p.x,m.z-p.z)<64);const host=nearM.filter(m=>MOBS[m.type].hostile).length,pass=nearM.filter(m=>MOBS[m.type].pass).length;
     if(dim!==W.dim) continue;// 只在主機所在的維度生成（主機才有那裡的地形）
     const ang=rand(0,6.28),dist=rand(22,44);const x=Math.floor(p.x+Math.cos(ang)*dist),z=Math.floor(p.z+Math.sin(ang)*dist);if(!getChunk(x>>4,z>>4,false)) continue;
+    if(dim==='sky'){if(pass>=12||Math.random()>0.35) continue;const sy=surfaceY(x,z);if(getB(x,sy-1,z)!==B.SKY_GRASS) continue;const tp=Math.random()<0.6?'cloudsheep':'skybird';for(let k=0;k<irand(1,3);k++) spawnMob(tp,x+rand(-1.5,1.5)+0.5,sy+(tp==='skybird'?2:0.1),z+rand(-1.5,1.5)+0.5,{dim});continue;}
     if(dim==='nether'){if(host>=8||W.diff===0) continue;for(let k=0;k<6;k++){const y=irand(12,100);if(getB(x,y,z)===0&&getB(x,y+1,z)===0&&BL[getB(x,y-1,z)].solid){const tp=Math.random()<0.3?'jelly':Math.random()<0.5?'magma':'zpig';if(tp==='jelly'&&(getB(x,y+2,z)||getB(x,y+3,z))) continue;spawnMob(tp,x+0.5,y,z+0.5,{dim});break;}}continue;}
     const sy=surfaceY(x,z);const top=getB(x,sy-1,z);const bio=biomeAt(x,z);
     const vil=villageNear(p.x,p.z,90);if(vil){const nv=all.filter(m=>m.type==='villager'&&Math.hypot(m.x-vil.x,m.z-vil.z)<60).length;if(nv<Math.min(10,vil.houses+3)){const vx=vil.x+irand(-6,6),vz=vil.z+irand(-6,6);const vy=surfaceY(vx,vz);if(getChunk(vx>>4,vz>>4,false)&&!getB(vx,vy,vz)) spawnMob('villager',vx+0.5,vy,vz+0.5,{dim,home:[vil.x,vil.z]});}}
@@ -1476,7 +1575,7 @@ function rayMob(maxD){const o=eyePos(),d=lookDir();let best=null,bd=maxD;for(con
   let t0=0,t1=bd;const mn=[m.x-r,m.y,m.z-r],mx=[m.x+r,m.y+m.h,m.z+r],oo=[o.x,o.y,o.z],dd=[d.x,d.y,d.z];let ok=true;
   for(let k=0;k<3;k++){if(Math.abs(dd[k])<1e-6){if(oo[k]<mn[k]||oo[k]>mx[k]){ok=false;break;}continue;}let a=(mn[k]-oo[k])/dd[k],b=(mx[k]-oo[k])/dd[k];if(a>b)[a,b]=[b,a];t0=Math.max(t0,a);t1=Math.min(t1,b);if(t0>t1){ok=false;break;}}
   if(ok&&t0<bd){bd=t0;best=m;}}return best?{m:best,t:bd}:null;}
-function attackEntity(){if(P.dead) return false;const hit=rayMob(3.2);if(!hit) return false;const blk=AIM.id?AIM.t:99;if(blk<hit.t) return false;const m=hit.m;const s=held();const d=s&&DEF(s.id);
+function attackEntity(){if(P.dead) return false;if(typeof vehHit==='function'&&vehHit()) return true;const hit=rayMob(3.2);if(!hit) return false;const blk=AIM.id?AIM.t:99;if(blk<hit.t) return false;const m=hit.m;const s=held();const d=s&&DEF(s.id);
   const cd=Math.min(1,(performance.now()-(P.lastAtk||0))/625);P.lastAtk=performance.now();let dmg=(d&&d.tool?d.tool.dmg:1);if(s&&s.ench&&s.ench.sharp) dmg+=0.5*s.ench.sharp+0.5;dmg*=0.2+cd*cd*0.8;
   const crit=P.vy<-0.5&&!P.onGround&&cd>0.85;if(crit){dmg*=1.5;puff(m.x,m.y+m.h*0.7,m.z,0xffffff,6);}
   const dir=lookDir();const kb=(P.sprint?9:5)+(s&&s.ench&&s.ench.kb?s.ench.kb*5:0);const src={by:myId(),kx:dir.x*kb*0.6,kz:dir.z*kb*0.6,fire:s&&s.ench&&s.ench.fire||0};
@@ -1485,16 +1584,18 @@ function attackEntity(){if(P.dead) return false;const hit=rayMob(3.2);if(!hit) r
   if(d&&d.tool&&['sword','axe'].includes(d.tool.type)) useTool(s);else if(d&&d.tool) useTool(s,2);P.exh+=0.1;armSwing();if(P.sprint) P.sprint=false;return true;}
 // ---- 右鍵使用 ----
 const USE={eat:0,bow:0,mode:null};
-function useItem(){if(P.dead||uiOpen) return;const s=held();const d=s&&DEF(s.id);armSwing(true);
+function useItem(){if(P.dead||uiOpen) return;if(typeof vehUse==='function'&&vehUse()) return;const s=held();const d=s&&DEF(s.id);armSwing(true);
   // 生物互動
   const hm=rayMob(3.5);if(hm&&(!AIM.id||hm.t<AIM.t)){if(mobUse(hm.m,s)) return;}
   // 方塊互動
   const h=AIM;if(h.id&&!P.sneak){const b=BL[h.id];
     if(b.use){const key=W.dim+':'+h.x+','+h.y+','+h.z;if(b.use==='bed'){useBed(h);return;}openUI(b.use,key);playSnd(b.use==='chest'?'chest':'click');return;}
+    if(b.mach==='drill'&&typeof drillUse==='function'){drillUse(h,s);return;}
     if(b.rs&&typeof rsUse==='function'&&rsUse(h.x,h.y,h.z,h.id)) return;
     if(b.tnt&&s&&(s.id===IT.I_FLINTSTEEL)){igniteTNT(h.x,h.y,h.z);useTool(s);return;}}
   if(!s) return;
   if(d.bag){openBag(s);return;}
+  if(d.vehicle){if(typeof placeVehicle==='function'&&placeVehicle(d.vehicle,h)){consumeHeld(1);}return;}
   if(d.plantB&&h.id===B.FARMLAND&&!getB(h.x,h.y+1,h.z)){setB(h.x,h.y+1,h.z,B[d.plantB]);consumeHeld(1);playSnd('grass');return;}
   if(d.rod){castRod(s);return;}
   if(d.spy){USE.mode='spy';return;}
@@ -1506,6 +1607,7 @@ function useItem(){if(P.dead||uiOpen) return;const s=held();const d=s&&DEF(s.id)
   if(s.id===IT.I_BUCKET){const r=rayCast(eyePos(),lookDir(),5,{liquid:true});if(r.id===B.WATER||r.id===B.LAVA){setB(r.x,r.y,r.z,0);const full=r.id===B.WATER?IT.I_WBUCKET:IT.I_LBUCKET;playSnd('splash');if(W.mode==='creative') return;if(s.n===1) P.inv[P.sel]={id:full,n:1};else{s.n--;if(addItem(full,1)) spawnDrop(full,1,P.x,P.y+1,P.z);}renderHotbar();}return;}
   if(!h.id) return;
   const tx=h.x+h.nx,ty=h.y+h.ny,tz=h.z+h.nz;
+  if(s.id===IT.I_WBUCKET&&tryPortal(tx,ty,tz,'sky')){if(W.mode!=='creative'){P.inv[P.sel]={id:IT.I_BUCKET,n:1};renderHotbar();}playSnd('portal');return;}
   if(s.id===IT.I_WBUCKET||s.id===IT.I_LBUCKET){if(placeOK(tx,ty,tz,true)){if(W.dim==='nether'&&s.id===IT.I_WBUCKET){puff(tx+0.5,ty+0.5,tz+0.5,0xffffff,8);playSnd('hiss');}else setB(tx,ty,tz,s.id===IT.I_WBUCKET?B.WATER:B.LAVA);if(W.mode!=='creative'){P.inv[P.sel]={id:IT.I_BUCKET,n:1};renderHotbar();}playSnd('splash');}return;}
   if(s.id===IT.I_FLINTSTEEL){if(typeof tryPortal==='function'&&tryPortal(tx,ty,tz)){useTool(s);playSnd('portal');return;}if(h.id===B.TNT){igniteTNT(h.x,h.y,h.z);useTool(s);}return;}
   if(d.tool&&d.tool.type==='hoe'){if((h.id===B.GRASS||h.id===B.DIRT)&&h.ny>=0&&!getB(h.x,h.y+1,h.z)){setB(h.x,h.y,h.z,B.FARMLAND);useTool(s);playSnd('grass');}return;}
@@ -1522,6 +1624,7 @@ function useItem(){if(P.dead||uiOpen) return;const s=held();const d=s&&DEF(s.id)
   if((BL[id].cross&&[B.SAPLING,B.FLOWER_R,B.FLOWER_Y,B.TALLGRASS,B.DEADBUSH].includes(id))&&![B.GRASS,B.DIRT,B.FARMLAND,B.SNOW_GRASS].includes(below)) return;
   if(id===B.SUGARCANE&&![B.GRASS,B.DIRT,B.SAND,B.SUGARCANE].includes(below)) return;if(id===B.CACTUS&&![B.SAND,B.CACTUS].includes(below)) return;
   if(id===B.DOOR){if(getB(px,py+1,pz)) return;setB(px,py+1,pz,B.DOOR);}
+  if(id===B.PISTON||id===B.STICKY_PISTON){const v=lookDir();const ax=Math.abs(v.x),ay=Math.abs(v.y),az=Math.abs(v.z);const f=ay>ax&&ay>az?(v.y>0?3:2):ax>az?(v.x>0?1:0):(v.z>0?5:4);const mk=W.dim+':'+px+','+py+','+pz;W.meta[mk]={f,ext:false};if(typeof netMeta==='function') netMeta(mk);}
   setB(px,py,pz,id);consumeHeld(1);playSnd(BL[id].snd||'stone',0.8);
   if(BL[id].fall) fallCheck(px,py,pz);
   if(id===B.TNT&&typeof rsPowered==='function'&&rsPowered(px,py,pz)) igniteTNT(px,py,pz);}
@@ -1666,14 +1769,16 @@ function bobTick(dt){const b=BOB;if(!b) return;const s=held();if(!s||!DEF(s.id).
 function throwSnow(v){const m=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.18,0.18),new THREE.MeshLambertMaterial({color:0xf8f8ff}));scene.add(m);const o=eyePos();ENTS.push({kind:'egg',snow:true,eid:EID++,x:o.x,y:o.y,z:o.z,vx:v.x*20,vy:v.y*20,vz:v.z*20,mesh:m,age:0,dim:W.dim});playSnd('bow',0.3);}
 
 // ================= 紅石、地獄傳送門、維度、世界隨機更新 =================
-const RS={set:{over:new Map(),nether:new Map()},dirty:[],busy:false,pulse:new Map(),plates:new Map(),t:0};
+const RS={set:{over:new Map(),nether:new Map(),sky:new Map()},mach:{over:new Map(),nether:new Map(),sky:new Map()},dirty:[],busy:false,pulse:new Map(),plates:new Map(),t:0};
 const pk=(x,y,z)=>x+','+y+','+z;const upk=k=>k.split(',').map(Number);
 const N6=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
-function rsRebuild(){for(const d of ['over','nether']){RS.set[d].clear();for(const [ck,m] of Object.entries(W.mods[d]||{})){const [cx,cz]=ck.split(',').map(Number);for(const [i,id] of Object.entries(m)){if(BL[id]&&(BL[id].rs||BL[id].tnt)){const n=+i;RS.set[d].set(pk(cx*16+(n&15),n>>8,cz*16+((n>>4)&15)),id);}}}}}
-function onBlockChanged(x,y,z,old,id,dim){dim=dim||W.dim;const k=pk(x,y,z);if(BL[id].rs||BL[id].tnt) RS.set[dim].set(k,id);else RS.set[dim].delete(k);
+function rsRebuild(){for(const d of ['over','nether','sky']){RS.set[d].clear();RS.mach[d].clear();for(const [ck,m] of Object.entries(W.mods[d]||{})){const [cx,cz]=ck.split(',').map(Number);for(const [i,id] of Object.entries(m)){const n=+i;if(BL[id]&&(BL[id].rs||BL[id].tnt)) RS.set[d].set(pk(cx*16+(n&15),n>>8,cz*16+((n>>4)&15)),id);if(BL[id]&&BL[id].mach) RS.mach[d].set(pk(cx*16+(n&15),n>>8,cz*16+((n>>4)&15)),id);}}}}
+function onBlockChanged(x,y,z,old,id,dim){dim=dim||W.dim;const k=pk(x,y,z);if(BL[id].rs||BL[id].tnt) RS.set[dim].set(k,id);else RS.set[dim].delete(k);if(BL[id].mach) RS.mach[dim].set(k,id);else RS.mach[dim].delete(k);
+  if((old===B.PISTON||old===B.STICKY_PISTON)&&id!==old&&!RS.busy){const mk=dim+':'+k;const m=W.meta[mk];if(m&&m.ext){const [dx,dy,dz]=N6[m.f];if(getB(x+dx,y+dy,z+dz,dim)===B.PISTON_HEAD) setB(x+dx,y+dy,z+dz,0,{local:true,dim});}delete W.meta[mk];}
+  if(old===B.PISTON_HEAD&&id===0&&!RS.busy){for(let f=0;f<6;f++){const [dx,dy,dz]=N6[f];const px=x-dx,py=y-dy,pz=z-dz;const pid=getB(px,py,pz,dim);const m=W.meta[dim+':'+pk(px,py,pz)];if((pid===B.PISTON||pid===B.STICKY_PISTON)&&m&&m.f===f&&m.ext) m.ext=false;}}
   if(dim!==W.dim) return;
   // 傳送門框被破壞
-  if((old===B.OBSIDIAN||old===B.PORTAL)&&id!==old) for(const [a,b,c] of N6) if(getB(x+a,y+b,z+c)===B.PORTAL) breakPortal(x+a,y+b,z+c);
+  if((old===B.OBSIDIAN||old===B.PORTAL||old===B.GLOWSTONE||old===B.SKY_PORTAL)&&id!==old) for(const [a,b,c] of N6){const q=getB(x+a,y+b,z+c);if(q===B.PORTAL||q===B.SKY_PORTAL) breakPortal(x+a,y+b,z+c,q);}
   // 水碰到熔岩變黑曜石
   if(id===B.WATER) for(const [a,b,c] of N6) if(getB(x+a,y+b,z+c)===B.LAVA) setB(x+a,y+b,z+c,B.OBSIDIAN,{local:true});
   if(id===B.LAVA) for(const [a,b,c] of N6) if(getB(x+a,y+b,z+c)===B.WATER){setB(x,y,z,B.OBSIDIAN,{local:true});break;}
@@ -1700,6 +1805,7 @@ function rsUpdate(){if(!RS.dirty.length) return;const set=RS.set[W.dim];const pt
     if(id===B.WIRE||id===B.WIRE_ON){const want=(pow.get(k)||0)>0?B.WIRE_ON:B.WIRE;if(want!==id) setB(x,y,z,want,{local:true});}
     else if(id===B.LAMP||id===B.LAMP_ON){const want=powered(x,y,z)?B.LAMP_ON:B.LAMP;if(want!==id) setB(x,y,z,want,{local:true});}
     else if(id===B.TNT){if(powered(x,y,z)&&isHost()){RS.busy=false;igniteTNT(x,y,z);RS.busy=true;}}
+    else if(id===B.PISTON||id===B.STICKY_PISTON){pistonUpdate(x,y,z,id,powered(x,y,z));}
     else if(id===B.DOOR||id===B.DOOR_OPEN){const below=getB(x,y-1,z);if(BL[below].door) continue;const p=powered(x,y,z)||powered(x,y+1,z);const st=RS.doorPow||(RS.doorPow=new Map());const was=st.get(W.dim+k);if(was===undefined){st.set(W.dim+k,p);continue;}if(was===p) continue;st.set(W.dim+k,p);
       const want=p?B.DOOR_OPEN:B.DOOR;if(want!==id){setB(x,y,z,want,{local:true});if(BL[getB(x,y+1,z)].door) setB(x,y+1,z,want,{local:true});playSnd('door',0.6);}}}
   RS.busy=false;}
@@ -1716,37 +1822,38 @@ function rsTick(dt){for(const [k,t] of RS.pulse){const n=t-dt;if(n<=0){RS.pulse.
     for(const [k,id] of RS.set[W.dim]){if(id!==B.PLATE) continue;const [x,y,z]=upk(k);const on=ents.some(([a,b,c])=>Math.floor(a)===x&&Math.floor(c)===z&&b>=y-0.05&&b<y+0.6);if(on!==!!RS.plates.get(k)){RS.plates.set(k,on);rsDirty(x,y,z);playSnd('click',0.5);}}}
   rsUpdate();}
 // ---- 地獄傳送門 ----
-function tryPortal(x,y,z){if(getB(x,y,z)!==0) return false;
+function tryPortal(x,y,z,kind){if(getB(x,y,z)!==0) return false;const FR=kind==='sky'?B.GLOWSTONE:B.OBSIDIAN,PT=kind==='sky'?B.SKY_PORTAL:B.PORTAL;
   for(const ax of ['x','z']){const d=ax==='x'?[1,0]:[0,1];
-    let y0=y;while(y0>y-22&&getB(x,y0-1,z)===0) y0--;if(getB(x,y0-1,z)!==B.OBSIDIAN) continue;
+    let y0=y;while(y0>y-22&&getB(x,y0-1,z)===0) y0--;if(getB(x,y0-1,z)!==FR) continue;
     let a0=0;while(a0>-22&&getB(x+d[0]*(a0-1),y0,z+d[1]*(a0-1))===0) a0--;let a1=0;while(a1<22&&getB(x+d[0]*(a1+1),y0,z+d[1]*(a1+1))===0) a1++;
-    const w=a1-a0+1;if(w<2||w>21) continue;if(getB(x+d[0]*(a0-1),y0,z+d[1]*(a0-1))!==B.OBSIDIAN||getB(x+d[0]*(a1+1),y0,z+d[1]*(a1+1))!==B.OBSIDIAN) continue;
+    const w=a1-a0+1;if(w<2||w>21) continue;if(getB(x+d[0]*(a0-1),y0,z+d[1]*(a0-1))!==FR||getB(x+d[0]*(a1+1),y0,z+d[1]*(a1+1))!==FR) continue;
     let h=0;while(h<22&&getB(x+d[0]*a0,y0+h,z+d[1]*a0)===0) h++;if(h<3||h>21) continue;
-    let ok=true;for(let i=a0;i<=a1&&ok;i++){const cx=x+d[0]*i,cz=z+d[1]*i;if(getB(cx,y0-1,cz)!==B.OBSIDIAN||getB(cx,y0+h,cz)!==B.OBSIDIAN) ok=false;for(let j=0;j<h&&ok;j++) if(getB(cx,y0+j,cz)!==0) ok=false;}
-    for(let j=0;j<h&&ok;j++){if(getB(x+d[0]*(a0-1),y0+j,z+d[1]*(a0-1))!==B.OBSIDIAN||getB(x+d[0]*(a1+1),y0+j,z+d[1]*(a1+1))!==B.OBSIDIAN) ok=false;}
+    let ok=true;for(let i=a0;i<=a1&&ok;i++){const cx=x+d[0]*i,cz=z+d[1]*i;if(getB(cx,y0-1,cz)!==FR||getB(cx,y0+h,cz)!==FR) ok=false;for(let j=0;j<h&&ok;j++) if(getB(cx,y0+j,cz)!==0) ok=false;}
+    for(let j=0;j<h&&ok;j++){if(getB(x+d[0]*(a0-1),y0+j,z+d[1]*(a0-1))!==FR||getB(x+d[0]*(a1+1),y0+j,z+d[1]*(a1+1))!==FR) ok=false;}
     if(!ok) continue;
-    for(let i=a0;i<=a1;i++)for(let j=0;j<h;j++) setB(x+d[0]*i,y0+j,z+d[1]*i,B.PORTAL);toast('傳送門開啟了！走進去等幾秒就會被傳送');return true;}
+    for(let i=a0;i<=a1;i++)for(let j=0;j<h;j++) setB(x+d[0]*i,y0+j,z+d[1]*i,PT);toast(kind==='sky'?'天空傳送門開啟了！走進去就會到天空島':'傳送門開啟了！走進去等幾秒就會被傳送');return true;}
   return false;}
-function breakPortal(x,y,z){const q=[[x,y,z]];let n=0;while(q.length&&n++<500){const [a,b,c]=q.pop();if(getB(a,b,c)!==B.PORTAL) continue;setB(a,b,c,0,{local:true});for(const [i,j,k] of N6) q.push([a+i,b+j,c+k]);}}
-function findPortal(x,z,r){const cx0=Math.floor(x)>>4,cz0=Math.floor(z)>>4;let best=null,bd=1e9;
-  for(let a=-2;a<=2;a++)for(let b=-2;b<=2;b++){const c=getChunk(cx0+a,cz0+b,true);if(!c) continue;for(let i=0;i<c.data.length;i++){if(c.data[i]!==B.PORTAL) continue;const lx=i&15,lz=(i>>4)&15,y=i>>8;
-    const px=c.cx*16+lx,pz=c.cz*16+lz;if(getB(px,y-1,pz)!==B.PORTAL){const d=Math.hypot(px-x,pz-z);if(d<bd&&d<r){bd=d;best=[px,y,pz];}}}}return best;}
-function buildPortal(x,z){x=Math.floor(x);z=Math.floor(z);let y=null;
+function breakPortal(x,y,z,pid){pid=pid||B.PORTAL;const q=[[x,y,z]];let n=0;while(q.length&&n++<500){const [a,b,c]=q.pop();if(getB(a,b,c)!==pid) continue;setB(a,b,c,0,{local:true});for(const [i,j,k] of N6) q.push([a+i,b+j,c+k]);}}
+function findPortal(x,z,r,pid){pid=pid||B.PORTAL;const cx0=Math.floor(x)>>4,cz0=Math.floor(z)>>4;let best=null,bd=1e9;
+  for(let a=-2;a<=2;a++)for(let b=-2;b<=2;b++){const c=getChunk(cx0+a,cz0+b,true);if(!c) continue;for(let i=0;i<c.data.length;i++){if(c.data[i]!==pid) continue;const lx=i&15,lz=(i>>4)&15,y=i>>8;
+    const px=c.cx*16+lx,pz=c.cz*16+lz;if(getB(px,y-1,pz)!==pid){const d=Math.hypot(px-x,pz-z);if(d<bd&&d<r){bd=d;best=[px,y,pz];}}}}return best;}
+function buildPortal(x,z,kind){x=Math.floor(x);z=Math.floor(z);let y=null;const FR=kind==='sky'?B.GLOWSTONE:B.OBSIDIAN,PT=kind==='sky'?B.SKY_PORTAL:B.PORTAL;
+  if(W.dim==='sky'){y=60;for(let a=-3;a<=5;a++)for(let b=-3;b<=3;b++){setB(x+a,y-1,z+b,B.SKY_STONE);for(let j=0;j<5;j++) setB(x+a,y+j,z+b,0);}}else 
   if(W.dim==='nether'){for(let yy=32;yy<H-8;yy++){let ok=true;for(let a=-1;a<=3&&ok;a++)for(let j=0;j<5&&ok;j++) if(BL[getB(x+a,yy+j,z)].solid||getB(x+a,yy+j,z)===B.LAVA) ok=false;if(ok){y=yy;break;}}if(y===null) y=64;}
   else{y=surfaceY(x,z);if(y<SEA+1) y=SEA+1;}
   // 平台＋清空
-  for(let a=-2;a<=4;a++)for(let b=-2;b<=2;b++){if(!BL[getB(x+a,y-1,z+b)].solid||getB(x+a,y-1,z+b)===B.LAVA) setB(x+a,y-1,z+b,W.dim==='nether'?B.OBSIDIAN:B.COBBLE);for(let j=0;j<5;j++) setB(x+a,y+j,z+b,0);}
-  for(let a=-1;a<=2;a++){setB(x+a,y-1,z,B.OBSIDIAN);setB(x+a,y+3,z,B.OBSIDIAN);}for(let j=0;j<3;j++){setB(x-1,y+j,z,B.OBSIDIAN);setB(x+2,y+j,z,B.OBSIDIAN);}
-  for(let a=0;a<=1;a++)for(let j=0;j<3;j++) setB(x+a,y+j,z,B.PORTAL);return [x,y,z];}
+  if(W.dim!=='sky') for(let a=-2;a<=4;a++)for(let b=-2;b<=2;b++){if(!BL[getB(x+a,y-1,z+b)].solid||getB(x+a,y-1,z+b)===B.LAVA) setB(x+a,y-1,z+b,W.dim==='nether'?B.OBSIDIAN:B.COBBLE);for(let j=0;j<5;j++) setB(x+a,y+j,z+b,0);}
+  for(let a=-1;a<=2;a++){setB(x+a,y-1,z,FR);setB(x+a,y+3,z,FR);}for(let j=0;j<3;j++){setB(x-1,y+j,z,FR);setB(x+2,y+j,z,FR);}
+  for(let a=0;a<=1;a++)for(let j=0;j<3;j++) setB(x+a,y+j,z,PT);return [x,y,z];}
 function switchDim(to,respawn){if(to===W.dim) return;const from=W.dim;clearMeshes(from);
   for(const e of ENTS){if(e.kind!=='mob') e.dead=true;else if(e.remote) e.dead=true;}
   W.dim=to;RS.dirty.length=0;
-  if(!respawn){let tx=P.x,tz=P.z;if(to==='nether'){tx/=8;tz/=8;}else{tx*=8;tz*=8;}
-    let p=findPortal(tx,tz,to==='nether'?16:96);if(!p) p=buildPortal(tx,tz);P.x=p[0]+0.5;P.y=p[1];P.z=p[2]+0.5;P.vy=0;P.portalCool=3;}
-  P.fallStart=null;scene.fog.near=to==='nether'?10:40;scene.fog.far=to==='nether'?60:RD*16;
-  if(typeof netDim==='function') netDim();toast(to==='nether'?'你進入了地獄':'你回到了主世界');playSnd('portal');}
-function portalTick(dt){if(P.dead) return;P.portalCool=Math.max(0,(P.portalCool||0)-dt);const inP=getB(P.x,P.y+0.5,P.z)===B.PORTAL||getB(P.x,P.y+1.4,P.z)===B.PORTAL;
-  if(inP&&P.portalCool<=0){P.portalT+=dt;$('#portalFx').style.opacity=Math.min(0.8,P.portalT/4);if(P.portalT>=(W.mode==='creative'?0.6:4)){P.portalT=0;$('#portalFx').style.opacity=0;switchDim(W.dim==='over'?'nether':'over');}}
+  if(!respawn){let tx=P.x,tz=P.z;const kind=(to==='sky'||from==='sky')?'sky':'nether';if(kind==='nether'){if(to==='nether'){tx/=8;tz/=8;}else{tx*=8;tz*=8;}}
+    const pid=kind==='sky'?B.SKY_PORTAL:B.PORTAL;let p=findPortal(tx,tz,to==='nether'?16:kind==='sky'?24:96,pid);if(!p) p=buildPortal(tx,tz,kind);P.x=p[0]+0.5;P.y=p[1];P.z=p[2]+0.5;P.vy=0;P.portalCool=3;}
+  P.fallStart=null;scene.fog.near=to==='nether'?10:40;scene.fog.far=to==='nether'?60:RD*16;W.meta=W.meta||{};
+  if(typeof netDim==='function') netDim();toast(to==='nether'?'你進入了地獄':to==='sky'?'你來到了天空島！小心別掉下去（掉下去會回到主世界）':'你回到了主世界');playSnd('portal');}
+function portalTick(dt){if(P.dead) return;P.portalCool=Math.max(0,(P.portalCool||0)-dt);const q1=getB(P.x,P.y+0.5,P.z),q2=getB(P.x,P.y+1.4,P.z);const pt=BL[q1].portal||BL[q2].portal;const inP=!!pt;
+  if(inP&&P.portalCool<=0){P.portalT+=dt;$('#portalFx').style.opacity=Math.min(0.8,P.portalT/4);if(P.portalT>=(W.mode==='creative'||pt==='sky'?0.8:4)){P.portalT=0;$('#portalFx').style.opacity=0;switchDim(pt==='sky'?(W.dim==='sky'?'over':'sky'):(W.dim==='nether'?'over':'nether'));}}
   else{P.portalT=Math.max(0,P.portalT-dt*2);$('#portalFx').style.opacity=Math.min(0.8,P.portalT/4);}}
 // ---- 世界隨機更新（作物、樹苗、甘蔗…）----
 let rtT=0;
@@ -1759,7 +1866,17 @@ function randomTicks(dt){rtT+=dt;if(rtT<0.1) return;rtT=0;const pcx=Math.floor(P
       else if(id===B.DIRT&&!getB(x,y+1,z)&&W.dim==='over'){for(const [i,,j] of N6) if(getB(x+i,y,z+j)===B.GRASS){setB(x,y,z,B.GRASS);break;}}
       else if(id===B.GRASS&&BL[getB(x,y+1,z)].solid&&!BL[getB(x,y+1,z)].cut) setB(x,y,z,B.DIRT);}}}
 
+// ---- 活塞 ----
+const IMMOVABLE=new Set();
+function movable(id){if(!IMMOVABLE.size) for(const k of ['BEDROCK','OBSIDIAN','PORTAL','SKY_PORTAL','PISTON_HEAD','CHEST','FURNACE','FURNACE_ON','HOPPER','ENCH','DRILL','HARVESTER','SPAWNER']) IMMOVABLE.add(B[k]);const b=BL[id];return !IMMOVABLE.has(id)&&b.h>=0;}
+function pistonUpdate(x,y,z,id,pow){const mk=W.dim+':'+pk(x,y,z);const m=W.meta[mk]||(W.meta[mk]={f:2,ext:false});const [dx,dy,dz]=N6[m.f];
+  if(pow&&!m.ext){const list=[];let cx=x+dx,cy=y+dy,cz=z+dz;for(let k=0;k<13;k++){const b=getB(cx,cy,cz);if(!b||BL[b].liquid||BL[b].replace||BL[b].cross&&b!==B.LANTERN&&b!==B.CRYSTAL){break;}if(!movable(b)||k===12){return;}list.push([cx,cy,cz,b]);cx+=dx;cy+=dy;cz+=dz;}
+    if(cy<1||cy>=H) return;for(let i=list.length-1;i>=0;i--){const [a,b,c,bid]=list[i];setB(a+dx,b+dy,c+dz,bid,{local:true});}setB(x+dx,y+dy,z+dz,B.PISTON_HEAD,{local:true});m.ext=true;playSnd('door',0.8);}
+  else if(!pow&&m.ext){if(getB(x+dx,y+dy,z+dz)===B.PISTON_HEAD) setB(x+dx,y+dy,z+dz,0,{local:true});m.ext=false;
+    if(id===B.STICKY_PISTON){const b=getB(x+2*dx,y+2*dy,z+2*dz);if(b&&movable(b)&&!BL[b].liquid){setB(x+dx,y+dy,z+dz,b,{local:true});setB(x+2*dx,y+2*dy,z+2*dz,0,{local:true});}}playSnd('door',0.6);}}
+
 // ================= 多人連線（房間代碼）=================
+const DIMS=['over','nether','sky'];
 const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:1};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
@@ -1786,7 +1903,7 @@ function hostRecv(o,from){const p=NET.peers.get(from);
   if(o.t==='join'){if(o.ver!==NET.ver){NET.conns.get(from).send({t:'kick',why:'遊戲版本不同，請用同一個檔案'});return;}
     let name=String(o.name||'玩家').slice(0,16);if(name===SET.name||[...NET.peers.values()].some(q=>q.name===name)) name+=from.slice(1);
     NET.peers.set(from,{name,color:o.color||'#3a6aa8',st:null,sleeping:false});const saved=W.pinv&&W.pinv[name];
-    NET.conns.get(from).send({t:'welcome',id:from,ver:NET.ver,seed:W.seed,wname:W.name,mode:W.mode,diff:W.diff,time:W.time,day:W.day,rain:WX.rain,mods:W.mods,cont:W.cont,furn:W.furn,spawn:W.spawn,host:{name:SET.name,color:P.color},
+    NET.conns.get(from).send({t:'welcome',id:from,ver:NET.ver,seed:W.seed,wname:W.name,mode:W.mode,diff:W.diff,time:W.time,day:W.day,rain:WX.rain,mods:W.mods,cont:W.cont,furn:W.furn,meta:W.meta,island:W.island,spawn:W.spawn,host:{name:SET.name,color:P.color},
       players:[...NET.peers].filter(([id])=>id!==from).map(([id,q])=>({id,name:q.name,color:q.color,st:q.st})),saved});
     hostBcast({t:'pjoin',id:from,name,color:o.color},from);toast(`${name} 加入了遊戲`);netUI();return;}
   if(!p) return;
@@ -1833,9 +1950,10 @@ function clientRecv(o){switch(o.t){
   default:commonRecv(o,o.from||'H');}}
 // ---- 雙方都會收到的 ----
 function commonRecv(o,from){switch(o.t){
-  case 'sets':{const a=o.a;for(let i=0;i<a.length;i+=5){const dim=a[i+4]?'nether':'over';if(dim===W.dim||W.chunks[dim].size) setB(a[i],a[i+1],a[i+2],a[i+3],{local:true,dim});else{const ck=CK(a[i]>>4,a[i+2]>>4);(W.mods[dim][ck]||(W.mods[dim][ck]={}))[IDX(a[i]&15,a[i+1],a[i+2]&15)]=a[i+3];}
+  case 'sets':{const a=o.a;for(let i=0;i<a.length;i+=5){const dim=DIMS[a[i+4]]||'over';if(dim===W.dim||W.chunks[dim].size) setB(a[i],a[i+1],a[i+2],a[i+3],{local:true,dim});else{const ck=CK(a[i]>>4,a[i+2]>>4);(W.mods[dim][ck]||(W.mods[dim][ck]={}))[IDX(a[i]&15,a[i+1],a[i+2]&15)]=a[i+3];}
       if(dim===W.dim&&a[i+3]===0&&Math.hypot(a[i]-P.x,a[i+2]-P.z)<24) {}}break;}
   case 'cont':W.cont[o.k]=o.v;if(UI.kind==='chest'&&UI.key===o.k) renderUI();break;
+  case 'meta':W.meta[o.k]=o.v;break;
   case 'furn':W.furn[o.k]=o.v;if(UI.kind==='furnace'&&UI.key===o.k) renderUI();break;
   case 'chat':chatLine(o.name,o.msg);break;
   case 'boom':if(o.dim===W.dim) explode(o.x,o.y,o.z,o.p,false,o.list);else for(let i=0;i<o.list.length;i+=3) setB(o.list[i],o.list[i+1],o.list[i+2],0,{local:true,dim:o.dim});break;
@@ -1850,14 +1968,15 @@ function syncMobs(list){const seen=new Set();for(const r of list){const [eid,typ
     if(!(fl&4)&&m.baby){m.baby=false;m.mesh.scale.setScalar(MOBS[type].split?size*0.5:1);}}
   for(const e of ENTS) if(e.kind==='mob'&&e.remote&&!seen.has(e.eid)){if(e.hp<=0||Math.hypot(e.x-P.x,e.z-P.z)<60) puff(e.x,e.y+0.5,e.z,0xdddddd,4);e.dead=true;}}
 // ---- 送出 ----
-function netSetBlock(x,y,z,id,dim){if(!NET.on) return;NET.outSets.push(x,y,z,id,dim==='nether'?1:0);}
+function netSetBlock(x,y,z,id,dim){if(!NET.on) return;NET.outSets.push(x,y,z,id,Math.max(0,DIMS.indexOf(dim)));}
 function netCont(k){if(!NET.on) return;const o={t:'cont',k,v:W.cont[k]};if(NET.host) hostBcast(o);else NET.hc.send(o);}
+function netMeta(k){if(!NET.on) return;const o={t:'meta',k,v:W.meta[k]};if(NET.host) hostBcast(o);else NET.hc.send(o);}
 function netFurn(k){if(!NET.on) return;const o={t:'furn',k,v:W.furn[k]};if(NET.host) hostBcast(o);else NET.hc.send(o);}
 function netDim(){if(NET.on) netSendState();}
 NET.send=o=>{if(!NET.on) return;if(NET.host) hostRecv(o,NET.myId);else NET.hc&&NET.hc.send(o);};
 NET.sendTo=(id,o)=>{if(!NET.on) return;if(NET.host){const c=NET.conns.get(id);if(c) c.send(o);}};
 NET.bcast=o=>{if(!NET.on) return;if(NET.host) hostBcast(o);else NET.hc&&NET.hc.send(o);};
-function netSendState(){const s=held();const st={x:+P.x.toFixed(2),y:+P.y.toFixed(2),z:+P.z.toFixed(2),yaw:+P.yaw.toFixed(3),pitch:+P.pitch.toFixed(3),dim:W.dim,dead:P.dead,mode:W.mode,sneak:P.sneak,held:s?s.id:0,sw:VM.swing>0.75?1:0};
+function netSendState(){const s=held();const st={x:+P.x.toFixed(2),y:+P.y.toFixed(2),z:+P.z.toFixed(2),yaw:+P.yaw.toFixed(3),pitch:+P.pitch.toFixed(3),dim:W.dim,dead:P.dead,mode:W.mode,sneak:P.sneak,held:s?s.id:0,veh:P.ride?P.ride.type:0,vyaw:P.ride?+P.ride.yaw.toFixed(2):0,sw:VM.swing>0.75?1:0};
   if(NET.host) hostBcast({t:'p',id:NET.myId,st,name:SET.name,color:P.color});else NET.hc&&NET.hc.send({t:'p',st});}
 function sendChat(msg){msg=String(msg).slice(0,200);if(!msg.trim()) return;if(msg[0]==='/'){chatCmd(msg);return;}chatLine(SET.name,msg);if(NET.on) NET.bcast({t:'chat',name:SET.name,msg});}
 function chatLine(name,msg){const el=$('#chatLog');const d=document.createElement('div');d.className='cl';d.innerHTML=`<b>&lt;${esc(name)}&gt;</b> ${esc(msg)}`;el.appendChild(d);while(el.children.length>10) el.firstChild.remove();setTimeout(()=>d.classList.add('fade'),9000);setTimeout(()=>d.remove(),11000);playSnd('click',0.3);}
@@ -1903,7 +2022,7 @@ const SAVE_IDX='mmvox_worlds';
 function worldList(){try{return JSON.parse(localStorage.getItem(SAVE_IDX)||'[]');}catch(e){return [];}}
 function setWorldList(L){try{localStorage.setItem(SAVE_IDX,JSON.stringify(L));}catch(e){}}
 function packWorld(){const mobsS=mobs().filter(m=>!m.remote&&(MOBS[m.type].pass||m.tamed)).slice(0,120).map(m=>[m.type,+m.x.toFixed(1),+m.y.toFixed(1),+m.z.toFixed(1),m.dim,{tamed:m.tamed,sheared:m.sheared,wool:m.wool,baby:m.baby}]);
-  return {v:2,pal:palNow(),id:W.id,name:W.name,seed:W.seed,mode:W.mode,diff:W.diff,cheats:W.cheats,time:W.time,day:W.day,rain:WX.rain,spawn:W.spawn,mods:W.mods,cont:W.cont,furn:W.furn,pinv:W.pinv||{},mobs:mobsS,player:Object.assign(myPack(),{yaw:P.yaw,pitch:P.pitch,sel:P.sel}),saved:Date.now()};}
+  return {v:2,pal:palNow(),id:W.id,name:W.name,seed:W.seed,mode:W.mode,diff:W.diff,cheats:W.cheats,time:W.time,day:W.day,rain:WX.rain,spawn:W.spawn,mods:W.mods,cont:W.cont,furn:W.furn,meta:W.meta,island:W.island,vehs:typeof vehPack==='function'?vehPack():[],pinv:W.pinv||{},mobs:mobsS,player:Object.assign(myPack(),{yaw:P.yaw,pitch:P.pitch,sel:P.sel}),saved:Date.now()};}
 function saveWorld(quiet){if(!W.id||(NET.on&&!NET.host)) return;try{const s=JSON.stringify(packWorld());localStorage.setItem('mmvox_w_'+W.id,s);const L=worldList();const it=L.find(x=>x.id===W.id);const meta={id:W.id,name:W.name,mode:W.mode,diff:W.diff,saved:Date.now(),size:s.length,seed:W.seed};if(it) Object.assign(it,meta);else L.unshift(meta);L.sort((a,b)=>b.saved-a.saved);setWorldList(L);if(!quiet) toast('已儲存世界');}
   catch(e){toast('⚠ 儲存失敗：瀏覽器空間不夠了。可以在世界清單「匯出」備份');}}
 
@@ -1930,25 +2049,29 @@ function repairScreen(){const raw=loadSave(selWorld);if(!raw){toast('讀取失�
 
 function loadSave(id){let sv;try{sv=JSON.parse(localStorage.getItem('mmvox_w_'+id));}catch(e){return null;}if(sv&&sv.pal&&!samePal(sv.pal,palNow())) sv=convertSave(sv,sv.pal);return sv;}
 // ---- 開始世界 ----
-function resetWorld(){for(const d of ['over','nether']){clearMeshes(d);W.chunks[d].clear();}for(const e of ENTS){if(e.mesh) scene.remove(e.mesh);}ENTS.length=0;for(const p of PARTS) scene.remove(p.m);PARTS.length=0;
-  RS.pulse.clear();RS.plates.clear();RS.dirty.length=0;if(RS.doorPow) RS.doorPow.clear();W.dim='over';W.mods={over:{},nether:{}};W.cont={};W.furn={};W.pinv={};W.spawn=null;
+function resetWorld(){for(const d of ['over','nether','sky']){clearMeshes(d);W.chunks[d].clear();}if(typeof vehReset==='function') vehReset();for(const e of ENTS){if(e.mesh) scene.remove(e.mesh);}ENTS.length=0;for(const p of PARTS) scene.remove(p.m);PARTS.length=0;
+  RS.pulse.clear();RS.plates.clear();RS.dirty.length=0;if(RS.doorPow) RS.doorPow.clear();W.dim='over';W.mods={over:{},nether:{},sky:{}};W.cont={};W.furn={};W.pinv={};W.meta={};W.island=false;W.spawn=null;
   Object.assign(P,{vx:0,vy:0,vz:0,mvx:0,mvz:0,hp:20,food:20,sat:5,exh:0,xp:0,level:0,xpTot:0,air:300,fire:0,fallStart:null,inv:Array(36).fill(null),armor:Array(4).fill(null),sel:0,dead:false,fly:false,sprint:false,sneak:false,spawn:null,portalT:0,invul:2,sleeping:false,kbT:0});USE.mode=null;}
-function startAnimals(){const types=['sheep','sheep','sheep','cow','cow','pig','chicken','rabbit'];let made=0;
+function islandKit(){const [sx,sy,sz]=W.spawn;let cx=sx+2,cz=sz+1;const cy=surfaceY(cx,cz);setB(cx,cy,cz,B.CHEST,{local:true});
+  W.cont['over:'+cx+','+cy+','+cz]=[{id:IT.I_BREAD,n:3},{id:IT.I_APPLE,n:2},{id:B.SAPLING,n:2},{id:IT.I_SEEDS,n:4},{id:IT.I_STRING,n:3},{id:IT.I_BUCKET,n:1},null,null,null].concat(Array(18).fill(null));
+  toast('🏝 荒島求生：你被困在小島上了！箱子裡有一點點補給。砍樹做木船，出海去找別的島吧');toast('海上會漂來木頭和補給箱，要記得撿');}
+function startAnimals(){if(W.island) return;const types=['sheep','sheep','sheep','cow','cow','pig','chicken','rabbit'];let made=0;
   for(let k=0;k<40&&made<10;k++){const a=rand(0,6.28),d=rand(10,60);const x=Math.floor(P.x+Math.cos(a)*d),z=Math.floor(P.z+Math.sin(a)*d);const y=surfaceY(x,z);const t=getB(x,y-1,z);if(t!==B.GRASS&&t!==B.SNOW_GRASS) continue;
     const tp=types[made%types.length];const n=tp==='sheep'?irand(3,5):irand(2,4);for(let i=0;i<n;i++){const xx=x+irand(-2,2),zz=z+irand(-2,2);spawnMob(tp,xx+0.5,surfaceY(xx,zz)+0.1,zz+0.5,{});}made++;}}
 function findSpawn(){for(let r=0;r<400;r+=8){for(let a=0;a<Math.max(1,r/4);a++){const ang=a/(Math.max(1,r/4))*Math.PI*2;const x=Math.round(Math.cos(ang)*r),z=Math.round(Math.sin(ang)*r);const y=surfaceY(x,z);const t=getB(x,y-1,z);if(y>SEA&&(t===B.GRASS||t===B.SNOW_GRASS||t===B.SAND)){let open=true;for(let k=0;k<12&&open;k++) if(getB(x,y+k,z)) open=false;if(open) return [x,y,z];}}}return [0,surfaceY(0,0),0];}
-function startWorld(save,opts){resetWorld();if(save){W.id=save.id;W.name=save.name;W.seed=save.seed;W.mode=save.mode;W.diff=save.diff;W.cheats=!!save.cheats;W.time=save.time;W.day=save.day||1;WX.rain=!!save.rain;W.spawn=save.spawn;W.mods=save.mods||{over:{},nether:{}};W.cont=save.cont||{};W.furn=save.furn||{};W.pinv=save.pinv||{};}
-  else{W.id='w'+Date.now().toString(36);W.name=opts.name;W.seed=opts.seed;W.mode=opts.mode;W.diff=opts.diff;W.cheats=opts.cheats;W.time=1000;W.day=1;WX.rain=false;}
-  if(!W.mods.over) W.mods={over:{},nether:{}};SEED=W.seed;
+function startWorld(save,opts){resetWorld();if(save){W.id=save.id;W.name=save.name;W.seed=save.seed;W.mode=save.mode;W.diff=save.diff;W.cheats=!!save.cheats;W.time=save.time;W.day=save.day||1;WX.rain=!!save.rain;W.spawn=save.spawn;W.mods=save.mods||{over:{},nether:{}};W.cont=save.cont||{};W.furn=save.furn||{};W.pinv=save.pinv||{};W.meta=save.meta||{};W.island=!!save.island;}
+  else{W.id='w'+Date.now().toString(36);W.name=opts.name;W.seed=opts.seed;W.mode=opts.mode;W.diff=opts.diff;W.cheats=opts.cheats;W.island=!!opts.island;W.time=1000;W.day=1;WX.rain=false;}
+  if(!W.mods.over) W.mods={over:{},nether:{},sky:{}};if(!W.mods.sky) W.mods.sky={};SEED=W.seed;
   rsRebuild();
   if(!W.spawn||!W.spawn.length) W.spawn=findSpawn();
   const pl=save&&save.player;if(pl&&pl.inv){applyPack(pl);P.yaw=pl.yaw||0;P.pitch=pl.pitch||0;P.sel=pl.sel||0;}else{P.x=W.spawn[0]+0.5;P.y=W.spawn[1]+0.1;P.z=W.spawn[2]+0.5;P.yaw=0;P.pitch=0;}
-  if(!save) startAnimals();
+  if(!save){startAnimals();if(W.island) islandKit();}
+  if(save&&save.vehs&&typeof vehLoad==='function') vehLoad(save.vehs);
   if(save&&save.mobs) for(const [t,x,y,z,dim,ex] of save.mobs) if(dim===W.dim) spawnMob(t,x,y,z,Object.assign({dim},ex||{}));
   beginPlay();saveWorld(true);}
 function applyPack(pl){P.inv=(pl.inv||[]).slice(0,36);while(P.inv.length<36) P.inv.push(null);P.armor=(pl.armor||[null,null,null,null]).slice(0,4);P.xp=pl.xp||0;P.level=pl.level||0;P.xpTot=pl.xpTot||0;P.hp=pl.hp||20;P.food=pl.food===undefined?20:pl.food;P.spawn=pl.spawn||null;
   if(pl.dim&&pl.dim!==W.dim){W.dim=pl.dim;}P.x=pl.x;P.y=pl.y;P.z=pl.z;scene.fog.near=W.dim==='nether'?10:40;}
-function startFromNet(m){resetWorld();W.id='';W.name=m.wname;W.seed=m.seed;SEED=m.seed;W.mode=m.mode;W.diff=m.diff;W.cheats=false;W.time=m.time;W.day=m.day;WX.rain=m.rain;W.spawn=m.spawn;W.mods=m.mods;W.cont=m.cont||{};W.furn=m.furn||{};rsRebuild();
+function startFromNet(m){resetWorld();W.id='';W.name=m.wname;W.seed=m.seed;SEED=m.seed;W.mode=m.mode;W.diff=m.diff;W.cheats=false;W.time=m.time;W.day=m.day;WX.rain=m.rain;W.spawn=m.spawn;W.mods=m.mods;if(!W.mods.sky) W.mods.sky={};W.cont=m.cont||{};W.furn=m.furn||{};W.meta=m.meta||{};W.island=!!m.island;rsRebuild();
   NET.peers.set('H',{name:m.host.name,color:m.host.color,st:null});for(const p of m.players) NET.peers.set(p.id,{name:p.name,color:p.color,st:p.st});
   if(m.saved&&m.saved.inv) applyPack(m.saved);else{P.x=W.spawn[0]+0.5+rand(-1,1);P.y=W.spawn[1]+0.1;P.z=W.spawn[2]+0.5+rand(-1,1);}netUI();beginPlay();toast(`已加入 ${m.host.name} 的世界「${m.wname}」`);}
 function beginPlay(){showScreen(null);$('#hud').hidden=false;running=true;paused=false;title.on=false;scene.fog.far=W.dim==='nether'?60:RD*16;
@@ -1995,11 +2118,11 @@ on('w_exp',()=>{const s=localStorage.getItem('mmvox_w_'+selWorld);if(!s) return;
 on('w_fix',()=>repairScreen());on('rp_back',()=>showScreen('worlds'));on('w_imp',()=>$('#w_file').click());
 $('#w_file').addEventListener('change',e=>{const f=e.target.files[0];if(!f) return;f.text().then(t=>{const s=JSON.parse(t);if(!s.seed&&s.seed!==0) throw 0;s.id='w'+Date.now().toString(36);localStorage.setItem('mmvox_w_'+s.id,JSON.stringify(s));const L=worldList();L.unshift({id:s.id,name:s.name+'（匯入）',mode:s.mode,diff:s.diff,saved:Date.now(),seed:s.seed});setWorldList(L);selWorld=s.id;renderWorlds();}).catch(()=>toast('這不是世界存檔檔案'));e.target.value='';});
 on('w_back',()=>showScreen('title'));
-const CR={mode:'survival',diff:2,cheats:false};
-function renderCreate(){$('#c_mode').textContent='遊戲模式：'+(CR.mode==='creative'?'創造':'生存');$('#c_mdesc').textContent=CR.mode==='creative'?'無限方塊、可以飛、不會受傷':'收集資源、合成、生存下去';$('#c_diff').textContent='難度：'+['和平','簡單','普通','困難'][CR.diff];$('#c_cheat').textContent='允許作弊指令：'+(CR.cheats?'開':'關');}
-on('c_mode',()=>{CR.mode=CR.mode==='survival'?'creative':'survival';if(CR.mode==='creative') CR.cheats=true;renderCreate();});on('c_diff',()=>{CR.diff=(CR.diff+1)%4;renderCreate();});on('c_cheat',()=>{CR.cheats=!CR.cheats;renderCreate();});
+const CR={mode:'survival',diff:2,cheats:false,island:false};
+function renderCreate(){$('#c_mode').textContent='遊戲模式：'+(CR.mode==='creative'?'創造':'生存');$('#c_mdesc').textContent=CR.mode==='creative'?'無限方塊、可以飛、不會受傷':'收集資源、合成、生存下去';$('#c_diff').textContent='難度：'+['和平','簡單','普通','困難'][CR.diff];$('#c_cheat').textContent='允許作弊指令：'+(CR.cheats?'開':'關');$('#c_island').textContent='荒島求生模組：'+(CR.island?'開（整個世界都是海和小島）':'關');}
+on('c_mode',()=>{CR.mode=CR.mode==='survival'?'creative':'survival';if(CR.mode==='creative') CR.cheats=true;renderCreate();});on('c_diff',()=>{CR.diff=(CR.diff+1)%4;renderCreate();});on('c_cheat',()=>{CR.cheats=!CR.cheats;renderCreate();});on('c_island',()=>{CR.island=!CR.island;renderCreate();});
 on('c_go',()=>{const nm=$('#c_name').value.trim()||'新的世界';const sv=$('#c_seed').value.trim();let seed=sv?(/^-?\d+$/.test(sv)?(+sv>>>0):[...sv].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7)):Math.floor(Math.random()*2147483647);
-  showScreen('loading');lockPointer();setTimeout(()=>startWorld(null,{name:nm,seed,mode:CR.mode,diff:CR.diff,cheats:CR.cheats}),30);});
+  showScreen('loading');lockPointer();setTimeout(()=>startWorld(null,{name:nm,seed,mode:CR.mode,diff:CR.diff,cheats:CR.cheats,island:CR.island}),30);});
 on('c_back',()=>showScreen('worlds'));
 on('m_join',()=>{const nm=$('#m_name').value.trim();if(nm){SET.name=nm.slice(0,16);saveSet();}$('#m_err').textContent='連線中…（可能要等 5～30 秒）';$('#m_join').disabled=true;
   netJoin($('#m_code').value,(m,err)=>{$('#m_join').disabled=false;if(!m){$('#m_err').textContent=err;return;}$('#m_err').textContent='';showScreen('loading');setTimeout(()=>startFromNet(m),30);});});
@@ -2089,6 +2212,116 @@ function showPlist(on){const el=$('#plist');if(!on){el.hidden=true;return;}const
 addEventListener('keyup',e=>{if(e.code==='Tab') showPlist(false);});
 let SHOT=false;
 
+// ================= 模組：交通工具（船、礦車）、電梯、漏斗、自動收成機、自動挖礦機 =================
+// ---- 合成 ----
+{const PL=B.PLANKS,ST=IT.I_STICK,IR=IT.I_IRON;
+  rs(['P P','PPP'],{P:PL},IT.I_BOAT);rs(['I I','III'],{I:IR},IT.I_MINECART);rs(['I I','ISI','I I'],{I:IR,S:ST},B.RAIL,16);rs(['G G','GSG','GRG'],{G:IT.I_GOLD,S:ST,R:IT.I_REDSTONE},B.GRAIL,6);
+  rs(['I I','ICI',' I '],{I:IR,C:B.CHEST},B.HOPPER);rs(['PPP','CIC','CRC'],{P:PL,C:B.COBBLE,I:IR,R:IT.I_REDSTONE},B.PISTON);rl([B.PISTON,IT.I_SLIMEBALL],B.STICKY_PISTON);
+  rs(['WWW','WIW','WWW'],{W:B.WOOL_WHITE,I:IR},B.ELEVATOR,2);rs(['III','IHI','IRI'],{I:IR,H:IT.T_hoe_iron,R:IT.I_REDSTONE},B.HARVESTER);rs(['III','RPR','III'],{I:IR,R:IT.I_REDSTONE,P:IT.T_pick_iron},B.DRILL);
+  rs(['SS','SS'],{S:B.SKY_STONE},B.SKY_BRICKS,4);rl([B.PALM_LOG],PL,4);rl([B.SKY_LOG],PL,4);rs(['GGG','GSG','GGG'],{G:IT.I_GOLD,S:IT.I_SKYGEM},IT.I_GAPPLE);}
+// ---- 交通工具 ----
+const VEH=[];
+function vehMesh(type){const g=new THREE.Group();const wood=new THREE.MeshLambertMaterial({color:0x9a6a3a}),dark=new THREE.MeshLambertMaterial({color:0x6a4420}),iron=new THREE.MeshLambertMaterial({color:0x8a8a92}),ind=new THREE.MeshLambertMaterial({color:0x3a3a42});
+  const box=(w,h,d,x,y,z,m)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);b.castShadow=true;g.add(b);};
+  if(type==='boat'){box(1.2,0.12,1.9,0,0.06,0,dark);box(0.1,0.35,1.9,-0.6,0.24,0,wood);box(0.1,0.35,1.9,0.6,0.24,0,wood);box(1.3,0.35,0.1,0,0.24,0.95,wood);box(1.3,0.35,0.1,0,0.24,-0.95,wood);box(1.1,0.08,0.3,0,0.3,-0.2,wood);}
+  else{box(0.95,0.1,1.2,0,0.15,0,iron);box(0.08,0.55,1.2,-0.47,0.42,0,iron);box(0.08,0.55,1.2,0.47,0.42,0,iron);box(0.95,0.55,0.08,0,0.42,0.6,iron);box(0.95,0.55,0.08,0,0.42,-0.6,iron);box(0.85,0.08,1.1,0,0.22,0,ind);
+    for(const [x,z] of [[-0.45,0.4],[0.45,0.4],[-0.45,-0.4],[0.45,-0.4]]) box(0.06,0.2,0.2,x,0.08,z,ind);}
+  return g;}
+function spawnVeh(type,x,y,z,yaw,dim){const v={type,x,y,z,yaw:yaw||0,vx:0,vy:0,vz:0,sp:0,dim:dim||W.dim,hp:3,mesh:vehMesh(type)};scene.add(v.mesh);VEH.push(v);if(type==='cart') cartSnap(v);return v;}
+function vehReset(){for(const v of VEH) scene.remove(v.mesh);VEH.length=0;P.ride=null;}
+function vehPack(){return VEH.filter(v=>v!==P.ride).map(v=>[v.type,+v.x.toFixed(2),+v.y.toFixed(2),+v.z.toFixed(2),+v.yaw.toFixed(2),v.dim]);}
+function vehLoad(L){for(const [t,x,y,z,yaw,d] of L||[]) spawnVeh(t,x,y,z,yaw,d);}
+const isRail=id=>!!(BL[id]&&BL[id].rail);
+function placeVehicle(type,h){if(type==='boat'){const r=rayCast(eyePos(),lookDir(),5,{liquid:true});if(r.id===B.WATER){spawnVeh('boat',r.x+0.5,r.y+0.6,r.z+0.5,P.yaw+Math.PI);return true;}
+    if(h.id&&BL[h.id].solid&&!getB(h.x,h.y+1,h.z)){spawnVeh('boat',h.x+0.5,h.y+1,h.z+0.5,P.yaw+Math.PI);return true;}toast('木船要放在水上或地上');return false;}
+  if(type==='cart'){if(h.id&&isRail(h.id)){spawnVeh('cart',h.x+0.5,h.y,h.z+0.5,0);return true;}toast('礦車要放在鐵軌上');return false;}return false;}
+function rayVeh(maxD){const o=eyePos(),d=lookDir();let best=null,bd=maxD;for(const v of VEH){if(v.dim!==W.dim||v===P.ride) continue;const r=0.7;let t0=0,t1=bd;const mn=[v.x-r,v.y,v.z-r],mx=[v.x+r,v.y+0.8,v.z+r],oo=[o.x,o.y,o.z],dd=[d.x,d.y,d.z];let ok=true;
+  for(let k=0;k<3;k++){if(Math.abs(dd[k])<1e-6){if(oo[k]<mn[k]||oo[k]>mx[k]){ok=false;break;}continue;}let a=(mn[k]-oo[k])/dd[k],b=(mx[k]-oo[k])/dd[k];if(a>b)[a,b]=[b,a];t0=Math.max(t0,a);t1=Math.min(t1,b);if(t0>t1){ok=false;break;}}if(ok&&t0<bd){bd=t0;best=v;}}return best?{v:best,t:bd}:null;}
+function vehUse(){if(P.ride) return false;const r=rayVeh(3.5);if(!r||(AIM.id&&AIM.t<r.t)) return false;P.ride=r.v;P.fly=false;toast(r.v.type==='boat'?'上船了：W/S 前進後退、A/D 轉彎，按 Shift 下船':'坐上礦車：按 W 往你看的方向推，按 Shift 下車');playSnd('wood');return true;}
+function vehHit(){const r=rayVeh(3.2);if(!r||(AIM.id&&AIM.t<r.t)) return false;const v=r.v;v.hp--;v.mesh.position.y+=0.1;playSnd('wood');armSwing();
+  if(v.hp<=0||W.mode==='creative'){if(P.ride===v) dismount();scene.remove(v.mesh);VEH.splice(VEH.indexOf(v),1);if(W.mode!=='creative') spawnDrop(v.type==='boat'?IT.I_BOAT:IT.I_MINECART,1,v.x,v.y+0.5,v.z);}return true;}
+function dismount(){const v=P.ride;if(!v) return;P.ride=null;for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1],[0,0]]){const x=v.x+a*1.2,z=v.z+b*1.2;if(!collides(x,v.y+0.5,z)){P.x=x;P.z=z;P.y=v.y+0.5;break;}}P.vy=0;P.fallStart=null;}
+function waterTop(x,y,z){let yy=Math.floor(y);if(getB(x,yy,z)!==B.WATER&&getB(x,yy-1,z)===B.WATER) yy--;if(getB(x,yy,z)!==B.WATER) return null;while(getB(x,yy+1,z)===B.WATER) yy++;return yy+1;}
+// 礦車沿著鐵軌走
+function railAt(x,y,z){for(const dy of [0,-1,1]){if(isRail(getB(x,y+dy,z))) return y+dy;}return null;}
+function cartSnap(v){const x=Math.floor(v.x),z=Math.floor(v.z);const y=railAt(x,Math.floor(v.y),z);if(y===null){v.rail=null;return;}v.rail={c:[x,y,z],n:null,p:0};
+  const opts=[[1,0],[-1,0],[0,1],[0,-1]].filter(([a,b])=>railAt(x+a,y,z+b)!==null);v.dir=opts[0]||[0,1];}
+function cartNext(v){const [x,y,z]=v.rail.c;const [dx,dz]=v.dir;const cand=[[dx,dz],[dz,-dx],[-dz,dx]];for(const [a,b] of cand){const ny=railAt(x+a,y,z+b);if(ny!==null){v.dir=[a,b];return [x+a,ny,z+b];}}return null;}
+function cartTick(v,dt,riding){if(!v.rail||!isRail(getB(v.rail.c[0],v.rail.c[1],v.rail.c[2]))) cartSnap(v);
+  if(!v.rail){v.vy-=20*dt;v.y+=v.vy*dt;if(BL[getB(v.x,v.y-0.05,v.z)].solid){v.vy=0;v.y=Math.floor(v.y-0.05)+1;}v.sp*=Math.pow(0.1,dt);return;}
+  const R=v.rail;if(riding){let f=0;if(keys.KeyW||TOUCH.y<-0.3) f=1;if(keys.KeyS||TOUCH.y>0.3) f=-1;if(f){const look=lookDir();let dot=look.x*v.dir[0]+look.z*v.dir[1];if(Math.abs(dot)<0.2) dot=1;const want=Math.sign(dot)*f;if(v.sp===0||Math.sign(v.sp)===want) v.sp+=want*6*dt;else v.sp+=want*12*dt;}}
+  if(getB(R.c[0],R.c[1],R.c[2])===B.GRAIL&&Math.abs(v.sp)>0.05) v.sp=Math.sign(v.sp)*Math.min(11,Math.abs(v.sp)+14*dt);
+  v.sp*=Math.pow(0.75,dt);if(Math.abs(v.sp)<0.02) v.sp=0;v.sp=clamp(v.sp,-11,11);
+  if(v.sp<0){v.dir=[-v.dir[0],-v.dir[1]];v.sp=-v.sp;if(R.n){const t=R.c;R.c=R.n;R.n=t;R.p=1-R.p;}}
+  if(!R.n) R.n=cartNext(v);if(!R.n){v.sp=0;R.p=0;}
+  if(R.n){const slope=R.n[1]-R.c[1];v.sp+=(-slope)*6*dt;R.p+=v.sp*dt;let g=0;while(R.p>=1&&g++<4){R.p-=1;R.c=R.n;R.n=cartNext(v);if(!R.n){R.p=0;v.sp=0;break;}}}
+  const n=R.n||R.c;v.x=R.c[0]+0.5+(n[0]-R.c[0])*R.p;v.z=R.c[2]+0.5+(n[2]-R.c[2])*R.p;v.y=R.c[1]+(n[1]-R.c[1])*R.p+0.05;v.yaw=Math.atan2(v.dir[0],v.dir[1]);}
+function boatTick(v,dt,riding){const surf=waterTop(v.x,v.y+0.2,v.z);const inW=surf!==null&&surf-v.y<1.2;
+  let turn=0,acc=0;if(riding){if(keys.KeyA||TOUCH.x<-0.4) turn=1;if(keys.KeyD||TOUCH.x>0.4) turn=-1;if(keys.KeyW||TOUCH.y<-0.3) acc=1;if(keys.KeyS||TOUCH.y>0.3) acc=-0.5;}
+  v.yaw+=turn*2.2*dt;const max=inW?8:1.2;v.sp+=acc*(inW?6:3)*dt;v.sp*=Math.pow(inW?0.5:0.02,dt);v.sp=clamp(v.sp,-max/2,max);
+  const fx=-Math.sin(v.yaw)*v.sp,fz=-Math.cos(v.yaw)*v.sp;const nx=v.x+fx*dt,nz=v.z+fz*dt;const blocked=(x,z)=>BL[getB(x,v.y+0.35,z)].solid||BL[getB(x+Math.sign(fx)*0.6,v.y+0.35,z+Math.sign(fz)*0.6)].solid;
+  if(!blocked(nx,v.z)) v.x=nx;else v.sp*=0.3;if(!blocked(v.x,nz)) v.z=nz;else v.sp*=0.3;
+  if(inW){v.y+=((surf-0.32)-v.y)*Math.min(1,dt*6);v.vy=0;}else{v.vy-=20*dt;v.y+=v.vy*dt;if(BL[getB(v.x,v.y-0.05,v.z)].solid){v.vy=0;v.y=Math.floor(v.y-0.05)+1;}}
+  if(v.y<-20){scene.remove(v.mesh);VEH.splice(VEH.indexOf(v),1);if(P.ride===v) P.ride=null;}}
+function rideTick(dt){const v=P.ride;if(!v||v.dim!==W.dim){P.ride=null;return;}if(keys.ShiftLeft||keys.ShiftRight||TOUCH.sneak){TOUCH.sneak=false;dismount();return;}
+  P.x=v.x;P.z=v.z;P.y=v.y+(v.type==='boat'?0.05:0.15);P.vy=0;P.onGround=true;P.fallStart=null;P.moveAmt=0;}
+function vehTick(dt){for(const v of [...VEH]){if(v.dim!==W.dim){v.mesh.visible=false;continue;}v.mesh.visible=true;const riding=P.ride===v;
+    if(v.type==='boat') boatTick(v,dt,riding);else cartTick(v,dt,riding);v.mesh.position.set(v.x,v.y,v.z);v.mesh.rotation.y=v.yaw;if(v.hp<3&&Math.random()<dt) v.hp++;}
+  if(P.ride) rideTick(dt);}
+// 其他玩家坐的交通工具
+function remoteVehTick(){if(!NET.on) return;for(const p of NET.peers.values()){const want=p.st&&p.st.veh&&(p.st.dim||'over')===W.dim?p.st.veh:null;if(p.vehM&&p.vehT!==want){scene.remove(p.vehM);p.vehM=null;}
+    if(want&&!p.vehM){p.vehM=vehMesh(want);p.vehT=want;scene.add(p.vehM);}if(p.vehM&&p.cur){p.vehM.position.set(p.cur.x,p.cur.y-0.1,p.cur.z);p.vehM.rotation.y=p.st.vyaw||0;}}}
+// ---- 電梯方塊 ----
+const ELV={jump:false,sneak:false};
+function elevatorTick(){if(P.dead||P.ride||uiOpen) return;const ey=getB(P.x,P.y-0.1,P.z)===B.ELEVATOR?Math.floor(P.y-0.1):getB(P.x,P.y-0.7,P.z)===B.ELEVATOR?Math.floor(P.y-0.7):null;const on=ey!==null;const j=!!(keys.Space||TOUCH.jump),sn=!!P.sneak;
+  if(on&&j&&!ELV.jump){const x=Math.floor(P.x),z=Math.floor(P.z),y0=ey;for(let y=y0+2;y<Math.min(H-2,y0+40);y++){if(getB(x,y,z)===B.ELEVATOR&&!BL[getB(x,y+1,z)].solid&&!BL[getB(x,y+2,z)].solid){P.y=y+1;P.vy=0;P.fallStart=null;playSnd('portal',0.3);break;}}}
+  if(on&&sn&&!ELV.sneak){const x=Math.floor(P.x),z=Math.floor(P.z),y0=ey;for(let y=y0-2;y>Math.max(1,y0-40);y--){if(getB(x,y,z)===B.ELEVATOR&&!BL[getB(x,y+1,z)].solid&&!BL[getB(x,y+2,z)].solid){P.y=y+1;P.vy=0;P.fallStart=null;playSnd('portal',0.3);break;}}}
+  ELV.jump=j;ELV.sneak=sn;}
+// ---- 機器（主機才跑）----
+const CONT_IDS=()=>new Set([B.CHEST,B.HOPPER]);
+function contAt(x,y,z){const id=getB(x,y,z);const k=W.dim+':'+x+','+y+','+z;if(id===B.CHEST){ensureLoot(k);if(!W.cont[k]) W.cont[k]=Array(27).fill(null);return {k,a:W.cont[k],t:'chest'};}
+  if(id===B.HOPPER){if(!W.cont[k]) W.cont[k]=Array(5).fill(null);return {k,a:W.cont[k],t:'hopper'};}if(id===B.FURNACE||id===B.FURNACE_ON){if(!W.furn[k]) W.furn[k]={in:null,fuel:null,out:null,burn:0,prog:0};return {k,f:W.furn[k],t:'furn'};}return null;}
+function putStack(c,s,side){// 放一個進去，成功回傳 true
+  if(c.t==='furn'){const slot=side==='side'&&fuelOf(s.id)?'fuel':'in';const cur=c.f[slot];if(!cur){c.f[slot]={id:s.id,n:1};}else if(cur.id===s.id&&cur.n<maxStack(s.id)&&!cur.ench) cur.n++;else return false;netFurn(c.k);return true;}
+  for(let i=0;i<c.a.length;i++){const t=c.a[i];if(t&&t.id===s.id&&!t.ench&&!s.ench&&!t.d&&!s.d&&t.n<maxStack(s.id)){t.n++;netCont(c.k);return true;}}
+  for(let i=0;i<c.a.length;i++) if(!c.a[i]){c.a[i]={...s,n:1};netCont(c.k);return true;}return false;}
+function takeOne(c){if(c.t==='furn'){const o=c.f.out;if(!o) return null;const s={...o,n:1};o.n--;if(!o.n) c.f.out=null;netFurn(c.k);return s;}
+  for(let i=c.a.length-1;i>=0;i--){const t=c.a[i];if(t){const s={...t,n:1};t.n--;if(!t.n) c.a[i]=null;netCont(c.k);return s;}}return null;}
+function giveOut(x,y,z,id,n,extra){// 把東西放進旁邊的箱子，放不下就掉在地上
+  const near=[[0,1,0],[0,-1,0],[1,0,0],[-1,0,0],[0,0,1],[0,0,-1]].map(([a,b,c])=>contAt(x+a,y+b,z+c)).filter(c=>c&&c.t!=='furn');
+  for(let k=0;k<n;k++){let ok=false;for(const c of near){if(putStack(c,Object.assign({id},extra||{}),'top')){ok=true;break;}}if(!ok) spawnDrop(id,1,x+0.5,y+1.2,z+0.5,extra);}}
+let machT=0,harvT=0,drillT=0;
+function machineTick(dt){if(!isHost()) return;machT+=dt;harvT+=dt;drillT+=dt;const doH=machT>0.4,doHarv=harvT>3,doDrill=drillT>0.5;if(doH) machT=0;if(doHarv) harvT=0;if(doDrill) drillT=0;if(!doH&&!doHarv&&!doDrill) return;
+  for(const [k,id] of RS.mach[W.dim]){const [x,y,z]=k.split(',').map(Number);if(Math.abs(x-P.x)>96||Math.abs(z-P.z)>96) continue;
+    if(id===B.HOPPER&&doH){const me=contAt(x,y,z);if(!me) continue;
+      const up=contAt(x,y+1,z);if(up&&me.a.some(s=>!s)||up&&me.a.some(s=>s&&s.n<maxStack(s.id))){const s=up?takeOne(up):null;if(s&&!putStack(me,s)){if(up.t==='furn'){if(up.f.out) up.f.out.n++;else up.f.out=s;}else putStack(up,s);}}
+      for(const e of ENTS){if(e.kind==='drop'&&!e.dead&&Math.abs(e.x-x-0.5)<0.7&&Math.abs(e.z-z-0.5)<0.7&&e.y>=y+0.5&&e.y<y+2){while(e.n>0&&putStack(me,{id:e.id,n:1,...(e.ench?{ench:e.ench}:{})})) e.n--;if(e.n<=0) e.dead=true;}}
+      const first=me.a.findIndex(s=>s);if(first>=0){const s=me.a[first];let tgt=contAt(x,y-1,z),side='top';if(!tgt){for(const [a,c] of [[1,0],[-1,0],[0,1],[0,-1]]){const t=contAt(x+a,y,z+c);if(t&&t.t!=='hopper'){tgt=t;side='side';break;}}}
+        if(tgt&&putStack(tgt,{...s,n:1},side)){s.n--;if(!s.n) me.a[first]=null;netCont(me.k);}}}
+    if(id===B.HARVESTER&&doHarv){for(let a=-4;a<=4;a++)for(let b=-4;b<=4;b++)for(let c=-1;c<=1;c++){const X=x+a,Y=y+c,Z=z+b;const bid=getB(X,Y,Z);const bd=BL[bid];
+        if(bd.crop===3){for(const [d2,n] of dropOf(bid,true,null)) if(n) giveOut(x,y,z,d2,n);setB(X,Y,Z,bid-3);puff(X+0.5,Y+0.5,Z+0.5,0x7aff7a,3);}
+        else if((bid===B.MELON||bid===B.PUMPKIN)&&getB(X,Y-1,Z)!==B.MELON){for(const [d2,n] of dropOf(bid,true,null)) if(n) giveOut(x,y,z,d2,n);setB(X,Y,Z,0);}
+        else if(bid===B.SUGARCANE&&getB(X,Y-1,Z)===B.SUGARCANE&&getB(X,Y-2,Z)!==B.SUGARCANE){let yy=Y;while(getB(X,yy,Z)===B.SUGARCANE){setB(X,yy,Z,0);giveOut(x,y,z,B.SUGARCANE,1);yy++;}}}}
+    if(id===B.DRILL&&doDrill){const mk=W.dim+':'+k;const m=W.meta[mk]||(W.meta[mk]={fuel:0,i:0,y:y-1});if(m.fuel<=0||m.y<2) continue;
+      for(let tries=0;tries<30;tries++){const dx=(m.i%5)-2,dz=Math.floor(m.i/5)-2;const X=x+dx,Z=z+dz,Y=m.y;m.i++;if(m.i>=25){m.i=0;m.y--;}
+        const bid=getB(X,Y,Z);const bd=BL[bid];if(!bid||bd.liquid||bd.h<0||bd.h>=20||bid===B.CHEST||bid===B.HOPPER||bid===B.DRILL) continue;
+        for(const [d2,n] of dropOf(bid,true,{ench:{}})) if(n) giveOut(x,y,z,d2,n);if(bid===B.CHEST){}setB(X,Y,Z,0);m.fuel--;blockBits(X,Y,Z,bid);playSnd(bd.snd||'stone',0.3);break;}
+      if(m.y<2) toastTo(myId(),'自動挖礦機挖到底了！');}}}
+function drillUse(h,s){const mk=W.dim+':'+h.x+','+h.y+','+h.z;const m=W.meta[mk]||(W.meta[mk]={fuel:0,i:0,y:h.y-1});
+  if(s&&(s.id===IT.I_COAL||s.id===IT.I_CHARCOAL)){const n=P.sneak?s.n:1;m.fuel+=n*32;if(W.mode!=='creative'){s.n-=n;if(!s.n) P.inv[P.sel]=null;renderHotbar();}if(typeof netMeta==='function') netMeta(mk);toast(`加了燃料！可以再挖 ${m.fuel} 格（蹲下按右鍵一次放一整組）`);return;}
+  if(s&&s.id===IT.I_LBUCKET){m.fuel+=500;if(W.mode!=='creative'){P.inv[P.sel]={id:IT.I_BUCKET,n:1};renderHotbar();}toast(`倒了熔岩！可以再挖 ${m.fuel} 格`);return;}
+  toast(m.fuel>0?`自動挖礦機：燃料可以挖 ${m.fuel} 格，正在挖高度 ${m.y}（5×5 範圍往下挖，東西會放進旁邊的箱子）`:'自動挖礦機沒有燃料：拿煤炭或熔岩桶對它按右鍵');}
+// ---- 荒島求生：海上漂流物 ----
+let driftT=4;
+function islandTick(dt){if(!W.island||W.dim!=='over'||P.dead) return;driftT-=dt;if(driftT>0) return;driftT=rand(5,9);
+  if(ENTS.filter(e=>e.kind==='drop'&&e.drift).length>=14) return;
+  for(let k=0;k<6;k++){const a=rand(0,6.28),d=rand(14,34);const x=Math.floor(P.x+Math.cos(a)*d),z=Math.floor(P.z+Math.sin(a)*d);const top=waterTop(x,SEA-1,z);if(top===null) continue;
+    const r=Math.random();const pick=r<0.3?[B.PLANKS,irand(2,4)]:r<0.5?[IT.I_STICK,irand(2,4)]:r<0.62?[B.OAK_LOG,irand(1,2)]:r<0.72?[IT.I_STRING,irand(1,2)]:r<0.8?[IT.I_LEATHER,1]:r<0.86?[IT.I_BREAD,1]:
+      r<0.9?[IT.I_COCONUT,1]:r<0.93?[[IT.I_IRON,IT.I_CARROT,IT.I_POTATO,IT.I_BEETSEED,B.SAPLING,IT.I_SEEDS][irand(0,5)],irand(1,3)]:r<0.96?[IT.I_BUCKET,1]:r<0.98?[IT.I_ROD,1]:[IT.I_BOAT,1];
+    const e=spawnDrop(pick[0],pick[1],x+0.5,top,z+0.5);if(e){e.drift=true;e.swim=true;e.vx=rand(-0.4,0.4);e.vz=rand(-0.4,0.4);e.vy=0;e.pick=0.5;}break;}}
+// ---- 每幀 ----
+function modTick(dt){vehTick(dt);islandTick(dt);elevatorTick();machineTick(dt);remoteVehTick();}
+
 // ================= 主迴圈 =================
 const rainG=(()=>{const n=600,p=new Float32Array(n*6);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));const m=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x9ab0d8,transparent:true,opacity:0.5}));m.frustumCulled=false;m.visible=false;scene.add(m);
   const d=[];for(let i=0;i<n;i++) d.push([rand(-16,16),rand(0,24),rand(-16,16),rand(14,20)]);return {m,p,d,n};})();
@@ -2096,7 +2329,7 @@ function weatherTick(dt){if(isHost()&&W.dim==='over'){WX.next-=dt*20;if(WX.next<
   const bio=biomeAt(P.x,P.z);const show=WX.rain&&W.dim==='over'&&bio!=='desert';rainG.m.visible=show;if(!show) return;const snow=bio==='snowy'||bio==='snowpeak';rainG.m.material.color.set(snow?0xffffff:0x9ab0d8);
   const cp=camera.position;for(let i=0;i<rainG.n;i++){const r=rainG.d[i];r[1]-=r[3]*dt*(snow?0.15:1);if(r[1]<-8){r[1]=rand(12,24);r[0]=rand(-16,16);r[2]=rand(-16,16);}const x=cp.x+r[0],y=cp.y+r[1],z=cp.z+r[2];const top=surfaceY(x,z);const vis=y>top;
     const L=snow?0.12:0.6;rainG.p.set(vis?[x,y,z,x+(snow?0.08:0),y-L,z]:[0,-999,0,0,-999,0],i*6);}rainG.m.geometry.attributes.position.needsUpdate=true;}
-function playerTick(dt){if(P.dead||P.sleeping){if(P.sleeping){P.vx=P.vz=0;}return;}
+function playerTick(dt){if(P.ride) return;if(P.dead||P.sleeping){if(P.sleeping){P.vx=P.vz=0;}return;}
   const ctl=!uiOpen&&!paused;const fly=P.fly&&W.mode==='creative';
   let fx=0,fz=0;if(ctl){if(keys.KeyW) fz-=1;if(keys.KeyS) fz+=1;if(keys.KeyA) fx-=1;if(keys.KeyD) fx+=1;fx+=TOUCH.x;fz+=TOUCH.y;}
   const len=Math.hypot(fx,fz);if(len>1){fx/=len;fz/=len;}
@@ -2114,7 +2347,7 @@ function playerTick(dt){if(P.dead||P.sleeping){if(P.sleeping){P.vx=P.vz=0;}retur
   // 爬樓梯：自動跳一格（像原版的跳躍很快）
   const moved=Math.hypot(P.x-ox,P.z-oz);P.moveAmt=moved/dt/4.3;if(P.onGround) P.walkT=(P.walkT||0)+moved*2.2;
   if(P.sprint) P.exh+=moved*0.1;if(P.inWater&&jump) P.exh+=moved*0.01;}
-function cameraTick(dt){const fly=P.fly&&W.mode==='creative';let ey=P.y+EYE-(P.sneak?0.12:0);if(P.sleeping) ey=P.y+0.3;if(P.dead) ey=P.y+0.4;
+function cameraTick(dt){const fly=P.fly&&W.mode==='creative';let ey=P.y+EYE-(P.sneak?0.12:0)-(P.ride?0.55:0);if(P.sleeping) ey=P.y+0.3;if(P.dead) ey=P.y+0.4;
   const bob=SET.bob&&P.onGround?Math.sin(P.walkT||0)*0.05*Math.min(1,P.moveAmt||0):0;camera.rotation.set(P.pitch+(SET.bob?Math.abs(bob)*0.15:0),P.yaw,P.dead?0.8:(P.hurtT>0?Math.sin(P.hurtT*20)*0.06:0));
   let cx=P.x+Math.cos(P.yaw)*bob*0.4,cz=P.z-Math.sin(P.yaw)*bob*0.4,cyy=ey+Math.abs(bob);
   if(shakeT>0){shakeT-=dt;cx+=rand(-1,1)*shakeT*0.3;cyy+=rand(-1,1)*shakeT*0.3;cz+=rand(-1,1)*shakeT*0.3;}
@@ -2230,7 +2463,7 @@ function simStep(dt){lastSim=performance.now();
     if(!paused&&!document.hidden) playerTick(dt);else{P.mvx=P.mvz=0;physics(dt,0,0,false);}
     aimTick();mineTick(dt);useTick(dt);survivalTick(dt);portalTick(dt);
     entitiesTick(dt);if(isHost()){spawnTick(dt);furnTick(dt);}
-    rsTick(dt);randomTicks(dt);weatherTick(dt);netTick(dt);
+    rsTick(dt);randomTicks(dt);weatherTick(dt);if(typeof modTick==='function') modTick(dt);netTick(dt);
     saveT+=dt;if(saveT>60){saveT=0;saveWorld(true);}}
 // 視窗在背景時瀏覽器會停掉畫面更新：多人連線時仍要讓世界繼續跑
 setInterval(()=>{if(running&&NET.on&&performance.now()-lastSim>250){try{simStep(0.1);}catch(e){console.error(e);}}},100);
