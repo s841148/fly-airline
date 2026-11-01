@@ -464,6 +464,20 @@ IC('i_shield',P=>{P(3,2,'#8a5a2a',10,11);P(4,13,'#8a5a2a',8,1);P(5,14,'#8a5a2a',
 const DISC=[['#e84a4a','#f8a040'],['#4ab0e8','#a0f0ff'],['#6ac84a','#f8e040']];
 DISC.forEach(([a,b],i)=>IC('i_disc'+i,P=>{P(3,3,'#1a1a1a',10,10);P(2,5,'#1a1a1a',12,6);P(5,2,'#1a1a1a',6,12);P(6,6,a,4,4);P(7,7,b,2,2);P(4,4,'#3a3a3a',2,1);}));
 IC('i_amethyst',P=>{P(6,2,'#9a6ae8',4,12);P(4,6,'#8a5ad8',8,6);P(7,3,'#e0c8ff',1,6);});
+// 銅工具、銅裝備的圖示
+TOOLS.forEach(tp=>[['copper','銅','#d8824a']].forEach(([k,,c])=>icon(`i_${tp}_${k}`,g=>{
+  if(tp==='sword'){g.fillStyle=c;for(let i=0;i<9;i++) g.fillRect(5+i,9-i,2,2);g.fillStyle=shade(c,1.25);for(let i=0;i<8;i++) g.fillRect(6+i,9-i,1,1);g.fillStyle='#5a3a18';g.fillRect(2,12,3,3);g.fillStyle='#333';g.fillRect(3,9,4,1);g.fillRect(6,10,1,4);return;}
+  stickPx(g);g.fillStyle=c;
+  if(tp==='pick'){g.fillRect(4,2,9,2);g.fillRect(3,3,2,3);g.fillRect(12,3,2,3);}
+  if(tp==='axe'){g.fillRect(8,1,4,6);g.fillRect(11,2,2,4);}
+  if(tp==='shovel'){g.fillRect(10,1,4,4);g.fillRect(11,4,2,2);}
+  if(tp==='hoe'){g.fillRect(8,2,5,2);g.fillRect(8,3,2,2);}})));
+ARMOR.forEach(sl=>[['copper','銅','#d8824a']].forEach(([k,,c])=>icon(`i_${sl}_${k}`,g=>{g.fillStyle=c;
+  if(sl==='helmet'){g.fillRect(3,4,10,5);g.fillRect(3,9,2,3);g.fillRect(11,9,2,3);}
+  if(sl==='chest'){g.fillRect(2,3,4,3);g.fillRect(10,3,4,3);g.fillRect(4,5,8,9);}
+  if(sl==='legs'){g.fillRect(4,2,8,4);g.fillRect(4,6,3,8);g.fillRect(9,6,3,8);}
+  if(sl==='boots'){g.fillRect(3,8,4,5);g.fillRect(9,8,4,5);g.fillRect(2,11,5,2);g.fillRect(9,11,5,2);}
+  g.fillStyle=shade(c,0.7);g.fillRect(3,13,10,1);})));
 const BL=[];const B={};
 function defB(key,o){const id=BL.length;B[key]=id;o.key=key;o.id=id;if(o.tool!==undefined){o.btool=o.tool;delete o.tool;}if(o.solid===undefined) o.solid=true;if(!o.tex){const t=T[key.toLowerCase()];o.tex=[t,t,t];}BL.push(o);return id;}
 const tx3=(t,s,b)=>[T[t],T[s||t],T[b||t]];
@@ -650,6 +664,9 @@ defI('I_BOAT',{n:'木船',ic:T.i_boat,stack:1,vehicle:'boat'});defI('I_MINECART'
 defI('I_SKYGEM',{n:'天藍寶石',ic:T.i_skygem});defI('I_COCONUT',{n:'椰子',ic:T.i_coconut,food:4,sat:3});defI('I_SLIMEBALL',{n:'黏液球',ic:T.i_slimeball});defI('I_SKYHONEY',{n:'雲朵蜂蜜',ic:T.i_skyhoney,food:6,sat:8,heal:4});
 defI('I_COPPER',{n:'銅錠',ic:T.i_copper});defI('I_SHIELD',{n:'盾牌',ic:T.i_shield,stack:1,shield:true,tool:{type:'shield',tier:0,sp:1,dmg:1,dur:336}});
 defI('I_DISC0',{n:'唱片：麥麥進行曲',ic:T.i_disc0,stack:1,disc:0});defI('I_DISC1',{n:'唱片：天空之歌',ic:T.i_disc1,stack:1,disc:1});defI('I_DISC2',{n:'唱片：小島搖籃曲',ic:T.i_disc2,stack:1,disc:2});defI('I_AMETHYST',{n:'紫水晶碎片',ic:T.i_amethyst});
+// 銅工具、銅裝備（加在最後面）
+{const DMG={pick:3.5,axe:9,shovel:4,sword:5.5,hoe:1};TOOLS.forEach(tp=>defI(`T_${tp}_copper`,{n:`銅${TOOL_ZH[tp]}`,ic:T[`i_${tp}_copper`],stack:1,tool:{type:tp,tier:2,sp:5,dmg:DMG[tp],dur:190}}));
+ const PTS=[2,5,4,1];ARMOR.forEach((sl,si)=>defI(`A_${sl}_copper`,{n:`銅${ARMOR_ZH[sl]}`,ic:T[`i_${sl}_copper`],stack:1,armor:{slot:si,def:PTS[si],dur:Math.round(130*[1.1,1.6,1.5,1.3][si])}}));}
 const isItem=id=>id>=256;
 const DEF=id=>isItem(id)?ITL[id]:BL[id];
 const nameOf=id=>{const d=DEF(id);return d?d.n:'？';};
@@ -1248,7 +1265,7 @@ function uiMsg(t){const el=$('#mcMsg');el.textContent=t;el.hidden=false;clearTim
 function dollCanvas(){const c=document.createElement('canvas');c.width=16;c.height=32;const g=c.getContext('2d');const f=(col,x,y,w,h)=>{g.fillStyle=col;g.fillRect(x,y,w,h);};
   f('#e3b58c',4,0,8,8);f('#4a2c14',4,0,8,2);f('#4a2c14',4,2,1,2);f('#4a2c14',11,2,1,2);f('#fff',5,4,2,1);f('#fff',9,4,2,1);f('#3a5a9a',6,4,1,1);f('#3a5a9a',9,4,1,1);f('#a86a4a',6,6,4,1);
   f(P.color,4,8,8,12);f(P.color,0,8,4,8);f(P.color,12,8,4,8);f('#e3b58c',0,16,4,4);f('#e3b58c',12,16,4,4);f('#3a3f5a',4,20,8,10);f('#2a2a3a',4,30,8,2);
-  const ac=s=>s?{leather:'#8a5a32',iron:'#cfcfcf',gold:'#f0c93a',diamond:'#5fd6d0'}[DEF(s.id).key.split('_').pop()]:null;const a=P.armor;
+  const ac=s=>s?{leather:'#8a5a32',iron:'#cfcfcf',gold:'#f0c93a',diamond:'#5fd6d0',copper:'#d8824a'}[DEF(s.id).key.split('_').pop()]:null;const a=P.armor;
   if(ac(a[0])){f(ac(a[0]),3,0,10,3);f(ac(a[0]),3,3,1,3);f(ac(a[0]),12,3,1,3);}if(ac(a[1])){f(ac(a[1]),4,8,8,10);f(ac(a[1]),0,8,4,5);f(ac(a[1]),12,8,4,5);}if(ac(a[2])) f(ac(a[2]),4,18,8,8);if(ac(a[3])) f(ac(a[3]),4,28,8,4);return c;}
 function renderUI(){if(!UI.kind) return;const k=UI.kind;let h='';
   if(k==='inv'||k==='table'){h+=`<div class="mc-top">${k==='inv'?`<div class="mc-grid g1">${P.armor.map((s,i)=>slotHTML(s,'arm',i,'arm'+i)).join('')}</div><div class="mc-doll" id="mcDoll"></div>`:''}<div><div class="mc-lab">${k==='table'?'合成':'合成'}</div>${craftHTML(k==='table'?3:2)}</div></div>${recipeBook(k==='table'?3:2)}`;}
@@ -1323,7 +1340,7 @@ function anvilResult(){const [a,b]=UI.anvil;if(!a||!b) return null;const da=DEF(
   else if(b.id!==IT.I_EBOOK) return null;
   if(b.ench){out.ench=out.ench||{};for(const [k,v] of Object.entries(b.ench)){const kind=enchKind(a.id);if(!(ENCH[k].for.includes(kind)||kind==='book'||(kind==='armor'&&ENCH[k].for.includes('armor')))) continue;const cur=out.ench[k]||0;out.ench[k]=Math.min(ENCH[k].max,cur===v?v+1:Math.max(cur,v));cost+=out.ench[k]*2;}}
   if(!cost) return null;return {out,cost:Math.min(39,cost)};}
-function repairMat(id){const k=DEF(id).key;if(/_wood$/.test(k)) return B.PLANKS;if(/_stone$/.test(k)) return B.COBBLE;if(/_iron$/.test(k)) return IT.I_IRON;if(/_gold$/.test(k)) return IT.I_GOLD;if(/_diamond$/.test(k)) return IT.I_DIAMOND;if(/_leather$/.test(k)) return IT.I_LEATHER;return -1;}
+function repairMat(id){const k=DEF(id).key;if(/_wood$/.test(k)) return B.PLANKS;if(/_stone$/.test(k)) return B.COBBLE;if(/_iron$/.test(k)) return IT.I_IRON;if(/_gold$/.test(k)) return IT.I_GOLD;if(/_diamond$/.test(k)) return IT.I_DIAMOND;if(/_copper$/.test(k)) return IT.I_COPPER;if(/_leather$/.test(k)) return IT.I_LEATHER;return -1;}
 function anvilHTML(){const r=anvilResult();return `<div class="mc-anvil">${slotHTML(UI.anvil[0],'a0',0)}<span class="plus">＋</span>${slotHTML(UI.anvil[1],'a1',0)}<span class="mc-arrow"></span>${slotHTML(r?r.out:null,'ao',0,'out')}</div><p class="acost ${r&&P.level<r.cost&&W.mode!=='creative'?'bad':''}">${r?`需要 ${r.cost} 級經驗`:'左邊放要修的工具，右邊放同樣的工具、修理材料或附魔書'}</p>`;}
 function anvilTake(){const r=anvilResult();if(!r||UI.cursor) return;if(W.mode!=='creative'&&P.level<r.cost) return;if(W.mode!=='creative') spendLevels(r.cost);const out={...r.out};delete out._use;
   if(r.out._use){UI.anvil[1].n-=r.out._use;if(UI.anvil[1].n<=0) UI.anvil[1]=null;}else UI.anvil[1]=null;UI.anvil[0]=null;UI.cursor=out;playSnd('anvil');}
@@ -2353,7 +2370,9 @@ let SHOT=false;
   rs(['B B',' B '],{B:B.BRICKS},B.FLOWERPOT);rs(['SSS','SGS','SGS'],{S:ST,G:IT.I_GOLD},B.BELL);rs(['PPP','PDP','PPP'],{P:PL,D:IT.I_DIAMOND},B.JUKEBOX);rs(['SSS','SWS','SSS'],{S:ST,W:B.WOOL_WHITE},B.PAINTING);
   rs(['CCC','CCC','CCC'],{C:IT.I_COPPER},B.COPPER_BLOCK);rl([B.COPPER_BLOCK],IT.I_COPPER,9);rs(['AA','AA'],{A:IT.I_AMETHYST},B.AMETHYST_BLOCK);
   rs(['PIP','PPP',' P '],{P:PL,I:IT.I_IRON},IT.I_SHIELD);rl([IT.I_COPPER,IT.I_AMETHYST,IT.I_COPPER],IT.I_SPYGLASS);
-  smelt(B.COPPER_ORE,IT.I_COPPER,0.7);}
+  smelt(B.COPPER_ORE,IT.I_COPPER,0.7);
+  const X=IT.I_COPPER;rs(['XXX',' S ',' S '],{X,S:ST},IT.T_pick_copper);rs(['XX','XS',' S'],{X,S:ST},IT.T_axe_copper);rs(['XX','SX','S '],{X,S:ST},IT.T_axe_copper);rs(['X','S','S'],{X,S:ST},IT.T_shovel_copper);rs(['X','X','S'],{X,S:ST},IT.T_sword_copper);rs(['XX',' S',' S'],{X,S:ST},IT.T_hoe_copper);rs(['XX','S ','S '],{X,S:ST},IT.T_hoe_copper);
+  rs(['XXX','X X'],{X},IT.A_helmet_copper);rs(['X X','XXX','XXX'],{X},IT.A_chest_copper);rs(['XXX','X X','X X'],{X},IT.A_legs_copper);rs(['X X','X X'],{X},IT.A_boots_copper);}
 // ---- 交通工具 ----
 const VEH=[];
 function vehMesh(type){const g=new THREE.Group();const wood=new THREE.MeshLambertMaterial({color:0x9a6a3a}),dark=new THREE.MeshLambertMaterial({color:0x6a4420}),iron=new THREE.MeshLambertMaterial({color:0x8a8a92}),ind=new THREE.MeshLambertMaterial({color:0x3a3a42});
