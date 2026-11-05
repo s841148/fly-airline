@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 單字學習助理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background-color: #f0f4f8; /* 淡藍灰色背景 */
+        }
+        .app-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .view {
+            display: none;
+        }
+        .view.active {
+            display: block;
+        }
+        .btn {
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .flashcard {
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flashcard.is-flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            background-color: #ffffff;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        .flashcard-back {
+            transform: rotateY(180deg);
+            background-color: #f8fafc;
+        }
+        /* 自定義加載動畫 */
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 5px solid #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* 自定義彈出訊息 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 9999px;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.5s, bottom 0.5s;
+            z-index: 999;
+        }
+        .toast.show {
+            opacity: 1;
+            bottom: 40px;
+        }
+        .toast-correct { background-color: #28a745; }
+        .toast-wrong { background-color: #dc3545; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="app-container">
+        <!-- 主選單視圖 -->
+        <div id="main-view" class="view active text-center">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">AI 單字學習助理</h1>
+            <p class="text-gray-500 mb-6">透過照片辨識、單字卡與測驗，高效學習英文</p>
+            <div class="mb-6 flex items-center justify-center gap-3">
+                <label for="scope-select" class="text-gray-700 font-semibold">練習範圍：</label>
+                <select id="scope-select" onchange="onScopeChange()" class="p-2 border border-gray-300 rounded-lg text-lg"></select>
+                <span id="scope-count" class="text-gray-500"></span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <button onclick="showView('word-bank-view')" class="btn bg-white border border-gray-300 text-gray-700 p-6 rounded-xl shadow-sm hover:shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-2">我的單字庫</h2>
+                    <p>管理、新增或匯入您的單字</p>
+                </button>
+                <button onclick="startFlashcardMode()" class="btn bg-blue-500 text-white p-6 rounded-xl shadow-lg hover:bg-blue-600">
+                    <h2 class="text-2xl font-semibold mb-2">單字卡模式</h2>
+                    <p>複習已儲存的單字</p>
+                </button>
+                <button onclick="startQuizMode()" class="btn bg-green-500 text-white p-6 rounded-xl shadow-lg hover:bg-green-600 col-span-1 md:col-span-2">
+                    <h2 class="text-2xl font-semibold mb-2">測驗模式</h2>
+                    <p>透過聽力拼寫來驗收學習成果</p>
+                </button>
+            </div>
+            <div id="quiz-dates-log" class="text-sm text-gray-500 mt-6 text-left"></div>
+        </div>
+
+        <!-- 單字庫管理視圖 -->
+        <div id="word-bank-view" class="view">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-gray-800">我的單字庫</h2>
+                <button onclick="showView('main-view')" class="btn bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">返回主選單</button>
+            </div>
+            
+            <!-- 新增單字區 -->
+            <div class="bg-gray-50 p-6 rounded-xl border border-gray-200 mb-6">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">匯入單字</h3>
+                <!-- 匯入單字 -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-medium text-gray-600 mb-3">從 txt 檔匯入（可一次選多個）</h4>
+                    <p class="text-sm text-gray-500 mb-3">檔名是 week19.txt 這種格式時，會自動標成「第 19 週」。已經在單字庫裡但還沒分週的單字，會一併補上週次。</p>
+                    <label for="txt-upload" class="btn bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 cursor-pointer inline-block">選擇 txt 檔</label>
+                    <input id="txt-upload" type="file" class="hidden" accept=".txt,text/plain" multiple onchange="importFromTxtFiles(event)">
+                </div>
+                <div>
+                    <h4 class="text-lg font-medium text-gray-600 mb-3">從文字匯入</h4>
+                    <div class="flex items-center gap-2 mb-3">
+                        <label for="week-input" class="text-gray-600">這批是第</label>
+                        <input id="week-input" type="number" min="1" class="w-20 p-2 border border-gray-300 rounded-lg text-center" placeholder="?">
+                        <span class="text-gray-600">週（可不填）</span>
+                    </div>
+                    <textarea id="paste-input" class="w-full p-3 border border-gray-300 rounded-lg h-32 focus:ring-2 focus:ring-purple-500" placeholder="貼上單字列表，一行一個單字，格式如下：&#10;extreme (adj.) 極端的&#10;Tornado Alley (n.) 龍捲風港"></textarea>
+                    <button onclick="importFromPaste()" class="mt-3 w-full btn bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600">匯入單字列表</button>
+                </div>
+            </div>
+
+            <!-- 圖片辨識獨立區塊 -->
+            <div class="bg-gray-50 p-6 rounded-xl border border-gray-200 mb-6 text-center">
+                 <h3 class="text-xl font-semibold mb-4 text-gray-700">圖片辨識</h3>
+                 <div class="flex flex-col md:flex-row items-center justify-center gap-2 mb-4">
+                     <input id="api-key-input" type="password" class="w-full md:w-80 p-2 border border-gray-300 rounded-lg" placeholder="貼上 Gemini API 金鑰（只存在這台電腦）">
+                     <button onclick="saveApiKey()" class="btn bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">儲存金鑰</button>
+                 </div>
+                 <p id="api-key-status" class="text-sm text-gray-500 mb-4"></p>
+                 <label for="image-upload" class="btn bg-indigo-500 text-white px-6 py-3 rounded-lg hover:bg-indigo-600 cursor-pointer inline-block">從圖片辨識單字</label>
+                 <input id="image-upload" type="file" class="hidden" accept="image/*,.heic,.HEIC" onchange="recognizeWordsFromImage(event)">
+                 <p id="ocr-status" class="mt-2 text-sm text-gray-500"></p>
+            </div>
+            
+             <!-- 辨識結果區 -->
+            <div id="ocr-results-container" class="hidden bg-yellow-50 p-6 rounded-xl border border-yellow-200 mb-6">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">圖片辨識結果</h3>
+                <p class="text-sm text-gray-600 mb-4">系統已自動從圖片中辨識單字和翻譯，請檢查並勾選您想加入的單字。</p>
+                <div id="ocr-results" class="space-y-3 max-h-60 overflow-y-auto"></div>
+                <div class="mt-4 text-right">
+                    <button onclick="addSelectedWordsFromOCR()" class="btn bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600">加入選取的單字</button>
+                </div>
+            </div>
+
+            <!-- 單字列表 -->
+            <div id="word-list" class="space-y-2 mb-6"></div>
+             <!-- 刪除單字庫區 -->
+            <div class="text-center border-t pt-6 mt-6 flex flex-col md:flex-row justify-center gap-4">
+                <button onclick="resetSpellingHints()" class="btn bg-blue-100 text-blue-700 px-6 py-3 rounded-lg hover:bg-blue-200 text-sm font-semibold">
+                    重設拼字提示（讓所有單字重新出現挖空提示）
+                </button>
+                <button onclick="openDeleteModal()" class="btn bg-red-100 text-red-700 px-6 py-3 rounded-lg hover:bg-red-200 hover:text-red-800 text-sm font-semibold">
+                    刪除整個單字庫
+                </button>
+            </div>
+        </div>
+
+        <!-- 單字卡視圖 -->
+        <div id="flashcard-view" class="view">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-gray-800">單字卡模式</h2>
+                <button onclick="showView('main-view')" class="btn bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">返回主選單</button>
+            </div>
+
+            <div id="flashcard-container" class="relative h-64 mb-6">
+                <div id="flashcard" class="flashcard w-full h-full" onclick="this.classList.toggle('is-flipped')">
+                    <div class="flashcard-inner">
+                        <div id="flashcard-front" class="flashcard-front">
+                            <span id="flashcard-word" class="text-5xl font-bold text-gray-800"></span>
+                        </div>
+                        <div id="flashcard-back" class="flashcard-back">
+                            <span id="flashcard-translation" class="text-4xl font-bold text-gray-700"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-center items-center gap-4">
+                <button onclick="prevFlashcard()" class="btn bg-gray-500 text-white p-4 rounded-full w-16 h-16 flex items-center justify-center shadow-lg hover:bg-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <button onclick="speakFlashcardWord()" class="btn bg-blue-500 text-white p-4 rounded-full w-20 h-20 flex items-center justify-center shadow-lg hover:bg-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.858 8.464a5 5 0 000 7.072m2.828 9.9A9 9 0 008.686 3.343M9 9l6-6m0 18l-6-6" /></svg>
+                </button>
+                <button onclick="nextFlashcard()" class="btn bg-gray-500 text-white p-4 rounded-full w-16 h-16 flex items-center justify-center shadow-lg hover:bg-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </button>
+            </div>
+             <div id="flashcard-progress" class="text-center mt-4 text-gray-500"></div>
+        </div>
+
+        <!-- 測驗模式視圖 -->
+        <div id="quiz-view" class="view">
+             <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-gray-800">測驗模式</h2>
+                <button onclick="showView('main-view')" class="btn bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">返回主選單</button>
+            </div>
+            <div class="text-center">
+                <p id="quiz-instruction" class="text-gray-600 mb-4">請聽發音，然後拼出單字</p>
+                <button onclick="speakQuizWord()" class="btn bg-blue-500 text-white p-4 rounded-full w-20 h-20 flex items-center justify-center shadow-lg hover:bg-blue-600 mx-auto">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.858 8.464a5 5 0 000 7.072m2.828 9.9A9 9 0 008.686 3.343M9 9l6-6m0 18l-6-6" /></svg>
+                </button>
+                <input id="quiz-input" type="text" class="mt-6 w-full max-w-md mx-auto p-4 text-2xl text-center border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="在這裡輸入答案..." autocomplete="off">
+                <div id="quiz-feedback" class="mt-4 text-xl font-semibold h-8"></div>
+                <button id="quiz-submit-btn" onclick="checkQuizAnswer()" class="mt-6 btn bg-green-500 text-white px-12 py-4 rounded-lg text-xl font-bold hover:bg-green-600">送出</button>
+            </div>
+            <div id="quiz-progress" class="text-center mt-6 text-gray-500"></div>
+        </div>
+
+    </div>
+    
+    <!-- 提示訊息框 -->
+    <div id="toast-message" class="toast"></div>
+
+    <!-- 刪除確認彈窗 -->
+    <div id="delete-confirm-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+        <div class="relative mx-auto p-6 border w-full max-w-md shadow-lg rounded-2xl bg-white">
+            <div class="mt-3 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl leading-6 font-bold text-gray-900 mt-4">確認刪除</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-base text-gray-600">
+                        刪除單字庫也會清除完成測驗的日期紀錄，確定要刪除嗎？
+                    </p>
+                </div>
+                <div class="flex justify-center items-center gap-4 mt-4">
+                    <button id="cancel-delete-btn" class="btn px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300">
+                        取消
+                    </button>
+                    <button id="confirm-delete-btn" class="btn px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700">
+                        繼續刪除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // DOM 元素
+        const views = document.querySelectorAll('.view');
+        const wordList = document.getElementById('word-list');
+        const ocrStatus = document.getElementById('ocr-status');
+        const ocrResultsContainer = document.getElementById('ocr-results-container');
+        const ocrResults = document.getElementById('ocr-results');
+        const flashcardWord = document.getElementById('flashcard-word');
+        const flashcardTranslation = document.getElementById('flashcard-translation');
+        const flashcardProgress = document.getElementById('flashcard-progress');
+        const quizInstruction = document.getElementById('quiz-instruction');
+        const quizInput = document.getElementById('quiz-input');
+        const quizFeedback = document.getElementById('quiz-feedback');
+        const quizProgress = document.getElementById('quiz-progress');
+        const quizSubmitBtn = document.getElementById('quiz-submit-btn');
+        const toastMessage = document.getElementById('toast-message');
+        const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+        const scopeSelect = document.getElementById('scope-select');
+        const scopeCount = document.getElementById('scope-count');
+
+        // 應用程式狀態
+        let wordBank = [];
+        let practiceWords = [];      // 目前範圍內的單字（單字卡用）
+        let currentFlashcardIndex = 0;
+        let quizWords = [];
+        let currentQuizWord = null;
+        let sessionCompletedCount = 0;
+        let totalQuizWords = 0;
+        let quizState = 'idle';      // 'answering' | 'waiting-next' | 'auto-advancing' | 'done'
+        let currentScope = 'all';
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadWordBank();
+            currentScope = safeGet('practiceScope') || 'all';
+            renderWordList();
+            renderScopeSelect();
+            loadQuizCompletionDates();
+            loadApiKeyStatus();
+
+            confirmDeleteBtn.addEventListener('click', confirmDeleteWordBank);
+            cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+        });
+
+        // --- 小工具 ---
+
+        function safeGet(key) {
+            try { return localStorage.getItem(key); } catch (e) { return null; }
+        }
+        function safeSet(key, value) {
+            try { localStorage.setItem(key, value); } catch (e) { console.warn('無法儲存', e); }
+        }
+        function safeRemove(key) {
+            try { localStorage.removeItem(key); } catch (e) {}
+        }
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function weekLabel(week) {
+            return week ? `第 ${week} 週` : '未分週';
+        }
+
+        // --- 核心功能 ---
+
+        function showView(viewId) {
+            views.forEach(view => view.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            if (viewId === 'main-view') {
+                renderScopeSelect();
+            }
+        }
+
+        function saveWordBank() {
+            safeSet('wordBank', JSON.stringify(wordBank));
+        }
+
+        function loadWordBank() {
+            const savedWords = safeGet('wordBank');
+            if (savedWords) {
+                try {
+                    wordBank = JSON.parse(savedWords).map(w => ({
+                        ...w,
+                        quizStage: w.quizStage || 1,
+                        week: w.week || null
+                    }));
+                } catch (e) {
+                    wordBank = [];
+                }
+            }
+        }
+
+        function loadQuizCompletionDates() {
+            const datesLogEl = document.getElementById('quiz-dates-log');
+            const savedDates = safeGet('quizCompletionDates');
+            let dates = [];
+            try { dates = savedDates ? JSON.parse(savedDates) : []; } catch (e) {}
+            if (dates.length > 0) {
+                let html = '<h4 class="font-semibold mb-2 text-center">測驗完成紀錄</h4><ul class="list-disc list-inside text-center" style="max-height: 100px; overflow-y: auto;">';
+                dates.slice().reverse().forEach(date => {
+                    html += `<li>${escapeHtml(date)}</li>`;
+                });
+                html += '</ul>';
+                datesLogEl.innerHTML = html;
+                return;
+            }
+            datesLogEl.innerHTML = '<p class="text-center">尚未完成過測驗</p>';
+        }
+
+        function showToast(message, type = 'correct') {
+            toastMessage.textContent = message;
+            toastMessage.className = `toast show ${type === 'correct' ? 'toast-correct' : 'toast-wrong'}`;
+            clearTimeout(showToast._t);
+            showToast._t = setTimeout(() => {
+                toastMessage.classList.remove('show');
+            }, 2500);
+        }
+
+        // --- 練習範圍（週次） ---
+
+        function getWeeks() {
+            const weeks = [...new Set(wordBank.map(w => w.week).filter(Boolean))];
+            return weeks.sort((a, b) => a - b);
+        }
+
+        function renderScopeSelect() {
+            const weeks = getWeeks();
+            const hasUnassigned = wordBank.some(w => !w.week);
+            let options = [`<option value="all">全部單字</option>`];
+            weeks.forEach(wk => options.push(`<option value="${wk}">第 ${wk} 週</option>`));
+            if (hasUnassigned && weeks.length > 0) options.push(`<option value="none">未分週</option>`);
+            scopeSelect.innerHTML = options.join('');
+
+            const valid = [...scopeSelect.options].some(o => o.value === String(currentScope));
+            if (!valid) currentScope = 'all';
+            scopeSelect.value = String(currentScope);
+            scopeCount.textContent = `（${getScopeWords().length} 個字）`;
+        }
+
+        function onScopeChange() {
+            currentScope = scopeSelect.value;
+            safeSet('practiceScope', currentScope);
+            scopeCount.textContent = `（${getScopeWords().length} 個字）`;
+        }
+
+        function getScopeWords() {
+            if (currentScope === 'all') return wordBank;
+            if (currentScope === 'none') return wordBank.filter(w => !w.week);
+            const wk = Number(currentScope);
+            return wordBank.filter(w => w.week === wk);
+        }
+
+        function scopeLabel() {
+            if (currentScope === 'all') return '全部';
+            if (currentScope === 'none') return '未分週';
+            return `第 ${currentScope} 週`;
+        }
+
+        // --- 單字庫管理 ---
+
+        function renderWordList() {
+            wordList.innerHTML = '';
+            if (wordBank.length === 0) {
+                wordList.innerHTML = '<p class="text-center text-gray-500">您的單字庫是空的，快去新增一些單字吧！</p>';
+                return;
+            }
+            // 依週次分組顯示（新的週在上面，未分週放最後）
+            const groups = new Map();
+            wordBank.forEach((item, index) => {
+                const key = item.week || 0;
+                if (!groups.has(key)) groups.set(key, []);
+                groups.get(key).push({ item, index });
+            });
+            const keys = [...groups.keys()].sort((a, b) => {
+                if (a === 0) return 1;
+                if (b === 0) return -1;
+                return b - a;
+            });
+            keys.forEach(key => {
+                const entries = groups.get(key);
+                const details = document.createElement('details');
+                details.className = 'bg-gray-50 rounded-lg border border-gray-200';
+                details.open = keys.length === 1;
+                const summary = document.createElement('summary');
+                summary.className = 'cursor-pointer p-3 font-semibold text-gray-700';
+                summary.textContent = `${weekLabel(key)}（${entries.length} 個字）`;
+                details.appendChild(summary);
+
+                const inner = document.createElement('div');
+                inner.className = 'space-y-2 p-3 pt-0';
+                entries.forEach(({ item, index }) => {
+                    const wordElement = document.createElement('div');
+                    wordElement.className = 'flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm';
+                    wordElement.innerHTML = `
+                        <div>
+                            <p class="font-semibold text-lg text-gray-800">${escapeHtml(item.word)}</p>
+                            <p class="text-gray-500">${escapeHtml(item.translation)}</p>
+                        </div>
+                        <button onclick="deleteWord(${index})" class="text-red-500 hover:text-red-700" title="刪除這個單字">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                    `;
+                    inner.appendChild(wordElement);
+                });
+                details.appendChild(inner);
+                wordList.appendChild(details);
+            });
+        }
+
+        // 解析文字：一行一個單字，格式「word (詞性) 中文」
+        // 允許單字中有連字號、句點、撇號、空格（例如 well-known、Mr.、black out）
+        function parseWordLines(text) {
+            const regex = /^([A-Za-z][A-Za-z\s'’.\-]*?)\s*(\([^)]*\))\s*(.*)$/;
+            const parsed = [];
+            const skipped = [];
+            text.split(/\r?\n/).forEach(line => {
+                const trimmedLine = line.trim();
+                if (!trimmedLine) return;
+                const match = trimmedLine.match(regex);
+                if (match && match[3].trim()) {
+                    parsed.push({
+                        word: match[1].trim(),
+                        translation: `${match[2]} ${match[3].trim()}`
+                    });
+                } else {
+                    skipped.push(trimmedLine);
+                }
+            });
+            return { parsed, skipped };
+        }
+
+        // 把解析好的單字加入單字庫；回傳新增、補上週次的數量
+        function addWordsToBank(items, week) {
+            let added = 0, tagged = 0;
+            items.forEach(({ word, translation }) => {
+                const existing = wordBank.find(w => w.word.toLowerCase() === word.toLowerCase());
+                if (existing) {
+                    if (week && !existing.week) {
+                        existing.week = week;
+                        tagged++;
+                    }
+                    return;
+                }
+                wordBank.push({ word, translation, quizStage: 1, week: week || null });
+                added++;
+            });
+            return { added, tagged };
+        }
+
+        function afterImport(added, tagged, skipped) {
+            if (added > 0 || tagged > 0) {
+                saveWordBank();
+                renderWordList();
+                renderScopeSelect();
+            }
+            let msg = [];
+            if (added > 0) msg.push(`新增 ${added} 個單字`);
+            if (tagged > 0) msg.push(`${tagged} 個舊單字補上週次`);
+            if (skipped.length > 0) msg.push(`${skipped.length} 行格式看不懂，已略過`);
+            if (skipped.length > 0) console.warn('略過的行：', skipped);
+            if (msg.length === 0) {
+                showToast('沒有找到可匯入的新單字（可能都已經在單字庫裡）', 'wrong');
+            } else {
+                showToast(msg.join('，'), (added > 0 || tagged > 0) ? 'correct' : 'wrong');
+            }
+            if (skipped.length > 0) {
+                setTimeout(() => {
+                    showToast(`略過的行，例如：${skipped.slice(0, 2).join(' / ')}`, 'wrong');
+                }, 2700);
+            }
+        }
+
+        function importFromPaste() {
+            const pasteArea = document.getElementById('paste-input');
+            const weekInput = document.getElementById('week-input');
+            const text = pasteArea.value.trim();
+            if (!text) {
+                showToast('請先貼上單字列表', 'wrong');
+                return;
+            }
+            const week = parseInt(weekInput.value, 10) || null;
+            const { parsed, skipped } = parseWordLines(text);
+            const { added, tagged } = addWordsToBank(parsed, week);
+            afterImport(added, tagged, skipped);
+            if (added > 0 || tagged > 0) {
+                pasteArea.value = '';
+            }
+        }
+
+        async function importFromTxtFiles(event) {
+            const files = [...event.target.files];
+            if (files.length === 0) return;
+            let totalAdded = 0, totalTagged = 0, allSkipped = [];
+            for (const file of files) {
+                const text = await file.text();
+                const m = file.name.match(/week\s*(\d+)/i);
+                const week = m ? parseInt(m[1], 10) : null;
+                const { parsed, skipped } = parseWordLines(text);
+                const { added, tagged } = addWordsToBank(parsed, week);
+                totalAdded += added;
+                totalTagged += tagged;
+                allSkipped.push(...skipped);
+            }
+            event.target.value = '';
+            afterImport(totalAdded, totalTagged, allSkipped);
+        }
+
+        function deleteWord(index) {
+            wordBank.splice(index, 1);
+            saveWordBank();
+            renderWordList();
+            renderScopeSelect();
+        }
+
+        function resetSpellingHints() {
+            wordBank.forEach(w => w.quizStage = 1);
+            saveWordBank();
+            showToast('已重設：下次測驗拼字時會再出現挖空提示');
+        }
+
+        function openDeleteModal() {
+            deleteConfirmModal.classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            deleteConfirmModal.classList.add('hidden');
+        }
+
+        function confirmDeleteWordBank() {
+            wordBank = [];
+            safeRemove('wordBank');
+            safeRemove('quizCompletionDates');
+            loadQuizCompletionDates();
+            renderWordList();
+            renderScopeSelect();
+            closeDeleteModal();
+            showToast('單字庫已成功刪除');
+        }
+
+        // --- Gemini 金鑰 ---
+
+        function loadApiKeyStatus() {
+            const status = document.getElementById('api-key-status');
+            status.textContent = safeGet('geminiApiKey')
+                ? '✅ 已儲存金鑰，可以使用圖片辨識'
+                : '尚未設定金鑰：到 aistudio.google.com 免費申請 Gemini API 金鑰後貼在上面';
+        }
+
+        function saveApiKey() {
+            const input = document.getElementById('api-key-input');
+            const key = input.value.trim();
+            if (!key) {
+                showToast('請先貼上金鑰', 'wrong');
+                return;
+            }
+            safeSet('geminiApiKey', key);
+            input.value = '';
+            loadApiKeyStatus();
+            showToast('金鑰已儲存');
+        }
+
+        // --- 圖片辨識 (OCR) ---
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function guessMimeType(file) {
+            if (file.type) return file.type;
+            const name = file.name.toLowerCase();
+            if (name.endsWith('.heic')) return 'image/heic';
+            if (name.endsWith('.heif')) return 'image/heif';
+            if (name.endsWith('.png')) return 'image/png';
+            if (name.endsWith('.webp')) return 'image/webp';
+            return 'image/jpeg';
+        }
+
+        async function recognizeWordsFromImage(event) {
+            const file = event.target.files[0];
+            event.target.value = '';
+            if (!file) return;
+
+            const apiKey = safeGet('geminiApiKey');
+            if (!apiKey) {
+                ocrStatus.textContent = '請先在上方貼上並儲存 Gemini API 金鑰。';
+                showToast('尚未設定 Gemini 金鑰', 'wrong');
+                return;
+            }
+
+            ocrStatus.innerHTML = '<div class="loader mx-auto"></div><p class="mt-2">正在使用 Gemini 辨識圖片中的單字...</p>';
+            ocrResultsContainer.classList.add('hidden');
+
+            try {
+                const base64ImageData = await fileToBase64(file);
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+                const prompt = "From the provided image of a vocabulary list, extract the English words/phrases and their complete Chinese translations (including the part of speech like '(n.)'). Respond with ONLY a valid JSON array of objects. Each object must have a 'word' key (the English term, preserving original case) and a 'translation' key (the full translation string including part of speech). For example: [{\"word\": \"team\", \"translation\": \"(n.) 團隊\"}, {\"word\": \"Tornado Alley\", \"translation\": \"(n.) 龍捲風港\"}]. Do not include any items that are only in Chinese without an English counterpart. Do not include any other text, explanations, or markdown formatting.";
+
+                const payload = {
+                    contents: [{
+                        parts: [
+                            { text: prompt },
+                            { inlineData: { mimeType: guessMimeType(file), data: base64ImageData } }
+                        ]
+                    }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    "word": { "type": "STRING" },
+                                    "translation": { "type": "STRING" }
+                                },
+                                required: ["word", "translation"]
+                            }
+                        }
+                    }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    if (response.status === 400 || response.status === 403) {
+                        throw new Error('KEY');
+                    }
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!jsonText) {
+                    throw new Error("Invalid response structure from Gemini API");
+                }
+
+                const recognizedPairs = JSON.parse(jsonText);
+                if (recognizedPairs.length > 0) {
+                    ocrStatus.textContent = `辨識完成！共找到 ${recognizedPairs.length} 個單字。`;
+                    displayOcrResults(recognizedPairs);
+                } else {
+                    ocrStatus.textContent = '辨識完成，但未找到可辨識的單字列表。';
+                }
+
+            } catch (error) {
+                console.error("Gemini OCR Error:", error);
+                ocrStatus.textContent = error.message === 'KEY'
+                    ? '圖片辨識失敗：金鑰可能不正確，或這種圖片格式不支援（可改用 jpg）。'
+                    : '圖片辨識失敗，請稍後再試。';
+            }
+        }
+
+        function displayOcrResults(results) {
+            ocrResults.innerHTML = '';
+            results.forEach(item => {
+                if (wordBank.some(bankItem => bankItem.word.toLowerCase() === item.word.toLowerCase())) {
+                    return;
+                }
+
+                const resultElement = document.createElement('div');
+                resultElement.className = 'grid grid-cols-1 md:grid-cols-3 gap-2 items-center';
+
+                const div = document.createElement('div');
+                div.className = 'flex items-center';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-3';
+                checkbox.dataset.word = item.word;
+                checkbox.checked = true;
+
+                const label = document.createElement('label');
+                label.className = 'font-medium text-gray-700';
+                label.textContent = item.word;
+
+                div.appendChild(checkbox);
+                div.appendChild(label);
+
+                const translationInput = document.createElement('input');
+                translationInput.type = 'text';
+                translationInput.placeholder = '請輸入中文翻譯';
+                translationInput.className = 'ocr-translation-input col-span-2 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500';
+                translationInput.value = item.translation;
+
+                resultElement.appendChild(div);
+                resultElement.appendChild(translationInput);
+                ocrResults.appendChild(resultElement);
+            });
+
+            if (ocrResults.children.length > 0) {
+                ocrResultsContainer.classList.remove('hidden');
+            } else {
+                ocrResultsContainer.classList.add('hidden');
+                if (ocrStatus.textContent.includes('辨識完成')) {
+                    ocrStatus.textContent = '辨識完成，但未找到可加入的新單字。';
+                }
+            }
+        }
+
+        function addSelectedWordsFromOCR() {
+            const week = parseInt(document.getElementById('week-input').value, 10) || null;
+            const selectedCheckboxes = ocrResults.querySelectorAll('input[type="checkbox"]:checked');
+            let addedCount = 0;
+            selectedCheckboxes.forEach(checkbox => {
+                const word = checkbox.dataset.word;
+                const translationInput = checkbox.closest('.grid').querySelector('.ocr-translation-input');
+                const translation = translationInput.value.trim();
+
+                if (translation && !wordBank.some(item => item.word.toLowerCase() === word.toLowerCase())) {
+                    wordBank.push({ word, translation, quizStage: 1, week });
+                    addedCount++;
+                }
+            });
+
+            if (addedCount > 0) {
+                saveWordBank();
+                renderWordList();
+                renderScopeSelect();
+                showToast(`成功加入 ${addedCount} 個單字${week ? `（第 ${week} 週）` : ''}！`);
+                ocrResultsContainer.classList.add('hidden');
+                ocrStatus.textContent = '';
+            } else {
+                showToast('請先勾選單字並填寫翻譯', 'wrong');
+            }
+        }
+
+        // --- 單字卡模式 ---
+
+        function startFlashcardMode() {
+            practiceWords = getScopeWords();
+            if (practiceWords.length === 0) {
+                showToast('這個範圍沒有單字，請先新增單字', 'wrong');
+                return;
+            }
+            currentFlashcardIndex = 0;
+            updateFlashcard();
+            showView('flashcard-view');
+        }
+
+        function updateFlashcard() {
+            const item = practiceWords[currentFlashcardIndex];
+            flashcardWord.textContent = item.word;
+            flashcardTranslation.textContent = item.translation;
+            flashcardProgress.textContent = `${scopeLabel()}　${currentFlashcardIndex + 1} / ${practiceWords.length}`;
+            document.getElementById('flashcard').classList.remove('is-flipped');
+        }
+
+        function nextFlashcard() {
+            currentFlashcardIndex = (currentFlashcardIndex + 1) % practiceWords.length;
+            updateFlashcard();
+        }
+
+        function prevFlashcard() {
+            currentFlashcardIndex = (currentFlashcardIndex - 1 + practiceWords.length) % practiceWords.length;
+            updateFlashcard();
+        }
+
+        function speakFlashcardWord() {
+            speak(practiceWords[currentFlashcardIndex].word);
+        }
+
+        // --- 語音合成 ---
+
+        function speak(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // --- 測驗模式 ---
+
+        function isSpellingCorrect(userAnswer, word) {
+            const norm = s => s.toLowerCase().replace(/[’]/g, "'").replace(/\s+/g, ' ').trim();
+            return norm(userAnswer) === norm(word);
+        }
+
+        function startQuizMode() {
+            const scopeWords = getScopeWords();
+            if (scopeWords.length === 0) {
+                showToast('這個範圍沒有單字，請先新增單字', 'wrong');
+                return;
+            }
+            totalQuizWords = scopeWords.length;
+            sessionCompletedCount = 0;
+            quizWords = [...scopeWords]
+                .map(w => ({ ...w, stage: w.quizStage }))
+                .sort(() => Math.random() - 0.5);
+
+            showView('quiz-view');
+            nextQuizWord();
+        }
+
+        function generateQuestionText(word, stage) {
+            if (stage >= 2) {
+                return { question: '請拼出完整單字...', answer: word };
+            }
+            const len = word.length;
+            if (len <= 3) return { question: '請拼出完整單字...', answer: word };
+            const textArray = word.split('');
+            // 只挖掉字母（不挖空格、連字號），且不挖第一個字母
+            const letterIdx = textArray.map((c, i) => i).filter(i => i !== 0 && /[A-Za-z]/.test(textArray[i]));
+            const hiddenCount = Math.min(letterIdx.length, Math.ceil(len * 0.4));
+            letterIdx.sort(() => Math.random() - 0.5);
+            for (let i = 0; i < hiddenCount; i++) {
+                textArray[letterIdx[i]] = '_';
+            }
+            return { question: textArray.map(c => c === ' ' ? '  ' : c).join(' '), answer: word };
+        }
+
+        function recordCompletion() {
+            const today = new Date();
+            const dateString = today.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+            const savedDates = safeGet('quizCompletionDates');
+            let dates = [];
+            try { dates = savedDates ? JSON.parse(savedDates) : []; } catch (e) {}
+            dates.push(`${dateString}（${scopeLabel()}，${totalQuizWords} 個字）`);
+            safeSet('quizCompletionDates', JSON.stringify(dates));
+            loadQuizCompletionDates();
+        }
+
+        function nextQuizWord() {
+            if (quizWords.length === 0) {
+                quizState = 'done';
+                quizInstruction.textContent = '';
+                quizFeedback.textContent = '🎉 恭喜！您已完成所有測驗！';
+                quizFeedback.style.color = '#10B981';
+                quizInput.style.display = 'none';
+                quizSubmitBtn.textContent = '回主選單';
+                quizSubmitBtn.onclick = () => showView('main-view');
+                quizProgress.textContent = `進度: ${totalQuizWords} / ${totalQuizWords}`;
+                recordCompletion();
+                return;
+            }
+
+            currentQuizWord = quizWords[0];
+
+            const { question } = generateQuestionText(currentQuizWord.word, currentQuizWord.stage);
+            quizInstruction.textContent = '請聽發音，然後拼出單字';
+            quizInput.placeholder = question;
+
+            quizState = 'answering';
+            quizInput.value = '';
+            quizInput.readOnly = false;
+            quizInput.style.display = 'block';
+            quizFeedback.textContent = '';
+            quizSubmitBtn.textContent = '送出';
+            quizSubmitBtn.onclick = checkQuizAnswer;
+            quizSubmitBtn.style.display = 'inline-block';
+            quizInput.focus();
+
+            quizProgress.textContent = `${scopeLabel()}　進度: ${sessionCompletedCount} / ${totalQuizWords}`;
+
+            setTimeout(() => speak(currentQuizWord.word), 300);
+        }
+
+        function speakQuizWord() {
+            if (currentQuizWord) {
+                speak(currentQuizWord.word);
+            }
+            if (quizState === 'answering') quizInput.focus();
+        }
+
+        function setWordStage(word, stage) {
+            const wordInBank = wordBank.find(w => w.word.toLowerCase() === word.toLowerCase());
+            if (wordInBank) {
+                wordInBank.quizStage = stage;
+                saveWordBank();
+            }
+        }
+
+        function checkQuizAnswer() {
+            if (quizState !== 'answering') return;
+            const userAnswer = quizInput.value.trim();
+            if (!userAnswer) return;
+
+            const isCorrect = isSpellingCorrect(userAnswer, currentQuizWord.word);
+
+            // 用 readOnly 而不是 disabled，這樣輸入框保有焦點，按 Enter 才能繼續
+            quizInput.readOnly = true;
+
+            if (isCorrect) {
+                quizState = 'auto-advancing';
+                quizFeedback.textContent = `✔ ${currentQuizWord.word}　${currentQuizWord.translation}`;
+                quizFeedback.style.color = '#10B981';
+
+                currentQuizWord.stage++;
+                setWordStage(currentQuizWord.word, currentQuizWord.stage);
+                if (currentQuizWord.stage === 2) {
+                    // 第一次拼對（有提示）→ 排到後面再考一次不給提示
+                    quizWords.push(quizWords.shift());
+                } else {
+                    quizWords.shift();
+                    sessionCompletedCount++;
+                }
+
+                setTimeout(nextQuizWord, 1200);
+
+            } else {
+                quizState = 'waiting-next';
+                quizFeedback.textContent = `正確答案: ${currentQuizWord.word}　${currentQuizWord.translation}`;
+                quizFeedback.style.color = '#EF4444';
+                quizSubmitBtn.textContent = '繼續（按 Enter）';
+                quizSubmitBtn.onclick = nextQuizWord;
+
+                // 拼錯了 → 下次再給挖空提示
+                currentQuizWord.stage = 1;
+                setWordStage(currentQuizWord.word, 1);
+                quizWords.push(quizWords.shift());
+            }
+        }
+
+        // 在測驗畫面按 Enter：作答中 → 送出；答錯等待中 → 下一題
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' || event.isComposing) return;
+            if (!document.getElementById('quiz-view').classList.contains('active')) return;
+            if (quizState === 'answering' && document.activeElement === quizInput) {
+                event.preventDefault();
+                checkQuizAnswer();
+            } else if (quizState === 'waiting-next') {
+                event.preventDefault();
+                nextQuizWord();
+            }
+        });
+    </script>
+</body>
+</html>
+

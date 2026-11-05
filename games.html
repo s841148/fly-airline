@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<!--
+  麥麥的遊戲工廠 · 遊戲中心
+  © 2026 麥麥的遊戲工廠. All rights reserved.
+  放在「麥麥的遊戲工廠」資料夾裡，直接雙擊就能開。
+-->
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="copyright" content="© 2026 麥麥的遊戲工廠">
+<title>麥麥的遊戲工廠 · 遊戲中心</title>
+<style>
+  :root{
+    --bg:#14122b; --bg2:#1e1b3d; --card:#262250; --card-hi:#2f2a63;
+    --ink:#f4f1ff; --muted:#a9a3cf; --line:#3a3570;
+    --gold:#ffcf4a; --pink:#ff6fa8; --mint:#4fe3b5; --sky:#5cb8ff; --orange:#ff9a4a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #3b2a7a 0%, transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, #1d4a6e 0%, transparent 55%),
+      var(--bg);
+    min-height:100vh;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+
+  /* ---------- 招牌 ---------- */
+  header{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:22px}
+  .logo{
+    width:76px;height:76px;border-radius:22px;flex:none;
+    display:grid;place-items:center;font-size:42px;
+    background:linear-gradient(135deg,var(--gold),var(--orange));
+    box-shadow:0 8px 0 #b8661f, 0 14px 30px rgba(0,0,0,.35);
+    transform:rotate(-6deg);
+  }
+  .title h1{margin:0;font-size:clamp(28px,5vw,44px);letter-spacing:2px;line-height:1.1}
+  .title h1 span{color:var(--gold)}
+  .title p{margin:6px 0 0;color:var(--muted);font-size:15px}
+  .counter{
+    margin-left:auto;background:var(--bg2);border:1px solid var(--line);
+    padding:10px 16px;border-radius:14px;text-align:center;
+  }
+  .counter b{display:block;font-size:28px;color:var(--mint);line-height:1}
+  .counter small{color:var(--muted)}
+
+  /* ---------- 篩選列 ---------- */
+  .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+  .chip{
+    border:1px solid var(--line);background:var(--bg2);color:var(--ink);
+    padding:9px 16px;border-radius:999px;font-size:15px;cursor:pointer;
+    font-family:inherit;transition:.15s;
+  }
+  .chip:hover{border-color:var(--gold)}
+  .chip.on{background:var(--gold);color:#2a1c00;border-color:var(--gold);font-weight:700}
+  .search{
+    margin-left:auto;flex:1 1 200px;max-width:280px;
+    background:var(--bg2);border:1px solid var(--line);color:var(--ink);
+    padding:10px 14px;border-radius:12px;font-size:15px;font-family:inherit;
+  }
+  .search::placeholder{color:var(--muted)}
+
+  /* ---------- 最近玩過 ---------- */
+  #recent{margin-bottom:18px;display:none}
+  #recent h2,.sec{font-size:16px;color:var(--muted);font-weight:600;margin:0 0 10px;letter-spacing:1px}
+  .recent-row{display:flex;gap:10px;flex-wrap:wrap}
+  .recent-row a{
+    display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);
+    background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:8px 14px;
+  }
+  .recent-row a:hover{border-color:var(--mint)}
+
+  /* ---------- 遊戲卡 ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+  .card{
+    position:relative;display:flex;flex-direction:column;text-decoration:none;color:var(--ink);
+    background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden;
+    transition:transform .15s, box-shadow .15s, background .15s;
+  }
+  .card:hover{transform:translateY(-5px);background:var(--card-hi);box-shadow:0 14px 30px rgba(0,0,0,.4)}
+  .card:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+  .art{
+    height:120px;display:grid;place-items:center;font-size:64px;position:relative;
+    background:linear-gradient(135deg,var(--c1),var(--c2));
+  }
+  .art::after{ /* 小小的像素格紋 */
+    content:"";position:absolute;inset:0;opacity:.12;
+    background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);
+    background-size:16px 16px;
+  }
+  .art span{position:relative;z-index:1;filter:drop-shadow(0 4px 6px rgba(0,0,0,.35))}
+  .badge{
+    position:absolute;top:10px;right:10px;z-index:2;font-size:12px;font-weight:700;
+    background:rgba(0,0,0,.45);padding:4px 9px;border-radius:999px;
+  }
+  .badge.new{background:var(--pink);color:#fff}
+  .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .body h3{margin:0;font-size:20px}
+  .body p{margin:0;color:var(--muted);font-size:14px;line-height:1.55;flex:1}
+  .tags{display:flex;gap:6px;flex-wrap:wrap}
+  .tag{font-size:12px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.08);color:#d9d4ff}
+  .play{
+    margin-top:4px;align-self:flex-start;background:var(--mint);color:#06281d;font-weight:800;
+    padding:8px 18px;border-radius:10px;font-size:15px;box-shadow:0 4px 0 #1f9b76;
+  }
+  .card:hover .play{background:#6ff0c6}
+  .empty{color:var(--muted);text-align:center;padding:40px 0;display:none}
+
+  footer{margin-top:34px;text-align:center;color:var(--muted);font-size:13px;line-height:1.8}
+  footer b{color:var(--ink)}
+
+  @media (max-width:560px){
+    .counter{margin-left:0}
+    .search{max-width:none;margin-left:0}
+    .art{height:100px;font-size:54px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">🎮</div>
+    <div class="title">
+      <h1>麥麥的<span>遊戲工廠</span></h1>
+      <p>自己設計、自己做的遊戲，全部在這裡 ✨</p>
+    </div>
+    <div class="counter"><b id="count">0</b><small>款作品</small></div>
+  </header>
+
+  <div class="bar" id="filters">
+    <!-- JS 填入分類按鈕 -->
+    <input class="search" id="search" type="search" placeholder="🔍 找遊戲…">
+  </div>
+
+  <section id="recent">
+    <h2>⏱ 最近玩過</h2>
+    <div class="recent-row" id="recent-row"></div>
+  </section>
+
+  <div class="grid" id="grid"></div>
+  <p class="empty" id="empty">找不到這個遊戲 🤔</p>
+
+  <footer>
+    <b>© 2026 麥麥的遊戲工廠</b>　版權所有<br>
+    所有遊戲的程式、文字與設計均為原創作品，未經授權請勿轉載、修改後散布或作商業用途。
+  </footer>
+</div>
+
+<script>
+/* ====== 遊戲清單 ======
+   新增遊戲：照下面的格式多加一筆就好。
+   file：電腦版，從這個資料夾出發的檔案位置（資料夾用 / 隔開）
+   web：網站版的網址位置
+   new：true 會出現「NEW」標籤                                   */
+const GAMES = [
+  { name:'四國村莊人生', file:'index.html', web:'village.html', icon:'🏡', c1:'#3fb37f', c2:'#1f6f9b',
+    tags:['模擬','3D'], desc:'選台灣、日本、美國或新加坡，住進村莊工作賺錢、買東西，過自己的人生。' },
+  { name:'麥麥方塊世界', file:'mc.html', web:'mc.html', icon:'⛏️', c1:'#7cc04b', c2:'#6b4a2b',
+    tags:['冒險','3D','建造'], desc:'挖礦、蒐集材料、蓋房子，在方塊組成的世界裡自由探險。' },
+  { name:'麥麥農場物語', file:'https://s841148.github.io/fly-airline/farm.html', web:'farm.html', icon:'🐄', c1:'#8bd36b', c2:'#c98a3b', new:true,
+    tags:['模擬','雙人'], desc:'種田過四季、養動物、參加鎮上節日，還能下礦坑釣魚、合成建造，2～4 人一起連線玩。' },
+  { name:'瀾洲總統', file:'president.html', web:'president.html', icon:'🏛️', c1:'#c9a227', c2:'#7a1f2b',
+    tags:['策略','模擬'], desc:'當上架空國家「瀾洲」的總統，處理內政、選國策，帶領國家走向未來。' },
+  { name:'台海防衛戰', file:'台海防衛戰(V3)/index.html', web:'taiwan-strait/', icon:'🛡️', c1:'#2c5d8f', c2:'#1a2a3f',
+    tags:['策略','戰爭'], desc:'六角格兵棋：調度陸海空部隊、研發、生產與外交軍售，守住台灣海峽。' },
+  { name:'諾曼第突擊', file:'諾曼第突擊.html', web:'normandy.html', icon:'🪖', c1:'#8a7a4a', c2:'#3c4a3a',
+    tags:['動作','戰爭'], desc:'登上海灘、突破防線，重現二戰諾曼第登陸的激烈戰鬥。' },
+  { name:'飛吧！航空大亨', file:'飛吧航空大亨.html', web:'index.html', icon:'✈️', c1:'#5cb8ff', c2:'#2a4fa8',
+    tags:['經營','模擬'], desc:'買飛機、開航線、賺大錢，打造全世界最厲害的航空公司。' },
+  { name:'錢潮 MoneyTide', file:'金融遊戲/index.html', web:'finance/', icon:'💰', c1:'#f5c542', c2:'#2f8f5b',
+    tags:['經營','學習'], desc:'在市場的漲漲跌跌裡做決定，學會理財與投資的眉角。' },
+  { name:'數學小農場', file:'數學小農場/數學小農場.html', web:'math-farm.html', icon:'🌻', c1:'#ffb648', c2:'#5aa83a',
+    tags:['學習'], desc:'答對數學題就能種田收成，一邊經營農場一邊練數學。' },
+  { name:'背單字小幫手', file:'../背單字小幫手/背單字小幫手.html', web:'vocab.html', icon:'📚', c1:'#9b7bff', c2:'#4a3aa8',
+    tags:['學習'], desc:'單字卡加聽力拼字測驗，每週的英文單字輕鬆背起來。' },
+];
+
+/* ====== 以下不用改 ====== */
+const grid = document.getElementById('grid');
+const filters = document.getElementById('filters');
+const search = document.getElementById('search');
+const empty = document.getElementById('empty');
+let currentTag = '全部';
+
+function safeGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function safeSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const ONLINE = /^https?:$/.test(location.protocol);
+function link(g){ if (ONLINE) return g.web; return /^https?:/.test(g.file) ? g.file : g.file.split('/').map(encodeURIComponent).join('/'); }
+
+document.getElementById('count').textContent = GAMES.length;
+
+// 分類按鈕
+const tags = ['全部', ...new Set(GAMES.flatMap(g => g.tags))];
+tags.forEach(t => {
+  const b = document.createElement('button');
+  b.className = 'chip' + (t === currentTag ? ' on' : '');
+  b.textContent = t;
+  b.onclick = () => {
+    currentTag = t;
+    filters.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === b));
+    render();
+  };
+  filters.insertBefore(b, search);
+});
+search.addEventListener('input', render);
+
+function render(){
+  const q = search.value.trim().toLowerCase();
+  const list = GAMES.filter(g =>
+    (currentTag === '全部' || g.tags.includes(currentTag)) &&
+    (!q || (g.name + g.desc + g.tags.join('')).toLowerCase().includes(q))
+  );
+  grid.innerHTML = list.map(g => `
+    <a class="card" href="${link(g)}" target="_blank" rel="noopener" data-name="${esc(g.name)}">
+      <div class="art" style="--c1:${g.c1};--c2:${g.c2}">
+        ${g.new ? '<span class="badge new">NEW</span>' : ''}
+        <span>${g.icon}</span>
+      </div>
+      <div class="body">
+        <h3>${esc(g.name)}</h3>
+        <div class="tags">${g.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>
+        <p>${esc(g.desc)}</p>
+        <span class="play">▶ 開始玩</span>
+      </div>
+    </a>`).join('');
+  empty.style.display = list.length ? 'none' : 'block';
+}
+
+// 最近玩過（只記在這台電腦）
+function loadRecent(){
+  let names = [];
+  try{ names = JSON.parse(safeGet('gfRecent') || '[]'); }catch(e){}
+  const games = names.map(n => GAMES.find(g => g.name === n)).filter(Boolean).slice(0,4);
+  const box = document.getElementById('recent');
+  box.style.display = games.length ? 'block' : 'none';
+  document.getElementById('recent-row').innerHTML = games.map(g =>
+    `<a href="${link(g)}" target="_blank" rel="noopener" data-name="${esc(g.name)}">${g.icon} ${esc(g.name)}</a>`).join('');
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest('a[data-name]');
+  if (!a) return;
+  let names = [];
+  try{ names = JSON.parse(safeGet('gfRecent') || '[]'); }catch(e){}
+  names = [a.dataset.name, ...names.filter(n => n !== a.dataset.name)].slice(0,6);
+  safeSet('gfRecent', JSON.stringify(names));
+  setTimeout(loadRecent, 50);
+});
+
+render();
+loadRecent();
+</script>
+</body>
+</html>

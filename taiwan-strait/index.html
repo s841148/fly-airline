@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<!--
+  台海防衛戰 Taiwan Strait Defense
+  © 2026 麥麥(Cormac)的遊戲工廠 Cormac’s Game Factory. All rights reserved.
+  本遊戲之程式、文字、數值與介面設計均為原創作品，
+  未經作者書面授權，請勿轉載、修改後散布或作商業用途。
+-->
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="麥麥(Cormac)的遊戲工廠 Cormac’s Game Factory">
+<meta name="copyright" content="© 2026 麥麥(Cormac)的遊戲工廠 Cormac’s Game Factory">
+<title>台海防衛戰 — Taiwan Strait Defense ｜ 麥麥(Cormac)的遊戲工廠</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ============ 上方國力列 ============ -->
+  <header id="topbar">
+    <div class="brand">
+      <span class="bt">台海防衛戰</span>
+      <span class="bs">TAIWAN STRAIT DEFENSE</span>
+      <span class="bm">麥麥(Cormac)的遊戲工廠 · Cormac’s Game Factory</span>
+    </div>
+
+    <div class="clock">
+      <div class="date" id="ui-date">D+0　0600</div>
+      <div class="turnno" id="ui-turn">第 1 回合</div>
+    </div>
+
+    <div class="stats" id="ui-stats"><!-- JS 填入 --></div>
+
+    <div class="ctrl">
+      <label class="spd">播放
+        <select id="ui-speed">
+          <option value="380">正常</option>
+          <option value="160">快速</option>
+          <option value="60">極速</option>
+          <option value="0">瞬間</option>
+        </select>
+      </label>
+      <button id="btn-help" class="ghost" title="教學與提示">？</button>
+      <button id="btn-save" class="ghost">存檔</button>
+      <button id="btn-end" class="primary">執行回合 ▶</button>
+    </div>
+  </header>
+
+  <!-- ============ 中間：地圖 + 側欄 ============ -->
+  <div id="main">
+
+    <div id="mapwrap">
+      <canvas id="map"></canvas>
+
+      <div id="wm">麥麥(Cormac)的遊戲工廠 · Cormac’s Game Factory</div>
+      <div id="maplayers">
+        <button class="lyr on" data-layer="terrain">地形</button>
+        <button class="lyr" data-layer="supply">補給</button>
+        <button class="lyr" data-layer="air">制空</button>
+        <button class="lyr" data-layer="sea">制海</button>
+        <button class="lyr" data-layer="aa">防空</button>
+        <button class="lyr" data-layer="threat">威脅</button>
+      </div>
+
+      <div id="maphint">滾輪縮放　右鍵拖曳平移　左鍵選取部隊　再點目標格下令　（砲兵點射程內的敵人＝火力任務）</div>
+
+      <div id="hexinfo" class="hidden"></div>
+      <div id="stackpick" class="hidden"></div>
+      <div id="tutor" class="hidden"></div>
+
+      <div id="playbar" class="hidden">
+        <div class="pb-txt" id="pb-txt">演算中…</div>
+        <button id="pb-skip">跳過動畫</button>
+      </div>
+    </div>
+
+    <aside id="side">
+      <nav id="tabs">
+        <button class="tab on" data-tab="unit">部隊</button>
+        <button class="tab" data-tab="form">編成</button>
+        <button class="tab" data-tab="air">空軍</button>
+        <button class="tab" data-tab="navy">海軍</button>
+        <button class="tab" data-tab="prod">生產</button>
+        <button class="tab" data-tab="tech">研發</button>
+        <button class="tab" data-tab="dip">外交軍售</button>
+        <button class="tab" data-tab="pol">國策</button>
+      </nav>
+      <div id="tabbody"><!-- JS 填入 --></div>
+    </aside>
+  </div>
+
+  <!-- ============ 下方戰報 ============ -->
+  <footer id="logbar">
+    <div class="logtitle">戰　報</div>
+    <div id="log"></div>
+    <div class="credit">© 2026 麥麥(Cormac)的遊戲工廠 Cormac’s Game Factory</div>
+  </footer>
+
+</div>
+
+<!-- 事件 / 軍售 / 勝負 彈窗 -->
+<div id="modal" class="hidden"><div id="modalbox"></div></div>
+
+<!-- ============ 程式檔（依相依順序載入，可直接雙擊開啟，不需伺服器） ============ -->
+<script src="js/data/balance.js"></script>
+<script src="js/data/terrain.js"></script>
+<script src="js/data/equipment.js"></script>
+<script src="js/data/units.js"></script>
+<script src="js/data/oob.js"></script>
+<script src="js/data/tech.js"></script>
+<script src="js/data/events.js"></script>
+<script src="js/core/state.js"></script>
+<script src="js/core/rules.js"></script>
+<script src="js/core/env.js"></script>
+<script src="js/core/combat.js"></script>
+<script src="js/core/ai.js"></script>
+<script src="js/core/turn.js"></script>
+<script src="js/ui/map.js"></script>
+<script src="js/ui/fx.js"></script>
+<script src="js/ui/panels.js"></script>
+<script src="js/ui/audio.js"></script>
+<script src="js/ui/tutorial.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>
