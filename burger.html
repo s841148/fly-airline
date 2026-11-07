@@ -86,6 +86,9 @@ input[type=text]{font:inherit;font-weight:700;padding:8px 10px;border:3px solid 
 #btnUndo{bottom:calc(150px + env(safe-area-inset-bottom))}
 #btnMove{bottom:calc(150px + env(safe-area-inset-bottom));right:calc(100px + env(safe-area-inset-right))}
 #btnRot{bottom:calc(220px + env(safe-area-inset-bottom))}
+#touchhint{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(40px + env(safe-area-inset-bottom));color:rgba(255,255,255,.9);font-weight:900;font-size:13px;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+#ctx{position:fixed;z-index:30;display:flex;flex-direction:column;gap:6px;background:rgba(255,246,224,.97);border:3px solid var(--ink);border-radius:14px;padding:8px;box-shadow:0 6px 0 rgba(0,0,0,.3);min-width:170px}
+#ctx button{text-align:left;font-size:16px;padding:10px 12px}
 #joy{position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,246,224,.25);border:3px solid rgba(255,255,255,.6);display:none}
 #joyk{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px;border-radius:50%;background:rgba(255,201,60,.85);border:3px solid var(--ink)}
 #joyhint{position:absolute;left:calc(24px + env(safe-area-inset-left));bottom:calc(40px + env(safe-area-inset-bottom));width:110px;height:110px;border-radius:50%;border:3px dashed rgba(255,255,255,.5);color:rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;text-align:center}
@@ -177,13 +180,11 @@ input[type=text]{font:inherit;font-weight:700;padding:8px 10px;border:3px solid 
 </div>
 <div id="mob" class="hidden">
  <div id="joyhint">左手拖曳<br>走路</div>
+ <div id="touchhint">👆 點東西就能用<br>長按：更多動作</div>
  <div id="joy"><div id="joyk"></div></div>
- <button id="btnDrop">丟掉<br>手上</button>
- <button id="btnUndo" class="hidden">退一層</button>
- <button id="btnMove" class="hidden">搬</button>
- <button id="btnRot" class="hidden">轉向</button>
- <button id="btnUse">用</button>
 </div>
+
+<div id="ctx" class="hidden"></div>
 
 <!-- 後場電腦 -->
 <div id="panel" class="overlay hidden"><div class="card">
@@ -206,9 +207,10 @@ input[type=text]{font:inherit;font-weight:700;padding:8px 10px;border:3px solid 
  <h2>📖 怎麼玩</h2>
  <div class="helpk">
   <kbd>W A S D</kbd><span>走路（手機：左下拖曳）</span>
-  <kbd>滑鼠</kbd><span>轉頭看（點一下畫面鎖定滑鼠；手機：右半邊螢幕滑動）</span>
-  <kbd>E / 左鍵</kbd><span>使用眼前的東西（手機：按「用」）</span>
-  <kbd>Q</kbd><span>丟掉手上的東西（手機：按「丟掉手上」）</span>
+  <kbd>拖曳</kbd><span>按住滑鼠左鍵拖曳轉頭（手機：手指在畫面右邊滑動）</span>
+  <kbd>滑鼠左鍵</kbd><span>點東西就能使用（手機：直接用手指點）；也可以對準後按 E</span>
+  <kbd>滑鼠右鍵</kbd><span>更多動作：搬機器、組裝台退一層、丟掉手上東西、切換視角（手機：長按）</span>
+  <kbd>Q</kbd><span>丟掉手上的東西（手機：長按畫面跳出選單）</span>
   <kbd>R</kbd><span>對準組裝台：拿掉最上面一層（放錯可以重做）；搬機器時：轉向</span>
   <kbd>B</kbd><span>對準煎台、炸鍋、飲料機、珍奶機、垃圾桶：搬動機器（再按 E 放下、B 取消）</span>
   <kbd>V</kbd><span>切換第一人稱／第三人稱</span>
@@ -449,7 +451,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, IS_TOUCH?1.5:2));
 const scene=new T.Scene();
 scene.background=new T.Color(0x9fdcff);
 scene.fog=new T.Fog(0x9fdcff,30,80);
-const camera=new T.PerspectiveCamera(70,1,.05,200);
+const camera=new T.PerspectiveCamera(74,1,.05,200);
 camera.rotation.order='YXZ';
 scene.add(camera);
 function resize(){ const w=innerWidth,h=innerHeight; renderer.setSize(w,h,false); camera.aspect=w/h; if(camera.__off){ camera.__off=false; camera.clearViewOffset(); } camera.updateProjectionMatrix(); }
@@ -734,27 +736,30 @@ function buildWorld(){
  W.drinkBtns.boba=addIt(hitBox(.9,.9,.4,0,1.35,.4,W.bobaG),{key:'dr:boba',mach:'boba',name:'珍珠奶茶', on:()=>!!S.upg.boba, label:()=>drinkLabel('boba'), act:()=>drinkAct('boba')});
  // 搬機器時地上的框
  W.moveMark=new T.Mesh(new T.PlaneGeometry(1,1),new T.MeshBasicMaterial({color:0x3fae5a,transparent:true,opacity:.45,depthTest:false})); W.moveMark.rotation.x=-Math.PI/2; W.moveMark.position.y=.03; W.moveMark.renderOrder=5; W.moveMark.visible=false; scene.add(W.moveMark);
- // ===== 中島組裝台 =====
- box(11.3,.95,.9,0xc98a4a,.35,.475,-5); box(11.4,.06,1,0xf0e0c0,.35,.98,-5);
- addCol(.35,-5,11.3,.9);
- const board=box(1.1,.05,.75,0xe8c48a,0,1.035,-5);
- W.boardG=new T.Group(); W.boardG.position.set(0,1.06,-5); scene.add(W.boardG);
- const bdl=makeLabel('🍔 組裝台',{fs:44,h:.22,bg:'#fff6e0'}); bdl.position.set(0,1.95,-5); scene.add(bdl);
- W.board=addIt(hitBox(1.1,.6,.9,0,1.25,-5),{key:'board',name:'組裝台', label:()=>boardLabel(), act:()=>boardAct(), ok:()=>boardOk()});
- const BINS=['bun','ricebun','cheese','tomato','lettuce','onion','ketchup','mayo','bacon','avocado','bbq'];
- const BINX=[-1.15,-1.9,-2.65,-3.4,-4.15,1.15,1.9,2.65,3.4,4.15,4.9];
+ // ===== 漢堡站（U 字型：中間組裝台，後、左、右三邊放食材）=====
+ const STW=0xc98a4a, STT=0xf0e0c0;
+ box(2.9,.95,.55,STW,0,.475,-5.75); box(2.98,.06,.62,STT,0,.98,-5.75); addCol(0,-5.75,2.9,.55);
+ [-1,1].forEach(sd=>{ box(.5,.95,1.35,STW,sd*1.2,.475,-4.8); box(.56,.06,1.4,STT,sd*1.2,.98,-4.8); addCol(sd*1.2,-4.8,.5,1.35); });
+ box(.95,.9,.75,0xd8a060,0,.45,-5.05); box(1.0,.06,.8,STT,0,.93,-5.05); addCol(0,-5.05,.95,.75);
+ box(.85,.04,.6,0xe8c48a,0,.98,-5.05);
+ W.boardG=new T.Group(); W.boardG.position.set(0,1.0,-5.05); scene.add(W.boardG);
+ const bdl=makeLabel('🍔 漢堡站',{fs:44,h:.22,bg:'#fff6e0'}); bdl.position.set(0,2.05,-5.6); scene.add(bdl);
+ W.board=addIt(hitBox(.85,.22,.6,0,1.07,-5.05),{key:'board',name:'組裝台', label:()=>boardLabel(), act:()=>boardAct(), ok:()=>boardOk()});
+ const BINP={bun:[-1.04,-5.75],ricebun:[-.52,-5.75],cheese:[0,-5.75],lettuce:[.52,-5.75],tomato:[1.04,-5.75],
+  ketchup:[-1.2,-5.2],mayo:[-1.2,-4.75],onion:[-1.2,-4.3],
+  bacon:[1.2,-5.2],avocado:[1.2,-4.75],bbq:[1.2,-4.3]};
  W.bins={};
- BINS.forEach((k,i)=>{
-  const g=new T.Group(); g.position.set(BINX[i],1.01,-5); scene.add(g);
-  box(.62,.12,.6,0xd8d8d8,0,.06,0,g); box(.54,.04,.52,0xbbbbbb,0,.11,0,g);
-  // 食材樣品
+ Object.keys(BINP).forEach(k=>{
+  const [bx,bz]=BINP[k];
+  const g=new T.Group(); g.position.set(bx,1.01,bz); scene.add(g);
+  box(.46,.12,.42,0xd8d8d8,0,.06,0,g); box(.4,.04,.36,0xbbbbbb,0,.11,0,g);
   let sample;
-  if(k==='bun'||k==='ricebun'){ sample=makeBurger([k],false); sample.scale.setScalar(.45); sample.position.y=.12; const s2=makeBurger([k,k],true); s2.scale.setScalar(.35); s2.position.set(.12,.13,.1); g.add(s2); }
+  if(k==='bun'||k==='ricebun'){ sample=makeBurger([k],false); sample.scale.setScalar(.4); sample.position.y=.12; const s2=makeBurger([k,k],true); s2.scale.setScalar(.3); s2.position.set(.1,.13,.08); g.add(s2); }
   else if(k==='ketchup'||k==='mayo'){ sample=new T.Group(); cyl(.08,.09,.32,k==='ketchup'?0xd81e1e:0xfff6d8,0,.16,0,sample); cyl(.03,.05,.08,0xffffff,0,.36,0,sample); sample.position.y=.12; }
-  else { sample=makeBurger([k],false); sample.scale.setScalar(.48); sample.position.y=.14; }
+  else { sample=makeBurger([k],false); sample.scale.setScalar(.42); sample.position.y=.14; }
   g.add(sample);
-  const lb=makeLabel(ING[k].e+' '+(k==='ricebun'?'飯餅':ING[k].n),{fs:40,h:.17,bg:'#fff'}); lb.position.set(0,.62,0); g.add(lb);
-  W.bins[k]={g, it:addIt(hitBox(.66,.5,.9,BINX[i],1.2,-5),{key:'bin:'+k,name:ING[k].n, on:()=>ingAvail(k), label:()=>binLabel(k), act:()=>binAct(k)})};
+  const lb=makeLabel(ING[k].e+' '+(k==='ricebun'?'飯餅':ING[k].n),{fs:40,h:.15,bg:'#fff'}); lb.position.set(0,.6,0); g.add(lb);
+  W.bins[k]={g, it:addIt(hitBox(.46,.4,.42,bx,1.2,bz),{key:'bin:'+k,name:ING[k].n, on:()=>ingAvail(k), label:()=>binLabel(k), act:()=>binAct(k)})};
  });
  // 垃圾桶
  const tg=machine('trash','垃圾桶',-5.95,-5,.6,.6).g;
@@ -814,12 +819,13 @@ function buildWorld(){
  W.passItems=new T.Group(); W.passItems.position.y=.05; pg.add(W.passItems);
  const pl2=makeLabel('🛎️ 出餐台',{fs:44,h:.2,bg:'#fff6e0'}); pl2.position.set(0,.78,0); pg.add(pl2);
  W.pass=addIt(hitBox(1.1,.6,1.0,1.0,1.35,-2),{key:'pass',name:'出餐台',label:()=>passLabel(),ok:()=>G.tray.length>0||G.pass.length>0,act:()=>passAct()});
- // ===== 保溫盤 =====
- const wg=new T.Group(); wg.position.set(-4.9,1.01,-5); scene.add(wg);
- box(.6,.1,.55,0xc0c6cc,0,.05,0,wg); box(.6,.06,.3,0xff5a2a,0,.6,0,wg); box(.04,.55,.04,0x888888,-.28,.33,0,wg); box(.04,.55,.04,0x888888,.28,.33,0,wg);
- W.warmItems=new T.Group(); W.warmItems.position.y=.12; wg.add(W.warmItems);
- const wl=makeLabel('♨️ 保溫盤',{fs:44,h:.2,bg:'#fff6e0'}); wl.position.set(0,.95,0); wg.add(wl);
- W.warm=addIt(hitBox(.66,.6,.9,-4.9,1.25,-5),{key:'warm',name:'保溫盤',label:()=>G.hand&&G.hand.t==='patty'?(G.hand.burnt?'焦掉的肉不能放保溫盤':'把熟肉放進保溫盤（'+G.warm+'/8）'):G.warm?(G.hand?'手上有東西，拿不了':'拿一片熟肉（剩 '+G.warm+' 片）'):'保溫盤（熟肉可以先放這裡）',ok:()=>(G.warm>0&&!G.hand)||(G.hand&&G.hand.t==='patty'&&!G.hand.burnt),act:()=>warmAct()});
+ // ===== 保溫盤（可以搬）=====
+ const wg=machine('warmer','保溫盤',-3.2,-4.9,.8,.7).g;
+ box(.8,.95,.7,0xb8bec6,0,.475,0,wg); box(.6,.08,.5,0xc0c6cc,0,.99,0,wg); box(.62,.06,.3,0xff5a2a,0,1.6,0,wg); box(.04,.6,.04,0x888888,-.29,1.3,0,wg); box(.04,.6,.04,0x888888,.29,1.3,0,wg);
+ const glow=new T.Mesh(new T.BoxGeometry(.56,.01,.46),new T.MeshBasicMaterial({color:0xffa060})); glow.position.y=1.035; wg.add(glow);
+ W.warmItems=new T.Group(); W.warmItems.position.y=1.05; wg.add(W.warmItems);
+ const wl=makeLabel('♨️ 保溫盤',{fs:44,h:.2,bg:'#fff6e0'}); wl.position.set(0,1.95,0); wg.add(wl);
+ W.warm=addIt(hitBox(.8,.7,.8,0,1.2,0,wg),{key:'warm',mach:'warmer',name:'保溫盤',label:()=>G.hand&&G.hand.t==='patty'?(G.hand.burnt?'焦掉的肉不能放保溫盤':'把熟肉放進保溫盤（'+G.warm+'/8）'):G.warm?(G.hand?'手上有東西，拿不了':'拿一片熟肉（剩 '+G.warm+' 片）'):'保溫盤（熟肉可以先放這裡）',ok:()=>(G.warm>0&&!G.hand)||(G.hand&&G.hand.t==='patty'&&!G.hand.burnt),act:()=>warmAct()});
  // ===== 得來速 =====
  W.driveG=new T.Group(); scene.add(W.driveG);
  const dsign=planeText('🚗 得來速 DRIVE THRU',3.2,.6,{fs:70,bg:'#9b5ad9',color:'#fff',border:'#3b2314'},W.driveG); dsign.position.set(10.13,2.75,-4); dsign.rotation.y=Math.PI/2;
@@ -1363,13 +1369,13 @@ function endDay(){
 
 /* ---------------- 新手教學 ---------------- */
 const TUT=[
- {ev:'move',  t:'歡迎來到<b>麥麥漢堡</b>！先走走看：<b>WASD</b> 走路、移動滑鼠轉頭（先點一下畫面）。', m:'歡迎來到<b>麥麥漢堡</b>！先走走看：<b>左下拖曳</b>走路、<b>右半邊螢幕滑動</b>轉頭。'},
+ {ev:'move',  t:'歡迎來到<b>麥麥漢堡</b>！先走走看：<b>WASD</b> 走路、<b>按住滑鼠左鍵拖曳</b>轉頭。看到東西直接用滑鼠點就能用！', m:'歡迎來到<b>麥麥漢堡</b>！先走走看：<b>左下拖曳</b>走路、<b>右半邊螢幕滑動</b>轉頭。'},
  {ev:'open',  t:'準備好了就按下方的 <b>🔔 開門營業</b>。'},
- {ev:'takeOrder', t:'第一位客人來了！走到<b>櫃台的收銀機</b>前，對準它按 <b>E</b> 幫客人點餐。', m:'第一位客人來了！走到<b>櫃台的收銀機</b>前，對準它按 <b>用</b> 幫客人點餐。', tg:()=>W.register.anchor},
+ {ev:'takeOrder', t:'第一位客人來了！走到<b>櫃台的收銀機</b>前，對準它按 <b>E</b> 幫客人點餐。', m:'第一位客人來了！走到<b>櫃台的收銀機</b>前，直接<b>點收銀機</b> 幫客人點餐。', tg:()=>W.register.anchor},
  {ev:'grillPut', t:'點餐單會出現在畫面上方。去後面的<b>煎台</b>，對準格子放上一片肉。', tg:()=>W.slots[0].it.anchor},
  {ev:'flip', t:'肉會慢慢變色，出現 <b>⤴</b> 的時候對準它<b>翻面</b>！', tg:()=>W.slots.find(s=>s.state!=='empty')?.it.anchor||W.slots[0].it.anchor},
  {ev:'pattyTake', t:'再等一下，出現 <b>✔</b> 就熟了，對準它<b>拿起來</b>。（太久會焦掉喔！）', tg:()=>W.slots.find(s=>s.state!=='empty')?.it.anchor||W.slots[0].it.anchor},
- {ev:'bunBottom', t:'拿著肉走到中間的<b>組裝台</b>，先對準旁邊的 <b>🍞 麵包</b> 放下麵包底。', tg:()=>W.bins.bun.it.anchor},
+ {ev:'bunBottom', t:'拿著肉走到<b>🍔 漢堡站</b>，先點後排的 <b>🍞 麵包</b> 放下麵包底。', tg:()=>W.bins.bun.it.anchor},
  {ev:'addPatty', t:'對準<b>組裝台</b>，把肉放上去。', tg:()=>W.board.anchor},
  {ev:'burgerDone', t:'照點餐單加配料：<b>🥬 生菜、🍅 番茄、🔴 番茄醬</b>，最後再按一次 <b>🍞 麵包</b> 蓋上去！', tg:()=>W.bins.lettuce.it.anchor},
  {ev:'burgerToTray', t:'漢堡完成了！對準<b>組裝台</b>把漢堡放上托盤。', tg:()=>W.board.anchor},
@@ -1392,7 +1398,7 @@ function updateTutor(){
  const box=$('tutor');
  if(!G||G.tut<0){ box.classList.add('hidden'); W.arrow.visible=false; return; }
  box.classList.remove('hidden');
- const s=TUT[G.tut]; $('tutT').innerHTML=(IS_TOUCH&&s.m)?s.m:(IS_TOUCH?s.t.replace(/按 <b>E<\/b>/g,'按 <b>用</b>'):s.t);
+ const s=TUT[G.tut]; $('tutT').innerHTML=(IS_TOUCH&&s.m)?s.m:(true?s.t.replace(/對準它按 <b>E<\/b>/g,'點它').replace(/按 <b>E<\/b>/g,'點一下').replace(/對準/g,'點'):s.t);
  $('tutN').textContent='新手教學 '+Math.min(G.tut+1,TUT.length)+'/'+TUT.length;
 }
 function updateTutorArrow(dt){
@@ -1498,7 +1504,7 @@ function moveLabelOf(o){ return o&&o.mach&&W.mach[o.mach]?W.mach[o.mach]:null; }
 function startMove(m){
  if(MV.id||!G) return;
  MV.id=m.id; MV.orig=[m.g.position.x,m.g.position.z,m.rot]; MV.rotOff=0;
- toast('🔧 搬「'+m.n+'」：走到想放的地方'+(IS_TOUCH?'按「用」放下、「轉向」轉方向':'按 E 放下、R 轉方向、B 取消'),'gold'); sfx('box');
+ toast('🔧 搬「'+m.n+'」：走到想放的地方'+(IS_TOUCH?'點一下畫面放下，長按可以轉向或取消':'點一下放下，按右鍵可以轉向或取消'),'gold'); sfx('box');
 }
 function updateMove(){
  const mk=W.moveMark;
@@ -1529,26 +1535,29 @@ const ray=new T.Raycaster();
 let focus=null;
 function updateFocus(){
  updateMove();
- if(MV.id){ const h=$('hint'); h.classList.remove('hidden'); const html=MV.ok?`<span class="k">${IS_TOUCH?'用':'E'}</span>放在這裡${IS_TOUCH?'':'　R 轉向　B 取消'}`:'這裡放不下 🚫'; if(h._h!==html){ h.innerHTML=html; h._h=html; } $('cross').classList.toggle('on',MV.ok); mobBtns(); return; }
- ray.setFromCamera({x:0,y:0},camera);
- const camD=P.tp?2.6:0;
- ray.far=camD+2.7;
+ if(MV.id){ const h=$('hint'); h.classList.remove('hidden'); const html=MV.ok?`<span class="k">👆</span>點一下放在這裡${IS_TOUCH?'　長按：轉向／取消':'　右鍵：轉向／取消'}`:'這裡放不下 🚫'; if(h._h!==html){ h.innerHTML=html; h._h=html; } $('cross').classList.toggle('on',MV.ok); mobBtns(); return; }
+ const useMouse=!IS_TOUCH&&mouse.in&&!(drag&&drag.moved>6);
+ ray.setFromCamera(useMouse?{x:mouse.x/innerWidth*2-1,y:-(mouse.y/innerHeight)*2+1}:{x:0,y:0},camera);
+ ray.far=40;
  const list=ITS.filter(o=>!o.on||o.on());
  const hits=ray.intersectObjects(list.map(o=>o.hit),false);
  let f=null;
- for(const h of hits){ const o=h.object.userData.it; const a=h.point; if(Math.hypot(a.x-P.x,a.z-P.z)<2.7){ f=o; break; } }
- if(!f){ // 靠近又在前方的
+ f=bestHit(hits,useMouse?mouse.x/innerWidth*2-1:0,useMouse?-(mouse.y/innerHeight)*2+1:0);
+ if(!f&&!useMouse){ // 靠近又在前方的
   const fx=-Math.sin(P.yaw), fz=-Math.cos(P.yaw); let bd=1.5;
   for(const o of list){ const a=anchorOf(o); const dx=a.x-P.x, dz=a.z-P.z, d=Math.hypot(dx,dz); if(d<bd&&d>.01&&(dx*fx+dz*fz)/d>.6){ bd=d; f=o; } }
  }
  focus=f;
  const lb=f&&f.label?f.label():null;
  const h=$('hint'), cr=$('cross');
- if(lb){ h.classList.remove('hidden'); const can=!f.ok||f.ok(); const k=can?`<span class="k">${IS_TOUCH?'用':'E'}</span>`:''; const extra=IS_TOUCH?'':(f.mach?'　<span class="k">B</span>搬動':'')+(f.key==='board'&&G.board.layers.length?'　<span class="k">R</span>退一層':''); const html=k+lb+extra; if(h._h!==html){ h.innerHTML=html; h._h=html; } cr.classList.toggle('on',can); }
+ cr.style.display=IS_TOUCH?'':'none';
+ if(useMouse){ h.style.left=mouse.x+'px'; h.style.top=(mouse.y+28)+'px'; } else { h.style.left=''; h.style.top=''; }
+ canvas.style.cursor=drag&&drag.moved>6?'grabbing':(f?'pointer':'grab');
+ if(lb){ h.classList.remove('hidden'); const can=!f.ok||f.ok(); const k=can?'<span class="k">👆</span>':''; const extra=IS_TOUCH?'':(f.mach||(f.key==='board'&&G.board.layers.length)?'　（右鍵：更多）':''); const html=k+lb+extra; if(h._h!==html){ h.innerHTML=html; h._h=html; } cr.classList.toggle('on',can); }
  else { h.classList.add('hidden'); cr.classList.remove('on'); }
  mobBtns();
 }
-function mobBtns(){ if(!IS_TOUCH) return; const sh=(id,on)=>$(id).classList.toggle('hidden',!on); sh('btnUndo',!MV.id&&focus&&focus.key==='board'&&G.board.layers.length>0); sh('btnMove',!!MV.id||!!moveLabelOf(focus)); $('btnMove').textContent=MV.id?'取消':'搬'; sh('btnRot',!!MV.id); }
+function mobBtns(){}
 function interact(){
  if(mode!=='game'||!G||G.paused) return;
  audioInit();
@@ -1723,7 +1732,7 @@ function syncEmployees(){
  });
 }
 const sideOf=z=>z<-5?'back':'front';
-function kRoute(e,to){ const p=e.g.position, a=sideOf(p.z), b=sideOf(to[1]); if(a===b) return [to]; const la=a==='back'?-6.6:-3.6, lb=b==='back'?-6.6:-3.6; const ex=(p.x+to[0])/2<0?-6.6:6.7; return [[ex,la],[ex,lb],to]; }
+function kRoute(e,to){ const p=e.g.position, a=sideOf(p.z), b=sideOf(to[1]); if(a===b) return [to]; const la=a==='back'?-6.6:-3.6, lb=b==='back'?-6.6:-3.6; const ex=(p.x+to[0])/2<0?-2.3:2.3; return [[ex,la],[ex,lb],to]; }
 function dRoute(e,to){ const p=e.g.position; return [[p.x,.6],[to[0],.6],to]; }
 function goDo(e,route,fn){ e.path=route; e.after=fn||null; }
 function empWalk(e,dt){
@@ -1810,7 +1819,7 @@ function empCook(e,dt){
  const done=slots.find(s=>s.state==='side2'&&s.b>=C);
  if(done&&!e.carry.length){ goDo(e,kRoute(e,slotStand(done)),()=>{ faceMach(e,'grill');
    if(done.state==='side2'&&done.b>=C){ const burnt=done.a>BURN()||done.b>BURN(); done.state='empty'; done.patty.visible=false; done.ind.visible=false;
-    if(!burnt){ setCarry(e,[{t:'patty'}]); goDo(e,kRoute(e,[-4.9,-5.9]),()=>{ G.warm++; renderWarm(); setCarry(e,[]); e.g.rotation.y=0; }); } } }); return; }
+    if(!burnt){ setCarry(e,[{t:'patty'}]); goDo(e,kRoute(e,machStand('warmer',0)),()=>{ G.warm++; renderWarm(); setCarry(e,[]); faceMach(e,'warmer'); }); } } }); return; }
  const fl=slots.find(s=>s.state==='side1'&&s.a>=C);
  if(fl){ goDo(e,kRoute(e,slotStand(fl)),()=>{ faceMach(e,'grill'); if(fl.state==='side1'&&fl.a>=C){ fl.state='side2'; fl.flipT=.35; sfx('flip'); } }); return; }
  const cooking=slots.filter(s=>s.state!=='empty').length;
@@ -2119,10 +2128,12 @@ $('bCam').onclick=()=>{ P.tp=!P.tp; toast(P.tp?'第三人稱視角':'第一人�
 setMusic(AU.musicOn); setSfx(AU.sfxOn);
 
 /* ---------------- 輸入 ---------------- */
-let locked=false, lockFailed=false, drag=null;
+let locked=false, drag=null, lastTouch=0, dragTipShown=false; const mouse={x:0,y:0,in:false};
 function exitLock(){ if(document.pointerLockElement) try{ document.exitPointerLock(); }catch(e){} }
 document.addEventListener('pointerlockchange',()=>{ locked=document.pointerLockElement===canvas; });
-document.addEventListener('pointerlockerror',()=>{ lockFailed=true; });
+document.addEventListener('pointerlockerror',()=>lockFail());
+function lockFail(){ if(mode==='game'&&!dragTipShown&&!IS_TOUCH){ dragTipShown=true; toast('🖱️ 滑鼠鎖不住也沒關係：按住左鍵拖曳就能轉頭','gold'); } }
+function tryLock(){ try{ const r=canvas.requestPointerLock(); if(r&&r.catch) r.catch(()=>lockFail()); }catch(err){ lockFail(); } }
 addEventListener('keydown',e=>{
  if(e.target&&e.target.tagName==='INPUT') return;
  keys[e.code]=true;
@@ -2138,44 +2149,108 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>{ keys[e.code]=false; });
 addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; });
 canvas.addEventListener('mousedown',e=>{
- if(IS_TOUCH||mode!=='game'||!G||G.paused) return;
- audioInit();
- if(locked){ if(e.button===0) interact(); return; }
+ if(performance.now()-lastTouch<900||mode!=='game'||!G||G.paused) return;
+ audioInit(); hideCtx();
+ if(e.button!==0) return;
  drag={x:e.clientX,y:e.clientY,moved:0};
- if(!lockFailed){ try{ const r=canvas.requestPointerLock(); if(r&&r.catch) r.catch(()=>{lockFailed=true;}); }catch(err){ lockFailed=true; } }
 });
+canvas.addEventListener('mouseleave',()=>{ mouse.in=false; });
 addEventListener('mousemove',e=>{
- if(mode!=='game'||!G||G.paused) return;
- if(locked){ P.yaw-=e.movementX*.0024; P.pitch=clamp(P.pitch-e.movementY*.0024,-1.3,1.2); return; }
- if(drag){ const dx=e.clientX-drag.x, dy=e.clientY-drag.y; drag.x=e.clientX; drag.y=e.clientY; drag.moved+=Math.abs(dx)+Math.abs(dy); P.yaw-=dx*.005; P.pitch=clamp(P.pitch-dy*.005,-1.3,1.2); }
+ if(performance.now()-lastTouch<900) return;
+ mouse.x=e.clientX; mouse.y=e.clientY; mouse.in=e.target===canvas;
+ if(mode!=='game'||!G||G.paused||!drag) return;
+ const dx=e.clientX-drag.x, dy=e.clientY-drag.y; drag.x=e.clientX; drag.y=e.clientY; drag.moved+=Math.abs(dx)+Math.abs(dy);
+ if(drag.moved>6){ P.yaw-=dx*.005; P.pitch=clamp(P.pitch-dy*.005,-1.3,1.2); canvas.style.cursor='grabbing'; }
 });
-addEventListener('mouseup',e=>{ if(drag&&!locked&&drag.moved<6&&mode==='game'&&G&&!G.paused) interact(); drag=null; });
-// 觸控
+addEventListener('mouseup',e=>{ if(drag&&drag.moved<=6&&e.button===0&&mode==='game'&&G&&!G.paused) tapAt(e.clientX,e.clientY); drag=null; canvas.style.cursor=''; });
+canvas.addEventListener('contextmenu',e=>{ e.preventDefault(); if(mode==='game'&&G&&!G.paused&&performance.now()-lastTouch>900) longPress(e.clientX,e.clientY); });
+// 觸控：左邊拖曳走路、其他地方滑動轉頭、點一下就使用、長按跳出選單
 const joyEl=$('joy'), joyK=$('joyk');
+const TT=new Map();
+// 射線穿過好幾個東西時，選「中心最靠近游標」的那個（側邊食材前後排不會互相擋）
+const _pv=new T.Vector3();
+function bestHit(hits,nx,ny){
+ let best=null, bd=1e9;
+ for(const h of hits){ const o=h.object.userData.it; if(Math.hypot(h.point.x-P.x,h.point.z-P.z)>=2.9) continue;
+  const a=anchorOf(o); _pv.set(a.x,(a.y==null||a.y<.2)?1:a.y,a.z).project(camera); const d=Math.hypot(_pv.x-nx,_pv.y-ny); if(d<bd){ bd=d; best=o; } }
+ return best;
+}
+function pickAt(x,y){
+ ray.setFromCamera({x:x/innerWidth*2-1,y:-(y/innerHeight)*2+1},camera); ray.far=40;
+ const list=ITS.filter(o=>!o.on||o.on());
+ const hits=ray.intersectObjects(list.map(o=>o.hit),false);
+ const o=bestHit(hits,x/innerWidth*2-1,-(y/innerHeight)*2+1);
+ if(o) return {o};
+ return hits.length?{far:hits[0].object.userData.it}:null;
+}
+function tapAt(x,y){
+ if(!G||G.paused) return;
+ if(MV.id){ placeMove(); return; }
+ const r=pickAt(x,y); if(!r) return;
+ if(r.far){ toast('走近一點再點喔 👣'); return; }
+ focus=r.o; interact();
+}
+function hideCtx(){ $('ctx').classList.add('hidden'); }
+function showCtx(x,y,opts){
+ const el=$('ctx'); el.innerHTML=''; if(!opts.length) return;
+ opts.forEach(([t,f])=>{ const b=document.createElement('button'); b.textContent=t; b.onclick=()=>{ hideCtx(); f(); }; el.appendChild(b); });
+ const c=document.createElement('button'); c.textContent='✖ 關閉'; c.className='sm'; c.onclick=hideCtx; el.appendChild(c);
+ el.classList.remove('hidden');
+ const w=el.offsetWidth, h=el.offsetHeight; const lx=x+28+w<innerWidth-8?x+28:x-w-28; el.style.left=clamp(lx,8,innerWidth-w-8)+'px'; el.style.top=clamp(y-h/2,8,innerHeight-h-8)+'px';
+}
+function longPress(x,y){
+ if(!G||G.paused) return;
+ const opts=[];
+ if(MV.id){ opts.push(['🔄 轉向',rotateMove],['✅ 放在這裡',placeMove],['↩️ 取消搬動',cancelMove]); }
+ else {
+  const r=pickAt(x,y), o=r&&r.o;
+  if(o){
+   const m=moveLabelOf(o); if(m) opts.push(['🔧 搬動'+m.n,()=>startMove(m)]);
+   if(o.key==='board'&&G.board.layers.length) opts.push(['↩️ 組裝台退一層',boardUndo]);
+   opts.push(['👆 使用：'+((o.label&&o.label())||o.name||'').slice(0,14),()=>{ focus=o; interact(); }]);
+  }
+  if(G.hand) opts.push(['🗑️ 丟掉手上的'+(G.hand.t==='box'?'紙箱':'肉'),dropHand]);
+  opts.push([P.tp?'🎥 換成第一人稱':'🎥 換成第三人稱',()=>{ P.tp=!P.tp; }]);
+ }
+ showCtx(x,y,opts); try{ navigator.vibrate&&navigator.vibrate(20); }catch(e){}
+}
 addEventListener('touchstart',e=>{
+ lastTouch=performance.now();
  if(mode!=='game'||!G||G.paused) return;
  audioInit();
  for(const t of e.changedTouches){
-  if(t.target.closest('button')||t.target.closest('#tickets')||t.target.closest('#tutor')) continue;
-  if(t.clientX<innerWidth*.45&&joy.id===null){ joy.id=t.identifier; joy.ox=t.clientX; joy.oy=t.clientY; joyEl.style.display='block'; joyEl.style.left=(t.clientX-60)+'px'; joyEl.style.top=(t.clientY-60)+'px'; $('joyhint').style.display='none'; }
-  else if(lookTouch===null){ lookTouch={id:t.identifier,x:t.clientX,y:t.clientY}; }
+  if(t.target.closest('button')||t.target.closest('#tickets')||t.target.closest('#tutor')||t.target.closest('#ctx')) continue;
+  hideCtx();
+  const o={sx:t.clientX,sy:t.clientY,x:t.clientX,y:t.clientY,t:performance.now(),kind:'pending',lpDone:false};
+  o.lp=setTimeout(()=>{ if(o.kind==='pending'){ o.lpDone=true; longPress(o.sx,o.sy); } },550);
+  TT.set(t.identifier,o);
  }
 },{passive:true});
 addEventListener('touchmove',e=>{
+ lastTouch=performance.now();
  if(mode!=='game'||!G) return;
  for(const t of e.changedTouches){
-  if(t.identifier===joy.id){ let dx=t.clientX-joy.ox, dy=t.clientY-joy.oy; const d=Math.hypot(dx,dy), mx=50; if(d>mx){ dx*=mx/d; dy*=mx/d; } joy.x=dx/mx; joy.y=dy/mx; joyK.style.transform=`translate(${dx}px,${dy}px)`; }
-  else if(lookTouch&&t.identifier===lookTouch.id){ const dx=t.clientX-lookTouch.x, dy=t.clientY-lookTouch.y; lookTouch.x=t.clientX; lookTouch.y=t.clientY; P.yaw-=dx*.006; P.pitch=clamp(P.pitch-dy*.006,-1.3,1.2); }
+  const o=TT.get(t.identifier); if(!o) continue;
+  if(o.kind==='pending'&&Math.hypot(t.clientX-o.sx,t.clientY-o.sy)>12){
+   clearTimeout(o.lp);
+   if(o.sx<innerWidth*.42&&joy.id===null){ o.kind='joy'; joy.id=t.identifier; joy.ox=o.sx; joy.oy=o.sy; joyEl.style.display='block'; joyEl.style.left=(o.sx-60)+'px'; joyEl.style.top=(o.sy-60)+'px'; $('joyhint').style.display='none'; }
+   else o.kind='look';
+  }
+  if(o.kind==='joy'){ let dx=t.clientX-joy.ox, dy=t.clientY-joy.oy; const d=Math.hypot(dx,dy), mx=50; if(d>mx){ dx*=mx/d; dy*=mx/d; } joy.x=dx/mx; joy.y=dy/mx; joyK.style.transform=`translate(${dx}px,${dy}px)`; }
+  else if(o.kind==='look'&&!G.paused){ P.yaw-=(t.clientX-o.x)*.006; P.pitch=clamp(P.pitch-(t.clientY-o.y)*.006,-1.3,1.2); }
+  o.x=t.clientX; o.y=t.clientY;
  }
 },{passive:true});
-function touchEnd(e){ for(const t of e.changedTouches){ if(t.identifier===joy.id){ joy.id=null; joy.x=joy.y=0; joyEl.style.display='none'; joyK.style.transform=''; } if(lookTouch&&t.identifier===lookTouch.id) lookTouch=null; } }
-addEventListener('touchend',touchEnd); addEventListener('touchcancel',touchEnd);
-$('btnUse').addEventListener('touchstart',e=>{ e.preventDefault(); interact(); },{passive:false});
-$('btnUse').addEventListener('click',()=>{ if(!IS_TOUCH) interact(); });
-$('btnUndo').addEventListener('touchstart',e=>{ e.preventDefault(); if(G&&!G.paused) boardUndo(); },{passive:false});
-$('btnMove').addEventListener('touchstart',e=>{ e.preventDefault(); keyB(); },{passive:false});
-$('btnRot').addEventListener('touchstart',e=>{ e.preventDefault(); rotateMove(); },{passive:false});
-$('btnDrop').addEventListener('touchstart',e=>{ e.preventDefault(); if(G&&!G.paused) dropHand(); },{passive:false});
+function touchEnd(e){
+ lastTouch=performance.now();
+ for(const t of e.changedTouches){
+  const o=TT.get(t.identifier); if(!o) continue; TT.delete(t.identifier); clearTimeout(o.lp);
+  if(o.kind==='joy'||t.identifier===joy.id){ joy.id=null; joy.x=joy.y=0; joyEl.style.display='none'; joyK.style.transform=''; }
+  if(o.lpDone&&e.cancelable) e.preventDefault();
+  if(e.type==='touchend'&&o.kind==='pending'&&!o.lpDone&&performance.now()-o.t<500&&mode==='game'){ if(e.cancelable) e.preventDefault(); tapAt(o.sx,o.sy); }
+ }
+}
+addEventListener('touchend',touchEnd,{passive:false}); addEventListener('touchcancel',touchEnd);
 
 /* ---------------- 主迴圈 ---------------- */
 buildWorld();
@@ -2214,6 +2289,6 @@ S={upg:{},day:1,prices:{},stock:{},emp:{},layout:{}}; applyUpgrades(); S=null;
 showTitle();
 requestAnimationFrame(loop);
 // 開發測試用
-window.__mb={MV,startMove,placeMove,setMachine,canPlace,boardUndo,warmAct,machStand,get G(){return G;}, get S(){return S;}, NET, RP, ME, get CM(){return CM;}, syncEmployees, setHire, buyUpg, netHost, netJoin, startClient, passAct, clearTable, blocked, get focus(){return focus;}, P, ITS, W, interact, openShop, tutEv, spawnCustomer, endDay, startDay, takeOrder, serve};
+window.__mb={tapAt,longPress,pickAt,MV,startMove,placeMove,setMachine,canPlace,boardUndo,warmAct,machStand,get G(){return G;}, get S(){return S;}, NET, RP, ME, get CM(){return CM;}, syncEmployees, setHire, buyUpg, netHost, netJoin, startClient, passAct, clearTable, blocked, get focus(){return focus;}, P, ITS, W, interact, openShop, tutEv, spawnCustomer, endDay, startDay, takeOrder, serve};
 </script>
 </body></html>
