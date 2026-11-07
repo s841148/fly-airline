@@ -1694,8 +1694,9 @@ function mobAnim(e,dt){const T2=MOBS[e.type];const p=e.model.parts;const spd=Mat
   if(p.tail) p.tail.rotation.x=e.tamed?-0.6:0.3;
   if(e.type==='jelly') for(let k=0;k<6;k++) if(p['t'+k]) p['t'+k].rotation.x=Math.sin(performance.now()/300+k)*0.3;
   if(T2.hop&&p.outer){const s=e.onGround?1:1.1;p.outer.scale.set(1/s,s,1/s);}
-  e.mesh.position.set(e.x,e.y,e.z);let dy=e.yaw-e.mesh.rotation.y;while(dy>Math.PI) dy-=Math.PI*2;while(dy<-Math.PI) dy+=Math.PI*2;e.mesh.rotation.y+=dy*Math.min(1,dt*10);
-  if(e.type==='wolf'&&e.ai&&e.ai.sit){e.mesh.rotation.x=-0.3;}else e.mesh.rotation.x=0;
+  e.mesh.position.set(e.x,e.y+(e.fsleep?0.3:e.fsit?-0.28:0),e.z);let dy=e.yaw-e.mesh.rotation.y;while(dy>Math.PI) dy-=Math.PI*2;while(dy<-Math.PI) dy+=Math.PI*2;e.mesh.rotation.y+=dy*Math.min(1,dt*10);
+  if(e.type==='townie'){e.mesh.rotation.order='YXZ';e.mesh.rotation.x=e.fsleep?-Math.PI/2:0;if(e.fsit&&p.l0){p.l0.rotation.x=p.l1.rotation.x=-1.45;if(p.aL){p.aL.rotation.x=p.aR.rotation.x=-0.3;}}}
+  else if(e.type==='wolf'&&e.ai&&e.ai.sit){e.mesh.rotation.x=-0.3;}else e.mesh.rotation.x=0;
   const fuse=e.ai&&e.ai.fuse||e.fuse||0;
   const l=lightAt(e.x,e.y+e.h*0.6,e.z);const lv=Math.max(W.dim==='nether'?0.5:0.08,Math.max(l.s*LIGHT.sky.value,l.b))*(T2.fireproof?1:1);
   for(const m of e.model.mats){if(!m.userData.base) m.userData.base=m.color.clone();m.color.copy(m.userData.base).multiplyScalar(e.type==='jelly'||e.type==='magma'?1:Math.min(1,lv+0.08));
@@ -1944,7 +1945,7 @@ function entitiesTick(dt){const host=isHost();
         if(e.fuse<=0){e.dead=true;if(!e.ghost) explode(e.x,e.y+0.5,e.z,4,true);}}
       else if(e.kind==='mob'){e.mesh.visible=true;if(e.hurtT>0.4&&!e._bled){e._bled=true;bloodFx(e,e.hp<=0);}if(e.hurtT<=0.3) e._bled=false;if(e.hurtT>0) e.hurtT-=dt;
         if(e.remote){const k=Math.min(1,dt*10);if(e.tx!==undefined){e.vx=(e.tx-e.x)/0.12;e.vz=(e.tz-e.z)/0.12;e.x+=(e.tx-e.x)*k;e.y+=(e.ty-e.y)*k;e.z+=(e.tz-e.z)*k;}e.onGround=true;}
-        else if(host){mobAI(e,dt);entPhys(e,dt);if(e.y<-30) e.dead=true;}
+        else if(host){mobAI(e,dt);if(!e.noPhys) entPhys(e,dt);if(e.y<-30) e.dead=true;}
         mobAnim(e,dt);}}
     if(e.dead){if(e.mesh){scene.remove(e.mesh);if(e.kind==='mob'){e.mesh.traverse(o=>{if(o.geometry) o.geometry.dispose();});for(const m of e.model.mats) m.dispose();}else if(e.kind==='arrow'||e.kind==='fireball'||e.kind==='egg'){}}ENTS.splice(i,1);}}
   partsTick(dt);decalTick(dt);bobTick(dt);remoteTick(dt);selfTick(dt);}
@@ -2245,7 +2246,7 @@ function commonRecv(o,from){switch(o.t){
 function syncMobs(list){const seen=new Set();for(const r of list){const [eid,type,x,y,z,yaw,hp,fl,size,wool,tamed,pname,sad]=r;seen.add(eid);let m=ENTS.find(e=>e.kind==='mob'&&e.eid===eid&&e.remote);
     if(!m){m=spawnMob(type,x,y,z,{eid,remote:true,size,wool,baby:!!(fl&4),sheared:!!(fl&2),tamed:tamed||null,pname,saddle:!!sad});if(!m) continue;}
     m.tx=x;m.ty=y;m.tz=z;m.yaw=yaw;m.hp=hp;if(fl&1&&m.hurtT<=0) m.hurtT=0.5;m.fuse=fl&8?(m.fuse||0)+0.13:0;
-    if(!!(fl&2)!==m.sheared){m.sheared=!!(fl&2);sheepLook(m);}if((tamed||null)!==m.tamed){m.tamed=tamed||null;if(m.tamed) wolfLook(m);}m.ai.sit=!!(fl&32);if((pname||'')!==(m.pname||'')){m.pname=pname;petTag(m);}if(!!sad!==!!m.saddle){m.saddle=!!sad;rebuildMob(m);}
+    if(!!(fl&2)!==m.sheared){m.sheared=!!(fl&2);sheepLook(m);}if((tamed||null)!==m.tamed){m.tamed=tamed||null;if(m.tamed) wolfLook(m);}m.ai.sit=!!(fl&32);m.fsit=!!(fl&64);m.fsleep=!!(fl&128);if((pname||'')!==(m.pname||'')){m.pname=pname;petTag(m);}if(!!sad!==!!m.saddle){m.saddle=!!sad;rebuildMob(m);}
     if(!(fl&4)&&m.baby){m.baby=false;m.mesh.scale.setScalar(MOBS[type].split?size*0.5:1);}}
   for(const e of ENTS) if(e.kind==='mob'&&e.remote&&!seen.has(e.eid)){if(e.hp<=0||Math.hypot(e.x-P.x,e.z-P.z)<60) puff(e.x,e.y+0.5,e.z,0xdddddd,4);e.dead=true;}}
 // ---- 送出 ----
@@ -2264,7 +2265,7 @@ function netTick(dt){if(!NET.on) return;
   if(NET.outSets.length){const o={t:'sets',a:NET.outSets.splice(0)};if(NET.host) hostBcast(o);else NET.hc&&NET.hc.send(o);}
   NET.tP+=dt;if(NET.tP>0.1){NET.tP=0;netSendState();}
   if(NET.host){NET.tMob+=dt;if(NET.tMob>0.125){NET.tMob=0;const all=mobs();for(const [id,c] of NET.conns){const p=NET.peers.get(id);if(!p||!p.st) continue;const L=[];
-        for(const m of all){if(m.dim!==(p.st.dim||'over')||Math.hypot(m.x-p.st.x,m.z-p.st.z)>72) continue;const fl=(m.hurtT>0.3?1:0)|(m.sheared?2:0)|(m.baby?4:0)|(m.ai.fuse>0?8:0)|(m.fire>0?16:0)|(m.ai.sit?32:0);
+        for(const m of all){if(m.dim!==(p.st.dim||'over')||Math.hypot(m.x-p.st.x,m.z-p.st.z)>72) continue;const fl=(m.hurtT>0.3?1:0)|(m.sheared?2:0)|(m.baby?4:0)|(m.ai.fuse>0?8:0)|(m.fire>0?16:0)|(m.ai.sit?32:0)|(m.fsit?64:0)|(m.fsleep?128:0);
           L.push([m.eid,m.type,+m.x.toFixed(2),+m.y.toFixed(2),+m.z.toFixed(2),+m.yaw.toFixed(2),m.hp,fl,m.size,m.wool,m.tamed||0,m.pname||'',m.saddle?1:0]);}c.send({t:'mobs',m:L});}}
     NET.tTime+=dt;if(NET.tTime>4){NET.tTime=0;hostBcast({t:'time',time:W.time,day:W.day,rain:WX.rain,storm:WX.storm});}
     NET.tFurn+=dt;if(NET.tFurn>0.5){NET.tFurn=0;const ch={};let any=false;for(const k in W.furn){const s=JSON.stringify(W.furn[k]);if(NET.furnSnap[k]!==s){NET.furnSnap[k]=s;ch[k]=W.furn[k];any=true;}}if(any) hostBcast({t:'furnall',f:ch});}}
@@ -2800,9 +2801,6 @@ const TOWN=[
  {k:'shu',n:'書豪',marry:1,skin:'#e8c098',hair:'#2a2a3a',shirt:'#4a6a8a',pants:'#3a3a3a',bd:[2,1],love:['I_DIAMOND','I_PIZZA','I_EMERALD'],like:['I_BREAD','I_SALMON','I_AMETHYST'],lines:['書和熱茶，是最棒的組合。','你知道嗎？這座小鎮以前是漁村。','挖到稀有的礦物，可以拿來給我看看！'],heart:['你是我第一個想分享書的人。','有你在，小鎮變得更有趣了。']},
  {k:'xue',n:'周雪',marry:1,dress:1,skin:'#f8e0d0',hair:'#d8d8f0',shirt:'#7a8ac8',pants:'#4a4a6a',bd:[3,5],love:['I_DIAMOND','I_CAKE','I_YAM'],like:['I_MELON','I_CAULI','I_AMETHYST'],lines:['……你好。','冬天的海，最安靜了。','你的手上有泥土……今天也很努力呢。'],heart:['跟你說話的時候，我不會緊張了。','下雪的晚上，我會想起你。']},
 ];
-TOWN.forEach((t,i)=>{FACE['tw'+i]=faceCanvas((g,f)=>{f(t.skin,0,0,8,8);f(t.hair,0,0,8,2);f(t.hair,0,2,1,2);f(t.hair,7,2,1,2);f('#fff',1,3,2,1);f('#fff',5,3,2,1);f('#2a1a10',2,3);f('#2a1a10',5,3);f('#e89090',1,5);f('#e89090',6,5);f(shade(t.skin,0.75),3,6,2,1);});});
-function townieParts(i){const t=TOWN[i]||TOWN[0];const P2=[['body',[8,12,4],[0,18,0],t.shirt],['head',[8,8,8],[0,28,0],t.skin,'tw'+i],['hair',[8.6,2.2,8.6],[0,32.4,0],t.hair],['aL',[4,12,4],[-6,18,0],t.shirt],['aR',[4,12,4],[6,18,0],t.shirt],['l0',[4,12,4],[-2,6,0],t.pants],['l1',[4,12,4],[2,6,0],t.pants]];
-  if(t.dress) P2.push(['skirt',[9,5,5],[0,12,0],t.shirt]);if(i===0) P2.push(['hat',[9,2,9],[0,33.5,0],'#3a2a4a']);return P2;}
 MOBS.townie={n:'鎮民',hp:20,w:0.3,h:1.9,sp:0.8,pass:true,villager:true,townie:true,drops:[],xp:[0,0],snd:'hmm',parts:[]};
 const FSHOP={
   seed:{n:'美玉種子行',list:()=>Object.keys(FCROP).filter(k=>FCROP[k].s.includes(seasonNow())).map(k=>'I_'+k.toUpperCase()+'_S').concat(['I_SEEDS','I_BEETSEED','I_WCAN','B:SAPLING','I_BOUQUET','B:SHIPBIN'])},
@@ -2927,22 +2925,46 @@ function festStart(){const s=seasonNow();P.frel=P.frel||{};P.frel._fest=W.day;co
     toast(`⭐ ${f.n}：「謝謝你的禮物！這是我送你的：${nameOf(IT[back])}！冬星祭快樂！」`);}}
 function hstr(s){let h=7;for(const c of String(s)) h=(h*31+c.charCodeAt(0))>>>0;return h;}
 // ---- 開新世界時 ----
-// ---- 小鎮和你的家（開新世界時自動蓋好）----
-const SHOPDECO={seed:['COMPOSTER','FLOWERPOT','HAY'],smith:['FURNACE','ANVIL'],food:['COOKPOT','TABLE'],ranch:['HAY','HAY'],fish:['BARREL','CHEST'],home_aoi:['FLOWERPOT','WOOL_PINK'],home_shu:['BOOKSHELF','BOOKSHELF'],home_xue:['BOOKSHELF','WOOL_LBLUE']};
-const ROOFC={seed:'WOOL_GREEN',smith:'WOOL_GRAY',food:'WOOL_RED',ranch:'WOOL_BROWN',fish:'WOOL_BLUE',aoi:'WOOL_PINK',shu:'WOOL_BLACK',xue:'WOOL_WHITE'};
+// ================= 真實的小鎮 =================
 const SHOPZH={seed:'種子行',smith:'鐵匠鋪',food:'小酒館',ranch:'牧場',fish:'漁具店'};
+const ROOFC={seed:'WOOL_GREEN',smith:'WOOL_GRAY',food:'WOOL_RED',ranch:'WOOL_BROWN',fish:'WOOL_BLUE',library:'WOOL_BLACK',clinic:'WOOL_WHITE',
+  h_mei:'WOOL_GREEN',h_da:'WOOL_GRAY',h_xing:'WOOL_ORANGE',h_lin:'WOOL_BROWN',h_aoi:'WOOL_PINK',h_shu:'WOOL_BLUE',h_xue:'WOOL_LGRAY',h_hai:'WOOL_BLUE',h_chen:'WOOL_RED'};
+const SHOPDECO={seed:['COMPOSTER','FLOWERPOT'],smith:['FURNACE','ANVIL'],food:['COOKPOT','TABLE'],ranch:['HAY','HAY'],fish:['BARREL','CHEST'],library:['BOOKSHELF','BOOKSHELF']};
+// 16 個位置：北排（門朝南）、南排（門朝北）
+const LOTX=[-28,-22,-16,-10,6,12,18,24];
+const LOTS={h_mei:[0,0],h_da:[1,0],library:[2,0],seed:[3,0],smith:[4,0],food:[5,0],h_xing:[6,0],h_lin:[7,0],h_aoi:[0,1],h_shu:[1,1],h_xue:[2,1],clinic:[3,1],ranch:[4,1],fish:[5,1],h_hai:[6,1],h_chen:[7,1]};
+const WORKAT={mei:'seed',da:'smith',xing:'food',lin:'ranch',hai:'fish',shu:'library'};
+// 作息：[開始時間(0~1), 活動]；0=日出、0.25=中午、0.5=日落
+const SCHED={shop:[[0,'home'],[0.02,'eat'],[0.07,'work'],[0.22,'eat'],[0.27,'work'],[0.44,'visit'],[0.49,'sit'],[0.54,'home']],
+  xing:[[0,'home'],[0.03,'stroll'],[0.08,'work'],[0.8,'home']],
+  aoi:[[0,'home'],[0.03,'eat'],[0.08,'paint'],[0.22,'eat'],[0.28,'sit'],[0.35,'visit'],[0.42,'paint'],[0.5,'stroll'],[0.55,'home']],
+  shu:[[0,'home'],[0.04,'eat'],[0.08,'work'],[0.23,'eat'],[0.28,'work'],[0.43,'sit'],[0.5,'visit'],[0.55,'home']],
+  xue:[[0,'home'],[0.06,'eat'],[0.1,'clinic'],[0.17,'sit'],[0.23,'eat'],[0.29,'visit'],[0.37,'sit'],[0.46,'stroll'],[0.52,'home']],
+  chen:[[0,'home'],[0.02,'eat'],[0.06,'plaza'],[0.22,'eat'],[0.27,'plaza'],[0.42,'visit'],[0.5,'sit'],[0.55,'home']]};
+const FRIENDS={chen:['mei','da'],mei:['lin','chen','aoi'],da:['xing','hai'],xing:['da','hai'],lin:['mei','xue'],hai:['da','aoi'],aoi:['xue','mei','shu'],shu:['xue','chen'],xue:['aoi','shu']};
+const PAIRTALK={'aoi-xue':[['小雪，今天要不要一起畫畫？','好啊…你教我畫花。']],'shu-xue':[['周…周雪，這本書很適合你。','謝謝你，書豪。'],['今、今天天氣很好呢。','嗯…你的臉好紅喔？']],'da-xing':[['今晚喝一杯？','老位子等你！']],'da-hai':[['你的船錨我修好了！','太感謝了，大山哥！']],'lin-mei':[['姊，這是今天的牛奶。','謝啦，晚上來我家吃飯！']],'chen-mei':[['老婆，午餐吃什麼？','你最愛的地瓜飯～']],'aoi-hai':[['阿海，你又曬黑了！','哼，你又在畫我對不對？']],'aoi-shu':[['書豪，借我一本畫冊！','好、好的，等我一下！']],'hai-xing':[['今天的魚拿去做菜吧！','好！今晚的特餐就是它！']]};
+function lotXZ(key,cx,cz){const L=LOTS[key];const x0=cx+LOTX[L[0]];const z0=L[1]===0?cz-11:cz+7;return [x0,z0,L[1]===0?1:-1];}
 function okSurf(x,z){const y=surfaceY(x,z);const id=getB(x,y-1,z);const b=BL[id];if(!b||b.kind||id===B.ICE||id===B.SAND&&getB(x,y-2,z)===0) return [y,99];return [y,0];}
-function townSite(sx,sz){let best=null,bs=1e9;for(let r=0;r<=72;r+=8)for(let k=0;k<Math.max(1,r);k++){const a=k/Math.max(1,r)*Math.PI*2;const cx=Math.round(sx+Math.cos(a)*r),cz=Math.round(sz+Math.sin(a)*r);
-    let sum=0,sq=0,bad=0,n=0;for(let dx=-30;dx<=12;dx+=6)for(let dz=-10;dz<=10;dz+=5){const [y,pen]=okSurf(cx+dx,cz+dz);sum+=y;sq+=y*y;bad+=pen;n++;}const m=sum/n;const v=sq/n-m*m;const sc=v+bad+r*0.15+(m<SEA+1?50:0);if(sc<bs){bs=sc;best=[cx,cz,Math.round(m)];}if(bs<3) break;}
+function townSite(sx,sz){let best=null,bs=1e9;for(let r=0;r<=80;r+=8)for(let k=0;k<Math.max(1,r);k++){const a=k/Math.max(1,r)*Math.PI*2;const cx=Math.round(sx+Math.cos(a)*r),cz=Math.round(sz+Math.sin(a)*r);
+    let sum=0,sq=0,bad=0,n=0;for(let dx=-50;dx<=30;dx+=8)for(let dz=-16;dz<=16;dz+=8){const [y,pen]=okSurf(cx+dx,cz+dz);sum+=y;sq+=y*y;bad+=pen;n++;}const m=sum/n;const v=sq/n-m*m;const sc=v+bad+r*0.15+(m<SEA+1?50:0);if(sc<bs){bs=sc;best=[cx,cz,Math.round(m)];}if(bs<3) break;}
   return best||[sx,sz,surfaceY(sx,sz)];}
 function fillBox(x0,y0,z0,x1,y1,z1,id){for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++)for(let z=z0;z<=z1;z++) setB(x,y,z,id);}
-function buildStall(x0,cy,z0,face,roof,deco){// 5 寬 x 5 深，開口的櫃台朝向廣場（face=1 朝 +z，-1 朝 -z）
-  const zf=face>0?z0+4:z0,zb=face>0?z0:z0+4;fillBox(x0,cy-1,z0,x0+4,cy-1,z0+4,B.PLANKS);
-  for(let x=x0;x<=x0+4;x++)for(let z=z0;z<=z0+4;z++){const edge=x===x0||x===x0+4||z===z0||z===z0+4;if(!edge) continue;const corner=(x===x0||x===x0+4)&&(z===z0||z===z0+4);
-    for(let y=cy;y<=cy+2;y++){let id=corner?B.OAK_LOG:B.PLANKS;if(z===zf&&!corner) id=y===cy?B.PLANKS:y===cy+1?0:B.PLANKS;else if(y===cy+1&&!corner&&(x===x0||x===x0+4)&&z===z0+2) id=B.GLASS;setB(x,y,z,id);}}
-  fillBox(x0-1,cy+3,z0-1,x0+5,cy+3,z0+5,B[roof]||B.PLANKS);fillBox(x0,cy+4,z0+1,x0+4,cy+4,z0+3,B[roof]||B.PLANKS);
-  setB(x0+1,cy,zb+(face>0?1:-1),B[deco[0]]||B.CHEST);setB(x0+3,cy,zb+(face>0?1:-1),B[deco[1]]||B.CHEST);setB(x0+2,cy+2,zb+(face>0?1:-1),B.LANTERN||B.TORCH);
-  return [x0+2.5,cy,zf-face*2+0.5,face>0?0:Math.PI];}
+function roofOf(x0,cy,z0,roof){const R=B[roof]||B.PLANKS;fillBox(x0-1,cy+3,z0-1,x0+5,cy+3,z0+5,R);fillBox(x0,cy+4,z0,x0+4,cy+4,z0+4,R);fillBox(x0+1,cy+5,z0+1,x0+3,cy+5,z0+3,R);}
+function walls(x0,cy,z0,wall,cb){for(let x=x0;x<=x0+4;x++)for(let z=z0;z<=z0+4;z++){const edge=x===x0||x===x0+4||z===z0||z===z0+4;if(!edge) continue;const corner=(x===x0||x===x0+4)&&(z===z0||z===z0+4);
+  for(let y=cy;y<=cy+2;y++) setB(x,y,z,cb(x,y,z,corner)??(corner?B.OAK_LOG:wall));}}
+// 商店：櫃台朝向馬路
+function buildShop(x0,cy,z0,face,roof,deco){const zf=face>0?z0+4:z0,zb=face>0?z0:z0+4;fillBox(x0,cy-1,z0,x0+4,cy-1,z0+4,B.PLANKS);
+  walls(x0,cy,z0,B.PLANKS,(x,y,z,c)=>c?null:z===zf?(y===cy+1?0:B.PLANKS):(y===cy+1&&(x===x0||x===x0+4)&&z===z0+2?B.GLASS:null));
+  roofOf(x0,cy,z0,roof);const zi=zb+(face>0?1:-1);setB(x0+1,cy,zi,B[deco[0]]||B.CHEST);setB(x0+3,cy,zi,B[deco[1]]||B.CHEST);setB(x0+2,cy+2,z0+2,B.LANTERN||B.TORCH);
+  return {post:[x0+2.5,cy,zf-face*2+0.5,face>0?0:Math.PI],out:[x0+2.5,zf+face+0.5]};}
+// 房子：有門、床、桌子、椅子、燈
+function buildHouse(x0,cy,z0,face,roof,wall,clinic){const zf=face>0?z0+4:z0,zb=face>0?z0+1:z0+3;fillBox(x0,cy-1,z0,x0+4,cy-1,z0+4,B.PLANKS);
+  walls(x0,cy,z0,B[wall]||B.PLANKS,(x,y,z,c)=>{if(c) return null;if(z===zf&&x===x0+2&&y<=cy+1) return y===cy?B.DOOR:B.DOOR;if(y===cy+1&&(z===zf&&(x===x0+1||x===x0+3)||(x===x0||x===x0+4)&&z===z0+2)) return B.GLASS;return null;});
+  roofOf(x0,cy,z0,roof);const bx=x0+1;setB(bx,cy,zb,B.BED);setB(bx,cy,zb+face,B.BED);
+  setB(x0+3,cy,zb,B[clinic?'CHEST':'BOOKSHELF']||B.CHEST);setB(x0+3,cy,zb+face,B.TABLE);if(B.STAIRS_OAK) setB(x0+3,cy,zb+2*face,B.STAIRS_OAK);setB(x0+2,cy+2,z0+2,B.LANTERN||B.TORCH);
+  if(clinic){setB(x0+2,cy+3,zf+face,B.WOOL_RED);setB(x0+1,cy+3,zf+face,0);}if(B.FLOWER_R) setB(x0+1,cy,zf+face,B.FLOWER_R);if(B.FLOWER_Y) setB(x0+3,cy,zf+face,B.FLOWER_Y);
+  return {bed:[bx+0.5,cy+0.56,zb+face*2-face*0.05+(face>0?0:1),face>0?0:Math.PI],stand:[x0+2.5,cy,z0+2.5,face>0?0:Math.PI],out:[x0+2.5,zf+face*1.5+0.5]};}
+function buildTree(x,cy,z){const h=irand(4,5);for(let y=cy;y<cy+h;y++) setB(x,y,z,B.OAK_LOG);for(let a=-2;a<=2;a++)for(let b=-2;b<=2;b++)for(let c=h-2;c<=h+1;c++){if(Math.abs(a)+Math.abs(b)+(c>h?2:0)>3) continue;if(!getB(x+a,cy+c,z+b)) setB(x+a,cy+c,z+b,B.OAK_LEAVES);}}
 function buildHome(x0,cy,z0){// 你的家：7 x 6，門朝 +z
   fillBox(x0,cy-1,z0,x0+6,cy-1,z0+5,B.PLANKS);
   for(let x=x0;x<=x0+6;x++)for(let z=z0;z<=z0+5;z++){const edge=x===x0||x===x0+6||z===z0||z===z0+5;if(!edge) continue;const corner=(x===x0||x===x0+6)&&(z===z0||z===z0+5);
@@ -2955,33 +2977,45 @@ function buildHome(x0,cy,z0){// 你的家：7 x 6，門朝 +z
   for(const [id,n] of [['PLANKS',32],['TORCH',16],['SHIPBIN',1],['JAR_M',1]]) if(B[id]) C[i++]={id:B[id],n};
   return [x0+3.5,cy,z0+7.5];}
 function farmKit(){const fm=fmInit();const [sx,,sz]=W.spawn;const [cx,cz,cy]=townSite(sx,sz);
-  // 整地：x -34..+13、z -11..+11
-  for(let dx=-34;dx<=13;dx++)for(let dz=-11;dz<=11;dz++){const x=cx+dx,z=cz+dz;for(let y=cy-6;y<cy-1;y++){const id=getB(x,y,z);if(!id||BL[id].kind||!BL[id].solid) setB(x,y,z,B.DIRT);}
-    setB(x,cy-1,z,B.GRASS);for(let y=cy;y<cy+14;y++) if(getB(x,y,z)) setB(x,y,z,0);}
-  // 廣場
-  for(let dx=-4;dx<=4;dx++)for(let dz=-3;dz<=3;dz++) setB(cx+dx,cy-1,cz+dz,(dx+dz)&1?B.COBBLE:B.STONE);
-  for(let dx=-13;dx<=-5;dx++) setB(cx+dx,cy-1,cz,B.COBBLE);
-  for(const [a,b] of [[-4,-3],[4,-3],[-4,3],[4,3]]){setB(cx+a,cy,cz+b,B.FENCE);setB(cx+a,cy+1,cz+b,B.LANTERN||B.TORCH);}
-  setB(cx,cy,cz-3,B.SHIPBIN);fm.bins['over:'+cx+','+cy+','+(cz-3)]=1;
-  // 商店：北邊一排（櫃台朝南）、南邊一排（櫃台朝北）
-  fm.posts={};fm.town=[cx+0.5,cz+0.5];fm.v=2;const slots=[[-11,-10,1],[-5,-10,1],[1,-10,1],[7,-10,1],[-11,6,-1],[-5,6,-1],[1,6,-1],[7,6,-1]];let si=0;
-  TOWN.forEach((t,i)=>{if(t.k==='chen'){fm.posts[i]=[cx+0.5,cy,cz-1.5,0];return;}const [ox,oz,f]=slots[si++];const key=t.shop||t.k;fm.posts[i]=buildStall(cx+ox,cy,cz+oz,f,ROOFC[key]||'PLANKS',SHOPDECO[t.shop||'home_'+t.k]||['FLOWERPOT','CHEST']);});
-  // 你的家和田
-  const hx=cx-31,hz=cz-10;const door=buildHome(hx,cy,hz);
-  for(let dx=0;dx<=8;dx++)for(let dz=0;dz<=5;dz++){const x=cx-31+dx,z=cz-1+dz;const edge=dx===0||dx===8||dz===0||dz===5;if(edge){setB(x,cy,z,dx===4&&dz===0?0:B.FENCE);continue;}setB(x,cy-1,z,B.FARMLAND);}
-  setB(hx+5,cy,hz+7,B.SHIPBIN);fm.bins['over:'+(hx+5)+','+cy+','+(hz+7)]=1;
+  // 整地：x -52..+30、z -17..+17
+  for(let dx=-52;dx<=30;dx++)for(let dz=-17;dz<=17;dz++){const x=cx+dx,z=cz+dz;for(let y=cy-5;y<cy-1;y++){const id=getB(x,y,z);if(!id||BL[id].kind||!BL[id].solid) setB(x,y,z,B.DIRT);}
+    setB(x,cy-1,z,B.GRASS);for(let y=cy;y<cy+12;y++) if(getB(x,y,z)) setB(x,y,z,0);}
+  // 大馬路（石頭路，從你家一路通到小鎮東邊）和人行道
+  for(let dx=-50;dx<=30;dx++)for(let dz=-2;dz<=2;dz++) setB(cx+dx,cy-1,cz+dz,Math.abs(dz)===2?B.STONE:B.COBBLE);
+  for(let dx=-30;dx<=30;dx++) for(const dz of [-6,-5,-4,-3,3,4,5,6]) if(getB(cx+dx,cy-1,cz+dz)===B.GRASS&&(Math.abs(dz)>=5)) setB(cx+dx,cy-1,cz+dz,B.STONE);
+  // 廣場和噴水池
+  for(let dx=-5;dx<=5;dx++)for(let dz=-6;dz<=6;dz++) setB(cx+dx,cy-1,cz+dz,(dx+dz)&1?B.COBBLE:B.STONE);
+  for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++){const rim=Math.abs(dx)===2||Math.abs(dz)===2;if(rim) setB(cx+dx,cy,cz+dz,B.COBBLE);else{setB(cx+dx,cy-2,cz+dz,B.STONE);setB(cx+dx,cy-1,cz+dz,B.WATER);}}
+  setB(cx,cy-1,cz,B.COBBLE);setB(cx,cy,cz,B.COBBLE);setB(cx,cy+1,cz,B.LANTERN||B.TORCH);
+  const benches=[];if(B.STAIRS_OAK) for(const [dx,dz] of [[-4,-1],[-4,1],[4,-1],[4,1]]){setB(cx+dx,cy,cz+dz,B.STAIRS_OAK);benches.push([cx+dx+0.5,cz+dz+0.5,dx<0?Math.PI/2:-Math.PI/2]);}
+  // 路燈
+  for(let k=0;k<8;k++){for(const z of [cz-6,cz+6]){const x=cx+LOTX[k]+5;if(k===3||k===7) continue;setB(x,cy,z,B.FENCE);setB(x,cy+1,z,B.FENCE);setB(x,cy+2,z,B.LANTERN||B.TORCH);}}
+  for(let dx=-46;dx<=-32;dx+=7) for(const z of [cz-3,cz+3]){setB(cx+dx,cy,z,B.FENCE);setB(cx+dx,cy+1,z,B.FENCE);setB(cx+dx,cy+2,z,B.LANTERN||B.TORCH);}
+  // 建築
+  fm.places={};fm.npc={};fm.town=[cx+0.5,cz+0.5];fm.v=3;fm.ty=cy;
+  for(const key in LOTS){const [x0,z0,f]=lotXZ(key,cx,cz);
+    if(key.startsWith('h_')){const k=key.slice(2);const h=buildHouse(x0,cy,z0,f,ROOFC[key],k==='aoi'?'WOOL_PINK':k==='xue'?'WOOL_WHITE':'PLANKS');(fm.npc[k]=fm.npc[k]||{}).home=h;}
+    else if(key==='clinic'){fm.places.clinic=buildHouse(x0,cy,z0,f,'WOOL_WHITE','WOOL_WHITE',true).out;}
+    else{const sh=buildShop(x0,cy,z0,f,ROOFC[key],SHOPDECO[key]||['CHEST','CHEST']);fm.places[key]=sh.out;for(const k in WORKAT) if(WORKAT[k]===key) (fm.npc[k]=fm.npc[k]||{}).work=sh;}}
+  fm.places.benches=benches;fm.places.plaza=[cx+0.5,cz+0.5];
+  // 後院種樹、花圃
+  for(let dx=-28;dx<=28;dx+=7) for(const dz of [-15,15]) if(Math.random()<0.8) buildTree(cx+dx+irand(0,2),cy,cz+dz+irand(-1,1));
+  for(let dx=-30;dx<=-18;dx+=3) if(B.FLOWER_R) setB(cx+dx,cy,cz-3,Math.random()<0.5?B.FLOWER_R:B.FLOWER_Y);
+  // 你的家和田（小鎮西邊）
+  const hx=cx-48,hz=cz-11;const door=buildHome(hx,cy,hz);
+  for(let dx=0;dx<=10;dx++)for(let dz=0;dz<=6;dz++){const x=cx-49+dx,z=cz+5+dz;const edge=dx===0||dx===10||dz===0||dz===6;if(edge){setB(x,cy,z,dx===5&&dz===0?0:B.FENCE);continue;}setB(x,cy-1,z,B.FARMLAND);}
+  fm.places.paint=[cx-38.5,cz+6.5];
+  setB(hx+5,cy,hz+7,B.SHIPBIN);fm.bins['over:'+(hx+5)+','+cy+','+(hz+7)]=1;setB(cx+1,cy,cz-5,B.SHIPBIN);fm.bins['over:'+(cx+1)+','+cy+','+(cz-5)]=1;
   W.spawn=[Math.floor(door[0]),cy,Math.floor(door[2])];P.x=door[0];P.y=cy+0.01;P.z=door[2];P.vy=0;P.yaw=0;
-  addItem(IT.I_WCAN,1);if(IT.T_hoe_stone) addItem(IT.T_hoe_stone,1);if(IT.T_axe_stone) addItem(IT.T_axe_stone,1);if(IT.T_pick_stone) addItem(IT.T_pick_stone,1);
-  const sk=Object.keys(FCROP).find(k=>FCROP[k].s.includes(seasonNow()))||'turnip';addItem(IT['I_'+sk.toUpperCase()+'_S'],15);
-  townSpawn();setTimeout(()=>toast('🌱 歡迎來到你的農場！家裡的箱子有工具和種子，門前有出貨箱和田。沿著石頭路往東走是晴空小鎮，商店老闆都在櫃台後面。按 J 看手冊'),1500);}
+  if(!fm.kitGiven){fm.kitGiven=1;addItem(IT.I_WCAN,1);if(IT.T_hoe_stone) addItem(IT.T_hoe_stone,1);if(IT.T_axe_stone) addItem(IT.T_axe_stone,1);if(IT.T_pick_stone) addItem(IT.T_pick_stone,1);
+    const sk=Object.keys(FCROP).find(k=>FCROP[k].s.includes(seasonNow()))||'turnip';addItem(IT['I_'+sk.toUpperCase()+'_S'],15);}
+  for(const m of mobs()) if(m.type!=='townie'&&MOBS[m.type].pass&&m.x>cx-52&&m.x<cx+31&&m.z>cz-18&&m.z<cz+18){m.x=cx-40+rand(-4,4);m.z=cz+22+rand(-3,3);m.y=surfaceY(m.x,m.z)+0.1;}
+  townSpawn();setTimeout(()=>toast('🌱 歡迎來到你的農場！家裡的箱子有工具和種子，門前有田和出貨箱。沿著大馬路往東走就是晴空小鎮。按 J 看手冊'),1500);}
 function townSpawn(){if(!isHost()||!W.fm||!W.fm.town) return;const fm=W.fm;const ex=mobs().filter(m=>m.type==='townie'&&!m.dead);const have=new Set(ex.map(m=>m.wool));
-  TOWN.forEach((t,i)=>{if(have.has(i)) return;const p=fm.posts&&fm.posts[i];const [x,y,z]=p||[fm.town[0]+rand(-3,3),0,fm.town[1]+rand(-3,3)];
-    spawnMob('townie',x,p?y+0.01:surfaceY(x,z)+0.1,z,{wool:i,pname:t.shop?`${t.n}・${SHOPZH[t.shop]}`:t.n,home:fm.town,dim:'over'});});
-  for(const m of mobs()) if(m.type==='townie'&&!m.dead){m.home=fm.town;const p=fm.posts&&fm.posts[m.wool];if(p){m.post=p;m.x=p[0];m.y=p[1]+0.01;m.z=p[2];}const t=TOWN[m.wool];if(t) m.pname=t.shop?`${t.n}・${SHOPZH[t.shop]}`:t.n;}}
-function townUpgrade(){// 舊版農場世界：鎮民會亂跑 → 幫你蓋小鎮和家
-  if(!isHost()||!W.farm||!W.fm||W.fm.v===2) return;for(const m of mobs().filter(m=>m.type==='townie')) m.dead=true;farmKit();toast('🏠 農場物語模組更新：已經幫你蓋好小鎮商店和你的家了！');}
-// 鎮民站在自己的櫃台後面，不會亂跑
-// ================= 活潑的鎮民：作息、散步、聊天、打招呼、心動事件 =================
+  TOWN.forEach((t,i)=>{if(have.has(i)) return;const n=fm.npc&&fm.npc[t.k];const p=n&&n.home?n.home.stand:[fm.town[0],fm.ty||surfaceY(fm.town[0],fm.town[1]),fm.town[1]];
+    spawnMob('townie',p[0],p[1]+0.01,p[2],{wool:i,pname:t.shop?`${t.n}・${SHOPZH[t.shop]}`:t.n,home:fm.town,dim:'over'});});
+  for(const m of mobs()) if(m.type==='townie'&&!m.dead){m.home=fm.town;m.post=1;m.fs=null;const t=TOWN[m.wool];if(t) m.pname=t.shop?`${t.n}・${SHOPZH[t.shop]}`:t.k==='shu'?'書豪・圖書館':t.n;}}
+function townUpgrade(){if(!isHost()||!W.farm||!W.fm||W.fm.v===3) return;for(const m of mobs().filter(m=>m.type==='townie')) m.dead=true;W.fm.kitGiven=W.fm.v?1:0;farmKit();toast('🏙️ 農場物語模組更新：小鎮變大了！有大馬路、噴水池、路燈、每個鎮民自己的家，還有你的家和田。');}
 const TEV={chen:['其實我年輕的時候，也是個農夫喔。看到你，就想起當年的自己。','你知道嗎？這座廣場的石頭，是全鎮的人一起鋪的。','小鎮因為有你，變得越來越熱鬧了。謝謝你！'],
   mei:['我第一次種出花椰菜的時候，開心得哭了呢！','這包是我特別留的好種子，送你！','你就像我的家人一樣，有空常來坐坐。'],
   da:['這把鐵鎚是我爸爸留給我的，打了三十年鐵了。','你知道最難打的是什麼嗎？是送給朋友的禮物。','以後工具壞了，第一個來找我！'],
@@ -2993,44 +3027,83 @@ const TEV={chen:['其實我年輕的時候，也是個農夫喔。看到你，�
   xue:['我身體不太好，所以很少出門…但我喜歡在路上遇到你。','今天我自己走到廣場了喔！是因為想見你。','雪融化的時候，我想跟你一起看第一朵花。']};
 const TGIFT={chen:null,mei:['I_STRAWB_S','I_TURNIP_S','I_TOMATO_S'],da:['I_IRON','I_COAL'],xing:['I_PIZZA','I_BREAD'],lin:['I_EGG','I_WHEAT'],hai:['I_SALMON','I_COD'],aoi:['I_COOKIE','I_JAM'],shu:['I_AMETHYST','I_BREAD'],xue:['I_CAKE','I_COOKIE']};
 const GOSSIP=[['今天天氣真好！','對啊，適合曬棉被。'],['你有看到新來的農夫嗎？','有！好像很努力喔。'],['昨天的晚餐好好吃。','是阿星做的嗎？'],['最近雞蛋好像變便宜了。','那我要多做幾個蛋糕！'],['聽說海邊出現了大魚！','真的嗎？我要去看看！'],['下次節日要穿什麼呢？','我還在想耶～'],['你的頭髮剪短了？','嘿嘿，有發現喔！'],['好想去旅行喔。','我們一起去山上露營吧！'],['田裡的作物長得好快。','因為有人每天澆水呀。'],['晚上要不要去酒館？','好啊，一起去！']];
-const WP=[[0,2],[3,-2],[-3,2],[3,2],[-3,-2],[0,-1],[-8,0],[-11,1],[6,-3],[9,3],[-2,4],[10,-2],[5,4],[-6,3]];
-const WPF={aoi:[[-21,0],[-21,3],[-18,4],[-2,4]],shu:[[0,2],[3,2],[-3,2]],xue:[[10,3],[9,-3],[-11,1]],chen:[[0,2],[3,0],[-3,0],[0,-1]]};
-const dayT=()=>(W.time%24000)/24000;
-function wantOut(e,t){if(WX.rain) return false;const d=dayT();if(d>0.53) return false;
-  if(t.k==='xing') return d<0.2||d>0.44;if(t.shop) return d>0.22&&d<0.29||d>0.44&&d<0.52;if(t.k==='chen') return d>0.04&&d<0.46;return d>0.03&&d<0.48;}
-function outPt(e){const p=e.post;if(TOWN[e.wool]&&TOWN[e.wool].k==='chen') return [p[0],p[2]];return [p[0],p[2]+(p[3]===0?3:-3)];}
-function pickWP(t){const L=(WPF[t.k]&&Math.random()<0.7)?WPF[t.k]:WP;const w=L[Math.floor(Math.random()*L.length)];const [cx,cz]=W.fm.town;return [cx+w[0]+rand(-0.8,0.8),cz+w[1]+rand(-0.8,0.8)];}
-function faceNear(e,def){let yaw=def,best=7;for(const pl of players()){const d=Math.hypot(pl.x-e.x,pl.z-e.z);if(d<best){best=d;yaw=Math.atan2(pl.x-e.x,pl.z-e.z);}}return yaw;}
+
+// ================= 鎮民像真人一樣生活 =================
+function faceNear(e,def){let yaw=def,best=6;for(const pl of players()){const d=Math.hypot(pl.x-e.x,pl.z-e.z);if(d<best){best=d;yaw=Math.atan2(pl.x-e.x,pl.z-e.z);}}return yaw;}
 function fBub(m,text,sec){if(!m||!m.mesh||typeof bubbleSprite!=='function') return;if(m.fbub) m.mesh.remove(m.fbub);const sp=bubbleSprite(text);sp.position.y=m.h/(m.mesh.scale.y||1)+0.85;m.mesh.add(sp);m.fbub=sp;m.fbubT=sec||4;}
 function hostBub(m,text,sec){fBub(m,text,sec);if(NET.on&&NET.host) hostBcast({t:'fbub',eid:m.eid,txt:text,s:sec||4});}
-function townieHold(e,dt){const p=e.post;if(!p) return false;dt=dt||0.05;const t=TOWN[e.wool]||TOWN[0];const fs=e.fs||(e.fs={mode:'post',wait:rand(1,6)});e.ai.t=1;
-  const pin=()=>{e.x=p[0];e.z=p[2];if(e.y<p[1]-0.5||e.y>p[1]+1.5) e.y=p[1]+0.01;e.vx=e.vz=0;};
-  if(fs.mode==='post'){pin();e.yaw=faceNear(e,p[3]);fs.wait-=dt;if(fs.wait<=0){fs.wait=rand(3,9);if(wantOut(e,t)&&W.fm.town){const o=outPt(e);e.x=o[0];e.z=o[1];fs.mode='walk';fs.home=false;fs.legs=irand(2,5);fs.tgt=pickWP(t);fs.st=0;}}return true;}
-  if(!wantOut(e,t)&&!fs.home){fs.home=true;fs.tgt=outPt(e);fs.mode='walk';fs.st=0;}
-  if(fs.mode==='walk'){const dx=fs.tgt[0]-e.x,dz=fs.tgt[1]-e.z,d=Math.hypot(dx,dz);
-    if(d<0.5){e.vx=e.vz=0;if(fs.home){fs.mode='post';fs.wait=rand(4,10);pin();return true;}fs.mode='idle';fs.wait=rand(3,9);
-      if(Math.random()<0.25) hostBub(e,pickR(t.shop?['♪','嗯～今天生意不錯','伸個懶腰～']:t.k==='aoi'?['🎨 畫一下這裡','好漂亮的景色！']:t.k==='shu'?['📖 這本書好好看','嗯…原來如此']:t.k==='xue'?['🌸','風好舒服']:['大家早安！','今天也要加油！']),3);return true;}
-    const sp=t.k==='xue'?0.9:1.25;e.vx=dx/d*sp;e.vz=dz/d*sp;e.yaw=Math.atan2(dx,dz);fs.st+=dt;
-    if(fs.st>3){const mv=Math.hypot(e.x-(fs.lx||0),e.z-(fs.lz||0));fs.lx=e.x;fs.lz=e.z;fs.st=0;if(mv<0.5){if(fs.home){fs.mode='post';pin();}else fs.tgt=pickWP(t);}}
-    // 遇到其他鎮民就停下來聊天
-    if(!fs.home&&(fs.chatCD||0)<=0&&Math.random()<dt*0.6){const o=mobs().find(m=>m!==e&&m.type==='townie'&&m.fs&&(m.fs.mode==='walk'||m.fs.mode==='idle')&&!m.fs.home&&Math.hypot(m.x-e.x,m.z-e.z)<3);
-      if(o){const g=pickR(GOSSIP);for(const [m2,line,dl] of [[e,g[0],0],[o,g[1],1.8]]){m2.fs.mode='chat';m2.fs.wait=6;m2.fs.with=m2===e?o:e;m2.fs.chatCD=40;m2.vx=m2.vz=0;setTimeout(()=>{if(!m2.dead) hostBub(m2,line,3.5);},dl*1000);}}}
-    fs.chatCD=(fs.chatCD||0)-dt;return true;}
-  // 停下來（看風景或聊天）
-  e.vx=e.vz=0;fs.chatCD=(fs.chatCD||0)-dt;if(fs.mode==='chat'&&fs.with&&!fs.with.dead) e.yaw=Math.atan2(fs.with.x-e.x,fs.with.z-e.z);else e.yaw=faceNear(e,e.yaw);
-  fs.wait-=dt;if(fs.wait<=0){fs.legs--;fs.mode='walk';fs.st=0;if(fs.legs<=0){fs.home=true;fs.tgt=outPt(e);}else fs.tgt=pickWP(t);}return true;}
-// 打招呼、叫賣、送你小禮物（每個玩家自己看到）
+const dayT=()=>(W.time%24000)/24000;
+function actNow(t){const S=SCHED[t.k]||(t.shop?SCHED.shop:SCHED.aoi);const d=dayT();let a=S[0][1];for(const [s2,x] of S) if(d>=s2) a=x;
+  if(WX.rain&&!['home','work','eat'].includes(a)) a=t.k in WORKAT&&a!=='home'?'work':'home';if(t.k==='chen'&&a==='work') a='plaza';return a;}
+const isNight=()=>{const d=dayT();return d>0.55||d<0.005;};
+function laneZ(z){const cz=W.fm.town[1];return z<cz?cz-3.5:cz+3.5;}
+function route(x,z,tx,tz){const cz=W.fm.town[1];const L=[];const lz=Math.abs(tz-cz)<6&&Math.abs(z-cz)<6&&Math.sign(tz-cz)===Math.sign(z-cz)?null:laneZ(tz);
+  if(lz!==null){L.push([x,lz]);L.push([tx,lz]);}else if(Math.abs(tz-cz)<2.5&&Math.abs(tx-W.fm.town[0])<3){L.push([tx,laneZ(z)]);}L.push([tx,tz]);return L;}
+function goalOf(e,t){const fm=W.fm,n=fm.npc[t.k]||{},a=actNow(t),P2=fm.places;const fr=FRIENDS[t.k]||[];const h=hstr(t.k+W.day);
+  switch(a){case 'home':return n.home?{in:'home',out:n.home.out}:{spot:P2.plaza};
+    case 'work':return n.work?{in:'work',out:n.work.out}:{spot:P2.plaza};
+    case 'eat':{const o=P2.food;const k=TOWN.findIndex(x=>x.k===t.k);return {spot:[o[0]-3+(k%4)*2,o[1]+(o[1]<fm.town[1]?1.2:-1.2)],act:'eat'};}
+    case 'sit':{const b=P2.benches[h%P2.benches.length];return b?{spot:[b[0],b[1]],sit:b[2]}:{spot:P2.plaza};}
+    case 'visit':{const f=fr[h%Math.max(1,fr.length)];const fh=fm.npc[f]&&fm.npc[f].home;return fh?{spot:[fh.out[0]+0.8,fh.out[1]],act:'visit',who:f}:{spot:P2.plaza};}
+    case 'clinic':return {spot:P2.clinic,act:'clinic'};
+    case 'paint':return {spot:P2.paint,act:'paint'};
+    case 'plaza':{const r=[[0,4],[3,-4],[-3,4],[0,-4]][Math.floor(W.time/1200+h)%4];return {spot:[P2.plaza[0]+r[0],P2.plaza[1]+r[1]],act:'plaza'};}
+    case 'stroll':{const r=[[-14,3.5],[14,-3.5],[-25,3.5],[22,3.5],[-6,-3.5]][Math.floor(W.time/1500+h)%5];return {spot:[P2.plaza[0]+r[0],P2.plaza[1]+r[1]],act:'stroll'};}}
+  return {spot:P2.plaza};}
+const gkey=g=>g.in?'in:'+g.in:g.spot.map(v=>v.toFixed(1)).join(',');
+const ACTBUB={eat:['🍜 好好吃！','今天的午餐是什麼呢？','阿星的料理最棒了！'],paint:['🎨 這裡的光線剛剛好','畫一下這片田…','🖌️ 嗯～顏色再亮一點'],visit:['有人在家嗎？','叩叩叩～','我來找你玩了！'],clinic:['安安醫生，我又來了…','今天身體還不錯！'],plaza:['大家早安！','今天小鎮也很和平。','布告欄有新的委託喔！'],stroll:['散步真舒服～','♪～','今天天氣真好']};
+function townieHold(e,dt){if(!e.post||!W.fm||!W.fm.npc) return false;dt=dt||0.05;const t=TOWN[e.wool]||TOWN[0];const fm=W.fm;const n=fm.npc[t.k]||{};e.ai.t=1;
+  const fs=e.fs||(e.fs={inside:null,key:'',path:[],wait:0,pose:null});const g=goalOf(e,t);const k=gkey(g);
+  const place=(x,y,z,yaw)=>{e.x=x;e.y=y;e.z=z;e.vx=e.vz=0;e.vy=0;e.noPhys=true;if(yaw!==undefined) e.yaw=yaw;};
+  if(fs.key!==k){fs.key=k;fs.arr=false;e.fsit=e.fsleep=false;
+    if(fs.inside){const b=fs.inside==='home'?n.home:n.work;if(b){e.x=b.out[0];e.z=b.out[1];e.y=fm.ty+0.01;}fs.inside=null;}
+    const tgt=g.in?g.out:g.spot;fs.path=route(e.x,e.z,tgt[0],tgt[1]);}
+  if(fs.inside){const b=fs.inside==='home'?n.home:n.work;if(fs.inside==='home'&&isNight()&&b.bed){place(b.bed[0],b.bed[1],b.bed[2],b.bed[3]);e.fsleep=true;}
+    else{e.fsleep=false;const p=fs.inside==='home'?b.stand:b.post;place(p[0],p[1]+0.01,p[2],faceNear(e,p[3]));}return true;}
+  if(fs.path.length){e.noPhys=false;e.fsit=false;const [tx,tz]=fs.path[0];const dx=tx-e.x,dz=tz-e.z,d=Math.hypot(dx,dz);
+    if(d<0.45){fs.path.shift();if(!fs.path.length){fs.arr=true;fs.wait=rand(2,6);if(g.in){fs.inside=g.in;}else if(g.act&&Math.random()<0.6) hostBub(e,pickR(ACTBUB[g.act]),3.5);}return true;}
+    const sp=t.k==='xue'?1.0:t.k==='chen'?1.1:1.35;e.vx=dx/d*sp;e.vz=dz/d*sp;e.yaw=Math.atan2(dx,dz);
+    fs.st=(fs.st||0)+dt;if(fs.st>2.5){const mv=Math.hypot(e.x-(fs.lx||0),e.z-(fs.lz||0));fs.lx=e.x;fs.lz=e.z;fs.st=0;if(mv<0.4){e.x=tx;e.z=tz;e.y=fm.ty+0.01;}}
+    // 路上遇到朋友就停下來聊天
+    if((fs.chatCD||0)<=0&&Math.random()<dt*0.5){const o=mobs().find(m=>m!==e&&m.type==='townie'&&m.fs&&!m.fs.inside&&Math.hypot(m.x-e.x,m.z-e.z)<2.6);
+      if(o){const t2=TOWN[o.wool];const pk=[t.k,t2.k].sort().join('-');const g2=PAIRTALK[pk]?pickR(PAIRTALK[pk]):pickR(GOSSIP);const first=PAIRTALK[pk]&&[t.k,t2.k].sort()[0]!==t.k?o:e;
+        for(const [m2,line,dl] of [[first,g2[0],0],[first===e?o:e,g2[1],1.8]]){m2.fs.chatT=6;m2.fs.with=m2===e?o:e;m2.fs.chatCD=45;m2.vx=m2.vz=0;setTimeout(()=>{if(!m2.dead) hostBub(m2,line,3.5);},dl*1000);}}}
+    fs.chatCD=(fs.chatCD||0)-dt;if(fs.chatT>0){fs.chatT-=dt;e.vx=e.vz=0;if(fs.with&&!fs.with.dead) e.yaw=Math.atan2(fs.with.x-e.x,fs.with.z-e.z);}return true;}
+  // 到了：坐下、看風景、吃飯
+  e.vx=e.vz=0;if(g.sit!==undefined){place(g.spot[0],fm.ty+0.01,g.spot[1],g.sit);e.fsit=true;}else{e.noPhys=false;e.yaw=faceNear(e,e.yaw);}
+  fs.wait-=dt;if(fs.wait<=0){fs.wait=rand(6,14);if(g.act&&Math.random()<0.35) hostBub(e,pickR(ACTBUB[g.act]),3.5);else if(e.fsit&&Math.random()<0.3) hostBub(e,pickR(['☕ 休息一下','好舒服～','看噴水池好放鬆']),3);}
+  return true;}
+// 臉：16x16，會眨眼、會笑
+const TFACE={};
+function drawTownFace(i,blink){const t=TOWN[i];const tex=FACE['tw'+i];const c=tex.image;const g=c.getContext('2d');const f=(col,x,y,w,h)=>{g.fillStyle=col;g.fillRect(x,y,w||1,h||1);};g.clearRect(0,0,16,16);
+  f(t.skin,0,0,16,16);f(shade(t.skin,0.92),0,13,16,3);f(t.hair,0,0,16,4);f(t.hair,0,4,2,t.dress?10:5);f(t.hair,14,4,2,t.dress?10:5);for(let x=2;x<14;x+=3) f(t.hair,x,4,2,1);
+  f(shade(t.hair,0.8),3,5,3,1);f(shade(t.hair,0.8),10,5,3,1);
+  if(blink){f('#2a1a10',3,8,3,1);f('#2a1a10',10,8,3,1);}else{f('#fff',3,7,3,2);f('#fff',10,7,3,2);f(t.eye||'#3a2a1a',4,7,2,2);f(t.eye||'#3a2a1a',11,7,2,2);f('#fff',4,7);f('#fff',11,7);}
+  if(t.k==='shu'){g.strokeStyle='#222';g.lineWidth=1;g.strokeRect(2.5,6.5,5,4);g.strokeRect(8.5,6.5,5,4);f('#222',7,8,2,1);}
+  f(shade(t.skin,0.82),7,9,2,2);f('#f0a0a0',2,10,2,1);f('#f0a0a0',12,10,2,1);
+  if(t.k==='chen'||t.k==='da'){f(t.k==='chen'?'#d8d8d8':t.hair,5,11,6,1);f(t.k==='chen'?'#d8d8d8':t.hair,5,12,1,1);f(t.k==='chen'?'#d8d8d8':t.hair,10,12,1,1);}
+  f('#a8484a',6,12,4,1);f('#a8484a',5,11);f('#a8484a',10,11);tex.needsUpdate=true;}
+TOWN.forEach((t,i)=>{FACE['tw'+i]=faceCanvas(()=>{},16,16);drawTownFace(i,false);TFACE[i]={t:rand(1,4),b:0};});
+function townieParts(i){const t=TOWN[i]||TOWN[0];const P2=[['body',[8,12,4],[0,18,0],t.shirt],['head',[8,8,8],[0,28,0],t.skin,'tw'+i],['hair',[8.8,2.4,8.8],[0,32.4,0],t.hair],['aL',[4,12,4],[-6,18,0],t.shirt],['aR',[4,12,4],[6,18,0],t.shirt],['l0',[4,12,4],[-2,6,0],t.pants],['l1',[4,12,4],[2,6,0],t.pants]];
+  if(t.dress) P2.push(['skirt',[9.2,5,5.2],[0,12,0],t.shirt]);if(t.shop) P2.push(['apron',[7,9,0.6],[0,15,2.3],t.shop==='smith'?'#5a3a2a':'#f4f0e4']);
+  if(t.k==='chen') P2.push(['hat',[10,1,10],[0,33.6,0],'#3a2a4a'],['hat2',[7,3,7],[0,35.3,0],'#3a2a4a']);if(t.k==='hai') P2.push(['hat',[9,2,9],[0,33.6,0],'#f4f0e4']);if(t.k==='lin') P2.push(['hat',[11,1,11],[0,33.5,0],'#d8b060']);
+  if(t.k==='aoi') P2.push(['bow',[4,2,1],[3,32,4.3],'#f86a8a']);return P2;}
+// 打招呼、眨眼、轉頭看你
 let socT=0;
-function townSocial(dt){socT-=dt;for(const m of mobs()) if(m.type==='townie'&&m.fbub){m.fbubT-=dt;if(m.fbubT<=0){m.mesh.remove(m.fbub);m.fbub=null;}}
+function townSocial(dt){socT-=dt;const hd=new Set();
+  for(const m of mobs()){if(m.type!=='townie'||m.dead||!m.model) continue;if(m.fbub){m.fbubT-=dt;if(m.fbubT<=0){m.mesh.remove(m.fbub);m.fbub=null;}}
+    const tf=TFACE[m.wool];if(tf&&!hd.has(m.wool)){hd.add(m.wool);tf.t-=dt;if(tf.t<=0&&!tf.b){tf.b=0.13;drawTownFace(m.wool,true);}if(tf.b){tf.b-=dt;if(tf.b<=0){tf.b=0;tf.t=rand(2,5);drawTownFace(m.wool,!!m.fsleep);}}if(m.fsleep&&!tf.sl){tf.sl=1;drawTownFace(m.wool,true);}else if(!m.fsleep&&tf.sl){tf.sl=0;drawTownFace(m.wool,false);}}
+    const pt=m.model.parts;if(pt.head){let a=0;const d=Math.hypot(P.x-m.x,P.z-m.z);if(d<7&&!m.fsleep){a=Math.atan2(P.x-m.x,P.z-m.z)-m.mesh.rotation.y;while(a>Math.PI) a-=Math.PI*2;while(a<-Math.PI) a+=Math.PI*2;a=clamp(a,-1.1,1.1);}
+      const cur=pt.head.rotation.y+(a-pt.head.rotation.y)*Math.min(1,dt*6);for(const k of ['head','hair','hat','hat2']) if(pt[k]) pt[k].rotation.y=cur;}}
   if(socT>0) return;socT=0.5;if(W.dim!=='over') return;const d0=dayT();
   for(const m of mobs()){if(m.type!=='townie'||m.dead) continue;const t=TOWN[m.wool];if(!t) continue;const d=Math.hypot(m.x-P.x,m.z-P.z);const r=relOf(t.k);
-    if(d<5&&r.hi!==W.day&&!m.fbub){r.hi=W.day;const h=hearts(t.k);const nm=SET.name||'農夫';
-      const hi=d0>0.53?`晚安，${nm}～`:d0<0.12?`早安，${nm}！`:h>=6?`${nm}！見到你真開心 ❤️`:h>=3?`嗨，${nm}！今天也很努力呢！`:`你好，${nm}。`;
+    if(d<5&&r.hi!==W.day&&!m.fbub&&!m.fsleep){r.hi=W.day;const h=hearts(t.k);const nm=SET.name||'農夫';
+      const hi=d0>0.5?`晚安，${nm}～`:d0<0.1?`早安，${nm}！`:h>=6?`${nm}！見到你真開心 ❤️`:h>=3?`嗨，${nm}！今天也很努力呢！`:`你好，${nm}。`;
       const bday=t.bd[0]===seasonNow()&&t.bd[1]===sday();fBub(m,bday?'🎂 今天是我的生日喔！':hi,4);playSnd('hmm',0.5);
       const G2=TGIFT[t.k];if(h>=3&&(W.day-(r.gv||-9))>=3&&Math.random()<0.5){r.gv=W.day;setTimeout(()=>{if(t.k==='chen'){fmoney(100);fBub(m,'這是小鎮給你的獎勵金！💰 +100G',4);}
         else if(G2){const id=IT[pickR(G2)];if(id!==undefined){addOrDrop({id,n:1});fBub(m,`這個送你！🎁 ${nameOf(id)}`,4);playSnd('level',0.4);}}},2500);}continue;}
-    if(d<9&&!m.fbub&&(!m.fs||m.fs.mode==='post')){if(d0>0.55&&Math.random()<0.04) fBub(m,'💤',3);
-      else if(t.shop&&d0<0.5&&Math.random()<0.02) fBub(m,{seed:'種子新貨到喔～',smith:'工具要升級嗎？',food:'剛出爐的披薩！',ranch:'可愛的小動物在這裡！',fish:'今天的魚很新鮮！'}[t.shop],3);}}}
+    if(d<9&&!m.fbub){if(m.fsleep&&Math.random()<0.05) fBub(m,'💤',3);
+      else if(t.shop&&m.fs&&m.fs.inside==='work'&&Math.random()<0.02) fBub(m,{seed:'種子新貨到喔～',smith:'工具要升級嗎？',food:'剛出爐的披薩！',ranch:'可愛的小動物在這裡！',fish:'今天的魚很新鮮！'}[t.shop],3);}}}
 // ---- 每幀 ----
 let fLastDay=0,fT=0;
 function farmTick(dt){if(!W.farm||!running){fLastDay=0;const el=$('#fmoney');if(el) el.hidden=true;return;}const fm=fmInit();
