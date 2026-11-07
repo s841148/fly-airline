@@ -1643,7 +1643,7 @@ function puff(x,y,z,col,n,sp){for(let i=0;i<(n||6);i++){const m=new THREE.Mesh(p
 function blockBits(x,y,z,id){if(!BL[id]||!BL[id].tex) return;const mat=matTile(BL[id].tex[1]);for(let i=0;i<8;i++){const m=new THREE.Mesh(puffGeo,mat);m.scale.setScalar(rand(0.6,1.2));m.position.set(x+rand(0.2,0.8),y+rand(0.2,0.8),z+rand(0.2,0.8));scene.add(m);PARTS.push({m,vx:rand(-2,2),vy:rand(1,4),vz:rand(-2,2),t:0,life:rand(0.4,0.9),g:12,keep:true});}}
 function partsTick(dt){for(let i=PARTS.length-1;i>=0;i--){const p=PARTS[i];p.t+=dt;p.vy-=(p.g||0)*dt;p.m.position.x+=p.vx*dt;p.m.position.y+=p.vy*dt;p.m.position.z+=p.vz*dt;if(!p.keep) p.m.material.opacity=1-p.t/p.life;if(p.t>p.life){scene.remove(p.m);if(!p.keep) p.m.material.dispose();PARTS.splice(i,1);}}}
 // 生物 AI（主機才跑）
-function mobAI(e,dt){const T2=MOBS[e.type];const a=e.ai;a.t-=dt;a.cool-=dt;if(a.flee>0) a.flee-=dt;if(a.anger>0) a.anger-=dt;if(a.love>0) a.love-=dt;
+function mobAI(e,dt){const T2=MOBS[e.type];const a=e.ai;if(T2.townie&&e.post&&typeof townieHold==='function'&&townieHold(e)) return;a.t-=dt;a.cool-=dt;if(a.flee>0) a.flee-=dt;if(a.anger>0) a.anger-=dt;if(a.love>0) a.love-=dt;
   if(e.age<0){e.age+=dt*20;if(e.age>=0){e.baby=false;e.mesh.scale.setScalar(T2.split?e.size*0.5:1);e.w=T2.w;e.h=T2.h;}}
   if(T2.villager){const z=mobs().find(m=>(m.type==='zombie'||m.type==='husk')&&Math.hypot(m.x-e.x,m.z-e.z)<8);if(z){a.flee=2;a.tx=e.x+(e.x-z.x)*2;a.tz=e.z+(e.z-z.z)*2;a.t=1;}
     else if(e.home&&Math.hypot(e.home[0]-e.x,e.home[1]-e.z)>22&&a.t<=0){a.tx=e.home[0]+rand(-6,6);a.tz=e.home[1]+rand(-6,6);a.t=6;}
@@ -2347,7 +2347,7 @@ function startWorld(save,opts){resetWorld();if(save){W.id=save.id;W.name=save.na
   if(!save){startAnimals();if(W.island) islandKit();if(W.farm) farmKit();}
   if(save&&save.vehs&&typeof vehLoad==='function') vehLoad(save.vehs);
   if(save&&save.mobs) for(const [t,x,y,z,dim,ex] of save.mobs) if(dim===W.dim) spawnMob(t,x,y,z,Object.assign({dim},ex||{}));
-  if(save&&W.farm&&typeof townSpawn==='function') townSpawn();
+  if(save&&W.farm&&typeof townSpawn==='function'){townSpawn();townUpgrade();}
   beginPlay();saveWorld(true);}
 function applyPack(pl){P.adv=pl.adv||{};P.frel=pl.frel||{};P.inv=(pl.inv||[]).slice(0,36);while(P.inv.length<36) P.inv.push(null);P.armor=(pl.armor||[null,null,null,null]).slice(0,4);P.xp=pl.xp||0;P.level=pl.level||0;P.xpTot=pl.xpTot||0;P.hp=pl.hp||20;P.food=pl.food===undefined?20:pl.food;P.spawn=pl.spawn||null;
   if(pl.dim&&pl.dim!==W.dim){W.dim=pl.dim;}P.x=pl.x;P.y=pl.y;P.z=pl.z;scene.fog.near=W.dim==='nether'?10:40;}
@@ -2924,16 +2924,62 @@ function festStart(){const s=seasonNow();P.frel=P.frel||{};P.frel._fest=W.day;co
     toast(`⭐ ${f.n}：「謝謝你的禮物！這是我送你的：${nameOf(IT[back])}！冬星祭快樂！」`);}}
 function hstr(s){let h=7;for(const c of String(s)) h=(h*31+c.charCodeAt(0))>>>0;return h;}
 // ---- 開新世界時 ----
-function farmKit(){const fm=fmInit();const [sx,sy,sz]=W.spawn;const cx=sx+10,cz=sz;const cy=surfaceY(cx,cz);fm.town=[cx+0.5,cz+0.5];
-  for(let a=-5;a<=5;a++)for(let b=-5;b<=5;b++){const x=cx+a,z=cz+b;for(let y=cy-4;y<cy-1;y++) if(!getB(x,y,z)||BL[getB(x,y,z)].kind) setB(x,y,z,B.DIRT);setB(x,cy-1,z,(a+b)%2?B.COBBLE:B.STONE);for(let y=cy;y<cy+6;y++) setB(x,y,z,0);}
-  for(const [a,b] of [[-5,-5],[5,-5],[-5,5],[5,5]]){setB(cx+a,cy,cz+b,B.FENCE);setB(cx+a,cy+1,cz+b,B.LANTERN||B.TORCH);}
-  setB(cx,cy,cz-5,B.SHIPBIN);const sy2=surfaceY(sx+2,sz);setB(sx+2,sy2,sz,B.SHIPBIN);fm.bins['over:'+(sx+2)+','+sy2+','+sz]=1;fm.bins['over:'+cx+','+cy+','+(cz-5)]=1;
-  for(let a=-1;a<=2;a++)for(let b=2;b<=4;b++){const x=sx+a,z=sz+b;const y=surfaceY(x,z)-1;const id=getB(x,y,z);if(BL[id]&&BL[id].solid&&!BL[id].kind){setB(x,y-1,z,B.DIRT);setB(x,y,z,B.FARMLAND);if(BL[getB(x,y+1,z)].replace||!BL[getB(x,y+1,z)].solid) setB(x,y+1,z,0);}}
-  addItem(IT.I_WCAN,1);if(IT.T_hoe_wood) addItem(IT.T_hoe_wood,1);const sk=Object.keys(FCROP).find(k=>FCROP[k].s.includes(seasonNow()))||'turnip';addItem(IT['I_'+sk.toUpperCase()+'_S'],15);
-  townSpawn();setTimeout(()=>toast('🌱 農場物語模組開啟！旁邊有出貨箱和一小塊耕地。往東邊走是晴空小鎮廣場，跟鎮民聊天吧！按 J 看「農場物語」手冊'),1500);}
-function townSpawn(){if(!isHost()||!W.fm||!W.fm.town) return;const [cx,cz]=W.fm.town;const have=new Set(mobs().filter(m=>m.type==='townie').map(m=>m.wool));
-  TOWN.forEach((t,i)=>{if(have.has(i)) return;const x=cx+rand(-3,3),z=cz+rand(-3,3);spawnMob('townie',x,surfaceY(x,z)+0.1,z,{wool:i,pname:t.n,home:[cx,cz],dim:'over'});});
-  for(const m of mobs()) if(m.type==='townie') m.home=[cx,cz];}
+// ---- 小鎮和你的家（開新世界時自動蓋好）----
+const SHOPDECO={seed:['COMPOSTER','FLOWERPOT','HAY'],smith:['FURNACE','ANVIL'],food:['COOKPOT','TABLE'],ranch:['HAY','HAY'],fish:['BARREL','CHEST'],home_aoi:['FLOWERPOT','WOOL_PINK'],home_shu:['BOOKSHELF','BOOKSHELF'],home_xue:['BOOKSHELF','WOOL_LBLUE']};
+const ROOFC={seed:'WOOL_GREEN',smith:'WOOL_GRAY',food:'WOOL_RED',ranch:'WOOL_BROWN',fish:'WOOL_BLUE',aoi:'WOOL_PINK',shu:'WOOL_BLACK',xue:'WOOL_WHITE'};
+const SHOPZH={seed:'種子行',smith:'鐵匠鋪',food:'小酒館',ranch:'牧場',fish:'漁具店'};
+function okSurf(x,z){const y=surfaceY(x,z);const id=getB(x,y-1,z);const b=BL[id];if(!b||b.kind||id===B.ICE||id===B.SAND&&getB(x,y-2,z)===0) return [y,99];return [y,0];}
+function townSite(sx,sz){let best=null,bs=1e9;for(let r=0;r<=72;r+=8)for(let k=0;k<Math.max(1,r);k++){const a=k/Math.max(1,r)*Math.PI*2;const cx=Math.round(sx+Math.cos(a)*r),cz=Math.round(sz+Math.sin(a)*r);
+    let sum=0,sq=0,bad=0,n=0;for(let dx=-30;dx<=12;dx+=6)for(let dz=-10;dz<=10;dz+=5){const [y,pen]=okSurf(cx+dx,cz+dz);sum+=y;sq+=y*y;bad+=pen;n++;}const m=sum/n;const v=sq/n-m*m;const sc=v+bad+r*0.15+(m<SEA+1?50:0);if(sc<bs){bs=sc;best=[cx,cz,Math.round(m)];}if(bs<3) break;}
+  return best||[sx,sz,surfaceY(sx,sz)];}
+function fillBox(x0,y0,z0,x1,y1,z1,id){for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++)for(let z=z0;z<=z1;z++) setB(x,y,z,id);}
+function buildStall(x0,cy,z0,face,roof,deco){// 5 寬 x 5 深，開口的櫃台朝向廣場（face=1 朝 +z，-1 朝 -z）
+  const zf=face>0?z0+4:z0,zb=face>0?z0:z0+4;fillBox(x0,cy-1,z0,x0+4,cy-1,z0+4,B.PLANKS);
+  for(let x=x0;x<=x0+4;x++)for(let z=z0;z<=z0+4;z++){const edge=x===x0||x===x0+4||z===z0||z===z0+4;if(!edge) continue;const corner=(x===x0||x===x0+4)&&(z===z0||z===z0+4);
+    for(let y=cy;y<=cy+2;y++){let id=corner?B.OAK_LOG:B.PLANKS;if(z===zf&&!corner) id=y===cy?B.PLANKS:y===cy+1?0:B.PLANKS;else if(y===cy+1&&!corner&&(x===x0||x===x0+4)&&z===z0+2) id=B.GLASS;setB(x,y,z,id);}}
+  fillBox(x0-1,cy+3,z0-1,x0+5,cy+3,z0+5,B[roof]||B.PLANKS);fillBox(x0,cy+4,z0+1,x0+4,cy+4,z0+3,B[roof]||B.PLANKS);
+  setB(x0+1,cy,zb+(face>0?1:-1),B[deco[0]]||B.CHEST);setB(x0+3,cy,zb+(face>0?1:-1),B[deco[1]]||B.CHEST);setB(x0+2,cy+2,zb+(face>0?1:-1),B.LANTERN||B.TORCH);
+  return [x0+2.5,cy,zf-face*2+0.5,face>0?0:Math.PI];}
+function buildHome(x0,cy,z0){// 你的家：7 x 6，門朝 +z
+  fillBox(x0,cy-1,z0,x0+6,cy-1,z0+5,B.PLANKS);
+  for(let x=x0;x<=x0+6;x++)for(let z=z0;z<=z0+5;z++){const edge=x===x0||x===x0+6||z===z0||z===z0+5;if(!edge) continue;const corner=(x===x0||x===x0+6)&&(z===z0||z===z0+5);
+    for(let y=cy;y<=cy+2;y++){let id=corner?B.OAK_LOG:B.PLANKS;if(y===cy+1&&!corner&&(x===x0+1||x===x0+5||z===z0+2)) id=B.GLASS;setB(x,y,z,id);}}
+  fillBox(x0-1,cy+3,z0-1,x0+7,cy+3,z0+6,B.WOOL_RED||B.PLANKS);fillBox(x0,cy+4,z0+1,x0+6,cy+4,z0+4,B.WOOL_RED||B.PLANKS);fillBox(x0+1,cy+5,z0+2,x0+5,cy+5,z0+3,B.WOOL_RED||B.PLANKS);
+  setB(x0+3,cy,z0+5,B.DOOR);setB(x0+3,cy+1,z0+5,B.DOOR);
+  setB(x0+1,cy,z0+1,B.BED);setB(x0+5,cy,z0+1,B.TABLE);setB(x0+5,cy,z0+2,B.FURNACE);setB(x0+1,cy,z0+3,B.CHEST);setB(x0+3,cy+2,z0+2,B.LANTERN||B.TORCH);setB(x0+5,cy,z0+4,B.FLOWERPOT||0);
+  const k='over:'+(x0+1)+','+cy+','+(z0+3);const C=W.cont[k]=Array(27).fill(null);let i=0;
+  for(const [id,n] of [['T_pick_stone',1],['T_axe_stone',1],['T_shovel_stone',1],['T_sword_stone',1],['I_BREAD',8],['I_WCAN',1],['I_TURNIP_S',10],['I_STRAWB_S',5],['I_TOMATO_S',5],['I_CORN_S',5],['I_YAM_S',5]]) if(IT[id]) C[i++]={id:IT[id],n};
+  for(const [id,n] of [['PLANKS',32],['TORCH',16],['SHIPBIN',1],['JAR_M',1]]) if(B[id]) C[i++]={id:B[id],n};
+  return [x0+3.5,cy,z0+7.5];}
+function farmKit(){const fm=fmInit();const [sx,,sz]=W.spawn;const [cx,cz,cy]=townSite(sx,sz);
+  // 整地：x -34..+13、z -11..+11
+  for(let dx=-34;dx<=13;dx++)for(let dz=-11;dz<=11;dz++){const x=cx+dx,z=cz+dz;for(let y=cy-6;y<cy-1;y++){const id=getB(x,y,z);if(!id||BL[id].kind||!BL[id].solid) setB(x,y,z,B.DIRT);}
+    setB(x,cy-1,z,B.GRASS);for(let y=cy;y<cy+14;y++) if(getB(x,y,z)) setB(x,y,z,0);}
+  // 廣場
+  for(let dx=-4;dx<=4;dx++)for(let dz=-3;dz<=3;dz++) setB(cx+dx,cy-1,cz+dz,(dx+dz)&1?B.COBBLE:B.STONE);
+  for(let dx=-13;dx<=-5;dx++) setB(cx+dx,cy-1,cz,B.COBBLE);
+  for(const [a,b] of [[-4,-3],[4,-3],[-4,3],[4,3]]){setB(cx+a,cy,cz+b,B.FENCE);setB(cx+a,cy+1,cz+b,B.LANTERN||B.TORCH);}
+  setB(cx,cy,cz-3,B.SHIPBIN);fm.bins['over:'+cx+','+cy+','+(cz-3)]=1;
+  // 商店：北邊一排（櫃台朝南）、南邊一排（櫃台朝北）
+  fm.posts={};fm.town=[cx+0.5,cz+0.5];fm.v=2;const slots=[[-11,-10,1],[-5,-10,1],[1,-10,1],[7,-10,1],[-11,6,-1],[-5,6,-1],[1,6,-1],[7,6,-1]];let si=0;
+  TOWN.forEach((t,i)=>{if(t.k==='chen'){fm.posts[i]=[cx+0.5,cy,cz-1.5,0];return;}const [ox,oz,f]=slots[si++];const key=t.shop||t.k;fm.posts[i]=buildStall(cx+ox,cy,cz+oz,f,ROOFC[key]||'PLANKS',SHOPDECO[t.shop||'home_'+t.k]||['FLOWERPOT','CHEST']);});
+  // 你的家和田
+  const hx=cx-31,hz=cz-10;const door=buildHome(hx,cy,hz);
+  for(let dx=0;dx<=8;dx++)for(let dz=0;dz<=5;dz++){const x=cx-31+dx,z=cz-1+dz;const edge=dx===0||dx===8||dz===0||dz===5;if(edge){setB(x,cy,z,dx===4&&dz===0?0:B.FENCE);continue;}setB(x,cy-1,z,B.FARMLAND);}
+  setB(hx+5,cy,hz+7,B.SHIPBIN);fm.bins['over:'+(hx+5)+','+cy+','+(hz+7)]=1;
+  W.spawn=[Math.floor(door[0]),cy,Math.floor(door[2])];P.x=door[0];P.y=cy+0.01;P.z=door[2];P.vy=0;P.yaw=0;
+  addItem(IT.I_WCAN,1);if(IT.T_hoe_stone) addItem(IT.T_hoe_stone,1);if(IT.T_axe_stone) addItem(IT.T_axe_stone,1);if(IT.T_pick_stone) addItem(IT.T_pick_stone,1);
+  const sk=Object.keys(FCROP).find(k=>FCROP[k].s.includes(seasonNow()))||'turnip';addItem(IT['I_'+sk.toUpperCase()+'_S'],15);
+  townSpawn();setTimeout(()=>toast('🌱 歡迎來到你的農場！家裡的箱子有工具和種子，門前有出貨箱和田。沿著石頭路往東走是晴空小鎮，商店老闆都在櫃台後面。按 J 看手冊'),1500);}
+function townSpawn(){if(!isHost()||!W.fm||!W.fm.town) return;const fm=W.fm;const ex=mobs().filter(m=>m.type==='townie'&&!m.dead);const have=new Set(ex.map(m=>m.wool));
+  TOWN.forEach((t,i)=>{if(have.has(i)) return;const p=fm.posts&&fm.posts[i];const [x,y,z]=p||[fm.town[0]+rand(-3,3),0,fm.town[1]+rand(-3,3)];
+    spawnMob('townie',x,p?y+0.01:surfaceY(x,z)+0.1,z,{wool:i,pname:t.shop?`${t.n}・${SHOPZH[t.shop]}`:t.n,home:fm.town,dim:'over'});});
+  for(const m of mobs()) if(m.type==='townie'&&!m.dead){m.home=fm.town;const p=fm.posts&&fm.posts[m.wool];if(p){m.post=p;m.x=p[0];m.y=p[1]+0.01;m.z=p[2];}const t=TOWN[m.wool];if(t) m.pname=t.shop?`${t.n}・${SHOPZH[t.shop]}`:t.n;}}
+function townUpgrade(){// 舊版農場世界：鎮民會亂跑 → 幫你蓋小鎮和家
+  if(!isHost()||!W.farm||!W.fm||W.fm.v===2) return;for(const m of mobs().filter(m=>m.type==='townie')) m.dead=true;farmKit();toast('🏠 農場物語模組更新：已經幫你蓋好小鎮商店和你的家了！');}
+// 鎮民站在自己的櫃台後面，不會亂跑
+function townieHold(e){const p=e.post;if(!p) return false;e.x=p[0];e.z=p[2];if(e.y<p[1]-0.5||e.y>p[1]+1.5) e.y=p[1]+0.01;e.vx=e.vz=0;
+  let yaw=p[3];let best=7;for(const pl of players()){const d=Math.hypot(pl.x-e.x,pl.z-e.z);if(d<best){best=d;yaw=Math.atan2(pl.x-e.x,pl.z-e.z);}}e.yaw=yaw;e.ai.t=1;return true;}
 // ---- 每幀 ----
 let fLastDay=0,fT=0;
 function farmTick(dt){if(!W.farm||!running){fLastDay=0;const el=$('#fmoney');if(el) el.hidden=true;return;}const fm=fmInit();
