@@ -1253,12 +1253,12 @@ function openShop(){
  if(G.tut>=0) spawnCustomer({type:'normal',order:{burger:'classic',extras:['cola']},tut:true});
  else spawnNext();
 }
+function tutPaused(){ const i=TUT.findIndex(t=>t.ev==='serve'); return G.tut>=0&&G.tut<=i&&G.customers.some(c=>c.tut); }
 function spawnNext(){ if(S.upg.drive&&G.tut<0&&G.dq.length<5&&Math.random()<.35) spawnCustomer({car:true}); else spawnCustomer(); }
 const clockStr=m=>{ const h=10+Math.floor(m/60), mm=Math.floor(m%60); return (h<10?'0':'')+h+':'+(mm<10?'0':'')+mm; };
 function updateClock(dt){
  if(G.phase==='open'){
-  const tutorialRunning=G.tut>=0&&G.tut<TUT.length-1;
-  if(!tutorialRunning){
+  if(!tutPaused()){
    G.time+=dt*DAY_MIN/DAY_LEN;
    while(G.spawnIdx<G.spawn.length&&G.spawn[G.spawnIdx]<=G.time){ if(G.customers.length<16){ spawnNext(); G.spawnIdx++; } else { G.spawn[G.spawnIdx]+=5; break; } }
    if(G.criticAt>=0&&!G.critic&&G.time>=G.criticAt){ G.critic={c:spawnCustomer({type:'critic'})}; toastAll('📝 美食評論家來了！好好表現，評價好會上新聞喔！','gold'); }
@@ -1343,7 +1343,7 @@ const TUT=[
  {ev:'burgerToTray', t:'漢堡完成了！對準<b>組裝台</b>把漢堡放上托盤。', tg:()=>W.board.anchor},
  {ev:'drink', t:'客人還點了<b>可樂</b>！去後面的<b>飲料機</b>，對準 🥤 可樂。', tg:()=>W.drinkBtns.cola.anchor},
  {ev:'serve', t:'把餐送給客人！客人在櫃台右邊的<b>取餐處</b>，走過去對準他。', tg:()=>{ const c=G.customers.find(c=>c.tut); return c?c.g.position:null; }},
- {ev:'orderPlaced', t:'太棒了 🎉！最後學訂貨：到左邊的<b>💻 管理電腦</b>，訂一箱 <b>🥬 生菜</b>，按「一般訂貨」。', tg:()=>W.computer.anchor},
+ {ev:'orderPlaced', t:'太棒了 🎉！時間開始走了，客人會陸續上門。最後學訂貨：到左邊的<b>💻 管理電腦</b>，訂一箱 <b>🥬 生菜</b>，按「一般訂貨」。', tg:()=>W.computer.anchor},
  {ev:'stocked', t:'貨車會開到<b>後門</b>。去後門外面把<b>紙箱搬起來</b>，再搬到<b>❄️ 冰箱</b>放進去。', tg:()=>G.boxes.length&&!G.hand?G.boxes[0].g.position:W.fridge.anchor},
  {ev:'done', t:'新手教學完成！🍔 客人會陸續上門，祝你生意興隆！<br>（悠閒模式：做錯或太慢客人只會抱怨，不會走掉）'},
 ];
@@ -1352,6 +1352,7 @@ function tutEv(ev){
  const idx=TUT.findIndex((s,i)=>i>=G.tut&&s.ev===ev);
  if(idx<0) return;
  G.tut=idx+1; sfx('click');
+ if(ev==='serve'&&G.phase==='open') setTimeout(()=>{ if(G&&G.phase==='open'&&!isClient()) spawnNext(); },2500);
  if(G.tut>=TUT.length-1){ G.tut=TUT.length-1; S.tutorialDone=true; save(); G.tutWait=7; }
  updateTutor();
 }
@@ -1488,7 +1489,7 @@ function updateHud(dt){
  hudT-=dt;
  const status={prep:'準備中',open:'營業中',closing:'打烊中',summary:'結算'}[G.phase];
  const sv=(e,v)=>{ if(e._v!==v){ e._v=v; e.textContent=v; } };
- sv($('hDay'),'第 '+S.day+' 天'); sv($('hClock'),'🕙 '+clockStr(G.time)); sv($('hMoney'),money(S.money)); sv($('hStatus'),status+' '+(WEATHER[G.weather]||WEATHER.sunny).e);
+ sv($('hDay'),'第 '+S.day+' 天'); sv($('hClock'),'🕙 '+clockStr(G.time)); sv($('hMoney'),money(S.money)); sv($('hStatus'),(G.phase==='open'&&!isClient()&&tutPaused()?'教學中⏸':status)+' '+(WEATHER[G.weather]||WEATHER.sunny).e);
  if(G.dirty||hudT<=0){
   hudT=.5;
   // 點餐單
