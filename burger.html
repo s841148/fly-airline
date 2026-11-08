@@ -348,7 +348,7 @@ const TYPES = {
 };
 const EMP={
  cashier:{n:'收銀員',icon:'🧾',wage:300,shirt:'#2aa6d9',d:'站收銀機幫客人點餐；有空時會從出餐台拿外帶餐交給客人'},
- cook:{n:'煎肉師傅',icon:'🔥',wage:400,shirt:'#e2412b',d:'看點餐單自動煎肉，煎好放「保溫盤」（不會焦）；有空會裝飲料、炸薯條放到出餐台'},
+ cook:{n:'煎肉師傅',icon:'🔥',wage:400,shirt:'#e2412b',d:'看點餐單自動煎肉放「保溫盤」（不會焦），還會在漢堡站組漢堡；有空也會裝飲料、炸薯條、做甜點，全部放到出餐台'},
  server:{n:'外場服務生',icon:'🍽️',wage:300,shirt:'#3fae5a',d:'從出餐台拿餐送到內用客人桌上，還會收拾髒桌子'},
  drive:{n:'得來速店員',icon:'🚗',wage:350,shirt:'#9b5ad9',req:'drive',d:'在得來速窗口幫開車的客人點餐，從出餐台拿餐交給他們'},
 };
@@ -1037,6 +1037,7 @@ const isBun=k=>k==='bun'||k==='ricebun';
 function boardOk(){ const b=G.board; return (b.done&&G.tray.length<trayCap()) || (G.hand&&G.hand.t==='patty'&&b.layers.length&&!b.done); }
 function boardLabel(){
  const b=G.board;
+ if(b.busy) return '🔥 煎肉師傅正在做漢堡…';
  if(b.done) return '把 '+burgerName(b.layers)+' 放上托盤';
  if(G.hand&&G.hand.t==='patty') return b.layers.length?'放上'+(G.hand.burnt?'焦掉的':'')+'肉':'先放麵包底，才能放肉';
  if(!b.layers.length) return '組裝台（先按「麵包」放麵包底）';
@@ -1044,6 +1045,7 @@ function boardLabel(){
 }
 function boardUndo(){
  if(isClient()){ NET.send({t:'undo'}); return; }
+ if(G.board.busy){ toast('🔥 煎肉師傅正在用組裝台做漢堡，等他做完喔'); sfx('error'); return; }
  const b=G.board; if(!b.layers.length){ toast('組裝台是空的'); return; }
  const k=b.layers.pop();
  if(b.done) b.done=false;
@@ -1054,6 +1056,7 @@ function boardUndo(){
 }
 function boardAct(){
  const b=G.board;
+ if(G.board.busy){ toast('🔥 煎肉師傅正在用組裝台做漢堡，等他做完喔'); sfx('error'); return; }
  if(b.done){ if(G.tray.length>=trayCap()){ toast('托盤滿了！先送餐'); sfx('error'); return; }
   G.tray.push({t:'burger',layers:b.layers.slice()}); b.layers=[]; b.done=false; renderBoard(); sfx('put'); G.dirty=true; tutEv('burgerToTray'); return; }
  if(G.hand&&G.hand.t==='patty'){
@@ -1073,6 +1076,7 @@ function binLabel(k){
 }
 function binAct(k){
  const b=G.board;
+ if(G.board.busy){ toast('🔥 煎肉師傅正在用組裝台做漢堡，等他做完喔'); sfx('error'); return; }
  if(b.done){ toast('先把完成的漢堡放上托盤'); sfx('error'); return; }
  if(isBun(k)){
   if(!b.layers.length){ if(S.stock[k]<=0){ toast(ING[k].e+' '+ING[k].n+' 沒庫存了！','bad'); sfx('error'); return; } S.stock[k]--; b.layers.push(k); renderBoard(); sfx('put'); tutEv('bunBottom'); return; }
@@ -1107,7 +1111,7 @@ function burgerName(layers){
 function trashLabel(){ if(G.hand) return '丟掉手上的'+(G.hand.t==='box'?'紙箱（會浪費！）':'肉'); if(G.board.layers.length) return '清掉組裝台上的漢堡'; if(G.tray.length) return '丟掉托盤上最後一樣'; return '垃圾桶'; }
 function trashAct(){
  if(G.hand){ if(G.hand.t==='box'&&ACT===ME){ askConfirm('丟掉整箱貨？','這箱 '+ING[G.hand.k].n+' 會整個浪費掉喔！',()=>{ G.hand=null; G.dirty=true; sfx('trash'); }); return; } G.hand=null; sfx('trash'); G.dirty=true; return; }
- if(G.board.layers.length){ G.board.layers=[]; G.board.done=false; renderBoard(); sfx('trash'); return; }
+ if(G.board.layers.length&&!G.board.busy){ G.board.layers=[]; G.board.done=false; renderBoard(); sfx('trash'); return; }
  if(G.tray.length){ G.tray.pop(); sfx('trash'); G.dirty=true; return; }
  toast('沒有東西可以丟');
 }
@@ -1540,7 +1544,7 @@ function updateCamera(){
  const ex=P.x, ey=1.48+bob, ez=P.z;
  if(P.tp){
   const dir=new T.Vector3(0,0,-1).applyEuler(camera.rotation);
-  let d=2.6; while(d>.6&&blocked(ex-dir.x*d,ez-dir.z*d)) d-=.2; camera.position.set(ex-dir.x*d, ey+.35-dir.y*d, ez-dir.z*d);
+  let d=.4; while(d<2.6&&!blocked(ex-dir.x*(d+.2),ez-dir.z*(d+.2))) d+=.2; camera.position.set(ex-dir.x*d, ey+.35-dir.y*d, ez-dir.z*d);
   avatar.visible=true; avatar.position.set(P.x,0,P.z); avatar.rotation.y=P.yaw+Math.PI; animWalk(avatar,P.walkT,P.walkT?1:0);
   avatar.userData.arms.forEach(a=>{ a.rotation.x=-1.1; });
  } else { camera.position.set(ex,ey,ez); avatar.visible=false; }
@@ -1855,7 +1859,7 @@ const itemEmo=it=>it.t==='burger'?'🍔':it.t==='patty'?'🥩':it.t==='sundae'?'
 function empActive(r){ return !!(S.emp&&S.emp[r])&&(!EMP[r].req||!!S.upg[EMP[r].req]); }
 function syncEmployees(){
  if(!G||isClient()) return;
- G.emps=G.emps.filter(e=>{ if(empActive(e.role)) return true; scene.remove(e.g); if(e.carry.length&&e.carry[0].t!=='patty'){ G.pass.push(...e.carry); renderPass(); } if(e.claim) e.claim.claimed=null; return false; });
+ G.emps=G.emps.filter(e=>{ if(empActive(e.role)) return true; scene.remove(e.g); if(e.build){ G.board.layers=[]; G.board.done=false; G.board.busy=null; renderBoard(); } if(e.carry.length&&e.carry[0].t!=='patty'){ G.pass.push(...e.carry); renderPass(); } if(e.claim) e.claim.claimed=null; return false; });
  Object.keys(EMP).forEach(r=>{
   if(!empActive(r)||G.emps.some(e=>e.role===r)) return;
   const look={skin:pick(SKINS),hair:'cap',hairC:pick(HAIRC.slice(0,5)),shirt:EMP[r].shirt,pants:'#333333',apron:true,capC:'#ffc93c'};
@@ -1949,9 +1953,27 @@ function extrasWanted(){
  return need;
 }
 const slotStand=s=>machStand('grill',s.lx);
+const STATION_BACK=[0,-6.4];
+function canMake(k){ const m=MENU[k]; const need={}; [m.bun,...m.fill].forEach(x=>need[x]=(need[x]||0)+1);
+ for(const x in need){ if(x==='patty'){ if(G.warm<need[x]) return false; } else if((S.stock[x]||0)<need[x]) return false; } return true; }
+function burgerToMake(){
+ const need={}; G.tickets.forEach(c=>need[c.order.burger]=(need[c.order.burger]||0)+1);
+ allTrays().forEach(it=>{ if(it.t!=='burger') return; for(const k in need) if(need[k]>0&&burgerDiff(it.layers,k).diff===0){ need[k]--; break; } });
+ return Object.keys(need).find(k=>need[k]>0&&canMake(k))||null;
+}
+function buildStep(e){
+ const m=MENU[e.build.k], seq=[m.bun,...m.fill,m.bun], i=e.build.i, x=seq[i], b=G.board;
+ const abort=()=>{ b.layers.forEach((y,j)=>{ if(j===0||(y!=='patty'&&ING[y])) S.stock[y]=(S.stock[y]||0)+1; if(y==='patty') G.warm++; }); b.layers=[]; b.done=false; b.busy=null; e.build=null; renderBoard(); renderWarm(); };
+ if(i===seq.length-1){ b.layers.push(x); b.done=true; renderBoard(); sfx('happy');
+  setCarry(e,[{t:'burger',layers:b.layers.slice()}]); b.layers=[]; b.done=false; b.busy=null; e.build=null; renderBoard(); gainXP('cook',2); return; }
+ if(x==='patty'){ if(G.warm<=0){ abort(); return; } G.warm--; renderWarm(); }
+ else { if((S.stock[x]||0)<=0){ abort(); return; } S.stock[x]--; }
+ b.layers.push(x); e.build.i++; renderBoard(); sfx('put'); e.t=.45/spdOf('cook');
+}
 function empCook(e,dt){
  if(e.path.length||e.after){ empWalk(e,dt); return; }
  e.t-=dt; if(e.t>0) return; e.t=.3/spdOf('cook');
+ if(e.build){ buildStep(e); return; }
  const C=COOK(), slots=W.slots.slice(0,grillSlots());
  const done=slots.find(s=>s.state==='side2'&&s.b>=C);
  if(done&&!e.carry.length){ goDo(e,kRoute(e,slotStand(done)),()=>{ faceMach(e,'grill');
@@ -1963,6 +1985,9 @@ function empCook(e,dt){
  const need=Math.min(4,pattiesWanted()-pattiesMade()-G.warm-cooking);
  const em=slots.find(s=>s.state==='empty');
  if(need>0&&em&&S.stock.patty>0&&G.warm<6&&!e.carry.length){ goDo(e,kRoute(e,slotStand(em)),()=>{ faceMach(e,'grill'); if(em.state==='empty'&&S.stock.patty>0){ S.stock.patty--; em.state='side1'; em.a=0; em.b=0; em.readyRang=false; em.doneRang=false; em.patty.visible=true; sfx('sizzle'); } }); return; }
+ // 組漢堡：保溫盤有肉、點餐單還缺漢堡、組裝台空著，就去漢堡站後面組一個
+ const bk=G.board.layers.length||G.board.busy||e.carry.length?null:burgerToMake();
+ if(bk){ G.board.busy='cook'; goDo(e,kRoute(e,STATION_BACK),()=>{ faceTo(e,0,-5.05); if(burgerToMake()===bk||canMake(bk)){ e.build={k:bk,i:0}; e.t=.4; } else G.board.busy=null; }); return; }
  // 有空就合作：飲料、薯條做好放到出餐台
  const ex=extrasWanted();
  const friesNeed=G.tickets.reduce((a,c)=>a+c.order.extras.filter(k=>k==='fries').length,0)-allTrays().filter(i=>i.k==='fries').length;
@@ -2068,7 +2093,7 @@ function snap(){
   S:{day:S.day,money:S.money,stock:S.stock,upg:S.upg,prices:S.prices,pop:S.pop,emp:S.emp,layout:S.layout||{},combos:S.combos,comboDisc:S.comboDisc,staff:S.staff},
   ph:G.phase, tm:r(G.time), w:G.weather,
   sl:W.slots.map(s=>[s.state,r(s.a),r(s.b)]),
-  bd:[G.board.layers,G.board.done?1:0], fr:[G.fry.state,r(G.fry.t),G.fry.n||0], ov:[G.oven.state,r(G.oven.t),G.oven.n], tk:r(G.truck.x),
+  bd:[G.board.layers,G.board.done?1:0,G.board.busy?1:0], fr:[G.fry.state,r(G.fry.t),G.fry.n||0], ov:[G.oven.state,r(G.oven.t),G.oven.n], tk:r(G.truck.x),
   ps:G.pass, wm:G.warm,
   bx:G.boxes.map(b=>[b.id,b.k,b.qty,r(b.g.position.x),r(b.g.position.z)]),
   cu:G.customers.map(c=>[c.id,c.type,c.car?1:0,r(c.g.position.x),r(c.g.position.z),r(c.g.rotation.y),c.state,c.bubble.userData.txt||'',c.order,c.dine?1:0,Math.round(c.wait),Math.round(c.patience),c.sit?1:0,c.path.length?1:0,c.food?[r(c.food.position.x),r(c.food.position.z),r(c.food.scale.x)]:0,c.look,c.carCol]),
@@ -2147,7 +2172,7 @@ function applySnap(o){
  if(sk!==G._sk){ G._sk=sk; applyUpgrades(); }
  G.phase=o.ph; G.time=o.tm; G.weather=o.w;
  o.sl.forEach((v,i)=>{ const s=W.slots[i]; s.state=v[0]; s.a=v[1]; s.b=v[2]; s.patty.visible=s.state!=='empty'; if(s.state==='empty') s.ind.visible=false; });
- const bk=JSON.stringify(o.bd); if(bk!==G._bk){ G._bk=bk; G.board.layers=o.bd[0]; G.board.done=!!o.bd[1]; renderBoard(); G.dirty=true; }
+ const bk=JSON.stringify(o.bd); if(bk!==G._bk){ G._bk=bk; G.board.layers=o.bd[0]; G.board.done=!!o.bd[1]; G.board.busy=o.bd[2]?'cook':null; renderBoard(); G.dirty=true; }
  G.fry.state=o.fr[0]; G.fry.t=o.fr[1]; G.fry.n=o.fr[2]; fryVisual();
  if(o.ov){ G.oven.state=o.ov[0]; G.oven.t=o.ov[1]; G.oven.n=o.ov[2]; ovenVisual(); }
  G.truck.x=o.tk; W.truck.position.set(o.tk,0,-12.6);
