@@ -1354,7 +1354,7 @@ function hurt(dmg,why,ignoreArmor,src){if(P.dead||W.mode==='creative'||P.invul>0
   if(P.hp<=0) die(why);}
 function heal(n){P.hp=Math.min(20,P.hp+n);}
 function die(why){P.dead=true;P.deathMsg=why;if(typeof sysAll==='function') sysAll(SET.name+' '+why,'death');if(document.pointerLockElement) document.exitPointerLock();
-  for(const s of P.inv.concat(P.armor)) if(s) spawnDrop(s.id,s.n,P.x,P.y+1,P.z,s,true);P.inv=Array(36).fill(null);P.armor=Array(4).fill(null);
+  if(!(typeof shareDeathDrops==='function'&&shareDeathDrops())) for(const s of P.inv.concat(P.armor)) if(s) spawnDrop(s.id,s.n,P.x,P.y+1,P.z,s,true);P.inv=Array(36).fill(null);P.armor=Array(4).fill(null);
   if(P.xpTot>0) spawnXP(P.x,P.y+1,P.z,Math.min(100,P.level*7));P.xp=0;P.level=0;P.xpTot=0;renderHotbar();if(typeof showDeath==='function') showDeath(why);}
 function respawn(){P.dead=false;P.hp=20;P.food=20;P.sat=5;P.air=300;P.fire=0;P.vy=0;P.fallStart=null;
   let sp=P.spawn;if(sp&&sp.dim!==W.dim) switchDim(sp.dim,true);if(sp&&![B.BED,B.BED_FOOT].includes(getB(sp.x,sp.y,sp.z,sp.dim))){toast('你的床不見了，回到世界重生點');sp=null;P.spawn=null;}
@@ -1913,7 +1913,7 @@ function rayMob(maxD){const o=eyePos(),d=lookDir();let best=null,bd=maxD;for(con
   let t0=0,t1=bd;const mn=[m.x-r,m.y,m.z-r],mx=[m.x+r,m.y+m.h,m.z+r],oo=[o.x,o.y,o.z],dd=[d.x,d.y,d.z];let ok=true;
   for(let k=0;k<3;k++){if(Math.abs(dd[k])<1e-6){if(oo[k]<mn[k]||oo[k]>mx[k]){ok=false;break;}continue;}let a=(mn[k]-oo[k])/dd[k],b=(mx[k]-oo[k])/dd[k];if(a>b)[a,b]=[b,a];t0=Math.max(t0,a);t1=Math.min(t1,b);if(t0>t1){ok=false;break;}}
   if(ok&&t0<bd){bd=t0;best=m;}}return best?{m:best,t:bd}:null;}
-function attackEntity(){if(P.dead) return false;if(typeof vehHit==='function'&&vehHit()) return true;const hit=rayMob(3.2);if(!hit) return false;const blk=AIM.id?AIM.t:99;if(blk<hit.t) return false;const m=hit.m;const s=held();const d=s&&DEF(s.id);
+function attackEntity(){if(P.dead) return false;if(typeof vehHit==='function'&&vehHit()) return true;if(typeof pvpMelee==='function'&&pvpMelee()) return true;const hit=rayMob(3.2);if(!hit) return false;const blk=AIM.id?AIM.t:99;if(blk<hit.t) return false;const m=hit.m;const s=held();const d=s&&DEF(s.id);
   const cd=Math.min(1,(performance.now()-(P.lastAtk||0))/625);P.lastAtk=performance.now();let dmg=(d&&d.tool?d.tool.dmg:1);if(s&&s.ench&&s.ench.sharp) dmg+=0.5*s.ench.sharp+0.5;dmg*=0.2+cd*cd*0.8;if(P.eff&&P.eff.str>0) dmg+=3;
   const crit=P.vy<-0.5&&!P.onGround&&cd>0.85;if(crit){dmg*=1.5;puff(m.x,m.y+m.h*0.7,m.z,0xffffff,6);}
   const dir=lookDir();const kb=(P.sprint?9:5)+(s&&s.ench&&s.ench.kb?s.ench.kb*5:0);const src={by:myId(),kx:dir.x*kb*0.6,kz:dir.z*kb*0.6,fire:s&&s.ench&&s.ench.fire||0};
@@ -2072,8 +2072,8 @@ function entitiesTick(dt){const host=isHost();
     if(e.dim!==W.dim&&!e.dead){if(e.kind==='mob'&&host&&!e.remote){/* 其他維度的怪物：主機不在那裡，就不模擬 */e.mesh.visible=false;continue;}e.dead=true;}
     if(!e.dead){
       if(e.kind==='drop'){e.age+=dt;e.pick-=dt;entPhys(e,dt);e.mesh.position.set(e.x,e.y+0.15+Math.sin(e.age*2.5)*0.05,e.z);e.mesh.rotation.y+=dt*1.6;if(e.age>300) e.dead=true;
-        if(e.pick<=0&&!P.dead){const d=Math.hypot(P.x-e.x,P.y+0.8-e.y,P.z-e.z);if(d<1.5){const left=addItem(e.id,e.n,e);if(left<e.n){playSnd('pop',0.4);}if(!left) e.dead=true;else e.n=left;}}
-        if(e.age%1<dt) for(const o of ENTS) if(o!==e&&o.kind==='drop'&&!o.dead&&o.id===e.id&&!o.ench&&!e.ench&&!o.d&&!e.d&&Math.hypot(o.x-e.x,o.y-e.y,o.z-e.z)<0.8&&o.n+e.n<=maxStack(e.id)){e.n+=o.n;o.dead=true;}}
+        if(e.pick<=0&&!P.dead){const d=Math.hypot(P.x-e.x,P.y+0.8-e.y,P.z-e.z);if(d<1.5&&e.gid){gdropTouch(e);}else if(d<1.5){const left=addItem(e.id,e.n,e);if(left<e.n){playSnd('pop',0.4);}if(!left) e.dead=true;else e.n=left;}}
+        if(e.age%1<dt) for(const o of ENTS) if(o!==e&&o.kind==='drop'&&!o.dead&&!o.gid&&!e.gid&&o.id===e.id&&!o.ench&&!e.ench&&!o.d&&!e.d&&Math.hypot(o.x-e.x,o.y-e.y,o.z-e.z)<0.8&&o.n+e.n<=maxStack(e.id)){e.n+=o.n;o.dead=true;}}
       else if(e.kind==='xp'){e.age+=dt;const dx=P.x-e.x,dy=P.y+0.9-e.y,dz=P.z-e.z,d=Math.hypot(dx,dy,dz);if(d<7&&!P.dead&&e.age>0.4){const f=(1-d/7)*30*dt;e.vx+=dx/d*f;e.vy+=dy/d*f+28*dt*0.8;e.vz+=dz/d*f;}entPhys(e,dt);e.mesh.position.set(e.x,e.y+0.1,e.z);
         if(d<0.9&&!P.dead&&e.age>0.4){addXP(e.v);playSnd('xp',0.35);e.dead=true;}if(e.age>300) e.dead=true;}
       else if(e.kind==='arrow'||e.kind==='fireball') projTick(e,dt);
@@ -2392,6 +2392,7 @@ function commonRecv(o,from){switch(o.t){
   case 'btn':if(o.dim===W.dim) pressButton(o.x,o.y,o.z);break;
   case 'fmoney':case 'fmset':case 'fwet':case 'fcrop':case 'fbin':case 'fpet':case 'fspawn':case 'fbub':if(typeof farmRecv==='function') farmRecv(o,from);break;
   case 'rules':if(typeof rulesRecv==='function') rulesRecv(o);break;
+  case 'ddrop':case 'dpick':case 'dgone':if(typeof pvpRecv==='function') pvpRecv(o,from);break;
   case 'shot':case 'gunhit':case 'wboom':case 'wsmoke':case 'wflash':case 'wbases':case 'wcap':if(typeof warRecv==='function') warRecv(o,from);break;
   case 'proj':if(o.dim===W.dim){if(o.k==='arrow'){const m=new THREE.Mesh(arrowGeo,arrowMat);scene.add(m);ENTS.push({kind:'arrow',eid:EID++,x:o.x,y:o.y,z:o.z,vx:o.vx,vy:o.vy,vz:o.vz,mesh:m,age:0,stuck:false,dim:o.dim,ghost:true,by:'?'});}
       else{const m=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.6,0.6),fbMat);scene.add(m);ENTS.push({kind:'fireball',eid:EID++,x:o.x,y:o.y,z:o.z,vx:o.vx,vy:o.vy,vz:o.vz,mesh:m,age:0,dim:o.dim,ghost:true});}}break;}}
@@ -2491,8 +2492,8 @@ function startAnimals(){if(W.island) return;const types=['sheep','sheep','sheep'
   for(let k=0;k<40&&made<10;k++){const a=rand(0,6.28),d=rand(10,60);const x=Math.floor(P.x+Math.cos(a)*d),z=Math.floor(P.z+Math.sin(a)*d);const y=surfaceY(x,z);const t=getB(x,y-1,z);if(t!==B.GRASS&&t!==B.SNOW_GRASS) continue;
     const tp=types[made%types.length];const n=tp==='sheep'?irand(3,5):irand(2,4);for(let i=0;i<n;i++){const xx=x+irand(-2,2),zz=z+irand(-2,2);spawnMob(tp,xx+0.5,surfaceY(xx,zz)+0.1,zz+0.5,{});}made++;}}
 function findSpawn(){for(let r=0;r<400;r+=8){for(let a=0;a<Math.max(1,r/4);a++){const ang=a/(Math.max(1,r/4))*Math.PI*2;const x=Math.round(Math.cos(ang)*r),z=Math.round(Math.sin(ang)*r);const y=surfaceY(x,z);const t=getB(x,y-1,z);if(y>SEA&&(t===B.GRASS||t===B.SNOW_GRASS||t===B.SAND)){let open=true;for(let k=0;k<12&&open;k++) if(getB(x,y+k,z)) open=false;if(open) return [x,y,z];}}}return [0,surfaceY(0,0),0];}
-function startWorld(save,opts){resetWorld();if(save){W.id=save.id;W.name=save.name;W.seed=save.seed;W.mode=save.mode;W.diff=save.diff;W.cheats=!!save.cheats;W.time=save.time;W.day=save.day||1;WX.rain=!!save.rain;W.spawn=save.spawn;W.mods=save.mods||{over:{},nether:{}};W.cont=save.cont||{};W.furn=save.furn||{};W.pinv=save.pinv||{};W.meta=save.meta||{};W.island=!!save.island;W.farm=!!save.farm;W.fm=save.fm||null;W.guns=!!save.guns;W.war=!!save.war;W.pvp=!!save.pvp;W.wd=save.wd||null;}
-  else{W.id='w'+Date.now().toString(36);W.name=opts.name;W.seed=opts.seed;W.mode=opts.mode;W.diff=opts.diff;W.cheats=opts.cheats;W.island=!!opts.island;W.farm=!!opts.farm;W.fm=null;W.guns=!!(opts.guns||opts.war);W.war=!!opts.war;W.pvp=false;W.wd=null;W.time=1000;W.day=1;WX.rain=false;}
+function startWorld(save,opts){resetWorld();if(save){W.id=save.id;W.name=save.name;W.seed=save.seed;W.mode=save.mode;W.diff=save.diff;W.cheats=!!save.cheats;W.time=save.time;W.day=save.day||1;WX.rain=!!save.rain;W.spawn=save.spawn;W.mods=save.mods||{over:{},nether:{}};W.cont=save.cont||{};W.furn=save.furn||{};W.pinv=save.pinv||{};W.meta=save.meta||{};W.island=!!save.island;W.farm=!!save.farm;W.fm=save.fm||null;W.guns=!!save.guns;W.war=!!save.war;W.pvp=save.pvp!==false;W.wd=save.wd||null;}
+  else{W.id='w'+Date.now().toString(36);W.name=opts.name;W.seed=opts.seed;W.mode=opts.mode;W.diff=opts.diff;W.cheats=opts.cheats;W.island=!!opts.island;W.farm=!!opts.farm;W.fm=null;W.guns=!!(opts.guns||opts.war);W.war=!!opts.war;W.pvp=true;W.wd=null;W.time=1000;W.day=1;WX.rain=false;}
   if(!W.mods.over) W.mods={over:{},nether:{},sky:{}};if(!W.mods.sky) W.mods.sky={};SEED=W.seed;
   rsRebuild();
   if(!W.spawn||!W.spawn.length) W.spawn=findSpawn();
@@ -3375,7 +3376,7 @@ function shootRay(o,d,g,mz){const rng=g.rng||60;const r=rayCast(o,d,rng);const b
   tracer([mz.x,mz.y,mz.z],p);wsend({t:'shot',a:[+mz.x.toFixed(2),+mz.y.toFixed(2),+mz.z.toFixed(2)],b:p.map(v=>+v.toFixed(2)),s:g.snd,dim:W.dim});
   if(h){let dmg=g.dmg*(h.head?2:1)*(end>rng*0.5?0.7:1);const kx=d.x*1.5,kz=d.z*1.5;GUNSTATE.hitT=0.18;gunSnd('hit',0.5);
     if(h.kind==='mob'){const src={by:myId(),kx,kz};if(isHost()){h.e.hurtT=0;damageMob(h.e,dmg,src);}else{NET.send({t:'hitmob',id:h.e.eid,dmg,kx,kz,gun:1});}puff(p[0],p[1],p[2],0xaa2020,3,0.3);if(h.head) toast('🎯 爆頭！');}
-    else if(h.kind==='player'){if(!W.pvp){if(!GUNSTATE.pvpTip){GUNSTATE.pvpTip=1;toast('玩家對戰（PVP）沒有開，打不到朋友（創作者可以在設定裡打開）');}return;}
+    else if(h.kind==='player'){if(!W.pvp){if(!GUNSTATE.pvpTip){GUNSTATE.pvpTip=1;toast('玩家對戰（PVP）被創作者關掉了，打不到朋友');}return;}
       const why=`被 ${SET.name} 用${DEF(held().id).n}擊倒了`;if(isHost()) hurtPlayer(h.e,dmg,why,kx,kz);else NET.send({t:'gunhit',to:h.e.id,dmg,why,kx,kz});puff(p[0],p[1],p[2],0xaa2020,3,0.3);}
     return;}
   if(r&&r.id){const b=BL[r.id];puff(p[0],p[1],p[2],b&&b.tex?0xbbbbbb:0xcccccc,3,0.25);if(r.id===B.GLASS||(B.PANE&&r.id===B.PANE)){setB(r.x,r.y,r.z,0);playSnd('glass');}}}
@@ -3534,6 +3535,27 @@ function warTick(dt){for(let i=TRACERS.length-1;i>=0;i--){const t=TRACERS[i];t.t
 // ---- 世界規則（創作者決定）----
 function warToggle(k){if(isMember()) return;W[k]=!W[k];const N={guns:'🔫 槍械模組',war:'⚔️ 戰鬥模式',pvp:'🤺 玩家對戰（PVP）'};toast(`${N[k]}：${W[k]?'開':'關'}`);if(k==='war'&&W.war&&!W.guns){W.guns=true;toast('戰鬥模式需要槍，順便幫你打開槍械模組');}
   if(k==='war'&&!W.war) for(const m of mobs()) if(MOBS[m.type].soldier) m.dead=true;rulesBcast();}
+
+// ================= 玩家對戰：近戰打玩家、死掉的玩家東西掉在地上，大家都撿得到 =================
+const GDROP=new Map();// 主機：還在地上的共用掉落物 gid → true
+let gidN=0;
+function shareDeathDrops(){if(!NET.on) return false;const list=[];let k=0;const x=P.x,y=P.y+1,z=P.z;
+  for(const s of P.inv.concat(P.armor)) if(s){const gid=myId()+'-'+Date.now().toString(36)+'-'+(k++);const extra={};if(s.d) extra.d=s.d;if(s.ench) extra.ench=s.ench;if(s.bag) extra.bag=s.bag;if(s.mag!==undefined) extra.mag=s.mag;list.push({gid,id:s.id,n:s.n,extra});}
+  if(!list.length) return true;gdropSpawn(list,x,y,z,W.dim);wsend({t:'ddrop',list,x,y,z,dim:W.dim});return true;}
+function gdropSpawn(list,x,y,z,dim){for(const it of list){if(NET.host) GDROP.set(it.gid,true);if(dim!==W.dim) continue;const e=spawnDrop(it.id,it.n,x,y,z,it.extra,true);if(e){e.gid=it.gid;e.gx=it.extra;e.pick=1.5;e.age=-600;}}}
+// 撿起共用掉落物：先問主機，主機說可以才放進背包（避免兩個人同時撿到）
+function gdropTouch(e){if(e.req) return;e.req=true;e.mesh.visible=false;if(NET.host) gdropGrant(e.gid,myId());else NET.send({t:'dpick',gid:e.gid});setTimeout(()=>{if(!e.dead){e.req=false;e.mesh.visible=true;}},3000);}
+function gdropGrant(gid,who){if(!GDROP.has(gid)) return;GDROP.delete(gid);const o={t:'dgone',gid,to:who};hostBcast(o);gdropGone(o);}
+function gdropGone(o){for(const e of ENTS) if(e.kind==='drop'&&e.gid===o.gid&&!e.dead){if(o.to===myId()){const left=addItem(e.id,e.n,e.gx||e);if(e.gx&&e.gx.mag!==undefined){const s=P.inv.find(q=>q&&q.id===e.id&&q.mag===undefined);if(s) s.mag=e.gx.mag;}playSnd('pop',0.4);renderHotbar();if(left){spawnDrop(e.id,left,P.x,P.y+1,P.z);}}e.dead=true;}}
+function pvpRecv(o,from){switch(o.t){case 'ddrop':gdropSpawn(o.list,o.x,o.y,o.z,o.dim);break;case 'dpick':if(NET.host) gdropGrant(o.gid,from);break;case 'dgone':if(!NET.host) gdropGone(o);break;}}
+// 近戰打玩家
+function pvpMelee(){if(!NET.on||!W.pvp||P.dead) return false;const o=eyePos(),d=lookDir();let best=null;
+  for(const p of players()){if(p.local||p.dead||(p.dim||'over')!==W.dim) continue;const t=slab(o,d,[p.x-0.34,p.y,p.z-0.34],[p.x+0.34,p.y+1.85,p.z+0.34],3.4);if(t!==null&&(!best||t<best.t)) best={p,t};}
+  if(!best) return false;if(AIM.id&&AIM.t<best.t) return false;const s=held();const dd=s&&DEF(s.id);
+  const cd=Math.min(1,(performance.now()-(P.lastAtk||0))/625);P.lastAtk=performance.now();let dmg=(dd&&dd.tool?dd.tool.dmg:1)*(0.2+cd*cd*0.8);if(P.vy<-0.5&&!P.onGround&&cd>0.85) dmg*=1.5;
+  const kb=P.sprint?9:5;const kx=d.x*kb*0.6,kz=d.z*kb*0.6;const why=`被 ${SET.name} ${dd&&dd.tool?'用'+DEF(s.id).n:''}打倒了`;
+  if(NET.host) hurtPlayer(best.p,dmg,why,kx,kz);else NET.send({t:'gunhit',to:best.p.id,dmg,why,kx,kz});
+  armSwing();playSnd('hit');puff(best.p.x,best.p.y+1.3,best.p.z,0xffffff,3);if(s&&dd&&dd.tool&&typeof useTool==='function') useTool(s);return true;}
 
 // ================= 主迴圈 =================
 const rainG=(()=>{const n=600,p=new Float32Array(n*6);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));const m=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x9ab0d8,transparent:true,opacity:0.5}));m.frustumCulled=false;m.visible=false;scene.add(m);
