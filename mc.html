@@ -151,6 +151,60 @@ h2{margin:0 0 6px;font-size:22px;text-shadow:2px 2px 0 #3f3f3f}
 #tb_pause{right:calc(10px + env(safe-area-inset-right));top:10px;width:40px;height:40px}#tb_chat{right:58px;top:10px;width:40px;height:40px}#tb_view{right:106px;top:10px;width:40px;height:40px}
 @media (pointer:coarse){.hs{width:36px;height:36px}#stats,#xpbar{width:328px}#stats img{width:14px;height:14px}#stats .row{height:14px}#bottom{bottom:6px}#heldName{bottom:104px}#chatLog{bottom:auto;top:56px;left:8px;width:min(480px,60vw);font-size:13px}#chatBox{bottom:auto;top:56px}#chatLog.open{top:150px;bottom:auto}#netInfo{top:56px}}
 @media (max-width:440px){.g9{grid-template-columns:repeat(9,34px)}.sl{width:34px;height:34px}.g2{grid-template-columns:repeat(2,34px)}.g3{grid-template-columns:repeat(3,34px)}.g1{grid-template-columns:repeat(1,34px)}.hs{width:32px;height:32px}#stats,#xpbar{width:292px}}
+
+/* ===== 手機橫拿排版（不擠、不重疊）===== */
+@media (pointer:coarse) and (orientation:landscape),(pointer:coarse) and (max-height:520px){
+ #chatLog{top:max(6px,env(safe-area-inset-top));left:calc(8px + env(safe-area-inset-left));width:min(360px,42vw);font-size:11px;gap:1px}
+ #chatLog .ln,#chatLog>div{padding:1px 6px!important;line-height:1.35}
+ #chatBox{top:40px}
+ #mini{top:calc(54px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));width:84px;height:84px;border-width:2px}
+ #season{top:max(6px,env(safe-area-inset-top));right:auto;left:50%;transform:translateX(-102%);width:auto;font-size:11px;white-space:nowrap}
+ .fm-hud{top:max(6px,env(safe-area-inset-top));right:auto;left:50%;transform:translateX(2%);width:auto;font-size:11px;padding:2px 8px;white-space:nowrap}
+ #effs{top:calc(146px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));font-size:15px}
+ #look{top:auto;bottom:calc(150px + env(safe-area-inset-bottom));left:calc(10px + env(safe-area-inset-left));transform:none;font-size:11px;padding:3px 8px 3px 4px;max-width:200px;gap:6px}
+ #look canvas,#look img{width:24px!important;height:24px!important}
+ #bottom{bottom:max(4px,env(safe-area-inset-bottom))}
+ .hs{width:34px;height:34px}#stats,#xpbar{width:310px}#heldName{bottom:86px;font-size:13px}
+ #joy{left:calc(16px + env(safe-area-inset-left));bottom:calc(14px + env(safe-area-inset-bottom));width:calc(118px*var(--tb));height:calc(118px*var(--tb))}
+ #tb_jump{right:calc(14px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));width:calc(66px*var(--tb));height:calc(66px*var(--tb))}
+ #tb_use{right:calc(90px*var(--tb) + 14px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));width:calc(58px*var(--tb));height:calc(58px*var(--tb))}
+ #tb_sneak{right:calc(22px + env(safe-area-inset-right));bottom:calc(92px*var(--tb) + 14px + env(safe-area-inset-bottom));width:calc(50px*var(--tb));height:calc(50px*var(--tb))}
+ #tb_drop{right:calc(94px*var(--tb) + 14px + env(safe-area-inset-right));bottom:calc(84px*var(--tb) + 14px + env(safe-area-inset-bottom));width:calc(46px*var(--tb));height:calc(46px*var(--tb))}
+ #tb_inv{right:auto;left:calc(50% - 206px);bottom:max(6px,env(safe-area-inset-bottom));width:42px;height:42px}
+ #tb_pause{right:calc(10px + env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top))}
+ #tb_chat{right:calc(56px + env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top))}
+ #tb_view{right:calc(102px + env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top))}
+ .tb{font-size:calc(13px*var(--tb))}
+ /* 背包：左右兩欄，不用捲 */
+ .mc-panel{padding:6px 8px 8px;max-height:calc(100vh - 8px)}
+ .mc-head{margin-bottom:2px}
+ #mcBody.two{display:flex;gap:12px;align-items:flex-start}
+ #mcBody.two .mc-maincol{flex:1 1 auto;min-width:0;max-height:calc(100vh - 64px);overflow:auto}
+ #mcBody.two .mc-invcol{flex:none}
+ .sl{width:34px;height:34px}.g9{grid-template-columns:repeat(9,34px)}.g2{grid-template-columns:repeat(2,34px)}.g3{grid-template-columns:repeat(3,34px)}.g1{grid-template-columns:repeat(1,34px)}
+ .mc-doll{transform:scale(.8);transform-origin:top left}
+ .mc-lab{margin:2px 0}
+}
+/* ===== 第一次玩：圖文說明卡片 ===== */
+#tut{position:fixed;inset:0;z-index:300;background:rgba(10,10,20,.82);display:flex;align-items:center;justify-content:center;font-family:inherit}
+#tut[hidden]{display:none}
+.tut-box{width:min(620px,94vw);max-height:94vh;background:#c6c6c6;border:3px solid #000;box-shadow:inset 3px 3px 0 #fff,inset -3px -3px 0 #555;color:#2a2a2a;display:flex;flex-direction:column}
+.tut-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;flex:1}.tut-track::-webkit-scrollbar{display:none}
+.tut-card{flex:0 0 100%;scroll-snap-align:center;padding:12px 18px 6px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:8px}
+.tut-card h3{margin:0;font-size:20px;color:#1a1a1a}.tut-card p{margin:0;font-size:15px;line-height:1.55;text-align:left;width:100%}
+.tut-card b{color:#7a3a00}
+.tut-ill{position:relative;width:min(340px,80vw);height:150px;background:linear-gradient(#7ec8f0 0 55%,#6aa84a 55% 100%);border:4px solid #222;border-radius:16px;box-shadow:0 3px 0 #555;overflow:hidden;flex:none}
+.tut-ill.pc{border-radius:6px;height:140px}
+.tut-ill i{position:absolute;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;color:#fff;background:rgba(40,40,40,.55);border:1.5px solid rgba(255,255,255,.6);border-radius:6px;font-weight:700}
+.tut-ill i.on{background:#ffd23a;color:#222;border-color:#fff;box-shadow:0 0 0 3px rgba(255,210,58,.5);animation:tutp 1s infinite alternate}
+@keyframes tutp{to{box-shadow:0 0 0 6px rgba(255,210,58,.25)}}
+.tut-ill .lab{position:absolute;background:#fff;color:#222;font-size:11px;font-weight:700;padding:1px 6px;border-radius:8px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.tut-ill .hand{position:absolute;font-size:22px;animation:tuth 1.4s ease-in-out infinite alternate}@keyframes tuth{from{transform:translateX(-14px)}to{transform:translateX(14px)}}
+.tut-recipe{display:flex;align-items:center;gap:8px;font-size:28px}.tut-recipe span{background:#8b8b8b;border:2px solid #373737;width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.tut-foot{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;gap:8px;border-top:2px solid #8b8b8b}
+.tut-dots{display:flex;gap:6px}.tut-dots s{width:9px;height:9px;border-radius:50%;background:#8b8b8b;text-decoration:none}.tut-dots s.on{background:#2a6a2a}
+.tut-foot .mcb{width:auto;padding:6px 14px;margin:0;white-space:nowrap}.tut-foot>span{display:flex;gap:6px;flex:none}.tut-ill{height:160px}
+@media (max-height:420px){.tut-ill{height:120px}.tut-foot .mcb{padding:4px 10px;font-size:14px}.tut-card{padding:6px 14px 2px;gap:5px}.tut-card h3{font-size:17px}.tut-card p{font-size:13px;line-height:1.4}.tut-foot{padding:4px 10px}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -171,6 +225,7 @@ h2{margin:0 0 6px;font-size:22px;text-shadow:2px 2px 0 #3f3f3f}
   <button class="tb" id="tb_jump">跳</button><button class="tb" id="tb_use">使用</button><button class="tb" id="tb_sneak">蹲</button>
   <button class="tb" id="tb_inv">包</button><button class="tb" id="tb_drop">丟</button><button class="tb" id="tb_pause">⏸</button><button class="tb" id="tb_chat">💬</button><button class="tb" id="tb_view">👁</button></div>
 <div id="spyO" hidden></div><div id="help" hidden></div>
+<div id="tut" hidden><div class="tut-box"><div class="tut-track" id="tutTrack"></div><div class="tut-foot"><button class="mcb" id="tutSkip">略過</button><div class="tut-dots" id="tutDots"></div><span><button class="mcb" id="tutPrev">←</button> <button class="mcb" id="tutNext">下一張 →</button></span></div></div></div>
 <div id="mcui" hidden><div class="mc-panel"><div class="mc-head"><span id="mcTitle"></span><span><button class="mc-x" id="mcOne" aria-pressed="false" hidden>一次一個</button> <button class="mc-x" id="mcClose">關閉</button></span></div><div id="mcBody"></div></div></div>
 <div id="mcCursor" hidden></div><div id="mcTip" hidden></div><div id="mcMsg" hidden></div>
 <div id="menuBg" hidden></div>
@@ -198,7 +253,7 @@ h2{margin:0 0 6px;font-size:22px;text-shadow:2px 2px 0 #3f3f3f}
 <section class="scr dim" id="s_settings" hidden><h2>設定</h2><div id="setList"></div><button class="mcb" id="set_back">完成</button></section>
 <section class="scr dim" id="s_pause" hidden><h2>遊戲選單</h2>
   <button class="mcb" id="p_resume">回到遊戲</button><button class="mcb" id="p_lan">開放多人連線</button><p class="muted" id="p_info"></p>
-  <button class="mcb" id="p_set">設定…</button><button class="mcb" id="p_keys">快捷鍵說明</button><button class="mcb" id="p_quit">儲存並回到標題畫面</button></section>
+  <button class="mcb" id="p_set">設定…</button><button class="mcb" id="p_tut">📖 使用說明</button><button class="mcb" id="p_keys">快捷鍵說明</button><button class="mcb" id="p_quit">儲存並回到標題畫面</button></section>
 <section class="scr death" id="s_death" hidden><h1>你死了！</h1><p id="d_msg"></p><p id="d_score"></p><button class="mcb" id="d_respawn">重生</button><button class="mcb" id="d_title">回到標題畫面</button></section>
 <section class="scr dim" id="s_disc" hidden><h2>連線中斷</h2><p class="muted" id="disc_msg"></p><button class="mcb" id="disc_ok">回到標題畫面</button></section>
 <section class="scr dim" id="s_repair" hidden><h2>修復存檔物品</h2><div id="rpList" style="max-width:640px;width:94vw;max-height:70vh;overflow:auto"></div><button class="mcb" id="rp_back">返回</button></section>
@@ -1336,7 +1391,7 @@ function craftTake(shift){const w=UI.kind==='table'?3:2;let r=matchRecipe(UI.cg,
   else{if(!UI.cursor) UI.cursor={id:r.out,n:r.n};else if(UI.cursor.id===r.out&&!UI.cursor.ench&&UI.cursor.n+r.n<=maxStack(r.out)) UI.cursor.n+=r.n;else return;one();}
   playSnd('click');}
 function craftHTML(w){const r=matchRecipe(UI.cg,w);return `<div class="mc-craft"><div class="mc-grid g${w}">${UI.cg.map((s,k)=>slotHTML(s,'cg',k)).join('')}</div><span class="mc-arrow"></span>${slotHTML(r?{id:r.out,n:r.n}:null,'co',0,'out')}</div>`;}
-function invGrid(){return `<div class="mc-lab">物品欄</div><div class="mc-grid g9">${P.inv.slice(9).map((s,k)=>slotHTML(s,'inv',k+9)).join('')}</div><div class="mc-grid g9 hot">${P.inv.slice(0,9).map((s,k)=>slotHTML(s,'inv',k)).join('')}</div>`;}
+function invGrid(){return `<div class="mc-invcol"><div class="mc-lab">物品欄</div><div class="mc-grid g9">${P.inv.slice(9).map((s,k)=>slotHTML(s,'inv',k+9)).join('')}</div><div class="mc-grid g9 hot">${P.inv.slice(0,9).map((s,k)=>slotHTML(s,'inv',k)).join('')}</div></div>`;}
 const CTABS=[['方塊',()=>BL.filter(b=>b.id&&!['WATER','LAVA','PORTAL','FURNACE_ON','LEVER_ON','WIRE','WIRE_ON','LAMP_ON','DOOR_OPEN','BEDROCK','FARMLAND','PISTON_HEAD','SKY_PORTAL'].includes(b.key)&&!/^(WHEAT|CARROT|POTATO|BEET|WATER_F|LAVA_F|FC_|FARMLAND_WET)/.test(b.key)).map(b=>b.id)],
   ['工具戰鬥',()=>Object.keys(IT).filter(k=>/^(T_|A_)/.test(k)||['I_BOW','I_ARROW','I_FLINTSTEEL','I_SHEARS','I_BUCKET','I_WBUCKET','I_LBUCKET'].includes(k)).map(k=>IT[k])],
   ['材料食物',()=>Object.keys(IT).filter(k=>!/^(T_|A_)/.test(k)&&!['I_BOW','I_ARROW','I_FLINTSTEEL','I_SHEARS','I_BUCKET','I_WBUCKET','I_LBUCKET'].includes(k)).map(k=>IT[k])]];
@@ -1369,7 +1424,7 @@ function renderUI(){if(!UI.kind) return;const k=UI.kind;let h='';
   else if(k==='trade'){const T3=TRADES[UI.trade.prof]||TRADES[0];h+=`<div class="mc-lab">${PROFS[UI.trade.prof][0]}想跟你交易：</div><div class="trades">${T3.map((t,i)=>{const g=tid(t[0]),o=tid(t[2]);const can=W.mode==='creative'||countItem(g)>=t[1];
     return `<button class="trd ${can?'':'no'}" data-tr="${i}"><span class="ti">${icHTML(g,28)}<b>${t[1]}</b></span><small>${nameOf(g)}</small><span class="tarr">➜</span><span class="ti">${icHTML(o,28)}${t[3]>1?`<b>${t[3]}</b>`:''}</span><small>${nameOf(o)}</small></button>`;}).join('')}</div><p class="muted">點一下就交易。綠寶石可以挖礦（山裡）或賣東西給村民賺。</p>`;}
   else if(['npc','fshop','frel'].includes(k)&&typeof farmUI==='function') h+=farmUI(k);
-  h+=invGrid();$('#mcBody').innerHTML=h;$('#mcTitle').textContent={inv:'物品欄',table:'工作台',furnace:'熔爐',chest:'箱子',creative:'創造模式物品',ench:'附魔台',anvil:'鐵砧',trade:'村民交易',bag:'背包',hopper:'漏斗',cook:'煮鍋',share:'共用倉庫',ptrade:'玩家交易',npc:'鎮民',fshop:'商店',frel:'農場物語'}[k];
+  const two=isTouch&&innerWidth>innerHeight&&k!=='creative';$('#mcBody').classList.toggle('two',two);h=two?`<div class="mc-maincol">${h}</div>`+invGrid():h+invGrid();$('#mcBody').innerHTML=h;$('#mcTitle').textContent={inv:'物品欄',table:'工作台',furnace:'熔爐',chest:'箱子',creative:'創造模式物品',ench:'附魔台',anvil:'鐵砧',trade:'村民交易',bag:'背包',hopper:'漏斗',cook:'煮鍋',share:'共用倉庫',ptrade:'玩家交易',npc:'鎮民',fshop:'商店',frel:'農場物語'}[k];
   const dl=$('#mcDoll');if(dl) dl.appendChild(dollCanvas());renderCursor();$('#mcTip').hidden=true;}
 function renderCursor(e){const el=$('#mcCursor');if(!UI.cursor){el.hidden=true;return;}el.hidden=false;el.innerHTML=icHTML(UI.cursor.id)+(UI.cursor.n>1?`<b>${UI.cursor.n}</b>`:'');if(e){el.style.left=(e.clientX-16)+'px';el.style.top=(e.clientY-16)+'px';}}
 addEventListener('pointermove',e=>{if(UI.kind&&UI.cursor){const el=$('#mcCursor');el.style.left=(e.clientX-16)+'px';el.style.top=(e.clientY-16)+'px';}const t=$('#mcTip');if(t&&!t.hidden){t.style.left=Math.min(innerWidth-t.offsetWidth-4,e.clientX+14)+'px';t.style.top=Math.max(4,e.clientY-34)+'px';}});
@@ -2360,7 +2415,7 @@ function beginPlay(){showScreen(null);$('#hud').hidden=false;running=true;paused
   const cx=Math.floor(P.x)>>4,cz=Math.floor(P.z)>>4;for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++) getChunk(cx+a,cz+b,true);
   if(P.y<surfaceY(P.x,P.z)-1&&W.dim==='over'&&collides(P.x,P.y,P.z)) P.y=surfaceY(P.x,P.z)+0.1;
   for(let k=0;k<4;k++) streamChunks(P.x,P.z,6);renderHotbar();hudKey='';netUI();if(isTouch) $('#touch').hidden=false;
-  if(!localStorage.getItem('mmvox_tip')){toast(isTouch?'左邊搖桿移動、右邊滑動轉頭；點一下放方塊／使用，按住挖掘':'WASD 移動、滑鼠轉頭；左鍵挖／打，右鍵放方塊／使用；E 物品欄');toast('T 聊天，Esc 暫停；暫停選單可以「開放多人連線」');try{localStorage.setItem('mmvox_tip','1');}catch(e){}}
+  if(typeof tutMaybe==='function') tutMaybe();
   lockPointer();}
 function lockPointer(){if(isTouch) return;try{const r=canvas.requestPointerLock();if(r&&r.catch) r.catch(()=>{});}catch(e){}}
 function quitToTitle(){if(NET.on&&NET.host) saveWorld(true);if(!NET.on||NET.host) saveWorld(true);if(NET.on) netLeave();closeUI();running=false;paused=true;$('#hud').hidden=true;$('#touch').hidden=true;resetWorld();startTitle();}
@@ -2412,7 +2467,7 @@ on('m_back',()=>showScreen('title'));
 on('p_resume',resume);
 on('p_lan',()=>{if(NET.on){if(NET.host){navigator.clipboard&&navigator.clipboard.writeText(NET.code).catch(()=>{});toast('已複製房間代碼');}else{confirmBox('要離開這個多人世界嗎？',()=>quitToTitle());}return;}
   $('#p_lan').textContent='開啟中…';netHost((code,err)=>{if(!code){$('#p_lan').textContent='開放多人連線';$('#p_info').textContent='開不了房間：'+err+'（需要網路）';return;}renderPause();saveWorld(true);});});
-on('p_keys',()=>toggleHelp(true));on('p_set',()=>{renderSettings();SETBACK='pause';showScreen('settings');});
+on('p_keys',()=>toggleHelp(true));on('p_tut',()=>openTut());on('p_set',()=>{renderSettings();SETBACK='pause';showScreen('settings');});
 on('p_quit',()=>{if(NET.on&&NET.host){confirmBox('離開後同學也會被斷線，確定嗎？',()=>quitToTitle());return;}quitToTitle();});
 on('d_respawn',()=>{respawn();showScreen(null);paused=false;lockPointer();P.invul=2;});on('d_title',()=>quitToTitle());on('disc_ok',()=>quitToTitle());
 // ---- 設定 ----
@@ -3010,7 +3065,7 @@ function farmKit(){const fm=fmInit();const [sx,,sz]=W.spawn;const [cx,cz,cy]=tow
   if(!fm.kitGiven){fm.kitGiven=1;addItem(IT.I_WCAN,1);if(IT.T_hoe_stone) addItem(IT.T_hoe_stone,1);if(IT.T_axe_stone) addItem(IT.T_axe_stone,1);if(IT.T_pick_stone) addItem(IT.T_pick_stone,1);
     const sk=Object.keys(FCROP).find(k=>FCROP[k].s.includes(seasonNow()))||'turnip';addItem(IT['I_'+sk.toUpperCase()+'_S'],15);}
   for(const m of mobs()) if(m.type!=='townie'&&MOBS[m.type].pass&&m.x>cx-52&&m.x<cx+31&&m.z>cz-18&&m.z<cz+18){m.x=cx-40+rand(-4,4);m.z=cz+22+rand(-3,3);m.y=surfaceY(m.x,m.z)+0.1;}
-  townSpawn();setTimeout(()=>toast('🌱 歡迎來到你的農場！家裡的箱子有工具和種子，門前有田和出貨箱。沿著大馬路往東走就是晴空小鎮。按 J 看手冊'),1500);}
+  townSpawn();setTimeout(()=>toast('🌱 歡迎來到你的農場！家裡的箱子有工具和種子，門前有田和出貨箱。沿著大馬路往東走就是晴空小鎮。'+(isTouch?'點畫面上方的 💰 看手冊':'按 J 看手冊')),1500);}
 function townSpawn(){if(!isHost()||!W.fm||!W.fm.town) return;const fm=W.fm;const ex=mobs().filter(m=>m.type==='townie'&&!m.dead);const have=new Set(ex.map(m=>m.wool));
   TOWN.forEach((t,i)=>{if(have.has(i)) return;const n=fm.npc&&fm.npc[t.k];const p=n&&n.home?n.home.stand:[fm.town[0],fm.ty||surfaceY(fm.town[0],fm.town[1]),fm.town[1]];
     spawnMob('townie',p[0],p[1]+0.01,p[2],{wool:i,pname:t.shop?`${t.n}・${SHOPZH[t.shop]}`:t.n,home:fm.town,dim:'over'});});
@@ -3120,6 +3175,50 @@ function farmTick(dt){if(!W.farm||!running){fLastDay=0;const el=$('#fmoney');if(
 function farmPet(m,s){if(!W.farm||s||!['cow','sheep','pig','chicken','horse','rabbit'].includes(m.type)) return false;if(m.petDay===W.day){toast('今天已經摸過牠了');return true;}
   m.petDay=W.day;puff(m.x,m.y+m.h+0.3,m.z,0xff6a8a,6);playSnd('pop',0.5);if(!isHost()) NET.send({t:'fpet',id:m.eid});
   if(m.type==='chicken'&&Math.random()<0.5) spawnDrop(IT.I_EGG,1,m.x,m.y+0.5,m.z);toast(`摸了摸${m.pname||MOBS[m.type].n}，牠好開心 ❤️`);return true;}
+
+// ================= 第一次玩：圖文說明卡片 =================
+// 手機版畫一個「迷你手機畫面」，把要介紹的按鈕標黃色；電腦版畫鍵盤滑鼠
+function tutPhone(on,labels,extra){const B2=(k,css,txt)=>`<i class="${on.includes(k)?'on':''}" style="${css}">${txt}</i>`;
+  return `<div class="tut-ill">
+  ${B2('look','left:40%;top:20%;width:30%;height:40%;background:rgba(255,255,255,.08);border-style:dashed','')}
+  ${B2('joy','left:5%;bottom:7%;width:56px;height:56px;border-radius:50%','移動')}
+  ${B2('jump','right:4%;bottom:7%;width:40px;height:40px;border-radius:50%','跳')}
+  ${B2('use','right:20%;bottom:7%;width:36px;height:36px','使用')}
+  ${B2('sneak','right:5%;bottom:38%;width:30px;height:24px','蹲')}
+  ${B2('drop','right:21%;bottom:36%;width:28px;height:24px','丟')}
+  ${B2('inv','left:23%;bottom:4%;width:24px;height:22px','包')}
+  ${B2('hot','left:32%;bottom:4%;width:36%;height:22px;background:rgba(30,30,30,.7)','快捷欄')}
+  ${B2('pause','right:3%;top:5%;width:22px;height:20px','⏸')}${B2('chat','right:13%;top:5%;width:22px;height:20px','💬')}${B2('view','right:23%;top:5%;width:22px;height:20px','👁')}
+  ${B2('mini','right:3%;top:21%;width:38px;height:26px;background:#2a5a9a;font-size:9px','地圖')}
+  ${B2('money','left:38%;top:5%;width:24%;height:18px;background:rgba(60,40,10,.7)','🌸 春｜💰 G')}
+  ${(labels||[]).map(([t,css])=>`<span class="lab" style="${css}">${t}</span>`).join('')}${extra||''}</div>`;}
+function tutPC(keys,labels){const K=(t,css,on)=>`<i class="${on?'on':''}" style="${css}">${t}</i>`;
+  return `<div class="tut-ill pc" style="background:#3a3a3a">${keys.map(([t,css,on])=>K(t,css,on)).join('')}${(labels||[]).map(([t,css])=>`<span class="lab" style="${css}">${t}</span>`).join('')}</div>`;}
+function tutCards(){const T=isTouch;const C=[];
+  C.push({h:'歡迎來到麥麥方塊世界！',ill:T?tutPhone(['joy','look','jump','use'],[['左手：移動','left:4%;top:40%'],['右手：滑動轉頭','left:41%;top:32%']]):tutPC([['W','left:18%;top:20%;width:30px;height:30px',1],['A','left:8%;top:48%;width:30px;height:30px',1],['S','left:18%;top:48%;width:30px;height:30px',1],['D','left:28%;top:48%;width:30px;height:30px',1],['🖱️','left:68%;top:22%;width:60px;height:80px;border-radius:30px',1]],[['WASD 移動','left:8%;top:78%'],['滑鼠轉頭','left:64%;top:80%']]),
+    p:T?'<b>手機請橫著拿</b>。左手拇指按住左下角的圓圈拖動就能走路；右手在畫面右半邊滑動，就能轉頭看四周。':'用 <b>W A S D</b> 走路，移動<b>滑鼠</b>轉頭，<b>空白鍵</b>跳。點一下畫面就能開始玩。'});
+  C.push({h:'挖方塊、放方塊',ill:T?tutPhone(['look','use'],[['按住＝挖、打','left:36%;top:22%'],['點一下＝放方塊','left:36%;top:40%']],'<span class="hand" style="left:58%;top:36%">👆</span>'):tutPC([['左鍵','left:30%;top:25%;width:60px;height:70px',1],['右鍵','left:56%;top:25%;width:60px;height:70px',1]],[['按住＝挖、打','left:22%;top:80%'],['放方塊／使用','left:52%;top:80%']]),
+    p:T?'在畫面上<b>按住</b>就會挖方塊、打怪物；<b>點一下</b>就會把手上的方塊放下去。拿著食物、門、箱子時，按<b>「使用」</b>鈕就能吃東西或打開。':'<b>按住左鍵</b>挖方塊、打怪物；<b>右鍵</b>放方塊、吃東西、開門和箱子。'});
+  C.push({h:'其他按鈕',ill:T?tutPhone(['jump','sneak','drop','inv','hot'],[['蹲（不會掉下去）','right:14%;top:30%'],['丟東西','left:44%;top:46%'],['背包','left:14%;bottom:24%']]):tutPC([['空白','left:8%;top:30%;width:80px;height:30px',1],['Shift','left:8%;top:62%;width:50px;height:30px',1],['Q','left:40%;top:30%;width:30px;height:30px',1],['E','left:52%;top:30%;width:30px;height:30px',1],['1~9','left:70%;top:30%;width:44px;height:30px',1]],[['跳','left:12%;top:12%'],['蹲','left:10%;top:85%'],['丟','left:40%;top:12%'],['背包','left:50%;top:12%'],['換快捷欄','left:66%;top:12%']]),
+    p:T?'<b>跳</b>：跳上方塊。<b>蹲</b>：走到邊邊不會掉下去。<b>丟</b>：把手上的東西丟出去。<b>包</b>：打開背包。點下面的<b>快捷欄</b>可以換手上拿的東西。':'<b>空白鍵</b>跳，<b>Shift</b> 蹲，<b>Q</b> 丟東西，<b>E</b> 開背包，<b>1～9</b> 或滾輪換手上的東西。'});
+  C.push({h:'背包和合成',ill:`<div class="tut-recipe"><span>🪵</span>→<span>🟫</span>→<span>🧰</span>→<span>⛏️</span></div>`,
+    p:`先打樹拿到<b>木頭</b>，打開背包，把木頭放進合成格子變成<b>木板</b>，再做<b>工作台</b>，就能做出鎬子、斧頭這些工具了。<br>${T?'放物品：<b>點一下</b>拿起來，<b>再點一個格子</b>放下去。':'放物品：<b>點一下</b>拿起來，<b>再點一個格子</b>放下去；按住 Shift 點一下可以直接移過去。'}<br>不知道怎麼做？打開「📗 合成表」，點想要的東西就會自動放好材料。`});
+  if(W.farm) C.push({h:'🌱 農場物語模組',ill:`<div class="tut-recipe" style="font-size:24px"><span>🚿</span>→<span>🌱</span>→<span>🥕</span>→<span>📦</span>→<span>💰</span></div>`,
+    p:`① 家裡的箱子有工具和種子。② 用<b>鋤頭</b>把草地翻成田，種下種子。③ 每天用<b>澆水壺</b>澆水，作物每天早上長大（下雨不用澆）。④ 收成放進<b>出貨箱</b>，隔天早上變成錢。⑤ 沿著大馬路往東走是小鎮，對鎮民${T?'點一下':'按右鍵'}可以聊天、買東西、送禮。${T?'點畫面上方的<b>💰 金幣</b>':'按 <b>J</b>'}可以看農場手冊。`});
+  C.push({h:'找朋友一起玩、聊天',ill:T?tutPhone(['pause','chat','view'],[['⏸ 暫停 → 開放多人連線','left:8%;top:22%'],['💬 聊天　👁 換視角','left:8%;top:42%']]):tutPC([['Esc','left:10%;top:30%;width:44px;height:30px',1],['T','left:34%;top:30%;width:30px;height:30px',1],['F5','left:52%;top:30%;width:36px;height:30px',1],['H','left:72%;top:30%;width:30px;height:30px',1]],[['暫停','left:10%;top:12%'],['聊天','left:32%;top:12%'],['換視角','left:50%;top:12%'],['快捷鍵說明','left:66%;top:12%']]),
+    p:`按<b>${T?'⏸':'Esc'}</b> 打開暫停選單，選「開放多人連線」會出現房間代碼，朋友輸入代碼就能進來一起玩（最多 4 人）。${T?'按 💬':'按 T'} 可以聊天。<br>想再看一次這個說明：暫停選單 →「📖 使用說明」。`});
+  return C;}
+let tutI=0,tutN=0;
+function openTut(){const C=tutCards();tutN=C.length;tutI=0;$('#tutTrack').innerHTML=C.map(c=>`<div class="tut-card"><h3>${c.h}</h3>${c.ill}<p>${c.p}</p></div>`).join('');
+  $('#tutDots').innerHTML=C.map((_,i)=>`<s class="${i?'':'on'}"></s>`).join('');$('#tut').hidden=false;$('#tutTrack').scrollLeft=0;tutUpd();
+  if(document.pointerLockElement) document.exitPointerLock();}
+function tutGo(i){tutI=clamp(i,0,tutN-1);const tr=$('#tutTrack');tr.scrollTo({left:tr.clientWidth*tutI,behavior:'smooth'});tutUpd();}
+function tutUpd(){document.querySelectorAll('#tutDots s').forEach((d,i)=>d.classList.toggle('on',i===tutI));$('#tutPrev').style.visibility=tutI?'visible':'hidden';$('#tutNext').textContent=tutI>=tutN-1?'開始玩！':'下一張 →';}
+function closeTut(){$('#tut').hidden=true;try{localStorage.setItem('mmvox_tut','1');if(W.farm) localStorage.setItem('mmvox_tutfarm','1');}catch(e){}}
+$('#tutNext').onclick=()=>{if(tutI>=tutN-1) closeTut();else tutGo(tutI+1);};$('#tutPrev').onclick=()=>tutGo(tutI-1);$('#tutSkip').onclick=closeTut;
+$('#tutTrack').addEventListener('scroll',()=>{const tr=$('#tutTrack');const i=Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth));if(i!==tutI){tutI=i;tutUpd();}},{passive:true});
+for(const ev of ['pointerdown','touchstart','keydown','wheel']) $('#tut').addEventListener(ev,e=>e.stopPropagation(),{passive:true});
+function tutMaybe(){let seen=false,seenF=false;try{seen=!!localStorage.getItem('mmvox_tut');seenF=!!localStorage.getItem('mmvox_tutfarm');}catch(e){}if(!seen||(W.farm&&!seenF)) setTimeout(()=>{if(running) openTut();},600);}
 
 // ================= 主迴圈 =================
 const rainG=(()=>{const n=600,p=new Float32Array(n*6);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));const m=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x9ab0d8,transparent:true,opacity:0.5}));m.frustumCulled=false;m.visible=false;scene.add(m);
