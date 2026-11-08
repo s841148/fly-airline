@@ -216,6 +216,7 @@ h2{margin:0 0 6px;font-size:22px;text-shadow:2px 2px 0 #3f3f3f}
  .cq{font-size:12px;padding:2px 8px;white-space:nowrap;flex:none}#chatIn{font-size:16px}
  #chatQuick{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}#chatQuick::-webkit-scrollbar{display:none}
 }
+.mod-head{grid-column:1/-1;font-weight:700;margin:8px 0 2px;color:#ffe080}.mod-head small{font-weight:400;color:#ccc}.mcb.locked{opacity:.6;filter:grayscale(.6)}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -1256,7 +1257,7 @@ function veinMine(x,y,z,id){const list=[];const seen=new Set([x+','+y+','+z]);co
     blockBits&&blockBits(X,Y,Z,id);setB(X,Y,Z,0);if(tool0&&!held()) break;}
   if(list.length) toast(`連鎖挖掘：多挖了 ${list.length} 個 ${BL[id].n}`);}
 function breakBlock(h){const id=h.id;const b=BL[id];const s=held();
-  const vein=SET.vein&&(SET.vein===2||P.sneak)&&veinOK(id)&&(W.mode==='creative'||canHarvest(id,s))&&(VEIN_ORE.has(id)?s&&DEF(s.id).tool&&DEF(s.id).tool.type==='pick':true);
+  const vein=modOn('vein')&&(modOn('vein')===2||P.sneak)&&veinOK(id)&&(W.mode==='creative'||canHarvest(id,s))&&(VEIN_ORE.has(id)?s&&DEF(s.id).tool&&DEF(s.id).tool.type==='pick':true);
   if(W.mode!=='creative'){const ok=canHarvest(id,s);let drops=(s&&s.id===IT.I_SHEARS&&(b.drop==='_leaves'||id===B.TALLGRASS))?[[id,1]]:dropOf(id,ok,s);
     for(const [d,n] of drops) if(n>0) spawnDrop(d,n,h.x+0.5,h.y+0.5,h.z+0.5);if(b.xp&&ok) spawnXP(h.x+0.5,h.y+0.5,h.z+0.5,irand(b.xp[0],b.xp[1]));
     useTool(s);P.exh+=0.005;}
@@ -1350,7 +1351,7 @@ function initSmelt(){smelt(B.IRON_ORE,IT.I_IRON,0.7);smelt(B.GOLD_ORE,IT.I_GOLD,
 initRecipes();initSmelt();
 function matchRecipe(grid,w){const cells=[];for(let i=0;i<grid.length;i++) if(grid[i]) cells.push(i);if(!cells.length) return null;
   const xs=cells.map(i=>i%w),ys=cells.map(i=>Math.floor(i/w));const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);const ids=cells.map(i=>grid[i].id).sort((a,b)=>a-b);
-  for(const r of RECIPES){if(r.mod&&!SET[r.mod]) continue;if(r.shapeless){if(r.shapeless.length===ids.length&&r.shapeless.slice().sort((a,b)=>a-b).every((v,i)=>v===ids[i])) return r;continue;}
+  for(const r of RECIPES){if(r.mod&&!modOn(r.mod)) continue;if(r.shapeless){if(r.shapeless.length===ids.length&&r.shapeless.slice().sort((a,b)=>a-b).every((v,i)=>v===ids[i])) return r;continue;}
     const rh=r.rows.length,rw=Math.max(...r.rows.map(s=>s.length));if(rh!==y1-y0+1||rw!==x1-x0+1) continue;
     for(const mir of [false,true]){let ok=true;for(let y=0;y<rh&&ok;y++)for(let x=0;x<rw&&ok;x++){const ch=(r.rows[y][mir?rw-1-x:x]||' ');const want=ch===' '?0:r.key[ch];const s=grid[(y0+y)*w+x0+x];if((s?s.id:0)!==want) ok=false;}if(ok) return r;}}
   return null;}
@@ -1409,7 +1410,7 @@ function invGrid(){return `<div class="mc-invcol"><div class="mc-lab">物品欄<
 const CTABS=[['方塊',()=>BL.filter(b=>b.id&&!['WATER','LAVA','PORTAL','FURNACE_ON','LEVER_ON','WIRE','WIRE_ON','LAMP_ON','DOOR_OPEN','BEDROCK','FARMLAND','PISTON_HEAD','SKY_PORTAL','BED_FOOT'].includes(b.key)&&!/^(WHEAT|CARROT|POTATO|BEET|WATER_F|LAVA_F|FC_|FARMLAND_WET)/.test(b.key)).map(b=>b.id)],
   ['工具戰鬥',()=>Object.keys(IT).filter(k=>/^(T_|A_)/.test(k)||['I_BOW','I_ARROW','I_FLINTSTEEL','I_SHEARS','I_BUCKET','I_WBUCKET','I_LBUCKET'].includes(k)).map(k=>IT[k])],
   ['材料食物',()=>Object.keys(IT).filter(k=>!/^(T_|A_)/.test(k)&&!['I_BOW','I_ARROW','I_FLINTSTEEL','I_SHEARS','I_BUCKET','I_WBUCKET','I_LBUCKET'].includes(k)).map(k=>IT[k])]];
-function recipeBook(w){const seen=new Set(),list=[];for(const r of RECIPES){if(r.mod&&!SET[r.mod]) continue;if(seen.has(r.out)) continue;if(!r.shapeless&&(r.rows.length>w||Math.max(...r.rows.map(x=>x.length))>w)) continue;if(r.shapeless&&r.shapeless.length>w*w) continue;seen.add(r.out);list.push(r);}
+function recipeBook(w){const seen=new Set(),list=[];for(const r of RECIPES){if(r.mod&&!modOn(r.mod)) continue;if(seen.has(r.out)) continue;if(!r.shapeless&&(r.rows.length>w||Math.max(...r.rows.map(x=>x.length))>w)) continue;if(r.shapeless&&r.shapeless.length>w*w) continue;seen.add(r.out);list.push(r);}
   const need=r=>{const m={};if(r.shapeless) r.shapeless.forEach(id=>m[id]=(m[id]||0)+1);else r.rows.forEach(row=>[...row].forEach(ch=>{if(ch!==' '){const id=r.key[ch];m[id]=(m[id]||0)+1;}}));return m;};
   const have=r=>Object.entries(need(r)).every(([id,n])=>countItem(+id)>=n);const shown=list.filter(r=>!UI.onlyHave||have(r));
   return `<details class="mc-book" ${UI.bookOpen?'open':''}><summary>📗 合成表（${w===3?'3×3':'2×2'}）</summary><label class="mc-only"><input type="checkbox" data-only ${UI.onlyHave?'checked':''}> 只顯示做得出來的</label><div class="mc-rl">${shown.map(r=>{const m=need(r);return `<button class="mc-rec ${have(r)?'':'no'}" data-rec="${RECIPES.indexOf(r)}">${icHTML(r.out,24)}<span><b>${nameOf(r.out)}${r.n>1?' ×'+r.n:''}</b><small>${Object.entries(m).map(([id,n])=>nameOf(+id)+'×'+n).join('、')}</small></span></button>`;}).join('')}</div></details>`;}
@@ -1508,7 +1509,7 @@ function anvilHTML(){const r=anvilResult();return `<div class="mc-anvil">${slotH
 function anvilTake(){const r=anvilResult();if(!r||UI.cursor) return;if(W.mode!=='creative'&&P.level<r.cost) return;if(W.mode!=='creative') spendLevels(r.cost);const out={...r.out};delete out._use;
   if(r.out._use){UI.anvil[1].n-=r.out._use;if(UI.anvil[1].n<=0) UI.anvil[1]=null;}else UI.anvil[1]=null;UI.anvil[0]=null;UI.cursor=out;playSnd('anvil');}
 
-function openBag(s){if(!SET.pack){toast('背包模組沒有開（設定裡可以打開）');return;}const n=DEF(s.id).bag;if(!s.bag||s.bag.length!==n){const old=s.bag||[];s.bag=Array(n).fill(null);old.forEach((x,i)=>{if(i<n) s.bag[i]=x;});}
+function openBag(s){if(!modOn('pack')){toast(isMember()?'房主沒有開背包模組':'背包模組沒有開（設定裡可以打開）');return;}const n=DEF(s.id).bag;if(!s.bag||s.bag.length!==n){const old=s.bag||[];s.bag=Array(n).fill(null);old.forEach((x,i)=>{if(i<n) s.bag[i]=x;});}
   UI.bag=s.bag;UI.bagItem=s;openUI('bag');playSnd('chest');}
 
 // ================= 實體：掉落物、經驗球、生物、投射物、爆炸、其他玩家 =================
@@ -1701,7 +1702,7 @@ const BLOODC={skel:0xe8e8e0,stray:0xd8e0e8,slime:0x6ac84a,magma:0xff8a20,jelly:0
 const DECALS=[];let decalTex=null;
 function bloodTex(){if(decalTex) return decalTex;const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d');const r=prng(77);
   for(let k=0;k<9;k++){const x=8+r()*16,y=8+r()*16,R=2+r()*5;g.fillStyle='rgba(140,10,10,.85)';g.beginPath();g.arc(x,y,R,0,7);g.fill();}decalTex=new THREE.CanvasTexture(c);decalTex.magFilter=THREE.NearestFilter;return decalTex;}
-function bloodFx(e,big){if(!SET.blood) return;const col=BLOODC[e.type]||0x9a1010;puff(e.x,e.y+e.h*0.6,e.z,col,big?10:5,0.6);
+function bloodFx(e,big){if(!modOn('blood')) return;const col=BLOODC[e.type]||0x9a1010;puff(e.x,e.y+e.h*0.6,e.z,col,big?10:5,0.6);
   if(BLOODC[e.type]) return;// 骷髏、史萊姆不留血跡
   const gy=Math.floor(e.y);if(!BL[getB(e.x,gy-1,e.z)].solid) return;const m=new THREE.Mesh(new THREE.PlaneGeometry(0.7+(big?0.4:0),0.7+(big?0.4:0)),new THREE.MeshBasicMaterial({map:bloodTex(),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-3}));
   m.rotation.x=-Math.PI/2;m.rotation.z=rand(0,6.28);m.position.set(e.x+rand(-.2,.2),gy+0.02,e.z+rand(-.2,.2));scene.add(m);DECALS.push({m,t:0,dim:W.dim});while(DECALS.length>40){const d=DECALS.shift();scene.remove(d.m);d.m.material.dispose();d.m.geometry.dispose();}}
@@ -2251,7 +2252,7 @@ function hostRecv(o,from){const p=NET.peers.get(from);
   if(o.t==='join'){if(o.ver!==NET.ver){NET.conns.get(from).send({t:'kick',why:'遊戲版本不同，請用同一個檔案'});return;}
     let name=String(o.name||'玩家').slice(0,16);if(name===SET.name||[...NET.peers.values()].some(q=>q.name===name)) name+=from.slice(1);
     NET.peers.set(from,{name,color:o.color||'#3a6aa8',st:null,sleeping:false});const saved=W.pinv&&W.pinv[name];
-    NET.conns.get(from).send({t:'welcome',id:from,ver:NET.ver,seed:W.seed,wname:W.name,mode:W.mode,diff:W.diff,time:W.time,day:W.day,rain:WX.rain,mods:W.mods,cont:W.cont,furn:W.furn,meta:W.meta,island:W.island,farm:W.farm,fm:W.fm,spawn:W.spawn,host:{name:SET.name,color:P.color},
+    NET.conns.get(from).send({t:'welcome',id:from,ver:NET.ver,seed:W.seed,wname:W.name,mode:W.mode,diff:W.diff,time:W.time,day:W.day,rain:WX.rain,mods:W.mods,cont:W.cont,furn:W.furn,meta:W.meta,island:W.island,farm:W.farm,fm:W.fm,rules:hostRules(),spawn:W.spawn,host:{name:SET.name,color:P.color},
       players:[...NET.peers].filter(([id])=>id!==from).map(([id,q])=>({id,name:q.name,color:q.color,st:q.st})),saved});
     hostBcast({t:'pjoin',id:from,name,color:o.color},from);toast(`${name} 加入了遊戲`);netUI();return;}
   if(!p) return;
@@ -2313,6 +2314,7 @@ function commonRecv(o,from){switch(o.t){
   case 'tnt':if(o.dim===W.dim) igniteTNT(o.x,o.y,o.z,o.fuse,true);break;
   case 'btn':if(o.dim===W.dim) pressButton(o.x,o.y,o.z);break;
   case 'fmoney':case 'fmset':case 'fwet':case 'fcrop':case 'fbin':case 'fpet':case 'fspawn':case 'fbub':if(typeof farmRecv==='function') farmRecv(o,from);break;
+  case 'rules':if(typeof rulesRecv==='function') rulesRecv(o);break;
   case 'proj':if(o.dim===W.dim){if(o.k==='arrow'){const m=new THREE.Mesh(arrowGeo,arrowMat);scene.add(m);ENTS.push({kind:'arrow',eid:EID++,x:o.x,y:o.y,z:o.z,vx:o.vx,vy:o.vy,vz:o.vz,mesh:m,age:0,stuck:false,dim:o.dim,ghost:true,by:'?'});}
       else{const m=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.6,0.6),fbMat);scene.add(m);ENTS.push({kind:'fireball',eid:EID++,x:o.x,y:o.y,z:o.z,vx:o.vx,vy:o.vy,vz:o.vz,mesh:m,age:0,dim:o.dim,ghost:true});}}break;}}
 function syncMobs(list){const seen=new Set();for(const r of list){const [eid,type,x,y,z,yaw,hp,fl,size,wool,tamed,pname,sad]=r;seen.add(eid);let m=ENTS.find(e=>e.kind==='mob'&&e.eid===eid&&e.remote);
@@ -2402,7 +2404,7 @@ function repairScreen(){const raw=loadSave(selWorld);if(!raw){toast('讀取失�
 function loadSave(id){let sv;try{sv=JSON.parse(localStorage.getItem('mmvox_w_'+id));}catch(e){return null;}if(sv&&sv.pal&&!samePal(sv.pal,palNow())) sv=convertSave(sv,sv.pal);return sv;}
 // ---- 開始世界 ----
 function resetWorld(){for(const d of ['over','nether','sky']){clearMeshes(d);W.chunks[d].clear();}if(typeof vehReset==='function') vehReset();for(const e of ENTS){if(e.mesh) scene.remove(e.mesh);}ENTS.length=0;for(const p of PARTS) scene.remove(p.m);PARTS.length=0;
-  RS.pulse.clear();RS.plates.clear();LIQ.q.clear();RS.dirty.length=0;if(RS.doorPow) RS.doorPow.clear();W.dim='over';W.mods={over:{},nether:{},sky:{}};W.cont={};W.furn={};W.pinv={};W.meta={};W.island=false;W.farm=false;W.fm=null;W.spawn=null;
+  RS.pulse.clear();RS.plates.clear();LIQ.q.clear();RS.dirty.length=0;if(RS.doorPow) RS.doorPow.clear();W.dim='over';W.mods={over:{},nether:{},sky:{}};W.cont={};W.furn={};W.pinv={};W.meta={};W.island=false;W.farm=false;W.fm=null;W.rules=null;W.spawn=null;
   Object.assign(P,{vx:0,vy:0,vz:0,mvx:0,mvz:0,hp:20,food:20,sat:5,exh:0,xp:0,level:0,xpTot:0,air:300,fire:0,fallStart:null,inv:Array(36).fill(null),armor:Array(4).fill(null),sel:0,dead:false,fly:false,sprint:false,sneak:false,spawn:null,portalT:0,invul:2,sleeping:false,kbT:0});USE.mode=null;}
 function islandKit(){const [sx,sy,sz]=W.spawn;let cx=sx+2,cz=sz+1;const cy=surfaceY(cx,cz);setB(cx,cy,cz,B.CHEST,{local:true});
   W.cont['over:'+cx+','+cy+','+cz]=[{id:IT.I_BREAD,n:3},{id:IT.I_APPLE,n:2},{id:B.SAPLING,n:2},{id:IT.I_SEEDS,n:4},{id:IT.I_STRING,n:3},{id:IT.I_BUCKET,n:1},null,null,null].concat(Array(18).fill(null));
@@ -2424,7 +2426,7 @@ function startWorld(save,opts){resetWorld();if(save){W.id=save.id;W.name=save.na
   beginPlay();saveWorld(true);}
 function applyPack(pl){P.adv=pl.adv||{};P.frel=pl.frel||{};P.inv=(pl.inv||[]).slice(0,36);while(P.inv.length<36) P.inv.push(null);P.armor=(pl.armor||[null,null,null,null]).slice(0,4);P.xp=pl.xp||0;P.level=pl.level||0;P.xpTot=pl.xpTot||0;P.hp=pl.hp||20;P.food=pl.food===undefined?20:pl.food;P.spawn=pl.spawn||null;
   if(pl.dim&&pl.dim!==W.dim){W.dim=pl.dim;}P.x=pl.x;P.y=pl.y;P.z=pl.z;scene.fog.near=W.dim==='nether'?10:40;}
-function startFromNet(m){resetWorld();W.id='';W.name=m.wname;W.seed=m.seed;SEED=m.seed;W.mode=m.mode;W.diff=m.diff;W.cheats=false;W.time=m.time;W.day=m.day;WX.rain=m.rain;W.spawn=m.spawn;W.mods=m.mods;if(!W.mods.sky) W.mods.sky={};W.cont=m.cont||{};W.furn=m.furn||{};W.meta=m.meta||{};W.island=!!m.island;W.farm=!!m.farm;W.fm=m.fm||null;rsRebuild();
+function startFromNet(m){resetWorld();W.id='';W.name=m.wname;W.seed=m.seed;SEED=m.seed;W.mode=m.mode;W.diff=m.diff;W.cheats=false;W.time=m.time;W.day=m.day;WX.rain=m.rain;W.spawn=m.spawn;W.mods=m.mods;if(!W.mods.sky) W.mods.sky={};W.cont=m.cont||{};W.furn=m.furn||{};W.meta=m.meta||{};W.island=!!m.island;W.farm=!!m.farm;W.fm=m.fm||null;W.rules=m.rules||null;NET.hostName=m.host&&m.host.name;rsRebuild();
   NET.peers.set('H',{name:m.host.name,color:m.host.color,st:null});for(const p of m.players) NET.peers.set(p.id,{name:p.name,color:p.color,st:p.st});
   if(m.saved&&m.saved.inv) applyPack(m.saved);else{P.x=W.spawn[0]+0.5+rand(-1,1);P.y=W.spawn[1]+0.1;P.z=W.spawn[2]+0.5+rand(-1,1);}netUI();beginPlay();toast(`已加入 ${m.host.name} 的世界「${m.wname}」`);}
 function beginPlay(){showScreen(null);$('#hud').hidden=false;running=true;paused=false;title.on=false;scene.fog.far=W.dim==='nether'?60:RD*16;
@@ -2441,7 +2443,7 @@ const SCR=['title','worlds','create','multi','settings','pause','death','disc','
 function showScreen(n){for(const s of SCR) $('#s_'+s).hidden=s!==n;$('#menuBg').hidden=!n||n==='pause'||n==='death'||n==='disc';}
 function openPause(){if(!running||P.dead||uiOpen) return;paused=true;showScreen('pause');renderPause();}
 function renderPause(){$('#p_lan').textContent=NET.on?(NET.host?`房間代碼：${NET.code}（給同學輸入）`:'中斷連線'):'開放多人連線';$('#p_lan').classList.toggle('code',NET.on&&NET.host);
-  $('#p_info').innerHTML=NET.on?(NET.host?`把這個遊戲檔傳給同學 → 他們打開後按「多人遊戲」→ 輸入代碼 <b>${NET.code}</b>。<br>目前 ${1+NET.peers.size}/4 人。暫停時世界不會停（多人模式）。`:'你在別人的世界裡，東西會存在主機那邊。'):'開放後會拿到一組房間代碼，同學輸入就能加入（最多 4 人，需要網路）。';}
+  $('#p_info').innerHTML=NET.on?(NET.host?`你是<b>👑 創作者（房主）</b>：模組由你決定（設定 → 🧩 模組），成員不能改。<br>把這個遊戲檔傳給同學 → 他們打開後按「多人遊戲」→ 輸入代碼 <b>${NET.code}</b>。<br>目前 ${1+NET.peers.size}/4 人。暫停時世界不會停（多人模式）。`:`你是<b>成員</b>：在${esc(NET.hostName||'房主')}的世界裡玩，東西會存在房主那邊。模組（連鎖挖掘、背包、血跡、農場物語）由<b>👑 創作者</b>決定。`):'開放後會拿到一組房間代碼，同學輸入就能加入（最多 4 人，需要網路）。';}
 function resume(){showScreen(null);paused=false;lockPointer();}
 function showDeath(why){$('#d_msg').textContent=SET.name+' '+why;$('#d_score').textContent='分數：'+(P.xpTot|0);setTimeout(()=>{showScreen('death');},400);}
 function showDisconnect(why){running=false;$('#disc_msg').textContent=why;showScreen('disc');$('#hud').hidden=true;if(document.pointerLockElement) document.exitPointerLock();}
@@ -2492,9 +2494,9 @@ let SETBACK='title';
 const SETS=[['sens','滑鼠靈敏度',0.2,3,0.1,v=>Math.round(v*100)+'%'],['fov','視野',50,110,1,v=>v+'°'],['rd','顯示距離',2,isTouch?6:9,1,v=>v+' 區塊'],['vol','音量',0,1,0.05,v=>Math.round(v*100)+'%'],['btn','觸控按鈕大小',0.7,1.5,0.05,v=>Math.round(v*100)+'%']];
 function renderSettings(){$('#setList').innerHTML=SETS.map(([k,n,a,b,s,f])=>`<label class="slider"><span>${n}：<b id="sv_${k}">${f(SET[k])}</b></span><input type="range" min="${a}" max="${b}" step="${s}" value="${SET[k]}" data-k="${k}"></label>`).join('')+
   `<label class="field">名字<input id="s_name" maxlength="16" value="${esc(SET.name)}"></label><div class="colors">${['#3d8b6b','#3a6aa8','#a83a3a','#d8a020','#8a3aa8','#e07aa0','#5a5a5a','#e8e8e8'].map(c=>`<button class="cb ${SET.color===c?'on':''}" data-col="${c}" style="background:${c}" aria-label="衣服顏色"></button>`).join('')}</div>
-  <button class="mcb" id="s_bob">走路晃動：${SET.bob?'開':'關'}</button><button class="mcb" id="s_fps">顯示 FPS：${SET.fps?'開':'關'}</button><button class="mcb" id="s_shader">光影包：${['關','開','高畫質（較吃效能）'][SET.shader]}</button><button class="mcb" id="s_vein">連鎖挖掘模組：${['關','開（蹲下時挖才連鎖）','開（一直連鎖）'][SET.vein]}</button><button class="mcb" id="s_bubble">聊天泡泡：${SET.bubble?'開':'關'}</button><button class="mcb" id="s_ctime">聊天顯示時間：${SET.chatTime?'開':'關'}</button><button class="mcb" id="s_mini">小地圖：${SET.mini?'開':'關'}</button><button class="mcb" id="s_keys">快捷鍵說明（H）</button><button class="mcb" id="s_blood">血跡模組：${SET.blood?'開':'關'}</button><button class="mcb" id="s_pack">背包模組：${SET.pack?'開':'關'}</button><button class="mcb" id="s_look">顯示模組（看方塊資訊）：${SET.look?'開':'關'}</button>`;}
+  <button class="mcb" id="s_bob">走路晃動：${SET.bob?'開':'關'}</button><button class="mcb" id="s_fps">顯示 FPS：${SET.fps?'開':'關'}</button><button class="mcb" id="s_shader">光影包：${['關','開','高畫質（較吃效能）'][SET.shader]}</button><div class="mod-head">🧩 模組 ${isMember()?'<small>（成員：由創作者／房主決定）</small>':'<small>（你是創作者，可以決定開不開）</small>'}</div><button class="mcb${isMember()?' locked':''}" id="s_vein">${isMember()?'🔒 ':''}連鎖挖掘模組：${['關','開（蹲下時挖才連鎖）','開（一直連鎖）'][modOn('vein')]}</button><button class="mcb${isMember()?' locked':''}" id="s_farmmod">${isMember()?'🔒 ':''}🌱 農場物語模組：${W.farm?'開':'關'}</button><button class="mcb" style="pointer-events:none;opacity:.7">🏝️ 荒島求生模組：${W.island?'開':'關'}（建立世界時決定）</button><button class="mcb" id="s_bubble">聊天泡泡：${SET.bubble?'開':'關'}</button><button class="mcb" id="s_ctime">聊天顯示時間：${SET.chatTime?'開':'關'}</button><button class="mcb" id="s_mini">小地圖：${SET.mini?'開':'關'}</button><button class="mcb" id="s_keys">快捷鍵說明（H）</button><button class="mcb${isMember()?' locked':''}" id="s_blood">${isMember()?'🔒 ':''}血跡模組：${modOn('blood')?'開':'關'}</button><button class="mcb${isMember()?' locked':''}" id="s_pack">${isMember()?'🔒 ':''}背包模組：${modOn('pack')?'開':'關'}</button><button class="mcb" id="s_look">顯示模組（看方塊資訊）：${SET.look?'開':'關'}</button>`;}
 $('#setList').addEventListener('input',e=>{const k=e.target.dataset.k;if(!k) return;SET[k]=+e.target.value;const d=SETS.find(x=>x[0]===k);$('#sv_'+k).textContent=d[5](SET[k]);if(k==='rd'){RD=SET.rd;scene.fog.far=W.dim==='nether'?60:RD*16;}if(k==='btn') document.documentElement.style.setProperty('--tb',SET.btn);saveSet();});
-$('#setList').addEventListener('click',e=>{const c=e.target.closest('[data-col]');if(c){SET.color=c.dataset.col;P.color=SET.color;if(selfModel){scene.remove(selfModel.g);selfModel=null;}renderSettings();saveSet();}if(e.target.id==='s_bob'){SET.bob=!SET.bob;renderSettings();saveSet();}if(e.target.id==='s_shader'){SET.shader=(SET.shader+1)%3;applyShader();renderSettings();saveSet();}if(e.target.id==='s_vein'){SET.vein=(SET.vein+1)%3;renderSettings();saveSet();}if(e.target.id==='s_bubble'){SET.bubble=SET.bubble?0:1;renderSettings();saveSet();}if(e.target.id==='s_ctime'){SET.chatTime=SET.chatTime?0:1;renderSettings();saveSet();}if(e.target.id==='s_mini'){SET.mini=SET.mini?0:1;$('#mini').hidden=!SET.mini||!running;renderSettings();saveSet();}if(e.target.id==='s_keys'){toggleHelp(true);}if(e.target.id==='s_blood'){SET.blood=SET.blood?0:1;renderSettings();saveSet();}if(e.target.id==='s_pack'){SET.pack=SET.pack?0:1;renderSettings();saveSet();toast(SET.pack?'背包模組已開啟：用皮革和箱子合成背包，拿在手上按右鍵（或按 B）打開':'背包模組已關閉');}if(e.target.id==='s_look'){SET.look=!SET.look;renderSettings();saveSet();}if(e.target.id==='s_fps'){SET.fps=!SET.fps;$('#fps').hidden=!SET.fps;renderSettings();saveSet();}});
+$('#setList').addEventListener('click',e=>{const c=e.target.closest('[data-col]');if(c){SET.color=c.dataset.col;P.color=SET.color;if(selfModel){scene.remove(selfModel.g);selfModel=null;}renderSettings();saveSet();}if(e.target.id==='s_bob'){SET.bob=!SET.bob;renderSettings();saveSet();}if(e.target.id==='s_shader'){SET.shader=(SET.shader+1)%3;applyShader();renderSettings();saveSet();}if(['s_vein','s_blood','s_pack','s_farmmod'].includes(e.target.id)&&isMember()){toast('只有創作者（房主）可以改模組');return;}if(e.target.id==='s_vein'){SET.vein=(SET.vein+1)%3;renderSettings();saveSet();rulesBcast();}if(e.target.id==='s_bubble'){SET.bubble=SET.bubble?0:1;renderSettings();saveSet();}if(e.target.id==='s_ctime'){SET.chatTime=SET.chatTime?0:1;renderSettings();saveSet();}if(e.target.id==='s_mini'){SET.mini=SET.mini?0:1;$('#mini').hidden=!SET.mini||!running;renderSettings();saveSet();}if(e.target.id==='s_keys'){toggleHelp(true);}if(e.target.id==='s_blood'){SET.blood=SET.blood?0:1;renderSettings();saveSet();rulesBcast();}if(e.target.id==='s_farmmod'){farmToggle();renderSettings();}if(e.target.id==='s_pack'){SET.pack=SET.pack?0:1;renderSettings();saveSet();rulesBcast();toast(SET.pack?'背包模組已開啟：用皮革和箱子合成背包，拿在手上按右鍵（或按 B）打開':'背包模組已關閉');}if(e.target.id==='s_look'){SET.look=!SET.look;renderSettings();saveSet();}if(e.target.id==='s_fps'){SET.fps=!SET.fps;$('#fps').hidden=!SET.fps;renderSettings();saveSet();}});
 $('#setList').addEventListener('change',e=>{if(e.target.id==='s_name'){SET.name=e.target.value.trim().slice(0,16)||SET.name;saveSet();}});
 on('set_back',()=>showScreen(SETBACK));
 document.documentElement.style.setProperty('--tb',SET.btn);
@@ -2527,10 +2529,11 @@ function onKey(e){if(e.target&&e.target.tagName==='INPUT') return true;
   if(e.code==='F2'){e.preventDefault();SHOT=true;return true;}
   if(e.code==='KeyM'){SET.mini=SET.mini?0:1;saveSet();$('#mini').hidden=!SET.mini;toast(SET.mini?'小地圖：開':'小地圖：關');return true;}
   if(e.code==='KeyL'){SET.shader=(SET.shader+1)%3;applyShader();saveSet();toast('光影包：'+['關','開','高畫質'][SET.shader]);return true;}
+  if(e.code==='KeyV'&&isMember()){toast('只有創作者（房主）可以改模組');return true;}
   if(e.code==='KeyV'){SET.vein=(SET.vein+1)%3;saveSet();toast('連鎖挖掘：'+['關','開（蹲下時）','開（一直）'][SET.vein]);return true;}
   if(e.code==='KeyG'&&(W.cheats||W.mode==='creative')&&!(NET.on&&!NET.host)){W.mode=W.mode==='creative'?'survival':'creative';P.fly=false;hudKey='';toast('遊戲模式：'+(W.mode==='creative'?'創造':'生存'));return true;}
   if(e.code==='Tab'){e.preventDefault();showPlist(true);return true;}
-  if(e.code==='KeyB'&&SET.pack){const i=P.inv.findIndex(x=>x&&(x.id===IT.I_BACKPACK||x.id===IT.I_BIGPACK));if(i>=0){openBag(P.inv[i]);return true;}toast('你還沒有背包：用 8 個皮革圍住 1 個箱子合成');return true;}
+  if(e.code==='KeyB'&&modOn('pack')){const i=P.inv.findIndex(x=>x&&(x.id===IT.I_BACKPACK||x.id===IT.I_BIGPACK));if(i>=0){openBag(P.inv[i]);return true;}toast('你還沒有背包：用 8 個皮革圍住 1 個箱子合成');return true;}
   if(e.code==='KeyT'||e.code==='Enter'){e.preventDefault();openChat('');return true;}if(e.code==='Slash'){e.preventDefault();openChat('/');return true;}
   return false;}
 // ---- 觸控 ----
@@ -2559,7 +2562,7 @@ const KEYS=[['移動','W A S D'],['跳／游泳往上','空白鍵'],['蹲下（�
   ['快捷鍵說明','H'],['隱藏介面（拍照用）','F1'],['截圖存檔','F2'],['座標和除錯資訊','F3'],['第一／第三人稱','F5'],['放大鏡頭（望遠）','按住 Z'],['小地圖開關','M'],['光影包切換','L'],['連鎖挖掘切換','V'],
   ['打開背包（背包模組）','B'],['生存／創造切換（可作弊時）','G'],['看線上玩家','按住 Tab'],['創造模式飛行','連按兩下空白鍵']];
 function toggleHelp(force){const el=$('#help');const show=force===true?true:force===false?false:el.hidden;el.hidden=!show;if(show&&!uiOpen) uiOpen='help';if(!show&&uiOpen==='help') uiOpen=null;if(show){el.innerHTML=`<div class="help-box"><h2>快捷鍵</h2><div class="help-grid">${KEYS.map(([a,b])=>`<span>${a}</span><kbd>${b}</kbd>`).join('')}</div><button class="mcb" id="helpClose">關閉（H）</button></div>`;$('#helpClose').onclick=()=>toggleHelp(false);if(document.pointerLockElement) document.exitPointerLock();}else if(running&&!paused&&!uiOpen) lockPointer();}
-function showPlist(on){const el=$('#plist');if(!on){el.hidden=true;return;}const names=[SET.name+(NET.on&&NET.host?'（主機）':'')].concat(NET.on?[...NET.peers.values()].map(p=>p.name):[]);el.innerHTML=`<b>線上玩家（${names.length}）</b>`+names.map(n=>`<div>${esc(n)}</div>`).join('');el.hidden=false;}
+function showPlist(on){const el=$('#plist');if(!on){el.hidden=true;return;}const names=NET.on&&!NET.host?[(NET.hostName||'房主')+'　👑 創作者',SET.name+'　成員（你）'].concat([...NET.peers.values()].filter(p=>p.name!==NET.hostName).map(p=>p.name+'　成員')):[SET.name+(NET.on?'　👑 創作者（你）':'')].concat(NET.on?[...NET.peers.values()].map(p=>p.name+'　成員'):[]);el.innerHTML=`<b>線上玩家（${names.length}）</b>`+names.map(n=>`<div>${esc(n)}</div>`).join('');el.hidden=false;}
 addEventListener('keyup',e=>{if(e.code==='Tab') showPlist(false);});
 let SHOT=false;
 
@@ -2940,7 +2943,7 @@ function relOf(k){P.frel=P.frel||{};return P.frel[k]||(P.frel[k]={p:0,t:0,g:[]})
 const hearts=k=>Math.floor(relOf(k).p/250);
 function addRel(k,n){const r=relOf(k);const cap=P.frel._married===k?3500:P.frel._dating===k?2500:2000;r.p=clamp(r.p+n,0,cap);}
 function giftTaste(t,id){const d=DEF(id);const key=isItem(id)?d.key:'B:'+d.key;if(t.love.includes(key)) return 'love';if(t.like.includes(key)) return 'like';if(d.food&&d.food>=6||FPRICE[key]>=150) return 'like';if(!d.food&&fPrice(id)<=2) return 'dislike';return 'neutral';}
-function townTalk(m,s){if(!W.farm){toast('（這位鎮民好像在發呆…）');return;}const t=TOWN[m.wool];if(!t) return;UI.npc={eid:m.eid,i:m.wool};m.ai.t=4;m.ai.tx=m.x;m.ai.tz=m.z;
+function townTalk(m,s){if(!W.farm){toast('（這位鎮民好像在發呆…）');return;}if(m.fsleep){fBub(m,'💤 Zzz…',3);toast(`${(TOWN[m.wool]||{}).n||'鎮民'}睡著了，明天早上再來吧`);return;}const t=TOWN[m.wool];if(!t) return;UI.npc={eid:m.eid,i:m.wool};m.ai.t=4;m.ai.tx=m.x;m.ai.tz=m.z;
   const r=relOf(t.k);UI.npcLine=null;if(r.t!==W.day){r.t=W.day;addRel(t.k,20);UI.npcLine=pickLine(t);}else UI.npcLine=pickLine(t);
   const ev=TEV[t.k];const n=r.ev||0;if(ev&&n<3&&hearts(t.k)>=[2,4,6][n]){r.ev=n+1;UI.npcLine='💗 '+ev[n];addRel(t.k,50);if(n===2&&TGIFT[t.k]){const id=IT[TGIFT[t.k][0]];if(id!==undefined) addOrDrop({id,n:3});}playSnd('level',0.5);}
   if(m.fs&&m.fs.mode!=='post'){m.fs.mode='idle';m.fs.wait=Math.max(m.fs.wait||0,6);m.vx=m.vz=0;m.yaw=Math.atan2(P.x-m.x,P.z-m.z);}openUI('npc');playSnd('hmm');}
@@ -3239,6 +3242,19 @@ $('#tutNext').onclick=()=>{if(tutI>=tutN-1) closeTut();else tutGo(tutI+1);};$('#
 $('#tutTrack').addEventListener('scroll',()=>{const tr=$('#tutTrack');const i=Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth));if(i!==tutI){tutI=i;tutUpd();}},{passive:true});
 for(const ev of ['pointerdown','touchstart','keydown','wheel']) $('#tut').addEventListener(ev,e=>e.stopPropagation(),{passive:true});
 function tutMaybe(){let seen=false,seenF=false;try{seen=!!localStorage.getItem('mmvox_tut');seenF=!!localStorage.getItem('mmvox_tutfarm');}catch(e){}if(!seen||(W.farm&&!seenF)) setTimeout(()=>{if(running) openTut();},600);}
+
+// ================= 創作者（房主）與成員：模組只有創作者能決定 =================
+const isMember=()=>NET.on&&!NET.host;
+const hostRules=()=>({vein:SET.vein,pack:SET.pack,blood:SET.blood});
+function modOn(k){return isMember()&&W.rules&&W.rules[k]!==undefined?W.rules[k]:SET[k];}
+function rulesBcast(){if(NET.on&&NET.host) hostBcast({t:'rules',r:hostRules(),farm:W.farm});}
+function rulesRecv(o){if(!isMember()) return;const old=W.rules||{};W.rules=o.r;const nm={vein:'連鎖挖掘',pack:'背包',blood:'血跡'};
+  for(const k in o.r) if(old[k]!==undefined&&!!old[k]!==!!o.r[k]) toast(`👑 創作者把「${nm[k]}模組」${o.r[k]?'打開':'關掉'}了`);
+  if(o.farm!==undefined&&o.farm!==W.farm){W.farm=o.farm;toast(`👑 創作者把「農場物語模組」${o.farm?'打開':'關掉'}了`);}
+  if(!$('#s_settings')||!$('#s_settings').hidden) try{renderSettings();}catch(e){}}
+function farmToggle(){if(isMember()) return;if(W.farm){W.farm=false;toast('🌱 農場物語模組已關閉（農場和小鎮都還在，再打開就能繼續）');rulesBcast();return;}
+  if(NET.on&&(!W.fm||!W.fm.town)){toast('第一次打開農場物語模組要蓋小鎮，請先關掉多人連線再打開，蓋好後再開房間');return;}
+  W.farm=true;if(!W.fm||!W.fm.town){farmKit();}else toast('🌱 農場物語模組已打開');rulesBcast();}
 
 // ================= 主迴圈 =================
 const rainG=(()=>{const n=600,p=new Float32Array(n*6);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));const m=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x9ab0d8,transparent:true,opacity:0.5}));m.frustumCulled=false;m.visible=false;scene.add(m);
