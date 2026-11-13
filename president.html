@@ -2299,9 +2299,9 @@ function facSync(quiet){if(!state||!state.W||!state.ind||state.W.own[state.W.me]
   if(!quiet&&state.facInit){const t=x=>[x.civ?`${x.civ} 座民用工廠`:"",x.mil?`${x.mil} 座軍工廠`:""].filter(Boolean).join("、");
     if(lost.civ||lost.mil){log(`🏭 領土失守，失去 ${t(lost)}`);toast(`🏭 失去 ${t(lost)}`);}if(got.civ||got.mil){log(`🏭 接收佔領區的 ${t(got)}`);toast(`🏭 接收 ${t(got)}！`);}}
   state.facInit=1;}
-function facBuildStart(){const F=ui.fpick,I=state.ind,c=BUILD[F.type][1]*F.n;if(!F.sel.length||I.q||state.stats.treasury<c)return;state.stats.treasury-=c;I.q={type:F.type,left:buildTurns(F.n),n:F.n,locs:F.sel.slice()};
+function facBuildStart(){const F=ui.fpick,I=state.ind;F.n=F.sel.length;const c=BUILD[F.type][1]*F.n;if(!F.sel.length||I.q||state.stats.treasury<c)return;state.stats.treasury-=c;I.q={type:F.type,left:buildTurns(F.n),n:F.n,locs:F.sel.slice()};
   log(`開始在 ${F.sel.map(x=>GBY[x].n).join("、")} 興建 ${F.n} 座${BUILD[F.type][0]}`);toast(`🏗 ${F.n} 座${BUILD[F.type][0]}開工`);ui.fpick=null;save();render();}
-function buildTurns(n=1){return Math.max(1,Math.max(2,4-Math.floor(state.ind.civ/10))-(hasT("smart")?1:0))+Math.floor((n-1)/2);}
+function buildTurns(n=1){return Math.max(3,5-Math.floor(state.ind.civ/15)-(hasT("smart")?1:0))+Math.floor((n-1)/2);}
 const BUILD={civ:["民用工廠",40],mil:["軍工廠",50]};
 function budget(forTurn){const s=state.stats,cab=state.cab;const rate={low:.5,mid:.7,high:.9}[state.tax];
   const scale=1+Math.min(state.turn,40)*.0075;
@@ -2689,7 +2689,7 @@ function renderInd(){const I=state.ind,L=state.laws,R=state.res,dis=state.pendin
     <div class="force"><div class="k">人力</div><div class="v">${Math.round(state.mp)} 萬</div><div class="k">每季 +${r1(mg+occMp())}${occMp()>0?`（佔領區 +${occMp()}）`:""}・最多 ${mpCap()} 師</div></div></div>
    <div class="nbr" style="margin-bottom:6px"><span class="dir">建設中</span>${I.q?`<h5>${I.q.n||1} 座${BUILD[I.q.type][0]}・還要 ${I.q.left} 季${I.q.locs?`（${I.q.locs.map(x=>GBY[x].n).join("、")}）`:""}</h5>`:`<h5 style="color:var(--muted)">沒有工程</h5>`}
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px"><span class="k" style="font-size:.8rem;color:var(--muted)">一次蓋幾座：</span><div class="stepper sm2"><button type="button" data-bq="${Math.max(1,bq()-1)}" aria-label="少一座">−</button><input id="bqIn" type="number" inputmode="numeric" min="1" max="40" value="${bq()}" aria-label="座數" style="width:3.6em;text-align:center;background:var(--desk);color:var(--paper);border:0;font:inherit"><button type="button" data-bq="${Math.min(40,bq()+1)}" aria-label="多一座">＋</button></div><div class="seg">${[1,5,10,20].map(n=>`<button type="button" data-bq="${n}" aria-pressed="${bq()===n}">${n}</button>`).join("")}<button type="button" data-bq="${clamp(Math.floor(state.stats.treasury/40),1,40)}" title="用國庫能蓋的最多數量">最多</button></div></div>
-    <div class="waracts" style="margin-top:6px">${Object.entries(BUILD).map(([k,[n,c]])=>`<button class="btn" type="button" data-build="${k}" ${I.q||state.stats.treasury<c*bq()||state.pending?"disabled":""}>蓋 ${bq()} 座${n}（${c*bq()} 億・${buildTurns(bq())} 季）▶ 選地點</button>`).join("")}</div><p class="hint" style="margin:6px 0 0">工廠會蓋在你選的土地上。⚠ 那塊地被敵人打下來，上面的工廠就全部歸敵人；搶回來就拿回來。</p></div>`;
+    <div class="waracts" style="margin-top:6px">${Object.entries(BUILD).map(([k,[n,c]])=>`<button class="btn" type="button" data-build="${k}" ${I.q||state.stats.treasury<c||state.pending?"disabled":""}>蓋${n}（每座 ${c} 億・${buildTurns(1)} 季起）▶ 選地點</button>`).join("")}</div><p class="hint" style="margin:6px 0 0">工廠會蓋在你選的土地上。⚠ 那塊地被敵人打下來，上面的工廠就全部歸敵人；搶回來就拿回來。</p></div>`;
   {const PL=prodL(),EQ=eqS(),mm=milMul(),LN=[["inf","🪖 步兵裝備","提升軍力（陸軍師的槍砲彈藥）",`軍力每季 +${r1(PL.inf*.12*mm*15/B())}`,""],["arm","🛡 戰車","供應師編制裡的戰車營",`需要 ${tankNeed()} 輛`,`庫存 ${Math.round(EQ.arm)} 輛`],["air","✈ 戰機","增加空軍數量，爭奪制空權",`空軍 +${Math.round(Math.min(30,EQ.air/4))}`,`庫存 ${Math.round(EQ.air)} 架`],["nav","⚓ 艦艇","組建海軍，提高登陸成功率（15 艘以上可登陸）",`登陸 +${Math.round(Math.min(.2,EQ.nav/120)*100)}%`,`庫存 ${Math.round(EQ.nav)} 艘`]];
    h+=`<h3 style="margin-top:20px">生產線</h3><p class="hint">像鋼鐵雄心一樣，把軍工廠分配到不同生產線。沒分配的軍工廠都生產步兵裝備。戰爭中戰車和戰機會損耗。</p><div class="plines">${LN.map(([k,n,d,fx,st])=>`<div class="pline"><div><b>${n}</b><small>${d}</small></div><div class="pl-r"><span class="num">${fx}</span><small>${st}</small></div><div class="stepper sm2">${k==="inf"?`<span>${PL.inf} 座</span>`:`<button type="button" data-pl="${k}:-1" ${PL[k]<=0?"disabled":""} aria-label="減少">−</button><span>${PL[k]} 座</span><button type="button" data-pl="${k}:1" ${PL.inf<=0?"disabled":""} aria-label="增加">＋</button>`}</div></div>`).join("")}</div>`;}
   h+=`<h3 style="margin-top:20px">科技研究</h3><p class="hint">研究不花錢，只花時間。同時可以研究 ${slotsN()} 項${state.flags.tech?"":"（完成「科技島計畫」多 1 個研究槽）"}。</p>
@@ -2766,8 +2766,8 @@ function paintLabels(){if(!state||!state.W)return;const W=state.W,z=ui.vb[2]/100
     h+=`<text x="${g.c[0]}" y="${g.c[1]}" font-size="${f.toFixed(1)}" stroke-width="${(f/4).toFixed(2)}" class="lbl${o===W.me?" mine":""}">${tagName(o)}</text>`;}
   $("#wlab").innerHTML=h;}
 function fpickBar(){let b=$("#fpBar");const box=document.querySelector("#p-map .wbox");if(!box)return;if(!ui.fpick||!state||state.over){if(b)b.remove();return;}
-  if(!b){b=document.createElement("div");b.id="fpBar";b.className="fpbar";box.parentNode.insertBefore(b,box);}const F=ui.fpick,c=BUILD[F.type][1]*F.n;
-  b.innerHTML=`<b>🏭 選地點：${F.n} 座${BUILD[F.type][0]}</b><span>點你的領土（可以選很多塊），再點一次取消。已選 <b>${F.sel.length}</b> 塊${F.sel.length?`：${F.sel.slice(0,6).map(x=>GBY[x].n).join("、")}${F.sel.length>6?"…":""}`:""}</span><button class="btn sm" type="button" id="fpGo" ${F.sel.length&&state.stats.treasury>=c&&!state.ind.q?"":"disabled"}>✅ 開工（${c} 億）</button><button class="ghost sm" type="button" id="fpNo">取消</button>`;
+  if(!b){b=document.createElement("div");b.id="fpBar";b.className="fpbar";box.parentNode.insertBefore(b,box);}const F=ui.fpick;F.n=F.sel.length;const c=BUILD[F.type][1]*F.n;
+  b.innerHTML=`<b>🏭 選地點：每塊地蓋 1 座${BUILD[F.type][0]}（每座 ${BUILD[F.type][1]} 億）</b><span>點你的領土，選 2 塊就蓋 2 座，再點一次取消。蓋 ${F.n} 座要 ${F.sel.length?buildTurns(F.n):"－"} 季。已選 <b>${F.sel.length}</b> 塊${F.sel.length?`：${F.sel.slice(0,6).map(x=>GBY[x].n).join("、")}${F.sel.length>6?"…":""}`:""}</span><button class="btn sm" type="button" id="fpGo" ${F.sel.length&&state.stats.treasury>=c&&!state.ind.q?"":"disabled"}>✅ 開工（${c} 億）</button><button class="ghost sm" type="button" id="fpNo">取消</button>`;
   $("#fpGo").onclick=facBuildStart;$("#fpNo").onclick=()=>{ui.fpick=null;render();};}
 function renderMap(){fpickBar();const wx=$("#wxbar");if(wx)wx.textContent=(state.W.nwin>state.turn?`☢ 核冬天（剩 ${state.W.nwin-state.turn} 季）・`:"")+seasonTxt();if(!$("#wmap").dataset.built){buildMap();try{ui.big=localStorage.getItem("lanzhou-big")==="1";}catch(_){}applyBig();}paintMap();renderSel();renderWarPanel();
   document.querySelectorAll("[data-mm]").forEach(b=>b.setAttribute("aria-pressed",(ui.mm||"pol")===b.dataset.mm));}
@@ -2928,15 +2928,14 @@ function renderModal(){const v=$("#veil");const p=state.pending;v.classList.togg
      <button class="choice" type="button" data-bk="cut"><strong>✂ 緊急裁軍、變賣武器（+${60+b} 億）</strong><small>軍力 −20、後備動員取消、組織度 −20；之後軍費也變少</small></button>
      <button class="choice" type="button" data-bk="tax"><strong>📈 緊急加稅（+${80+Math.round(b/2)} 億）</strong><small>稅率調成「高」，支持率 −7</small></button></div></div>`;
     v.querySelectorAll("[data-bk]").forEach(x=>x.onclick=()=>bailout(x.dataset.bk));}
-  else if(p.kind==="fbuild"){const I=state.ind,c=BUILD[p.type][1]*p.n,busy=!!I.q;
-    v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>經濟部・工業建設</span><span>${dateStr()}</span></div><span class="stamp">建廠</span><h2>🏭 要蓋什麼工廠、蓋幾座？</h2>
+  else if(p.kind==="fbuild"){const I=state.ind,c=BUILD[p.type][1],busy=!!I.q;
+    v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>經濟部・工業建設</span><span>${dateStr()}</span></div><span class="stamp">建廠</span><h2>🏭 要蓋什麼工廠？</h2>
      ${busy?`<p style="color:#b0332a"><b>⚠ 已經有一項工程在蓋（${I.q.n} 座${BUILD[I.q.type][0]}，還要 ${I.q.left} 季），蓋好才能再開工。</b></p>`:""}
      <div class="taxrow" style="margin-bottom:10px;width:auto">${Object.entries(BUILD).map(([k,[n,cc]])=>`<button type="button" data-ft="${k}" aria-pressed="${p.type===k}">${k==="civ"?"🏢":"🏭"} ${n}（每座 ${cc} 億）</button>`).join("")}</div>
-     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px"><b>數量</b><button class="pbtn" type="button" data-fn="-1">−</button><b style="font-size:1.6rem;min-width:2em;text-align:center">${p.n}</b><button class="pbtn" type="button" data-fn="1">＋</button>${[1,5,10,20].map(n=>`<button class="pbtn" type="button" data-fs="${n}" style="padding:4px 8px">${n}</button>`).join("")}</div>
-     <p>總價 <b>${c}</b> 億（國庫 ${Math.round(state.stats.treasury)} 億）・要 ${buildTurns(p.n)} 季蓋好。<br>${p.type==="civ"?"民用工廠每季帶來收入。":"軍工廠每季生產武器裝備。"}下一步到地圖上選要蓋在哪裡（可以選好幾塊地，工廠會平均分配）。</p>
+          <p>每座 <b>${c}</b> 億（國庫 ${Math.round(state.stats.treasury)} 億）・約 ${buildTurns(1)} 季以上蓋好，蓋越多越久。<br>${p.type==="civ"?"民用工廠每季帶來收入。":"軍工廠每季生產武器裝備。"}下一步到地圖上點要蓋的地點：<b>一塊地蓋一座</b>，選兩塊就是兩座。</p>
      <div style="display:flex;gap:8px"><button class="pbtn" type="button" id="fbGo" ${busy||state.stats.treasury<c?"disabled":""}>📍 下一步：選地點 ▶</button><button class="pbtn" type="button" id="cancel">取消</button></div></div>`;
     v.querySelectorAll("[data-ft]").forEach(b=>b.onclick=()=>{p.type=b.dataset.ft;render();});v.querySelectorAll("[data-fn]").forEach(b=>b.onclick=()=>{p.n=clamp(p.n+ +b.dataset.fn,1,40);render();});v.querySelectorAll("[data-fs]").forEach(b=>b.onclick=()=>{p.n=+b.dataset.fs;render();});
-    $("#cancel").onclick=()=>{state.pending=null;render();};$("#fbGo").onclick=()=>{state.bq=p.n;ui.fpick={type:p.type,n:p.n,sel:[]};state.pending=null;ui.tab="map";render();};}
+    $("#cancel").onclick=()=>{state.pending=null;render();};$("#fbGo").onclick=()=>{ui.fpick={type:p.type,n:0,sel:[]};state.pending=null;ui.tab="map";render();};}
   else if(p.kind==="heroname"){const sug=HERONM.filter(n=>!(state.heroes||[]).some(h=>h.n===n));
     v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>參謀本部</span><span>授勳</span></div><span class="stamp">王牌</span><h2>🏅 第 ${p.no} 師戰功彪炳，升格為王牌部隊！</h2><p>幫這支部隊取個威風的名字吧！王牌部隊每顆星讓全軍戰力 +1.5%，打越多仗升越多星（最多 3 星）。</p>
      <input id="hrIn" maxlength="10" value="${sug[0]||"英雄第"+p.no+"師"}" style="width:100%;font-size:1.1rem;padding:8px;margin-bottom:8px;border:1px solid #b9a575">
@@ -3210,7 +3209,7 @@ function showStart(){const v=$("#veil");v.hidden=false;const sv=loadSave();const
 
 /* ================= wiring ================= */
 document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest("#hflag")&&state&&!state.pending&&!state.over){state.pending={kind:"flag",f:JSON.parse(JSON.stringify(myFlag()))};render();}});
-document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest("#facBtn")&&state&&!state.over&&!state.pending){state.pending={kind:"fbuild",type:"civ",n:bq()};render();}});
+document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest("#facBtn")&&state&&!state.over&&!state.pending){state.pending={kind:"fbuild",type:"civ",n:1};render();}});
 document.addEventListener("change",e=>{if(e.target&&e.target.id==="bqIn"&&state){state.bq=clamp(Math.round(+e.target.value)||1,1,40);save();render();}});
 document.addEventListener("click",e=>{const t=e.target.closest("[data-f],[data-mars],[data-alien],[data-zb],[data-dec],[data-tax],[data-tab],[data-post],[data-wonder],[data-law],[data-build],[data-tech],[data-bq],[data-pl],[data-tb],[data-ts],[data-tw],[data-tdel],[data-tadd],[data-dep],[data-airm],[data-blk],[data-act],[data-wst],[data-gen],[data-z],[data-mm],[data-comp]");if(!t||!state||t.disabled)return;
   if(t.dataset.f){ui.sel=t.dataset.f;renderTree();renderFocusDetail();}
@@ -3232,7 +3231,7 @@ document.addEventListener("click",e=>{const t=e.target.closest("[data-f],[data-m
   else if(t.dataset.blk){const e=t.dataset.blk,W=state.W;W.blk=W.blk||{};if(W.blk[e])W.blk[e]=0;else if(seaCtl(e)>=55){W.blk[e]=1;applyFx({tension:2});log(`海軍開始封鎖${tagName(e)}的港口`);}save();render();}
   else if(t.dataset.pl){const [k,d]=t.dataset.pl.split(":");prodL();const P=state.prod;if(+d<0&&P[k]>0)P[k]--;else if(+d>0&&prodL().inf>0)P[k]++;save();render();}
   else if(t.dataset.law){const [k,id]=t.dataset.law.split(":");if(!state.pending&&state.laws[k]!==id&&lawOk(k,id)&&state.pp>=30){state.pp-=30;state.laws[k]=id;log(`${LAWS[k].title}改為「${LAWS[k].opts.find(o=>o[0]===id)[1]}」`);save();render();}}
-  else if(t.dataset.build){const k=t.dataset.build,n=bq(),c=BUILD[k][1]*n;if(!state.pending&&!state.ind.q&&state.stats.treasury>=c){ui.fpick={type:k,n,sel:[]};ui.tab="map";render();}}
+  else if(t.dataset.build){const k=t.dataset.build,c=BUILD[k][1];if(!state.pending&&!state.ind.q&&state.stats.treasury>=c){ui.fpick={type:k,n:0,sel:[]};ui.tab="map";render();}}
   else if(t.dataset.bq){state.bq=clamp(Math.round(+t.dataset.bq)||1,1,40);save();render();}
   else if(t.dataset.tech){const tt=TBY[t.dataset.tech],i=state.res.slots.findIndex(x=>!x);if(!state.pending&&i>=0&&techState(tt)==="avail"){state.res.slots[i]={id:tt.id,left:tt.t};log(`開始研發：${tt.n}`);save();render();}}
   else if(t.dataset.act)handleAct(t.dataset.act,t.dataset.s);
