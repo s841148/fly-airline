@@ -243,6 +243,7 @@ body.touch .toast{font-size:13px}
  <tr><td>地獄火</td><td>射程約 8～11 公里。準星對準敵人約 1 秒，框框變紅「鎖定」再發射，飛彈會自己追過去。中間被山擋住就鎖不到</td></tr>
  <tr><td>R／點雷達</td><td>雷達範圍切換：3 公里／11 公里（看遠方的敵人）</td></tr>
  <tr><td>Z / X / G</td><td>指揮僚機：Z 跟著我、X 集中攻擊準星對準的敵人、G 自由攻擊（手機點「僚機」鈕切換）</td></tr>
+<tr><td>僚機彈藥</td><td>僚機的機砲、火箭和地獄火也會用完，用完會自己飛回基地停機坪補給約 10 秒再回來</td></tr>
 <tr><td>F</td><td>投熱焰彈：聽到「飛彈來襲」時按，可以騙走敵人的飛彈</td></tr>
  <tr><td>V</td><td>切換視角（追蹤／駕駛艙／遠景）</td></tr>
  <tr><td>M</td><td>大地圖</td></tr>
@@ -571,38 +572,84 @@ function cyl(r1,r2,l,c,x,y,z,rx,rz,par,seg){ const m=new T.Mesh(new T.CylinderGe
 const GLASS=USE_PBR?new T.MeshStandardMaterial({color:0x14222b,roughness:.06,metalness:.85,envMapIntensity:1.6}):new T.MeshPhongMaterial({color:0x1b2b33,shininess:120,specular:0x99bbcc});
 const DARKM=c=>mat(c,{metalness:.55,roughness:.42});
 function makeApache(col,enemy){
- const g=new T.Group(), c=col, dk=enemy?0x30343a:0x262c24, D=DARKM(dk);
+ const g=new T.Group(), c=col, dk=enemy?0x2a2826:0x1b2022, D=DARKM(dk), P=mat(c,{metalness:.22,roughness:.5}), L=mat(enemy?0x8a7a64:0x59625a,{metalness:.3,roughness:.5});
+ const K=mat(0x0e0e0e,{metalness:.3,roughness:.6}), MS=mat(0xc9ccc6,{metalness:.55,roughness:.3}), MT=mat(enemy?0x6a5a40:0x4a5240,{metalness:.3,roughness:.5});
  const body=new T.Group(); g.add(body);
- ell(.95,.9,3.7,c,0,0,.4,body,22);                       // 機身（橢球）
- ell(.66,.56,1.9,c,0,-.22,-3.7,body,18);                  // 前機身
- ell(.4,.38,.55,D,0,-.55,-5.15,body,14);                  // 下巴瞄準儀
- ell(.2,.2,.14,GLASS,0,-.55,-5.62,body,10);
- ell(.52,.54,1.2,GLASS,0,.82,-3.45,body,16);              // 前座艙罩
- ell(.58,.66,1.35,GLASS,0,1.15,-1.9,body,16);             // 後座艙罩
+ const tilt=(m,x,y,z)=>{ m.rotation.set(x||0,y||0,z||0); return m; };
+ // ── 機身：細長、稜線分明 ──
+ ell(.82,.78,3.3,P,0,.05,.35,body,24);                      // 中機身
+ ell(.6,.56,1.9,P,0,-.2,-3.55,body,20);                      // 前機身
+ rbox(1.25,.5,3.4,.16,P,0,-.62,-.9,body);                    // 腹部電子艙
+ rbox(1.3,.22,1.6,.08,D,0,-.9,-.5,body);                     // 腹部檢修板
+ // 座艙：前（砲手）低、後（飛行員）高，平板擋風玻璃
+ rbox(1.0,.3,1.25,.1,P,0,.64,-3.35,body);                    // 前座艙底座
+ rbox(1.02,.34,1.5,.1,P,0,.92,-1.7,body);                    // 後座艙底座
+ ell(.46,.46,1.05,GLASS,0,.92,-3.3,body,16);                 // 前座艙罩
+ tilt(box(.78,.03,.66,GLASS,0,.96,-4.1,body),.62,0,0);       // 前擋風玻璃
+ ell(.5,.58,1.25,GLASS,0,1.32,-1.72,body,16);                // 後座艙罩
+ tilt(box(.84,.03,.7,GLASS,0,1.3,-2.62,body),.55,0,0);       // 後擋風玻璃
+ rbox(1.06,.62,.14,.05,D,0,1.12,-2.52,body);                 // 座艙隔板（防彈）
+ for(const s of [-1,1]){ box(.04,.55,.04,D,s*.46,1.2,-2.0,body); box(.04,.5,.04,D,s*.4,.9,-3.35,body); }
+ // 機鼻：目標指示/夜視感測器（TADS/PNVS）
+ ell(.34,.3,.46,D,0,-.28,-4.95,body,16);
+ ell(.2,.2,.1,GLASS,-.13,-.28,-5.36,body,10); ell(.16,.16,.1,mat(0x6a1f1f,{metalness:.7,roughness:.2}),.14,-.3,-5.36,body,10);
+ ell(.26,.2,.34,D,0,.28,-5.0,body,14); ell(.14,.14,.08,GLASS,0,.28,-5.32,body,10);   // 夜視 PNVS
+ cyl(.012,.012,.6,0x222222,0,.0,-5.62,Math.PI/2,0,body,5);   // 空速管
+ // 發動機艙與進氣口、排氣
  for(const s of [-1,1]){
-  ell(.55,.52,2.0,D,s*1.02,.62,.9,body,14);               // 發動機艙
-  cyl(.3,.4,.5,0x151515,s*1.02,.62,3.05,Math.PI/2,0,body,10); // 排氣口
+  ell(.5,.5,2.15,P,s*1.0,.7,.95,body,18);
+  ell(.32,.32,.24,K,s*1.0,.7,-1.08,body,12);                 // 進氣口
+  cyl(.3,.24,.34,L,s*1.0,.74,-1.28,Math.PI/2,0,body,12);     // 進氣護蓋
+  cyl(.27,.34,.75,K,s*1.04,.72,3.1,Math.PI/2,0,body,12);     // 排氣（紅外抑制）
+  rbox(.2,.06,1.6,.02,D,s*.98,1.16,1.1,body);                 // 引擎艙上方散熱格
  }
- cyl(.24,.52,8.2,c,0,.38,7.0,Math.PI/2,0,body,14);        // 尾桁（越來越細）
- rbox(.2,2.8,1.5,.09,c,0,1.55,10.15,body);                // 垂直尾翼
- rbox(3.7,.12,.95,.055,c,0,.35,10.35,body);               // 水平尾翼
- rbox(4.9,.2,1.25,.09,c,0,-.32,-.3,body);                 // 短翼
+ rbox(1.5,.14,1.5,.06,P,0,1.08,.25,body);                    // 引擎間整流罩
+ // 尾桁、垂直尾翼、水平安定面
+ cyl(.2,.5,8.6,P,0,.55,7.1,Math.PI/2,0,body,16);
+ rbox(.16,2.7,1.7,.07,P,0,1.8,10.35,body); tilt(body.children[body.children.length-1],-.22,0,0);
+ rbox(.3,.4,1.2,.12,P,0,.62,9.65,body);                      // 尾桁與垂尾銜接
+ rbox(4.0,.1,1.0,.05,P,0,.45,10.75,body);                    // 水平尾翼
+ for(const s of [-1,1]) cyl(.03,.03,.9,0xd0d0d0,s*1.0,.46,10.2,0,0,body,5);
+ cyl(.016,.016,1.0,0x222222,0,1.15,5.2,0,0,body,5);          // 天線
+ cyl(.016,.016,.8,0x222222,0,-.9,2.0,0,0,body,5);
+ // 尾輪
+ rbox(.09,1.0,.12,.03,0x1c1c1c,0,-.08,8.7,body); cyl(.17,.17,.12,0x151515,0,-.72,8.7,0,Math.PI/2,body,12);
+ // 國徽（青天白日）貼在垂尾兩側
  for(const s of [-1,1]){
-  ell(.36,.36,1.05,mat(enemy?0x555a50:0x45503d),s*1.25,-.78,-.7,body,12);      // 火箭莢艙
-  for(const t of [-.2,.2]) for(const u of [-.2,.2]){ ell(.09,.09,.8,mat(0xc8ccc8,{metalness:.5,roughness:.35}),s*2.25+t,-.77+u,-.75,body,8); } // 地獄火
+  const a=new T.Mesh(new T.CircleGeometry(.34,20),new T.MeshBasicMaterial({color:enemy?0xb02020:0x1f3f9a})); a.rotation.y=s*Math.PI/2; a.position.set(s*.095,2.05,10.2); body.add(a);
+  const b=new T.Mesh(new T.CircleGeometry(.15,16),new T.MeshBasicMaterial({color:0xffffff})); b.rotation.y=s*Math.PI/2; b.position.set(s*.098,2.05,10.2); body.add(b); }
+ // ── 短翼與武裝：外側 4 枚地獄火、內側 19 管火箭莢艙 ──
+ rbox(5.4,.17,1.25,.07,P,0,-.18,-.35,body);
+ for(const s of [-1,1]){
+  box(.1,.3,.55,D,s*1.35,-.4,-.55,body); box(.1,.3,.55,D,s*2.35,-.4,-.55,body);
+  cyl(.3,.3,1.55,MT,s*1.35,-.78,-.6,Math.PI/2,0,body,16);                    // 火箭莢艙
+  cyl(.26,.3,.1,D,s*1.35,-.78,-1.4,Math.PI/2,0,body,16);
+  for(let k=0;k<7;k++){ const a=k*Math.PI/3.5; cyl(.045,.045,.02,0x050505,s*1.35+Math.cos(a)*.17*(k?1:0),-.78+Math.sin(a)*.17*(k?1:0),-1.46,Math.PI/2,0,body,6); }
+  for(const t of [-.2,.2]) for(const u of [-.12,.12]){                          // 地獄火飛彈導軌
+   const mx=s*2.35+t, my=-.64+u*1.2-.2; ell(.075,.075,.95,MS,mx,my,-.55,body,10);
+   ell(.07,.07,.2,mat(0x3c3c3c,{metalness:.4,roughness:.4}),mx,my,-1.6,body,8);
+   box(.2,.015,.1,0x555555,mx,my,.15,body); box(.015,.2,.1,0x555555,mx,my,.15,body); }
+  box(.06,.06,.6,0x222222,s*2.7,-.1,-.7,body);                                  // 翼尖天線
+  cyl(.04,.04,.55,0x2a2a2a,s*2.74,-.2,-.35,Math.PI/2,0,body,6);
  }
+ // ── 30mm 鏈砲（炮塔可轉動）──
  const gun=new T.Group(); gun.position.set(0,-1.05,-3.6); body.add(gun);
- ell(.3,.26,.5,D,0,0,0,gun,10); cyl(.065,.065,1.7,0x222222,0,0,-.95,Math.PI/2,0,gun,8);
- for(const s of [-1,1]){ rbox(.12,.75,.12,.05,0x222222,s*.95,-1.15,-2.2,body); cyl(.3,.3,.24,0x161616,s*.95,-1.55,-2.2,0,Math.PI/2,body,12); }
- cyl(.2,.2,.16,0x161616,0,-.75,9.2,0,Math.PI/2,body,10);
- cyl(.17,.22,1.0,D,0,1.5,-.4,0,0,body,10);               // 旋翼軸
- if(!enemy) ell(.62,.36,.62,mat(0x5e6a58,{metalness:.5,roughness:.4}),0,2.12,-.4,body,14); // 長弓雷達罩
- const rotor=new T.Group(); rotor.position.set(0,2.0,-.4); body.add(rotor);
- cyl(.34,.34,.26,D,0,0,0,0,0,rotor,12);
- for(let i=0;i<4;i++){ const a=new T.Group(); a.rotation.y=i*Math.PI/2; box(7.2,.06,.5,0x1d1d1d,3.8,0,0,a); rotor.add(a); }
+ ell(.3,.24,.55,D,0,0,0,gun,12); cyl(.06,.06,1.85,0x1a1a1a,0,-.02,-1.0,Math.PI/2,0,gun,8); cyl(.09,.09,.3,0x2a2a2a,0,-.02,-1.82,Math.PI/2,0,gun,8);
+ // ── 起落架 ──
+ for(const s of [-1,1]){
+  tilt(rbox(.12,1.15,.16,.04,0x252525,s*.98,-.95,-2.05,body),0,0,s*.14);
+  cyl(.26,.26,.2,0x141414,s*1.04,-1.59,-2.05,0,Math.PI/2,body,14); cyl(.12,.12,.22,0x6a6a6a,s*1.04,-1.59,-2.05,0,Math.PI/2,body,10); }
+ // ── 主旋翼：旋翼軸、長弓雷達罩、4 片槳葉 ──
+ cyl(.2,.28,1.05,D,0,1.55,-.4,0,0,body,12);
+ if(!enemy){ cyl(.1,.14,.4,D,0,2.5,-.4,0,0,body,10); ell(.62,.34,.62,mat(0x6b7468,{metalness:.5,roughness:.35}),0,2.82,-.4,body,18); }
+ const rotor=new T.Group(); rotor.position.set(0,2.05,-.4); body.add(rotor);
+ cyl(.36,.4,.28,D,0,0,0,0,0,rotor,14);
+ for(let i=0;i<4;i++){ const a=new T.Group(); a.rotation.y=i*Math.PI/2; box(.7,.12,.34,D,.55,0,0,a); rbox(6.8,.05,.5,.02,0x1b1b1b,3.95,0,0,a); box(.5,.052,.5,0xd6c040,7.2,0,0,a); rotor.add(a); }
  const disc=new T.Mesh(new T.CircleGeometry(7.4,28),new T.MeshBasicMaterial({color:0x111111,transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide})); disc.rotation.x=-Math.PI/2; disc.position.copy(rotor.position); body.add(disc);
- const tail=new T.Group(); tail.position.set(-.2,2.3,10.6); body.add(tail);
- for(let i=0;i<4;i++){ const a=new T.Group(); a.rotation.x=i*Math.PI/2; box(.05,1.5,.18,0x1d1d1d,0,.75,0,a); tail.add(a); }
+ // ── 尾旋翼（在垂尾右側）──
+ const tail=new T.Group(); tail.position.set(.3,2.0,10.55); body.add(tail);
+ cyl(.1,.1,.18,D,0,0,0,0,Math.PI/2,tail,10);
+ for(let i=0;i<4;i++){ const a=new T.Group(); a.rotation.x=i*Math.PI/2+.4; box(.04,1.25,.2,0x1b1b1b,0,.7,0,a); tail.add(a); }
  g.userData={body,rotor,tail,gun,disc};
  return g;
 }
@@ -772,8 +819,8 @@ function buildUnitModel(type,side){
  switch(type){
   case 'tank': return makeTank(c); case 'ftank': return makeTank(FCOL); case 'apc': return makeAPC(c); case 'truck': return makeTruck(c);
   case 'aa': return makeAA(c); case 'sam': return makeSAM(c); case 'boat': return makeBoat(0x5d6670); case 'aaboat': return makeBoat(0x55606a,true);
-  case 'cm32': return makeAPC(0x55634a,true); case 'fboat': return makeBoat(0x6b7d90,true,1.25); case 'fheli': return makeApache(0x4a583d,false);
-  case 'heli': return makeApache(0x5b6066,true); case 'uh60': return makeBlackhawk(); case 'target': return makeTarget(); case 'bunker': return makeBunker();
+  case 'cm32': return makeAPC(0x55634a,true); case 'fboat': return makeBoat(0x6b7d90,true,1.25); case 'fheli': return makeApache(0x3d4543,false);
+  case 'heli': return makeApache(0x6b6354,true); case 'uh60': return makeBlackhawk(); case 'target': return makeTarget(); case 'bunker': return makeBunker();
  } return new T.Group(); }
 const UNITS=new Map(); let UID=1;
 function shadowize(m){ if(!USE_SH) return; m.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } }); const d=m.userData.disc; if(d) d.castShadow=false; }
@@ -819,7 +866,7 @@ const ME={id:'H',name:PROG.name||'麥麥1號',pos:V3(),vel:V3(),yaw:0,pitch:0,ro
 const REM=new Map(); // 其他玩家
 function playerById(id){ if(id===ME.id) return ME; return REM.get(id)||null; }
 function allPlayers(){ return [ME,...REM.values()]; }
-function makeMeModel(){ if(ME.model) scene.remove(ME.model); ME.model=makeApache(0x434d3c); shadowize(ME.model); scene.add(ME.model); }
+function makeMeModel(){ if(ME.model) scene.remove(ME.model); ME.model=makeApache(0x3d4543); shadowize(ME.model); scene.add(ME.model); }
 function resetMe(sp,air){
  ME.pos.set(sp.x,0,sp.z); ME.pos.y=groundY(sp.x,sp.z)+(air?sp.alt||120:1.55); ME.vel.set(0,0,0); ME.yaw=sp.yaw||0; ME.pitch=ME.roll=0; ME.hp=100; ME.dead=false;
  ME.ammo={gun:1200,rkt:38,hf:8,fl:30}; ME.rotor=air?1:0; ME.landed=!air; ME.lockT=0; ME.lockId=0; ME.flareT=-99; ME.model.visible=true; ME.dmgTaken=0;
@@ -1197,7 +1244,23 @@ function wingCmd(m){
  else { WING.mode='free'; WING.tgt=0; toast('🚁 僚機：自由攻擊','gold'); }
  sfx('ping',.5); const b=$('tWing'); if(b) b.innerHTML='僚機<br>'+({free:'自由',follow:'跟隨',attack:'攻擊'})[WING.mode];
 }
+// 僚機彈藥：機砲 500 發、火箭 30 枚、地獄火 6 枚；用完飛回基地停機坪補給約 10 秒
+function wingRtb(u,dt){
+ const bx=PL.base.x, bz=PL.base.z, pad=Math.max(groundY(bx,bz),bldTop(bx,bz));
+ const dh=Math.hypot(bx-u.pos.x,bz-u.pos.z), ty=dh>70?pad+110:pad+1.7;
+ const want=V3(bx-u.pos.x,0,bz-u.pos.z); if(dh>1) want.normalize().multiplyScalar(Math.min(u.spd*1.2,dh*.5+8)); if(dh<=70) want.multiplyScalar(.5);
+ want.y=clamp((ty-u.pos.y)*.8,-14,14);
+ if(dh>70&&u.vel.lengthSq()>25){ const a=u.pos.clone().addScaledVector(u.vel.clone().normalize(),350); const need=Math.max(groundY(a.x,a.z),bldTop(a.x,a.z))+55; if(need>u.pos.y) want.y+=(need-u.pos.y)*.6; }
+ u.vel.lerp(want,clamp(dt*.9,0,1)); u.pos.addScaledVector(u.vel,dt);
+ if(u.pos.y<pad+1.6&&dh<=70) u.pos.y=pad+1.6;
+ const wy=Math.atan2(-(bx-u.pos.x),-(bz-u.pos.z)); if(dh>70) u.yaw+=clamp(wrapA(wy-u.yaw),-1.6*dt,1.6*dt);
+ u.model.rotation.x=-clamp(u.vel.length()/u.spd,0,1)*.15;
+ if(dh<=70&&u.pos.y<pad+3.5){ u.rearm=(u.rearm||0)+dt; if(u.rearm>10){ u.rearm=0; u.rtb=false; u.am={gun:500,rkt:30,hf:6}; toast('🚁 僚機補給完畢，重返戰場','gold'); sfx('ping',.5); } } else u.rearm=0;
+}
 function aiFHeli(u,dt){
+ if(!u.am) u.am={gun:500,rkt:30,hf:6};
+ if(!u.rtb&&((u.am.gun<=0&&u.am.rkt<=0)||(u.am.hf<=0&&u.am.rkt<=0&&u.am.gun<80))){ u.rtb=true; u.rearm=0; toast('🚁 僚機彈藥用完，返回基地補給','gold'); }
+ if(u.rtb) return wingRtb(u,dt);
  let tgt=null,bs=1e9;
  if(WING.mode==='attack'){ const t=UNITS.get(WING.tgt); if(t&&t.alive&&t.side==='e') tgt=t; else { WING.mode='free'; toast('🚁 目標已消滅，僚機恢復自由攻擊','gold'); } }
  if(!tgt) for(const e of UNITS.values()){ if(!e.alive||e.side!=='e') continue; const du=e.pos.distanceTo(u.pos), dm=e.pos.distanceTo(ME.pos); if(du>7000||dm>8500) continue; if(WING.mode==='follow'&&(du>2500||(dm>3500&&!ME.dead))) continue; const sc=du-(e.type==='sam'?900:0)-(e.air?600:0); if(sc<bs){ bs=sc; tgt=e; } }
@@ -1221,9 +1284,9 @@ function aiFHeli(u,dt){
  const from=u.pos.clone(); from.y-=1.2; const aimP=tgt.pos.clone(); aimP.y+=tgt.air?0:1.5;
  if(!facing||!los(from,aimP)) return;
  const dir=aimP.clone().sub(from);
- if(td<1500&&u.cd<=0){ u.burst=(u.burst||0)+1; u.cd=u.burst%7===0?2.2:.14; visTracer('fGun',from,dir); if(Math.random()<.5) PEND.push({t:td/700,unit:tgt.id,v:3.2}); }
- if(!tgt.air&&td>500&&td<2800&&u.rcd<=0){ u.rn=(u.rn||0)+1; u.rcd=u.rn%4===0?7:.35; dir.x+=(Math.random()-.5)*.04*td; dir.z+=(Math.random()-.5)*.04*td; fireF('rkt',from,dir,null); }
- if(td>1800&&td<8000&&u.hcd<=0&&(tgt.type==='tank'||tgt.type==='sam'||tgt.type==='aa'||tgt.type==='heli'||tgt.type==='aaboat')){ u.hcd=24; fireF('hf',from,dir,tgt.id); }
+ if(td<1500&&u.cd<=0&&u.am.gun>0){ u.am.gun--; u.burst=(u.burst||0)+1; u.cd=u.burst%7===0?2.2:.14; visTracer('fGun',from,dir); if(Math.random()<.5) PEND.push({t:td/700,unit:tgt.id,v:3.2}); }
+ if(!tgt.air&&td>500&&td<2800&&u.rcd<=0&&u.am.rkt>0){ u.am.rkt--; u.rn=(u.rn||0)+1; u.rcd=u.rn%4===0?7:.35; dir.x+=(Math.random()-.5)*.04*td; dir.z+=(Math.random()-.5)*.04*td; fireF('rkt',from,dir,null); }
+ if(td>1800&&td<8000&&u.hcd<=0&&u.am.hf>0&&(tgt.type==='tank'||tgt.type==='sam'||tgt.type==='aa'||tgt.type==='heli'||tgt.type==='aaboat')){ u.hcd=24; u.am.hf--; fireF('hf',from,dir,tgt.id); }
 }
 function aiUH60(u,dt){
  // 由任務控制 u.goalP / u.landAt
@@ -1598,7 +1661,7 @@ function netHost(cb){
  p.on('error',e=>{ if(e.type==='unavailable-id'){ p.destroy(); NET.host=false; NET.code=''; netHost(cb); return; } if(!NET.on){ NET.host=false; cb&&cb(null,e.type||'網路錯誤'); } else toast('連線錯誤：'+(e.type||e.message),'bad'); });
  p.on('disconnected',()=>{ try{ p.reconnect(); }catch(e){} });
 }
-function makeRemote(id,name){ const m=makeApache(0x4a5644); shadowize(m); scene.add(m); const l=labelSprite(name,'#7dff7d'); l.position.y=5; m.add(l);
+function makeRemote(id,name){ const m=makeApache(0x434b4a); shadowize(m); scene.add(m); const l=labelSprite(name,'#7dff7d'); l.position.y=5; m.add(l);
  return {id,name,pos:V3(),tpos:null,yaw:0,tyaw:0,pitch:0,roll:0,hp:100,dead:false,score:0,kills:0,deaths:0,flareT:-99,landed:false,model:m}; }
 function hostRecv(o,from){
  const c=NET.conns.get(from); if(!c) return;
