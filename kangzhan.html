@@ -55,6 +55,11 @@ h1.title{font-family:"Noto Serif TC","標楷體","DFKai-SB",serif;font-size:clam
 #tixw span{font-weight:700;min-width:30px;text-align:center}
 .tb{display:flex;gap:6px;margin-left:auto}
 .tb button{background:var(--pn);border:1px solid var(--ln);border-radius:8px;width:38px;height:34px;font-size:16px;padding:0}
+#titleCard{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;z-index:30;pointer-events:none;background:radial-gradient(#0008,#000c);animation:tcard 3.6s ease forwards}
+#titleCard h2{margin:0;font-family:"Noto Serif TC",serif;font-size:clamp(30px,6vw,60px);letter-spacing:.3em;color:#f3e7bd;text-shadow:0 3px 18px #000}
+#titleCard p{margin:10px 0 0;color:#cdbf94;letter-spacing:.2em;font-size:clamp(13px,2vw,18px)}
+@keyframes tcard{0%{opacity:0}15%{opacity:1}75%{opacity:1}100%{opacity:0}}
+#roomTag{display:none;position:absolute;top:42px;left:8px;z-index:6;background:#000a;color:#9be58a;font-size:12px;padding:3px 9px;border-radius:10px;pointer-events:none}
 #toasts{position:absolute;top:50px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:4px;align-items:center;pointer-events:none;width:min(92vw,520px)}
 .toast{background:#10150fe6;border:1px solid var(--ln);border-left:4px solid #bbb;border-radius:6px;padding:6px 14px;font-size:14px;animation:tin .25s;max-width:100%}
 .toast.ok{border-left-color:var(--grn)}.toast.bad{border-left-color:var(--red)}
@@ -85,6 +90,7 @@ h1.title{font-family:"Noto Serif TC","標楷體","DFKai-SB",serif;font-size:clam
 @media (pointer:coarse){.pb .hk{display:none}}
 @media (max-width:700px){#tixw span{min-width:24px}.res small{display:none}}
 </style>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -95,10 +101,33 @@ h1.title{font-family:"Noto Serif TC","標楷體","DFKai-SB",serif;font-size:clam
     <h1 class="title">抗戰烽火</h1>
     <div class="sub">國 軍 即 時 戰 略</div>
     <button class="btn" id="mStart" style="min-width:220px">開始作戰</button>
+    <button class="btn" id="mMulti" style="min-width:220px;background:linear-gradient(#2f7a4a,#1d5232)">多人合作（最多 4 人）</button>
     <button class="btn sec" id="mHelp" style="min-width:220px">操作說明</button>
     <button class="btn sec" id="mTerms" style="min-width:220px">使用條款</button>
   </div>
   <div class="foot">© 麥麥的遊戲工廠　版權所有　·　<a id="mTerms2">使用條款</a><br>歷史背景為簡化改編，僅供娛樂與認識歷史</div>
+</div>
+
+<div id="scLobby" class="scr bgd">
+  <div class="col" style="position:relative;z-index:1;max-width:420px">
+    <h1 class="title" style="font-size:38px">多人合作</h1>
+    <div class="sub">最多 4 人一起指揮國軍，共用兵力與資源，聯手對抗電腦</div>
+    <div id="lbA">
+      <button class="btn" id="lbHost" style="min-width:220px">建立房間</button>
+      <div style="margin:14px 0 4px;color:#cfc8b0;font-size:14px">或輸入朋友給你的房間代碼</div>
+      <input id="lbCode" maxlength="5" placeholder="例：K7M2Q" autocomplete="off" style="font-size:22px;letter-spacing:4px;text-align:center;text-transform:uppercase;width:170px;padding:8px;border-radius:8px;border:1px solid #6b6446;background:#1d1c16;color:#f3ecd0">
+      <button class="btn sec" id="lbJoin">加入</button>
+    </div>
+    <div id="lbB" style="display:none">
+      <div style="color:#cfc8b0;font-size:14px">房間代碼</div>
+      <div id="lbCodeBig" style="font-size:46px;letter-spacing:8px;font-weight:800;color:#ffd34a;margin:4px 0"></div>
+      <div id="lbList" style="margin-bottom:12px"></div>
+      <button class="btn" id="lbGo" style="min-width:220px">選擇戰役並開戰</button>
+      <div id="lbWait" style="display:none;color:#ffd34a">等待房主選擇戰役…</div>
+    </div>
+    <div id="lbMsg" style="min-height:22px;margin:10px 0;color:#9be58a"></div>
+    <button class="btn sec" id="lbBack" style="min-width:220px">返回</button>
+  </div>
 </div>
 
 <div id="scSelect" class="scr bgd">
@@ -127,7 +156,7 @@ h1.title{font-family:"Noto Serif TC","標楷體","DFKai-SB",serif;font-size:clam
     <div id="tixw"><span id="tixBn" style="color:#7db3f5">500</span><div class="bar"><i id="tixB"></i><i id="tixR"></i></div><span id="tixRn" style="color:#f08a80">500</span></div>
     <div class="tb"><button id="bSpd" title="速度">1×</button><button id="bSnd" title="音效">🔊</button><button id="bPause" title="暫停">❚❚</button></div>
   </div>
-  <div id="toasts"></div>
+  <div id="toasts"></div><div id="roomTag"></div><div id="titleCard"><h2 id="tcT"></h2><p id="tcS"></p></div>
   <div id="hint"></div>
   <div id="bottom">
     <div id="mmw"><canvas id="mm" width="300" height="200"></canvas></div>
@@ -153,6 +182,7 @@ h1.title{font-family:"Noto Serif TC","標楷體","DFKai-SB",serif;font-size:clam
     <div id="eStars" style="font-size:28px;color:#ffd34a;letter-spacing:6px;min-height:36px"></div>
     <div id="eSub" style="color:var(--dim);font-size:14px;line-height:1.6"></div>
     <div class="stats" id="eStats"></div>
+    <div id="eEpi" style="margin:10px 0 2px;color:#b9b39a;font-size:12.5px;line-height:1.7;text-align:left"></div>
     <div class="row"><button class="btn" id="eAgain">再戰一次</button><button class="btn" id="eNext" style="display:none">下一場會戰</button><button class="btn sec" id="eMenu">返回選單</button></div>
   </div>
 </div>
@@ -235,7 +265,18 @@ const Snd={ctx:null,out:null,on:true,last:{},nb:null,amb:null,
        v.gain.setValueAtTime(.0001,tt); v.gain.linearRampToValueAtTime(.16*vol,tt+.03); v.gain.setValueAtTime(.16*vol,tt+d*.85); v.gain.exponentialRampToValueAtTime(.0001,tt+d+.08); o.connect(f);o3.connect(f);f.connect(v);v.connect(this.out);o.start(tt);o3.start(tt);o.stop(tt+d+.1);o3.stop(tt+d+.1); tt+=d+.03; } } break;
    } },
  ambStart(){ if(!this.ctx||this.amb)return; const c=this.ctx; const s=c.createBufferSource(); s.buffer=this.nb; s.loop=true; const f=c.createBiquadFilter(); f.type='bandpass'; f.frequency.value=420; f.Q.value=.4; const g=c.createGain(); g.gain.value=.035; s.connect(f); f.connect(g); g.connect(this.out); s.start(); this.amb={s,g}; },
- ambStop(){ if(this.amb){try{this.amb.s.stop()}catch(e){} this.amb=null;} }
+ ambStop(){ if(this.amb){try{this.amb.s.stop()}catch(e){} this.amb=null;} this.musicStop(); if(this.rain){try{this.rain.stop()}catch(e){} this.rain=null;} },
+ rainStart(){ if(!this.ctx||this.rain)return; const c=this.ctx,s=c.createBufferSource(); s.buffer=this.nb; s.loop=true; const f=c.createBiquadFilter(); f.type='highpass'; f.frequency.value=2400; const g=c.createGain(); g.gain.value=.03; s.connect(f); f.connect(g); g.connect(this.out); s.start(); this.rain=s; },
+ musicStart(mood){ if(!this.ctx||this.mus)return; const c=this.ctx; const sc=mood==='sad'?[0,3,5,7,10]:[0,2,4,7,9]; const root=mood==='sad'?146.83:164.81; const hz=i=>root*Math.pow(2,i/12); let beat=0,next=c.currentTime+.5,bar=0;
+   const mv=c.createGain(); mv.gain.value=.55; mv.connect(this.out); const self=this;
+   const note=(t,f,dur,g,type)=>{ const o=c.createOscillator(),v=c.createGain(),lp=c.createBiquadFilter(); o.type=type||'triangle'; o.frequency.value=f; lp.type='lowpass'; lp.frequency.value=1600; v.gain.setValueAtTime(.0001,t); v.gain.linearRampToValueAtTime(g,t+.04); v.gain.exponentialRampToValueAtTime(.0001,t+dur); o.connect(lp); lp.connect(v); v.connect(mv); o.start(t); o.stop(t+dur+.05); };
+   const tick=()=>{ if(!self.mus)return; while(next<c.currentTime+.6){ const t=next, b=beat%16;
+       if(b===0){ const ch=[[0,7,12],[ -2,5,10],[3,10,15],[ -4,3,8]][bar%4]; for(const k of ch)note(t,hz(k-12),3.6,.05,'sine'); bar++; }
+       if(b%4===0&&Math.random()<.9){ self._t(t,.5,95,45,.22,'sine',0); }
+       if(b%2===0&&Math.random()<.55){ const d=sc[(Math.random()*sc.length)|0]+(Math.random()<.4?12:0); note(t,hz(d+12),1.1,.06,'triangle'); }
+       next+=.52; beat++; } };
+   this.mus=setInterval(tick,180); tick(); },
+ musicStop(){ if(this.mus){ clearInterval(this.mus); this.mus=null; } },
 };
 function t_(t){return t}
 
@@ -473,7 +514,7 @@ function paintRengan(m){
 }
 
 const SCN=[
- {id:'songhu',aiK:.82,hq:['四行倉庫','日軍陸戰隊本部'],name:'淞滬會戰',sub:'閘北巷戰',year:'1937 年 10 月',paint:paintShanghai,w:72,h:48,seed:11,
+ {id:'songhu',weather:'haze',epi:'1937 年 8 月至 11 月，淞滬會戰持續約三個月，國軍投入大量部隊，最後在日軍登陸杭州灣側翼後撤退。10 月底的四行倉庫保衛戰，孤軍死守一週，讓世人看見中國軍隊的抵抗意志。',aiK:.82,hq:['四行倉庫','日軍陸戰隊本部'],name:'淞滬會戰',sub:'閘北巷戰',year:'1937 年 10 月',paint:paintShanghai,w:72,h:48,seed:11,
   pal:{field:[150,142,124],paddy:[120,128,96],road:[172,160,134],water:[78,98,106],forest:[84,98,66],hill:[110,112,84],sky:'#7d7568'},
   brief:'1937 年 8 月 13 日，戰火在上海爆發。國軍投入包括德式整訓師在內的精銳部隊，與日軍在上海市區、羅店等地鏖戰三個月，使日軍速戰速決的計畫落空。10 月底，閘北的四行倉庫由孤軍固守數日後奉命撤出。\n本關為簡化後的市區巷戰，兵力與地形均為遊戲設計，並非實際戰役規模。',
   goal:'佔領街區據點，壓低日軍兵力；或摧毀日軍指揮所。守住「四行倉庫」。',
@@ -485,7 +526,7 @@ const SCN=[
   ai:{mix:{j_rifle:5,j_elite:3,j_lmg:2,j_hmg:2,j_grenade:1.5,j_gun:1},tank:{id:'j_t95',after:300,w:1.5},support:{kind:'naval',name:'日艦砲擊',first:170,every:[120,170]},at:'j_gun'},
   ability:{name:'砲兵支援',cost:60,cd:75,n:8,rad:62,dmg:46},
   events:[]},
- {id:'taierzhuang',mech:'urban',mechTxt:'巷戰：建築與瓦礫掩體更強，大刀隊在城內跑得更快，敵軍戰車在城內變慢。',aiK:.92,hq:['守軍指揮所','日軍前進指揮所'],name:'台兒莊戰役',sub:'城中死守',year:'1938 年 3–4 月',paint:paintTaierzhuang,w:72,h:48,seed:22,
+ {id:'taierzhuang',weather:'dust',epi:'1938 年 3 月底至 4 月初的台兒莊戰役，國軍守住城池並反包圍日軍，取得抗戰初期的重大勝利，大幅提振了全國士氣。',mech:'urban',mechTxt:'巷戰：建築與瓦礫掩體更強，大刀隊在城內跑得更快，敵軍戰車在城內變慢。',aiK:.92,hq:['守軍指揮所','日軍前進指揮所'],name:'台兒莊戰役',sub:'城中死守',year:'1938 年 3–4 月',paint:paintTaierzhuang,w:72,h:48,seed:22,
   pal:{field:[166,152,102],paddy:[150,146,100],road:[184,166,122],water:[96,118,112],forest:[104,118,66],hill:[140,130,90],sky:'#8a7f5c'},
   brief:'1938 年 3 至 4 月，李宗仁指揮的第五戰區，以孫連仲部固守台兒莊，並調集部隊從外圍包抄，日軍久攻不下並遭到反包圍，最後撤退。這是抗戰初期國軍少見的重大勝利，大大鼓舞了全國民心。\n本關為簡化版的守城戰，約五分鐘後友軍會從側翼趕到。',
   goal:'守住城牆內據點，撐到援軍抵達後反擊，摧毀日軍指揮所或耗盡其兵力。',
@@ -497,7 +538,7 @@ const SCN=[
   ai:{mix:{j_rifle:5,j_lmg:2,j_hmg:2,j_grenade:1.5,j_gun:1.2},tank:{id:'j_t95',after:200,w:1.6,alt:'j_t89'},support:{kind:'air',name:'日機空襲',first:210,every:[130,190]},at:'j_gun'},
   ability:{name:'砲兵支援',cost:60,cd:80,n:7,rad:60,dmg:44},
   events:[{t:300,side:0,units:['n_rifle','n_rifle','n_dadao','n_dadao','n_lmg','n_mortar'],from:[1,24],to:[22,24],msg:'友軍從外圍趕到，從側翼增援！',snd:'bugle'}]},
- {id:'changsha',mech:'scorch',mechTxt:'焦土戰術：可放火封鎖道路，火場內敵軍持續受傷並減速（另有岳麓山砲擊）。',hq:['長沙守軍指揮所','日軍前進指揮所'],name:'長沙會戰',sub:'天爐戰法',year:'1941 年底',paint:paintChangsha,w:72,h:48,seed:33,
+ {id:'changsha',weather:'rain',epi:'1941 年底至 1942 年初的第三次長沙會戰，國軍成功擊退日軍。這場勝利發生在太平洋戰爭剛爆發之際，在同盟國戰場上格外受到注意。',mech:'scorch',mechTxt:'焦土戰術：可放火封鎖道路，火場內敵軍持續受傷並減速（另有岳麓山砲擊）。',hq:['長沙守軍指揮所','日軍前進指揮所'],name:'長沙會戰',sub:'天爐戰法',year:'1941 年底',paint:paintChangsha,w:72,h:48,seed:33,
   pal:{field:[124,134,84],paddy:[106,128,96],road:[168,150,112],water:[90,118,128],forest:[70,98,58],hill:[102,114,72],sky:'#7b8460'},
   brief:'長沙在抗戰期間先後發生多次會戰。第九戰區司令長官薛岳採取「後退決戰」，誘敵深入後再反擊，被稱為「天爐戰法」。1941 年底至 1942 年初的第三次長沙會戰，日軍久攻長沙不下，撤退途中又遭追擊。\n本關有湘江西岸的重砲支援，砲擊支援冷卻較短。',
   goal:'守住長沙城周邊據點，趁日軍久攻疲憊時擊潰其兵力，或直搗指揮所。',
@@ -510,7 +551,7 @@ const SCN=[
   ability:{name:'岳麓山砲擊',cost:40,cd:42,n:9,rad:64,dmg:50},
   ability2:{name:'焦土放火',cost:35,cd:55,rad:96,life:24,dps:13},
   events:[{t:360,side:0,units:['n_rifle','n_rifle','n_lmg','n_at'],from:[70,44],to:[48,36],msg:'外線友軍回援長沙！',snd:'bugle'}]},
- {id:'kunlun',mech:'mountain',mechTxt:'山地作戰：站在高地（兩級以上）的步兵射程加遠，山坡掩體更好；仰攻會很吃力。',hq:['第五軍指揮所','日軍後方基地'],garrison:true,name:'崑崙關戰役',sub:'仰攻山地',year:'1939 年 12 月',paint:paintKunlun,w:72,h:48,seed:44,
+ {id:'kunlun',weather:'mist',epi:'崑崙關在 1939 年底至 1940 年間數度易手，雙方傷亡慘重。這場戰役是國軍首次以機械化部隊協同步兵、砲兵對日軍發動的大規模進攻之一。',mech:'mountain',mechTxt:'山地作戰：站在高地（兩級以上）的步兵射程加遠，山坡掩體更好；仰攻會很吃力。',hq:['第五軍指揮所','日軍後方基地'],garrison:true,name:'崑崙關戰役',sub:'仰攻山地',year:'1939 年 12 月',paint:paintKunlun,w:72,h:48,seed:44,
   pal:{field:[104,130,76],paddy:[100,128,84],road:[160,138,100],water:[90,118,124],forest:[56,88,50],hill:[112,122,74],sky:'#5d7048'},
   brief:'1939 年底至 1940 年初，杜聿明率第五軍（含機械化的第 200 師）進攻廣西南寧北方的崑崙關，與日軍第五師團一部在山地高地展開激烈爭奪，傷亡慘重。國軍一度攻下崑崙關，日軍旅團長中村正雄戰死。\n本關為簡化的山地攻堅，日軍預先佔據高地與碉堡。',
   goal:'奪取崑崙關與周邊高地，耗盡日軍兵力，或摧毀日軍指揮所。',
@@ -523,7 +564,7 @@ const SCN=[
   ability:{name:'砲兵支援',cost:60,cd:70,n:8,rad:62,dmg:48},
   events:[{t:420,side:1,units:['j_elite','j_elite','j_gun','j_hmg'],from:[70,44],to:[44,28],msg:'日軍增援部隊抵達戰場！',snd:'whistle'}]},
 
- {id:'xinkou',mech:'mountain',mechTxt:'山地作戰：站在高地（兩級以上）的步兵射程加遠，山坡掩體更好。後方游擊隊可在敵後伏擊。',aiK:.9,hq:['忻口前線指揮所','日軍前進指揮所'],name:'忻口會戰',sub:'晉北高地爭奪',year:'1937 年 10–11 月',paint:paintXinkou,w:72,h:48,seed:55,
+ {id:'xinkou',weather:'dust',epi:'1937 年 10 月至 11 月初，國軍在忻口一帶苦戰約三週，多位將領殉國。後來東面娘子關失守，側翼受威脅，部隊撤出忻口，太原於 11 月上旬陷落。',mech:'mountain',mechTxt:'山地作戰：站在高地（兩級以上）的步兵射程加遠，山坡掩體更好。後方游擊隊可在敵後伏擊。',aiK:.9,hq:['忻口前線指揮所','日軍前進指揮所'],name:'忻口會戰',sub:'晉北高地爭奪',year:'1937 年 10–11 月',paint:paintXinkou,w:72,h:48,seed:55,
   pal:{field:[150,138,98],paddy:[150,140,100],road:[176,158,118],water:[96,118,116],forest:[92,106,64],hill:[132,124,86],sky:'#7f7656'},
   brief:'1937 年 10 月，日軍沿同蒲路北段南下，國軍在山西忻口一帶依山構築防線，與日軍展開了約一個月的激戰，前線將領犧牲不少。戰事期間敵後的部隊也襲擾日軍補給線。本關是簡化改編版，重點在高地防守與反擊，並非完整史實。',
   goal:'守住南懷化高地與忻口鎮，耗盡日軍兵力，或摧毀其前進指揮所。',
@@ -535,7 +576,7 @@ const SCN=[
   ai:{mix:{j_rifle:5,j_elite:2,j_lmg:2,j_hmg:2,j_grenade:1.5,j_gun:1.2},tank:{id:'j_t95',after:300,w:1.3},support:{kind:'art',name:'日軍砲擊',first:200,every:[140,200]},at:'j_gun'},
   ability:{name:'砲兵支援',cost:60,cd:72,n:8,rad:62,dmg:46},
   events:[{t:280,side:0,units:['n_guerrilla','n_guerrilla','n_guerrilla'],from:[70,30],to:[56,20],msg:'敵後游擊部隊出現在日軍側翼！',snd:'bugle'}]},
- {id:'wanjialing',mech:'mountain',mechTxt:'山地作戰：站在高地（兩級以上）的步兵射程加遠，山坡掩體更好。',aiK:.8,hq:['德安指揮所','日軍第一○六師團前進所'],name:'萬家嶺大捷',sub:'武漢會戰·圍殲',year:'1938 年 9–10 月',paint:paintWanjialing,w:72,h:48,seed:66,
+ {id:'wanjialing',weather:'fog',epi:'1938 年 9 月底至 10 月初，萬家嶺一帶的戰鬥重創了日軍一個師團，被稱為「萬家嶺大捷」。但武漢最終仍於 10 月下旬失守，國軍轉入長期抗戰。',mech:'mountain',mechTxt:'山地作戰：站在高地（兩級以上）的步兵射程加遠，山坡掩體更好。',aiK:.8,hq:['德安指揮所','日軍第一○六師團前進所'],name:'萬家嶺大捷',sub:'武漢會戰·圍殲',year:'1938 年 9–10 月',paint:paintWanjialing,w:72,h:48,seed:66,
   pal:{field:[128,140,88],paddy:[110,132,98],road:[170,152,112],water:[88,116,128],forest:[62,96,56],hill:[108,120,72],sky:'#667a52'},
   brief:'1938 年 9 月底，武漢會戰期間，日軍一個師團沿南潯路突進江西德安一帶，深入山區。國軍集結部隊，從兩側包抄，將其困在萬家嶺附近，經過數日戰鬥，重創日軍。本關是簡化改編版：先穩住防線，援軍到時從兩翼反包圍。',
   goal:'撐住德安，等友軍兩翼抵達後反擊，奪取萬家嶺並耗盡日軍兵力，或摧毀其指揮所。',
@@ -548,7 +589,7 @@ const SCN=[
   ability:{name:'砲兵支援',cost:60,cd:70,n:8,rad:62,dmg:46},
   events:[{t:210,side:0,units:['n_rifle','n_german','n_lmg','n_dadao','n_dadao'],from:[2,6],to:[20,14],msg:'西線友軍趕到，從側翼包抄！',snd:'bugle'},
           {t:260,side:0,units:['n_rifle','n_rifle','n_mortar','n_hmg','n_german'],from:[70,44],to:[56,34],msg:'東線友軍趕到，切斷日軍退路！',snd:'bugle'}]},
- {id:'rengan',mech:'jungle',mechTxt:'叢林作戰：林地掩體更好，步兵躲在樹林裡更難被打到。',aiK:.85,hq:['新三十八師前進所','日軍第三十三師團前進所'],name:'仁安羌解圍',sub:'緬甸·油田',year:'1942 年 4 月',paint:paintRengan,w:72,h:48,seed:77,
+ {id:'rengan',weather:'rain',epi:'1942 年 4 月，新三十八師一一三團在仁安羌解救了約七千名被圍的英軍，是中國遠征軍入緬初期最受矚目的戰果；之後遠征軍仍因整體戰局撤出緬甸。',mech:'jungle',mechTxt:'叢林作戰：林地掩體更好，步兵躲在樹林裡更難被打到。',aiK:.85,hq:['新三十八師前進所','日軍第三十三師團前進所'],name:'仁安羌解圍',sub:'緬甸·油田',year:'1942 年 4 月',paint:paintRengan,w:72,h:48,seed:77,
   pal:{field:[176,158,104],paddy:[150,150,96],road:[190,170,124],water:[100,126,122],forest:[56,100,52],hill:[130,128,80],sky:'#7a8a56'},
   brief:'1942 年 4 月，中國遠征軍入緬協同英軍作戰。英軍約七千人在緬甸仁安羌一帶被日軍包圍，缺水斷糧。孫立人率新編第三十八師一一三團趕到，在兵力懸殊下連日猛攻，終於將被圍英軍解救出來。本關是簡化改編版：突破平墻河防線，攻佔油田，解救被圍友軍。',
   goal:'渡過平墻河，佔領油田與日軍封鎖線，救出被圍部隊；或摧毀日軍指揮所。',
@@ -1075,6 +1116,19 @@ function render(){
   if(UI.box){ const a=s2w(UI.box.x0,UI.box.y0),b=s2w(UI.box.x1,UI.box.y1); ctx.fillStyle='rgba(120,230,140,.12)'; ctx.strokeStyle='rgba(155,229,138,.9)'; ctx.lineWidth=1.5/cam.z; ctx.fillRect(a.x,a.y,b.x-a.x,b.y-a.y); ctx.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y); }
 }
 
+/* ---- 天氣與氣氛 ---- */
+const WX={p:[],t:0};
+function drawWeather(){ if(!G||!G.sc||!G.sc.weather)return; const w=G.sc.weather, W=cv.width, H=cv.height, d=dpr; WX.t+=.016; const t=WX.t;
+  ctx.setTransform(1,0,0,1,0,0);
+  if(w==='rain'){ ctx.fillStyle='rgba(30,50,70,.16)'; ctx.fillRect(0,0,W,H); ctx.strokeStyle='rgba(200,225,245,.38)'; ctx.lineWidth=1*d; ctx.beginPath(); const n=Math.round(W*H/9000/(d*d)*1.2); for(let i=0;i<n;i++){ const x=((i*97.3+t*(160+(i%7)*20))%(W+80))-40, y=((i*53.7+t*(900+(i%5)*120))%(H+60))-30; ctx.moveTo(x,y); ctx.lineTo(x-5*d,y+14*d); } ctx.stroke(); }
+  else if(w==='fog'||w==='mist'){ const a=w==='fog'?.22:.14; const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'rgba(210,220,215,'+a+')'); g.addColorStop(.5,'rgba(210,220,215,'+(a*.5)+')'); g.addColorStop(1,'rgba(210,220,215,'+a+')'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    for(let i=0;i<4;i++){ const x=((t*18*(i+1)+i*400)%(W+600))-300; const gr=ctx.createRadialGradient(x,H*(.2+i*.22),20,x,H*(.2+i*.22),320*d); gr.addColorStop(0,'rgba(225,232,228,.16)'); gr.addColorStop(1,'rgba(225,232,228,0)'); ctx.fillStyle=gr; ctx.fillRect(0,0,W,H); } }
+  else if(w==='dust'){ ctx.fillStyle='rgba(190,160,90,.10)'; ctx.fillRect(0,0,W,H); ctx.fillStyle='rgba(215,190,130,.35)'; const n=Math.round(W*H/26000/(d*d)); for(let i=0;i<n;i++){ const x=((i*131.1+t*(70+(i%6)*18))%(W+40))-20, y=(i*71.3+Math.sin(t+i)*20)%H; ctx.fillRect(x,y,2*d,1*d); } }
+  else if(w==='haze'){ ctx.fillStyle='rgba(70,64,56,.16)'; ctx.fillRect(0,0,W,H); for(let i=0;i<3;i++){ const x=((t*14*(i+1)+i*500)%(W+700))-350, y=H*(.25+i*.28); const gr=ctx.createRadialGradient(x,y,10,x,y,300*d); gr.addColorStop(0,'rgba(90,84,76,.2)'); gr.addColorStop(1,'rgba(90,84,76,0)'); ctx.fillStyle=gr; ctx.fillRect(0,0,W,H); } }
+  // 暗角
+  const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.45,W/2,H/2,Math.max(W,H)*.75); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.28)'); ctx.fillStyle=vg; ctx.fillRect(0,0,W,H); }
+(function(){ const _r=render; render=function(){ _r(); drawWeather(); }; })();
+
 /* ================= 介面與操作 ================= */
 const UI={mouse:null,box:null,boxStart:null,boxMode:false,speed:1,paused:false,running:false,diff:1,scn:0,keys:{},hudT:0,mmT:0,lastClick:{t:0,x:0,y:0}};
 const PROG_KEY='mmfactory_kangzhan_v1';
@@ -1104,19 +1158,19 @@ function showBrief(i){ UI.scn=i; const s=SCN[i]; $('bName').textContent=s.name+'
 
 /* 戰鬥開始 */
 function startBattle(si){
-  newGame(si,UI.diff); G.sc.hq=G.sc.hq||null; buildTerrain(); resize(); buildHUD();
+  newGame(si,UI.diff); G.sc.hq=G.sc.hq||null; if(typeof netOnBattleStart==='function')netOnBattleStart(); buildTerrain(); resize(); buildHUD();
   cam.z=Math.max(clamp(vw/1250,.55,1.2),minZoom()); const h=G.hqs[0]; centerOn(h.cx,h.cy+Math.min(120,vh*.12));
   showScr(null); $('hud').classList.add('on'); UI.running=true; UI.paused=false; UI.speed=1; $('bSpd').textContent='1×'; marks=[]; UI.box=null; UI.boxStart=null; G.amode=false; G.abMode=false;
-  Snd.init(); Snd.resume(); Snd.ambStart(); Snd.play('bugle',1); $('toasts').innerHTML=''; toast('任務：'+G.sc.goal,'ok'); toast(matchMedia('(pointer:coarse)').matches?'點部隊選取，再點地面移動、點敵人攻擊；單指拖曳移動畫面':'左鍵選取／框選，右鍵移動或攻擊；A＋左鍵＝攻擊移動','ok'); hudTick(1);
+  Snd.init(); Snd.resume(); Snd.ambStart(); Snd.musicStart(G.sc.id==='songhu'||G.sc.id==='xinkou'||G.sc.id==='rengan'?'sad':'war'); if(G.sc.weather==='rain')Snd.rainStart(); { const tc=$('titleCard'); $('tcT').textContent=G.sc.name; $('tcS').textContent=G.sc.sub+'　·　'+G.sc.year; tc.style.display='flex'; tc.style.animation='none'; void tc.offsetWidth; tc.style.animation=''; clearTimeout(UI.tcT); UI.tcT=setTimeout(()=>{tc.style.display='none';},3700); } netUiRefresh(); Snd.play('bugle',1); $('toasts').innerHTML=''; toast('任務：'+G.sc.goal,'ok'); toast(matchMedia('(pointer:coarse)').matches?'點部隊選取，再點地面移動、點敵人攻擊；單指拖曳移動畫面':'左鍵選取／框選，右鍵移動或攻擊；A＋左鍵＝攻擊移動','ok'); hudTick(1);
 }
 function endBattleUI(){ UI.running=false; Snd.ambStop(); $('hud').classList.remove('on'); ov('scPause',0); }
 $('pResume').onclick=()=>setPause(false);
 $('pRestart').onclick=()=>{ ov('scPause',0); startBattle(UI.scn); };
-$('pQuit').onclick=()=>{ endBattleUI(); showScr('scMenu'); };
+$('pQuit').onclick=()=>{ if(NET.on)netLeave(); endBattleUI(); showScr('scMenu'); };
 $('eAgain').onclick=()=>{ startBattle(UI.scn); };
 $('eNext').onclick=()=>{ showBrief(Math.min(SCN.length-1,UI.scn+1)); };
 $('eMenu').onclick=()=>{ buildSelect(); showScr('scSelect'); };
-function setPause(on){ if(!UI.running||G.over)return; UI.paused=on; ov('scPause',on); $('bPause').textContent=on?'▶':'❚❚'; }
+function setPause(on){ if(!UI.running||G.over)return; if(NET.on){ ov('scPause',on); return; } UI.paused=on; ov('scPause',on); $('bPause').textContent=on?'▶':'❚❚'; }
 $('bPause').onclick=()=>setPause(!UI.paused);
 $('bSpd').onclick=()=>{ UI.speed=UI.speed===1?2:1; $('bSpd').textContent=UI.speed+'×'; };
 $('bSnd').onclick=()=>{ Snd.init(); Snd.setOn(!Snd.on); $('bSnd').textContent=Snd.on?'🔊':'🔇'; Snd.resume(); };
@@ -1129,7 +1183,7 @@ function showEnd(r){
   $('eSub').textContent=r==='win'?'我軍擊潰敵軍，守住了陣地。':'我軍兵力耗盡，或指揮所被摧毀。再試一次吧！';
   let tot={}; try{ tot=JSON.parse(localStorage.getItem('mmfactory_kangzhan_stats')||'{}'); }catch(e){} tot.p=(tot.p||0)+1; if(r==='win')tot.w=(tot.w||0)+1; tot.k=(tot.k||0)+G.stats.kills[0]; try{ localStorage.setItem('mmfactory_kangzhan_stats',JSON.stringify(tot)); }catch(e){}
   const tm=Math.floor(G.time),mm=Math.floor(tm/60),ss=('0'+(tm%60)).slice(-2);
-  $('eStats').innerHTML='<span>戰鬥時間</span><b>'+mm+':'+ss+'</b><span>擊毀敵軍</span><b>'+G.stats.kills[0]+' 隊</b><span>我軍損失</span><b>'+G.stats.lost[0]+' 隊</b><span>剩餘兵力</span><b>'+Math.round(G.tickets[0])+' / '+MAXTIX+'</b><span>累計戰績</span><b>'+(tot.w||0)+' 勝 / '+tot.p+' 戰</b>';
+  $('eEpi').textContent=G.sc.epi?'【史實後記】'+G.sc.epi:''; $('eStats').innerHTML='<span>戰鬥時間</span><b>'+mm+':'+ss+'</b><span>擊毀敵軍</span><b>'+G.stats.kills[0]+' 隊</b><span>我軍損失</span><b>'+G.stats.lost[0]+' 隊</b><span>剩餘兵力</span><b>'+Math.round(G.tickets[0])+' / '+MAXTIX+'</b><span>累計戰績</span><b>'+(tot.w||0)+' 勝 / '+tot.p+' 戰</b>';
   $('eNext').style.display=(r==='win'&&UI.scn<SCN.length-1)?'':'none'; endBattleUI(); showScr('scEnd');
 }
 
@@ -1248,6 +1302,158 @@ function frame(ts){ requestAnimationFrame(frame); const dt=Math.min(.1,(ts-lastT
     updateCamera(dt); render(); UI.hudT-=dt; if(UI.hudT<=0){ UI.hudT=.12; hudTick(); } UI.mmT-=dt; if(UI.mmT<=0){ UI.mmT=.1; drawMinimap(); } } }
 resize(); requestAnimationFrame(frame);
 window.__kz={get G(){return G},step,newGame,startBattle,buildTerrain,cam,UI,SCN,DEF,queueUnit};
+
+/* ================= 多人合作：房主負責計算，其他玩家同步畫面並下指令 ================= */
+const NET={on:false,host:false,code:'',conns:new Map(),hc:null,peer:null,bc:null,n:0,ver:1,count:1,out:{fx:[],snd:[],ev:[]},acc:0,sn:0,inStep:false,orig:null};
+const QS=new URLSearchParams(location.search);
+const isGuest=()=>NET.on&&!NET.host, isHost=()=>NET.on&&NET.host;
+function mkCode(){ const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)]; return s; }
+function peerOpts(){ return {debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}}; }
+const useBC=()=>QS.get('bc')==='1'||typeof Peer==='undefined';
+function wrapConn(sendRaw,closeRaw){ const w={parts:{},
+  send(o){ let s; try{ s=JSON.stringify(o); }catch(e){ return; } if(s.length<12000){ sendRaw(s); return; } const id=Math.random().toString(36).slice(2,9),n=Math.ceil(s.length/12000); for(let i=0;i<n;i++) sendRaw(JSON.stringify({t:'_pt',id,i,n,s:s.slice(i*12000,(i+1)*12000)})); },
+  recv(d,cb){ let o; try{ o=typeof d==='string'?JSON.parse(d):d; }catch(e){ return; } if(o&&o.t==='_pt'){ const a=w.parts[o.id]||(w.parts[o.id]={n:0,a:[]}); if(a.a[o.i]===undefined){ a.a[o.i]=o.s; a.n++; } if(a.n===o.n){ delete w.parts[o.id]; try{ cb(JSON.parse(a.a.join(''))); }catch(e){} } return; } cb(o); },
+  close:closeRaw||(()=>{})}; return w; }
+function bcast(o){ for(const c of NET.conns.values()) c.send(o); }
+function gsend(o){ if(NET.hc) NET.hc.send(o); }
+
+/* ---- 房主 ---- */
+function netHost(cb){
+  if(NET.on){ cb&&cb(NET.code); return; }
+  NET.code=mkCode(); NET.host=true;
+  const ready=()=>{ NET.on=true; NET.count=1; lobbyRefresh(); cb&&cb(NET.code); };
+  if(useBC()){ NET.bc=new BroadcastChannel('mmkz-'+NET.code); NET.bc.onmessage=ev=>{ const {from,to,s}=ev.data||{}; if(to!=='H')return; let c=NET.conns.get(from); if(!c){ c=wrapConn(str=>NET.bc.postMessage({from:'H',to:from,s:str})); } c.recv(s,o=>hostRecv(o,from,c)); }; ready(); return; }
+  const p=new Peer('mmkz-'+NET.code.toLowerCase(),peerOpts()); NET.peer=p; p.on('open',ready);
+  p.on('connection',raw=>{ raw.on('open',()=>{ const id='c'+(++NET.n); const c=wrapConn(s=>{ try{ raw.send(s); }catch(e){} },()=>raw.close()); raw.on('data',d=>c.recv(d,o=>hostRecv(o,id,c))); raw.on('close',()=>hostDrop(id)); raw.on('error',()=>hostDrop(id)); }); });
+  p.on('error',e=>{ if(e.type==='unavailable-id'){ p.destroy(); NET.host=false; NET.code=''; netHost(cb); return; } if(!NET.on){ NET.host=false; cb&&cb(null,'連不上連線伺服器，請確認有網路'); } });
+  p.on('disconnected',()=>{ try{ p.reconnect(); }catch(e){} });
+}
+function hostDrop(id){ if(NET.conns.delete(id)){ NET.count=NET.conns.size+1; bcast({t:'lobby',n:NET.count}); lobbyRefresh(); if(UI.running)toast('一位隊友離開了','bad'); } }
+function hostRecv(o,from,c){
+  if(o.t==='join'){
+    if(o.ver!==NET.ver){ c.send({t:'kick',why:'遊戲版本不一樣，請兩邊都重新整理網頁'}); return; }
+    if(NET.conns.size>=3&&!NET.conns.has(from)){ c.send({t:'full'}); return; }
+    NET.conns.set(from,c); NET.count=NET.conns.size+1; c.send({t:'welcome',id:from,n:NET.count}); bcast({t:'lobby',n:NET.count}); lobbyRefresh();
+    if(UI.running&&G&&!G.over){ c.send({t:'start',si:UI.scn,di:UI.diff}); } return; }
+  if(!NET.conns.has(from))return;
+  if(o.t==='bye'){ hostDrop(from); return; }
+  if(!G||!UI.running||G.over)return;
+  NET.inStep=true; try{ const us=ids=>G.units.filter(u=>u.side===0&&!u.dead&&Array.isArray(ids)&&ids.includes(u.id));
+    if(o.t==='mv'){ const a=us(o.ids); if(a.length&&isFinite(o.x)&&isFinite(o.y)) orderGroupMove(a,o.x,o.y,o.k==='amove'||o.k==='retreat'?o.k:'move'); }
+    else if(o.t==='at'){ const tg=o.tgt==='hq'?G.hqs[1]:G.units.find(u=>u.id===o.tgt&&u.side===1&&!u.dead); if(tg) for(const u of us(o.ids)) orderAttack(u,tg); }
+    else if(o.t==='st'){ for(const u of us(o.ids)) orderStop(u); }
+    else if(o.t==='q'){ if(DEF[o.id]&&G.sc.roster[0].includes(o.id)) queueUnit(0,o.id); }
+    else if(o.t==='ab'){ if(isFinite(o.x)&&isFinite(o.y)){ if(o.n===2)scorchAbility(o.x,o.y); else playerAbility(o.x,o.y); } }
+  }catch(e){ console.warn(e); } NET.inStep=false;
+}
+/* 房主在伺服每一步後輸出快照 */
+function hookArr(arr,kind){ const orig=arr.push; arr.push=function(...a){ if(isHost()){ for(const f of a){ const c={}; for(const k in f){ const v=f[k]; if(typeof v==='function'||v===undefined||v===null)continue; c[k]=typeof v==='number'?Math.round(v*10)/10:v; } if(kind==='fx'){ if(NET.out.fx.length<110)NET.out.fx.push(c); } else NET.out.ev.push(['dc',c]); } } return orig.apply(this,a); }; }
+function buildSnap(){
+  const r1=x=>Math.round(x*10)/10;
+  const u=G.units.filter(v=>!v.dead).map(v=>[v.id,v.def.id,v.side,r1(v.x),r1(v.y),Math.round(v.hp),Math.round(v.supp),Math.round(v.fx*100)/100,Math.round(v.fy*100)/100,v.vet,Math.round(v.dep*10)/10,v.moving?1:0,(G.time-v.lastFire<.12)?1:0,v.tang==null?null:Math.round(v.tang*100)/100,v.engaged?1:0]);
+  const o={t:'snap',T:Math.round(G.time*100)/100,u,
+    h:G.hqs.map(h=>[Math.round(h.hp),h.alive?1:0,(h.q||[]).map(e=>[e.id,Math.round(e.p*10)/10,e.bt])]),
+    p:G.pts.map(p=>[p.owner,Math.round(p.prog*1000)/1000,p.capSide]),
+    r:[Math.round(G.res[0].m),Math.round(G.res[0].a)],tk:G.tickets.map(x=>Math.round(x*10)/10),inc:[G.income[0].m,G.income[0].a],
+    ab:[Math.round(G.abCd*10)/10,Math.round(G.abCd2*10)/10],fi:G.fires.map(f=>[f.x,f.y,f.r,Math.round(f.t*10)/10,f.life,f.dps]),
+    st:G.stats,fx:NET.out.fx,sn:NET.out.snd,ev:NET.out.ev};
+  if(G.over){ o.over=1; o.res=G.result; o.why=G.endWhy; }
+  if(NET.sn%5===0) o.bh=G.blds.map((b,i)=>(b.alive&&!b.solid&&b.hp<b.maxhp)?[i,Math.round(b.hp)]:null).filter(Boolean);
+  NET.sn++; NET.out={fx:[],snd:[],ev:[]}; return o; }
+function hostTick(dt){ if(!isHost()||!G||!NET.conns.size){ NET.out={fx:[],snd:[],ev:[]}; return; } NET.acc+=dt; if(NET.acc<.1&&!G.over)return; NET.acc=0; bcast(buildSnap()); }
+
+/* ---- 加入者 ---- */
+function netJoin(code,cb){
+  code=String(code||'').trim().toUpperCase();
+  if(!/^[A-Z0-9]{5}$/.test(code)){ cb(null,'房間代碼是 5 個英文字母或數字'); return; }
+  NET.code=code; NET.host=false; let done=false;
+  const to=setTimeout(()=>{ if(!done){ done=true; netLeave(); cb(null,'找不到這個房間（代碼錯了、房主沒開，或網路擋住了）'); } },25000);
+  const onMsg=o=>{
+    if(o.t==='welcome'&&!done){ done=true; clearTimeout(to); NET.on=true; NET.count=o.n; cb(o); }
+    else if(o.t==='full'&&!done){ done=true; clearTimeout(to); netLeave(); cb(null,'房間已經滿了（最多 4 人）'); }
+    else if(o.t==='kick'){ if(!done){ done=true; clearTimeout(to); netLeave(); cb(null,o.why); } }
+    else if(NET.on) clientRecv(o);
+  };
+  const hello=()=>NET.hc.send({t:'join',ver:NET.ver});
+  if(useBC()){ const tmp='t'+Math.random().toString(36).slice(2,8); NET.bc=new BroadcastChannel('mmkz-'+code); NET.hc=wrapConn(s=>NET.bc.postMessage({from:tmp,to:'H',s})); NET.bc.onmessage=ev=>{ const d=ev.data||{}; if(d.to===tmp)NET.hc.recv(d.s,onMsg); }; hello(); return; }
+  const p=new Peer(undefined,peerOpts()); NET.peer=p;
+  p.on('open',()=>{ const raw=p.connect('mmkz-'+code.toLowerCase(),{reliable:true,serialization:'raw'}); NET.hc=wrapConn(s=>{ try{ raw.send(s); }catch(e){} },()=>raw.close()); raw.on('open',hello); raw.on('data',d=>NET.hc.recv(d,onMsg)); raw.on('close',()=>{ if(NET.on)hostGone('房主離開了，或網路斷了。'); }); });
+  p.on('error',e=>{ if(!done&&(e.type==='peer-unavailable'||e.type==='network'||e.type==='server-error'||e.type==='socket-error')){ done=true; clearTimeout(to); netLeave(); cb(null,e.type==='peer-unavailable'?'找不到這個房間（代碼錯了，或房主沒開）':'連不上連線伺服器，請確認有網路'); } });
+}
+function hostGone(why){ if(!NET.on)return; const wasRun=UI.running; netLeave(); if(wasRun)endBattleUI(); showScr('scLobby'); lobbyRefresh(); lobbyMsg(why||'連線中斷'); }
+function netLeave(){
+  if(NET.on&&!NET.host&&NET.hc){ try{ NET.hc.send({t:'bye'}); }catch(e){} }
+  if(NET.host){ bcast({t:'hostbye'}); }
+  const peer=NET.peer,bc=NET.bc; setTimeout(()=>{ try{ peer&&peer.destroy(); }catch(e){} try{ bc&&bc.close(); }catch(e){} },200);
+  restoreGuest(); NET.conns.clear(); NET.on=false; NET.host=false; NET.peer=null; NET.bc=null; NET.hc=null; NET.count=1; netUiRefresh();
+}
+addEventListener('beforeunload',()=>{ if(NET.on)netLeave(); });
+function clientRecv(o){
+  if(o.t==='lobby'){ NET.count=o.n; lobbyRefresh(); }
+  else if(o.t==='start'){ UI.diff=o.di; UI.scn=o.si; if(UI.running)endBattleUI(); startBattle(o.si); }
+  else if(o.t==='snap')applySnap(o);
+  else if(o.t==='hostbye')hostGone('房主離開了房間。');
+}
+function applySnap(o){
+  if(!G||!UI.running)return;
+  G.time=o.T; const map=new Map(); for(const u of G.units)map.set(u.id,u); const keep=new Set();
+  for(const a of o.u){ const [id,def,side,x,y,hp,supp,fx,fy,vet,dep,mv,fl,tang,eng]=a; if(!DEF[def])continue; let u=map.get(id);
+    if(!u){ u=mkUnit(def,side,x,y); u.id=id; u.tx=x; u.ty=y; } u.tx=x; u.ty=y; if(dist(u.x,u.y,x,y)>160){u.x=x;u.y=y;}
+    u.hp=hp; u.supp=supp; u.fx=fx; u.fy=fy; u.vet=vet; u.dep=dep; u.moving=!!mv; u.engaged=!!eng; if(tang!=null)u.tang=tang; if(fl){ u.flash=.09; u.lastFire=G.time; } keep.add(id); }
+  if(G.units.some(u=>!keep.has(u.id))){ G.units=G.units.filter(u=>keep.has(u.id)); G.sel=G.sel.filter(u=>keep.has(u.id)); }
+  o.h.forEach((a,i)=>{ const h=G.hqs[i]; h.hp=a[0]; h.alive=!!a[1]; h.q=a[2].map(e=>({id:e[0],p:e[1],bt:e[2]})); });
+  o.p.forEach((a,i)=>{ const p=G.pts[i]; if(p){ p.owner=a[0]; p.prog=a[1]; p.capSide=a[2]; } });
+  G.res[0].m=o.r[0]; G.res[0].a=o.r[1]; G.tickets=o.tk; G.income[0]={m:o.inc[0],a:o.inc[1]}; G.abCd=o.ab[0]; G.abCd2=o.ab[1]; G.stats=o.st;
+  G.fires=o.fi.map(f=>({x:f[0],y:f[1],r:f[2],t:f[3],life:f[4],dps:f[5],side:0}));
+  for(const f of o.fx){ if(f.k==='shell')f.land=()=>{}; f.t=f.t||0; G.fx.push(f); }
+  for(const s of o.sn){ try{ snd(s[0],s[1],s[2],s[3],s[4]); }catch(e){} }
+  for(const e of o.ev){ if(e[0]==='t')toast(e[1],e[2]); else if(e[0]==='dc'){ G.decals.push(e[1]); }
+    else if(e[0]==='bd'){ const b=G.blds[e[1]]; if(b&&b.alive){ b.alive=false; for(let j=b.y;j<b.y+b.h;j++)for(let i=b.x;i<b.x+b.w;i++){ const k=j*G.w+i; G.grid[k]=T.RUBBLE; refreshPass(k); } G.dirty.push(b); } } }
+  if(o.bh)for(const [i,hp] of o.bh){ if(G.blds[i])G.blds[i].hp=hp; }
+  if(o.over&&!G.over){ G.over=true; G.result=o.res; G.endWhy=o.why; onGameEnd(o.res); }
+}
+function guestStep(dt){
+  G.time+=dt; const k=Math.min(1,dt*12);
+  for(const u of G.units){ if(u.tx!=null){ u.x+=(u.tx-u.x)*k; u.y+=(u.ty-u.y)*k; } if(u.flash>0)u.flash-=dt; }
+  for(let i=G.fx.length-1;i>=0;i--){ const f=G.fx[i]; f.t+=dt; if(f.vx){f.x+=f.vx*dt;f.y+=f.vy*dt;} if(f.t>=f.life)G.fx.splice(i,1); }
+  if(G.fx.length>700)G.fx.splice(0,G.fx.length-700);
+  for(const f of G.fires)f.t+=dt; if(G.abCd>0)G.abCd=Math.max(0,G.abCd-dt); if(G.abCd2>0)G.abCd2=Math.max(0,G.abCd2-dt);
+  G.visT-=dt; if(G.visT<=0){ G.visT=.25; computeVision(); }
+  G.sel=G.sel.filter(u=>!u.dead);
+}
+/* 加入者：把指令改成送給房主 */
+function installGuest(){ if(NET.orig)return; NET.orig={orderMove,orderAttack,orderStop,orderGroupMove,queueUnit,playerAbility,scorchAbility};
+  orderGroupMove=(us,x,y,k)=>gsend({t:'mv',ids:us.map(u=>u.id),x:Math.round(x),y:Math.round(y),k});
+  orderMove=(u,x,y,k)=>gsend({t:'mv',ids:[u.id],x:Math.round(x),y:Math.round(y),k});
+  orderAttack=(u,tg)=>gsend({t:'at',ids:[u.id],tgt:tg.isHQ?'hq':tg.id});
+  orderStop=u=>gsend({t:'st',ids:[u.id]});
+  queueUnit=(s,id)=>{ gsend({t:'q',id}); return true; };
+  playerAbility=(x,y)=>{ const ab=G.sc.ability; if(G.abCd>0||G.res[0].a<ab.cost)return false; gsend({t:'ab',n:1,x:Math.round(x),y:Math.round(y)}); G.abCd=ab.cd; return true; };
+  scorchAbility=(x,y)=>{ const ab=G.sc.ability2; if(!ab||G.abCd2>0||G.res[0].a<ab.cost)return false; gsend({t:'ab',n:2,x:Math.round(x),y:Math.round(y)}); G.abCd2=ab.cd; return true; }; }
+function restoreGuest(){ const o=NET.orig; if(!o)return; orderMove=o.orderMove; orderAttack=o.orderAttack; orderStop=o.orderStop; orderGroupMove=o.orderGroupMove; queueUnit=o.queueUnit; playerAbility=o.playerAbility; scorchAbility=o.scorchAbility; NET.orig=null; }
+function netOnBattleStart(){ if(!NET.on)return; NET.out={fx:[],snd:[],ev:[]}; NET.acc=0; NET.sn=0;
+  if(isHost()){ hookArr(G.fx,'fx'); hookArr(G.decals,'dc'); bcast({t:'start',si:UI.scn,di:UI.diff}); }
+  else { G.units=[]; G.decals=[]; G.evs=[]; installGuest(); }
+  netUiRefresh(); }
+/* 掛鉤：讓房主的聲音、提示、爆破等同步出去 */
+(function(){ const _snd=snd, _toast=toast, _step=step, _db=destroyBld;
+  snd=function(k,x,y,vol,glob){ if(isHost()&&NET.out.snd.length<30)NET.out.snd.push([k,Math.round(x||0),Math.round(y||0),vol,glob?1:0]); return _snd(k,x,y,vol,glob); };
+  toast=function(m,k){ _toast(m,k); if(isHost()&&NET.inStep)NET.out.ev.push(['t',m,k]); };
+  destroyBld=function(b,src){ _db(b,src); if(isHost())NET.out.ev.push(['bd',G.blds.indexOf(b)]); };
+  step=function(dt){ if(isGuest()){ guestStep(dt); return; } NET.inStep=true; _step(dt); NET.inStep=false; hostTick(dt); };
+})();
+
+/* ---- 大廳介面 ---- */
+function lobbyMsg(t){ const e=$('lbMsg'); if(e)e.textContent=t||''; }
+function lobbyRefresh(){ const a=$('lbA'),b=$('lbB'); if(!a)return; a.style.display=NET.on?'none':''; b.style.display=NET.on?'':'none';
+  if(NET.on){ $('lbCodeBig').textContent=NET.code; $('lbList').textContent='目前 '+NET.count+' 人在房間裡（最多 4 人）'; $('lbGo').style.display=NET.host?'':'none'; $('lbWait').style.display=NET.host?'none':''; $('lbBack').textContent='離開房間'; } else $('lbBack').textContent='返回'; }
+function netUiRefresh(){ const t=$('roomTag'); if(t){ t.style.display=(NET.on&&UI.running)?'block':'none'; t.textContent='🌐 房間 '+NET.code+'　'+NET.count+' 人'; }
+  const g=isGuest(); for(const id of ['bSpd','pRestart','eAgain','eNext'])if($(id))$(id).style.display=g?'none':''; if(g&&$('eNext'))$('eNext').style.display='none'; }
+$('mMulti').onclick=()=>{ Snd.init();Snd.resume();Snd.play('click'); lobbyMsg(''); lobbyRefresh(); showScr('scLobby'); };
+$('lbHost').onclick=()=>{ lobbyMsg('建立房間中…'); netHost((code,err)=>{ lobbyMsg(err||'把房間代碼告訴朋友，他們輸入後就會加入。'); lobbyRefresh(); }); };
+$('lbJoin').onclick=()=>{ lobbyMsg('連線中…'); netJoin($('lbCode').value,(r,err)=>{ if(err){ lobbyMsg(err); lobbyRefresh(); return; } lobbyMsg('已加入！等待房主選擇戰役…'); lobbyRefresh(); }); };
+$('lbGo').onclick=()=>{ buildSelect(); showScr('scSelect'); };
+$('lbBack').onclick=()=>{ if(NET.on)netLeave(); lobbyMsg(''); lobbyRefresh(); showScr('scMenu'); };
 
 
 </script>
