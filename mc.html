@@ -2468,7 +2468,7 @@ function liquidTick(dt){if(typeof isHost==='function'&&!isHost()) {LIQ.q.clear()
 
 // ================= 多人連線（房間代碼）=================
 const DIMS=['over','nether','sky'];
-const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611141400'};
+const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611141430'};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
 function peerOpts(){const o={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
@@ -2881,6 +2881,7 @@ function boatTick(v,dt,riding){const surf=waterTop(v.x,v.y+0.2,v.z);const inW=su
 function rideTick(dt){const v=P.ride;if(!v||v.dim!==W.dim){P.ride=null;return;}if(keys.ShiftLeft||keys.ShiftRight||TOUCH.sneak){TOUCH.sneak=false;dismount();return;}
   P.x=v.x;P.z=v.z;P.y=v.y+(VDEF[v.type]?VDEF[v.type].seat:v.type==='boat'?0.05:v.type==='horse'?1.0:v.type==='balloon'?0.4:0.15);P.vy=0;P.onGround=true;P.fallStart=null;P.moveAmt=0;}
 function vehTick(dt){for(const v of [...VEH]){if(v.dim!==W.dim){v.mesh.visible=false;continue;}v.mesh.visible=true;const riding=P.ride===v;
+    {const hide=riding&&!P.third;if(v._fpH!==hide){v._fpH=hide;v.mesh.traverse(o=>{if(o.userData&&o.userData.fp) o.visible=!hide;});}}
     if(v.type==='boat') boatTick(v,dt,riding);else if(v.type==='horse') horseTick(v,dt,riding);else if(v.type==='balloon') balloonTick(v,dt,riding);else if(VDEF[v.type]) warVehTick(v,dt,riding);else cartTick(v,dt,riding);v.mesh.position.set(v.x,v.y,v.z);v.mesh.rotation.y=v.yaw;if(v.hp<3&&Math.random()<dt) v.hp++;}
   if(P.ride) rideTick(dt);}
 // 其他玩家坐的交通工具
@@ -3657,9 +3658,9 @@ function warVehMesh(type){const g=new THREE.Group();const M=c=>new THREE.MeshLam
   const ol=M(0x5a6a3a),dk=M(0x2a2a2a),gl=M(0x9ad0f0),tn=M(0x4a5a2a);
   if(type==='jeep'){box(1.8,0.6,3,0,0.7,0,ol);box(1.8,0.5,1,0,1.2,-0.9,ol);box(1.6,0.5,0.08,0,1.6,-0.4,gl);for(const [x,z] of [[-0.95,-1],[0.95,-1],[-0.95,1],[0.95,1]]) box(0.35,0.7,0.7,x,0.35,z,dk);box(0.25,0.15,0.1,-0.6,0.8,-1.52,M(0xf8f0a0));box(0.25,0.15,0.1,0.6,0.8,-1.52,M(0xf8f0a0));box(0.4,0.6,0.4,0,1.1,1.3,dk);}
   if(type==='tank'){box(2.8,0.9,4.2,0,0.75,0,tn);box(0.7,0.8,4.4,-1.45,0.4,0,dk);box(0.7,0.8,4.4,1.45,0.4,0,dk);const tur=new THREE.Group();tur.position.set(0,1.2,0);g.add(tur);box(1.8,0.8,2,0,0.4,0,ol,tur);box(0.25,0.25,2.6,0,0.45,-2.1,dk,tur);box(0.5,0.3,0.5,0.4,0.95,0.3,dk,tur);g.userData.turret=tur;}
-  if(type==='heli'){box(1.6,1.4,3,0,1.0,0,ol);box(1.4,0.9,0.1,0,1.3,-1.52,gl);box(0.4,0.4,3,0,1.3,2.8,ol);box(0.1,0.9,0.6,0,1.7,4.1,ol);box(0.1,0.1,1.6,-0.6,0.15,0,dk);box(0.1,0.1,1.6,0.6,0.15,0,dk);box(0.1,0.35,0.1,-0.6,0.3,0,dk);box(0.1,0.35,0.1,0.6,0.3,0,dk);
-    const rot=new THREE.Group();rot.position.set(0,1.85,0);g.add(rot);box(7,0.06,0.3,0,0,0,dk,rot);box(0.3,0.06,7,0,0,0,dk,rot);box(0.2,0.3,0.2,0,-0.15,0,dk,rot);g.userData.rotor=rot;}
-  if(type==='heli'){const ar=M(0x3a4428);for(const sx of [-0.84,0.84]) box(0.1,1.0,2.6,sx,1.0,0.1,ar);box(1.7,0.12,2.8,0,1.76,0,ar);box(0.5,0.3,0.3,0,0.55,-1.45,dk);box(0.12,0.12,1.1,0,0.55,-2.05,dk);box(0.2,0.2,0.2,0,0.55,-2.6,M(0x111111));}
+  if(type==='heli'){box(1.6,1.4,3,0,1.0,0,ol);box(1.4,0.9,0.1,0,1.3,-1.52,gl).userData.fp=1;box(0.4,0.4,3,0,1.3,2.8,ol);box(0.1,0.9,0.6,0,1.7,4.1,ol);box(0.1,0.1,1.6,-0.6,0.15,0,dk);box(0.1,0.1,1.6,0.6,0.15,0,dk);box(0.1,0.35,0.1,-0.6,0.3,0,dk);box(0.1,0.35,0.1,0.6,0.3,0,dk);
+    const rot=new THREE.Group();rot.position.set(0,1.85,0);g.add(rot);box(7,0.06,0.3,0,0,0,dk,rot);box(0.3,0.06,7,0,0,0,dk,rot);box(0.2,0.3,0.2,0,-0.15,0,dk,rot);rot.userData.fp=1;g.userData.rotor=rot;}
+  if(type==='heli'){const ar=M(0x3a4428);for(const sx of [-0.84,0.84]) box(0.1,1.0,2.6,sx,1.0,0.1,ar).userData.fp=1;box(1.7,0.12,2.8,0,1.76,0,ar).userData.fp=1;box(0.5,0.3,0.3,0,0.55,-1.45,dk);box(0.12,0.12,1.1,0,0.55,-2.05,dk);box(0.2,0.2,0.2,0,0.55,-2.6,M(0x111111));}
   if(type==='plane'){const pc=M(0x7a8a5a),pd=M(0x5a6a3a),wh=M(0xe8e8e0),rd=M(0xc83a2a);
     box(1.1,1.0,5.2,0,1.1,0,pc);box(0.9,0.8,0.8,0,1.1,-2.9,pd);box(0.8,0.5,1.2,0,1.75,-0.4,gl);box(7.6,0.14,1.5,0,1.05,-0.4,pc);box(0.6,0.16,0.6,-3.2,1.06,-0.4,rd);box(0.6,0.16,0.6,3.2,1.06,-0.4,rd);
     box(2.8,0.12,0.9,0,1.3,2.4,pc);box(0.12,1.0,0.9,0,1.8,2.45,pd);box(0.6,0.2,0.2,0,1.95,2.55,wh);
@@ -3667,8 +3668,8 @@ function warVehMesh(type){const g=new THREE.Group();const M=c=>new THREE.MeshLam
     const pr=new THREE.Group();pr.position.set(0,1.1,-3.35);g.add(pr);box(0.18,2.2,0.08,0,0,0,dk,pr);box(2.2,0.18,0.08,0,0,0,dk,pr);box(0.3,0.3,0.25,0,0,0,M(0xc8c8c8),pr);g.userData.prop=pr;g.rotation.order='YXZ';}
   {const hl=M(0xfff6b0),rd2=M(0xc83a2a);
    if(type==='jeep'){box(0.08,0.9,0.08,-0.8,1.6,0.9,dk);box(0.08,0.9,0.08,0.8,1.6,0.9,dk);box(1.7,0.08,0.08,0,2.05,0.9,dk);box(0.7,0.7,0.12,0,0.55,1.55,dk);box(1.9,0.1,0.15,0,0.45,-1.55,dk);box(0.2,0.2,0.1,-0.6,0.75,1.52,rd2);box(0.2,0.2,0.1,0.6,0.75,1.52,rd2);}
-   if(type==='tank'){for(let i=-1.8;i<=1.8;i+=0.6){box(0.8,0.12,0.4,-1.45,0.82,i,dk);box(0.8,0.12,0.4,1.45,0.82,i,dk);}box(0.5,0.12,0.5,-0.5,2.0,0.3,dk);box(0.12,1.3,0.12,0.8,2.1,0.8,dk);box(0.3,0.3,0.3,0,0.95,-2.1,dk,g.userData.turret);box(2.4,0.2,0.3,0,0.85,-2.15,ol);}
-   if(type==='heli'){box(0.08,0.08,0.7,0.1,1.75,4.4,dk);box(0.7,0.08,0.08,0,1.75,4.5,dk);box(0.18,0.18,0.18,0,0.8,-1.55,hl);box(0.12,0.12,0.12,0,2.05,0.2,rd2);box(0.3,0.5,0.3,0,1.6,0.6,dk);}
+   if(type==='tank'){for(let i=-1.8;i<=1.8;i+=0.6){box(0.8,0.12,0.4,-1.45,0.82,i,dk);box(0.8,0.12,0.4,1.45,0.82,i,dk);}box(0.3,0.3,0.3,0,0.95,-2.1,dk,g.userData.turret);box(2.4,0.2,0.3,0,0.85,-2.15,ol);}
+   if(type==='heli'){box(0.08,0.08,0.7,0.1,1.75,4.4,dk);box(0.7,0.08,0.08,0,1.75,4.5,dk);box(0.18,0.18,0.18,0,0.8,-1.55,hl);box(0.12,0.12,0.12,0,2.05,0.2,rd2);}
    if(type==='plane'){for(const sx of [-0.35,0.35]) box(0.12,0.12,0.5,sx,1.45,-2.5,dk);box(0.2,0.2,0.2,-3.7,1.06,-0.4,hl);box(0.2,0.2,0.2,3.7,1.06,-0.4,rd2);box(7.4,0.04,0.3,0,1.14,-0.9,M(0xe8e8e0));box(1.12,0.2,0.4,0,1.1,-2.4,rd2);}}
   return g;}
 const VDEF={jeep:{sp:15,acc:6,turn:1.8,W2:0.95,H2:1.5,seat:0.55,hint:'上車了：W/S 油門和倒車、A/D 轉彎，可以邊開邊開槍，Shift 下車'},tank:{sp:5,acc:2.5,turn:0.9,W2:1.5,H2:1.8,seat:1.55,hint:'進入坦克：W/S 前進後退、A/D 轉向，砲塔跟著你看的方向，左鍵（手機按「使用」）開砲，Shift 下車'},heli:{sp:16,acc:2,turn:1.5,W2:1.0,H2:1.8,seat:0.55,hint:'坐上防彈直升機🛡️：按住空白鍵（手機「跳」）往上，放開會慢慢下降，W/S/A/D 往你看的方向飛；左鍵（手機「使用」）按住開機槍，子彈打不穿你；Shift 下來'},plane:{sp:30,acc:1,turn:1.2,W2:1.2,H2:1.5,seat:0.75,hint:'坐上戰鬥機✈️：W 加油門、S 減油門，速度夠快（看右下角）就會起飛，往上看拉高、往下看俯衝、轉頭轉彎；左鍵（手機「使用」）按住開機槍；慢慢降低速度平飛到地面就能降落，Shift 下來'}};
