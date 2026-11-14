@@ -2496,8 +2496,96 @@ function checkOver(){const s=state.stats;
   if(s.approval<15){state.over="recall";return true;}
   {const thr=-(easy()?150:100)-Math.round(B()*3);if(s.treasury<thr){if(state.bkT===state.turn-1||state.bkT===state.turn){if(state.bkT===state.turn-1){state.over="bankrupt";return true;}}else{state.bkT=state.turn;state.pending={kind:"bkrisis",thr};}}else if(state.bkT&&state.bkT<state.turn-1)state.bkT=0;}
   return false;}
+/* ================= 歷史大事件（像鋼鐵雄心：到了那一季，歷史就會發生） ================= */
+const HS={
+w:[
+ [1936,1,"h_rhine","德軍開進萊茵蘭","希特勒下令軍隊進駐凡爾賽條約規定的非軍事區。法國和英國都在看對方會不會出手。",h=>{h.boost("276",1.12);h.tens(3);},
+  {who:["250","826","276"],ch:[["抗議，但不出兵",{prestige:-2,stability:2}],["動員部隊施壓",{military:3,tension:8,treasury:-20}],["趁機擴軍",{military:4,prestige:2,tension:5}]]}],
+ [1936,3,"h_spain","西班牙內戰爆發","將軍們發動政變，左右兩派開打。德國、義大利和蘇聯都偷偷送武器過去，西班牙成了列強的練兵場。",h=>{h.tens(3);h.boost("724",.9);},
+  {who:["276","380","643","826","250"],ch:[["派志願軍和武器支援一方",{military:3,treasury:-25,tension:4}],["宣布不干預",{prestige:1,stability:2}]]}],
+ [1936,4,"h_anticom","反共產國際協定","德國和日本簽下協定，說要一起對付共產主義。義大利很快也加入。",h=>{h.join("392","軸心國");h.join("276","軸心國");h.join("380","軸心國");h.tens(3);}],
+ [1937,3,"h_marco","盧溝橋事變","日軍在北平郊外藉口演習失蹤一名士兵，和中國軍隊交火，全面戰爭就此爆發。",h=>{h.decl("392","156");h.tens(4);},
+  {who:["156","392","643","840"],ch:[["全力支援中國抗戰",{prestige:3,treasury:-25,military:2}],["保持距離，不惹麻煩",{stability:2,prestige:-1}]]}],
+ [1938,1,"h_anschluss","德奧合併","德軍開進維也納，奧地利一夜之間成為德國的一部分，英法只提出抗議。",h=>{h.annex("276","040");h.tens(5);},
+  {who:["040"],ch:[["接受，避免流血",{stability:-4,approval:-4}],["拒絕，堅持抵抗",{military:3,stability:-3,tension:10}]]}],
+ [1938,3,"h_munich","慕尼黑協定","英法德義四國開會，決定把捷克的蘇台德地區割給德國，捷克連會議都沒被邀請。",h=>{h.tens(-3);h.boost("276",1.1);},
+  {who:["826","250","203","276"],ch:[["簽字，換取和平",{approval:2,prestige:-3,tension:-6}],["拒絕讓步",{military:3,tension:8,stability:-2}]]}],
+ [1939,1,"h_prague","德軍佔領布拉格","德國撕毀協定，把剩下的捷克也吞掉。綏靖政策宣告破產。",h=>{h.annex("276","203");h.tens(6);}],
+ [1939,2,"h_albania","義大利入侵阿爾巴尼亞","墨索里尼也想要自己的帝國，義軍在亞得里亞海對岸登陸。",h=>{h.annex("380","008");}],
+ [1939,3,"h_pact","蘇德互不侵犯條約","死對頭德國和蘇聯突然簽約，還偷偷約好怎麼瓜分波蘭。全世界都嚇了一跳。",h=>{h.tens(5);},
+  {who:["643","276","616","826","250"],ch:[["簽下協議，爭取時間",{prestige:-2,military:2,tension:-4}],["公開譴責，加強防務",{military:4,treasury:-20,tension:5}]]}],
+ [1939,3,"h_poland","德國入侵波蘭，二戰爆發","1939 年 9 月 1 日，德軍從西邊越過邊界。英國和法國隨後對德國宣戰。",h=>{h.decl("276","616");h.decl("826","276");h.decl("250","276");h.tens(12);h.boost("276",1.1);},
+  {who:["616","826","250","276","643","840"],ch:[["全面動員，進入戰時",{military:5,treasury:-35,stability:-2,tension:8}],["保持戒備，觀望局勢",{stability:2,prestige:-1}]]}],
+ [1939,4,"h_winter","蘇芬冬季戰爭","蘇聯要求芬蘭割地，被拒絕後出兵。芬蘭人在雪地裡打得蘇軍灰頭土臉。",h=>{h.decl("643","246");},
+  {who:["246","643"],ch:[["堅守陣地，寸土不讓",{military:3,prestige:3,stability:-2}],["談判，交換土地",{prestige:-2,stability:2}]]}],
+ [1940,2,"h_norway","德軍閃擊北歐","德國搶在英國前面進攻丹麥和挪威，只花一天就佔領丹麥。",h=>{h.decl("276","578");h.decl("276","208");}],
+ [1940,2,"h_france","法國戰役","德軍繞過馬奇諾防線，穿過阿登森林，用裝甲部隊直撲英吉利海峽。",h=>{h.decl("276","528");h.decl("276","056");h.decl("276","250");h.decl("380","250");h.decl("380","826");h.tens(8);},
+  {who:["250","826","528","056"],ch:[["死守防線",{military:3,stability:-3,prestige:-1}],["機動防禦，保存主力",{military:2,stability:1}]]}],
+ [1940,3,"h_tri","三國同盟條約","德國、義大利、日本正式結成軍事同盟，約好互相支援。",h=>{h.join("392","軸心國");h.join("276","軸心國");h.join("380","軸心國");h.tens(4);}],
+ [1941,2,"h_barbarossa","巴巴羅薩作戰","1941 年 6 月 22 日清晨，三百萬德軍越過邊界入侵蘇聯，史上最大的陸地戰爭開打。",h=>{h.decl("276","643");h.tens(10);},
+  {who:["643","276","826","840"],ch:[["全國總動員",{military:5,treasury:-35,stability:-3,tension:6}],["以空間換時間，節節後退",{military:2,stability:-2,prestige:-2}]]}],
+ [1941,4,"h_pearl","珍珠港事件","日本海軍航空隊偷襲美國太平洋艦隊，美國隔天對日宣戰。",h=>{h.decl("392","840");h.decl("392","826");h.decl("840","392");h.tens(10);},
+  {who:["840","392","156","826"],ch:[["全力投入戰爭",{military:5,treasury:-30,approval:3,tension:6}],["先穩住國內，再反擊",{stability:2,military:2}]]}],
+ [1944,2,"h_dday","諾曼第登陸","盟軍在法國海灘發動史上最大的登陸作戰，西線第二戰場開啟。",h=>{h.tens(4);}],
+ [1945,3,"h_atom","廣島與長崎","兩顆原子彈改變了戰爭，也開啟了核子時代。全世界第一次知道這種武器有多可怕。",h=>{h.tens(6);}]
+],
+g:[
+ [1914,2,"g_sarajevo","塞拉耶佛的槍聲","奧匈帝國皇儲斐迪南大公在塞拉耶佛被刺殺。歐洲所有的盟約，像骨牌一樣一張接一張倒下。",h=>{h.tens(8);}],
+ [1914,3,"g_july","七月危機：列強接連宣戰","奧匈對塞爾維亞宣戰，俄國動員，德國對俄法宣戰，英國因為德軍侵入比利時也加入戰局。",h=>{h.decl("040","688");h.decl("276","643");h.decl("276","250");h.decl("276","056");h.decl("826","276");h.tens(12);},
+  {who:["276","250","643","826","040","688"],ch:[["全國總動員",{military:5,treasury:-30,stability:-2,tension:5}],["外交斡旋，盡量拖延",{prestige:-2,stability:2}]]}],
+ [1914,4,"g_marne","馬恩河奇蹟","法軍用計程車運送援軍，擋住了德軍。戰線停住，雙方開始挖壕溝，一場速戰速決的戰爭變成消耗戰。",h=>{h.boost("276",.92);h.boost("250",1.05);}],
+ [1914,4,"g_ottoman","鄂圖曼加入同盟國","土耳其海軍砲轟俄國黑海港口，鄂圖曼帝國正式參戰。",h=>{h.decl("792","643");h.join("792","同盟國");}],
+ [1915,2,"g_italy","義大利改投協約國","義大利撕毀三國同盟，換邊對奧匈宣戰，條件是戰後給它更多土地。",h=>{h.decl("380","040");h.join("380","協約國");}],
+ [1915,2,"g_lusitania","盧西塔尼亞號沉沒","德國潛艇擊沉英國客輪，一千多名乘客喪生，其中有一百多位美國人。",h=>{h.tens(3);},
+  {who:["840","276","826"],ch:[["發出嚴厲抗議",{prestige:3,tension:3}],["保持中立，不惹戰爭",{stability:2,approval:1}]]}],
+ [1916,1,"g_verdun","凡爾登絞肉機","德軍想把法國的血流乾，雙方在凡爾登打了十個月，死傷各數十萬。",h=>{h.boost("276",.94);h.boost("250",.94);},
+  {who:["250","276"],ch:[["一步也不退",{military:3,stability:-4,approval:-2}],["拉長戰線，輪流換防",{military:1,stability:-1}]]}],
+ [1916,3,"g_tank","坦克第一次上戰場","英軍在索姆河戰場推出『陸地戰艦』，雖然常常拋錨，卻改變了未來的戰爭。",h=>{h.boost("826",1.05);}],
+ [1917,1,"g_feb","俄國二月革命","彼得格勒的工人和士兵上街，沙皇被迫退位。俄國還要不要打下去，成了大問題。",h=>{h.boost("643",.85);h.tens(2);},
+  {who:["643"],ch:[["臨時政府繼續作戰",{military:2,stability:-6,approval:-4}],["尋求停戰",{stability:-2,prestige:-3}]]}],
+ [1917,2,"g_usa","美國參戰","德國恢復無限制潛艇戰，又被抓到拉攏墨西哥的電報。威爾遜總統向國會要求對德宣戰。",h=>{h.decl("840","276");h.join("840","協約國");h.boost("840",1.2);h.tens(5);},
+  {who:["840","276"],ch:[["全力投入歐洲戰場",{military:5,treasury:-30,approval:2,tension:4}],["只提供金錢和物資",{treasury:-15,prestige:1}]]}],
+ [1917,4,"g_oct","十月革命與退出戰爭","布爾什維克奪取政權，與德國簽約退出戰爭，把大片土地割給德國。",h=>{h.peace("643","276");h.peace("643","040");h.peace("643","792");h.tens(-4);},
+  {who:["643"],ch:[["簽訂和約，換取喘息",{stability:3,prestige:-4,treasury:15}],["堅持作戰",{military:3,stability:-8}]]}],
+ [1918,4,"g_armistice","停戰協定","1918 年 11 月 11 日，槍砲聲終於停下，四年的戰爭奪走一千多萬人的生命。",h=>{h.tens(-10);}]
+],
+c:[
+ [1963,4,"c_jfk","甘迺迪遇刺","美國總統在達拉斯遊行時遇刺身亡，全世界為之震驚。副總統詹森宣誓就任。",h=>{h.tens(2);},
+  {who:["840"],ch:[["延續前任政策",{stability:2,approval:2}],["改走自己的路線",{prestige:1,tension:2}]]}],
+ [1964,3,"c_tonkin","東京灣事件","美國宣稱驅逐艦在越南外海遇襲，國會授權總統增兵越南，越戰全面升級。",h=>{h.decl("840","704");h.tens(6);},
+  {who:["840","704","643","156"],ch:[["增兵，全面介入",{military:4,treasury:-30,tension:6}],["有限支援",{treasury:-12,stability:1}]]}],
+ [1964,4,"c_bomb","中國第一顆原子彈","羅布泊升起蘑菇雲，中國成為第五個擁有核武的國家。",h=>{h.boost("156",1.08);h.tens(4);},
+  {who:["156"],ch:[["加速核武與飛彈計畫",{military:5,prestige:5,treasury:-30}],["低調，把錢拿去發展經濟",{econ:3,prestige:2}]]}],
+ [1966,2,"c_cr","文化大革命","學生組成紅衛兵上街，批鬥老師與官員，社會秩序陷入混亂。",h=>{h.boost("156",.9);},
+  {who:["156"],ch:[["順應運動，保持權力",{stability:-6,approval:2}],["設法穩住局面",{stability:2,approval:-3}]]}],
+ [1967,2,"c_sixday","六日戰爭","以色列先發制人，空襲埃及機場，六天內打垮埃及、敘利亞和約旦。",h=>{h.decl("376","818");h.decl("376","760");h.decl("376","400");h.tens(5);},
+  {who:["376","818","760","400","840","643"],ch:[["全力支持一方",{prestige:2,treasury:-25,tension:5}],["呼籲停火",{prestige:3,tension:-3}]]}],
+ [1968,3,"c_prague","布拉格之春","捷克斯洛伐克推動『有人性的社會主義』，華沙公約國出動坦克進城鎮壓。",h=>{h.tens(5);},
+  {who:["203","643","840"],ch:[["堅持改革",{approval:4,stability:-5,tension:5}],["讓步，恢復秩序",{stability:3,approval:-4}]]}],
+ [1969,3,"c_moon","人類登上月球","『這是我個人的一小步，卻是人類的一大步。』阿波羅 11 號成功登月，太空競賽有了贏家。",h=>{h.fxMe(["840"],{prestige:6,approval:4});h.fxMe(["643"],{prestige:-2});h.tens(-3);}],
+ [1971,4,"c_bangla","印巴戰爭與孟加拉獨立","東巴基斯坦要求獨立，印度出兵支援，十三天的戰爭後誕生了孟加拉國。",h=>{h.decl("356","586");h.tens(4);},
+  {who:["356","586","840","643","156"],ch:[["出兵或出手支援",{military:3,treasury:-20,tension:4}],["外交調停",{prestige:2}]]}],
+ [1972,1,"c_nixon","尼克森訪問中國","美國總統走下飛機，和毛澤東握手。冷戰的棋盤，一夕之間重新洗牌。",h=>{h.fxMe(["840","156"],{prestige:5,tension:-6});h.fxMe(["643"],{tension:5});}],
+ [1973,4,"c_yom","贖罪日戰爭與石油危機","埃及和敘利亞在猶太贖罪日突襲以色列。阿拉伯產油國禁運石油，全世界油價暴漲。",h=>{h.decl("818","376");h.decl("760","376");h.tens(8);h.fxMe(["840","392","276","250","826","380","356","158","410"],{econ:-3,treasury:-20});},
+  {who:["376","818","760"],ch:[["全力作戰",{military:4,treasury:-25,tension:5}],["接受停火",{prestige:2,stability:2}]]}]
+]};
+const HEVNT=[];for(const sc in HS)for(const it of HS[sc]){const [y,q,id,n,d,act,ev]=it;if(ev)EVENTS.push({id,cat:"歷史事件",n,d,special:1,hist:1,ch:ev.ch.map(([n2,fx])=>({n:n2,fx}))});}
+const HH={boost(t,f){const W=state.W;if(alive(t)&&t!==W.me&&!isHum(t)&&W.dv[t]!=null)W.dv[t]=Math.max(.5,W.dv[t]*f);},
+  tens(d){state.stats.tension=clamp(state.stats.tension+d,0,100);},
+  decl(a,b){const W=state.W,me=W.me;if(!alive(a)||!alive(b)||a===b||a===me||isHum(a)||isHum(b))return;if(b===me&&(pactWith(a)||sameFac(a,me)))return;try{declare(a,b);}catch(_){}},
+  annex(a,b){const W=state.W,me=W.me;if(!alive(a)||!alive(b)||a===me||isHum(a)||isHum(b))return;if(b===me){HH.decl(a,b);return;}try{capitulate(b,a);}catch(_){}},
+  peace(a,b){const W=state.W;if(a===W.me||b===W.me)return;delete W.war[wk(a,b)];},
+  join(t,f){const W=state.W;if(!alive(t)||t===W.me||isHum(t)||facOf(t))return;if(W.fac[f]){W.fac[f].push(t);}},
+  fxMe(L,fx){if(L.includes(state.W.me))applyFx(fx);}};
+function histStep(){if(!state||!state.W||state.over)return;const W=state.W,S=SCN[W.sc],L=HS[W.sc];if(!L||!S)return;const me=W.me;W.hw=W.hw||{};state.hq=state.hq||{};
+  for(const it of L){const [y,q,id,n,d,act,ev]=it;const T=(y-S.y)*4+q-1;if(T>state.turn)continue;
+    if(!W.hw[id]&&(hsLast()||!state.hs)){W.hw[id]=1;if(T>=state.turn-1){try{act&&act(HH);}catch(_){}log(`📜 歷史：${n}`);news(n);}}
+    const hk2=id+"|"+me;if(state.hq[hk2]||T<state.turn-1)continue;state.hq[hk2]=1;
+    if(ev&&ev.who.includes(me))state.queue.push({id,turn:state.turn});
+    else{(state.genQ=state.genQ||[]).push({kind:"msg",kicker:"歷史事件",stamp:"歷史",title:n,text:d});}}}
 function maybeEvent(){
   if(state.pending)return;
+  try{histStep();}catch(_){}
   const qi=state.queue.findIndex(q=>q.turn<=state.turn);
   if(qi>=0){const q=state.queue.splice(qi,1)[0];
     if(q.id==="peace_conf"){const W=state.W,t=q.pc||W.pc;if(!t||!Object.keys(W.own).some(x=>W.own[x]===W.me&&W.orig[x]===t)){W.pc=null;return maybeEvent();}W.pc=t;}if(q.id!=="peace_offer"||state.war){state.pending={kind:"event",ev:q.id};return;}}
