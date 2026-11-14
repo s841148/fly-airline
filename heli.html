@@ -96,6 +96,7 @@ button{font-family:inherit;cursor:pointer}
 #tDn{right:31vw;bottom:5vh;width:70px;height:70px}
 #tFire{right:4vw;bottom:5vh;width:104px;height:104px;font-size:18px;background:rgba(170,40,30,.5)!important}
 #tWeap{right:calc(4vw + 112px);bottom:calc(5vh + 60px);width:64px;height:64px;font-size:13px}
+#tWing{right:calc(4vw + 112px);bottom:calc(5vh + 62px);width:60px;height:60px;font-size:12px;line-height:1.2}
 #tFlare{right:calc(4vw + 112px);bottom:calc(5vh - 8px);width:60px;height:60px;font-size:13px}
 #tGun{right:calc(4vw + 18px);bottom:calc(5vh + 114px);width:66px;height:66px;font-size:13px}
 #tTop{pointer-events:auto;position:absolute;right:10px;top:84px;display:flex;flex-direction:column;gap:6px}
@@ -168,6 +169,7 @@ body.touch .toast{font-size:13px}
  <div class="tb" id="tGun">機砲</div>
  <div class="tb" id="tWeap">換武器</div>
  <div class="tb" id="tFlare">熱焰彈</div>
+ <div class="tb" id="tWing">僚機<br>自由</div>
  <div id="tTop"><div class="tb" id="tPause">⏸</div><div class="tb" id="tMap">🗺</div><div class="tb" id="tView">🎥</div></div>
 </div>
 
@@ -240,7 +242,8 @@ body.touch .toast{font-size:13px}
  <tr><td>1 / 2 / 3、滾輪</td><td>切換：機砲 / 火箭 / 地獄火飛彈</td></tr>
  <tr><td>地獄火</td><td>射程約 8～11 公里。準星對準敵人約 1 秒，框框變紅「鎖定」再發射，飛彈會自己追過去。中間被山擋住就鎖不到</td></tr>
  <tr><td>R／點雷達</td><td>雷達範圍切換：3 公里／11 公里（看遠方的敵人）</td></tr>
- <tr><td>F</td><td>投熱焰彈：聽到「飛彈來襲」時按，可以騙走敵人的飛彈</td></tr>
+ <tr><td>Z / X / G</td><td>指揮僚機：Z 跟著我、X 集中攻擊準星對準的敵人、G 自由攻擊（手機點「僚機」鈕切換）</td></tr>
+<tr><td>F</td><td>投熱焰彈：聽到「飛彈來襲」時按，可以騙走敵人的飛彈</td></tr>
  <tr><td>V</td><td>切換視角（追蹤／駕駛艙／遠景）</td></tr>
  <tr><td>M</td><td>大地圖</td></tr>
  <tr><td>Esc / P</td><td>暫停、開房間</td></tr>
@@ -914,7 +917,7 @@ const TIN={fwd:0,turn:0,up:false,dn:false,fire:false,gun:false};
 addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT') return; const k=e.code; KEY[k]=true;
  if(mode!=='game') { if(k==='Escape'&&!$('mapOv').classList.contains('hidden')) toggleMap(false); return; }
  if(k==='Digit1') selW(0); else if(k==='Digit2') selW(1); else if(k==='Digit3') selW(2);
- else if(k==='KeyF') dropFlare(); else if(k==='KeyR') cycleRadar(); else if(k==='KeyV') CAM.mode=(CAM.mode+1)%3;
+ else if(k==='KeyF') dropFlare(); else if(k==='KeyR') cycleRadar(); else if(k==='KeyZ') wingCmd('follow'); else if(k==='KeyX') wingCmd('attack'); else if(k==='KeyG') wingCmd('free'); else if(k==='KeyV') CAM.mode=(CAM.mode+1)%3;
  else if(k==='KeyM') toggleMap(); else if(k==='Escape'||k==='KeyP'){ if(!$('mapOv').classList.contains('hidden')) toggleMap(false); else if(!$('pause').classList.contains('hidden')) $('pResume').click(); else openPause(); }
  if(['Space','ArrowUp','ArrowDown'].includes(k)) e.preventDefault(); });
 addEventListener('keyup',e=>{ KEY[e.code]=false; });
@@ -939,7 +942,7 @@ function setupTouch(){
   const end=e=>{ el.classList.remove('on'); off&&off(); e.preventDefault(); }; el.addEventListener('touchend',end,{passive:false}); el.addEventListener('touchcancel',end,{passive:false}); };
  hold('tUp',()=>TIN.up=true,()=>TIN.up=false); hold('tDn',()=>TIN.dn=true,()=>TIN.dn=false);
  hold('tFire',()=>TIN.fire=true,()=>TIN.fire=false); hold('tGun',()=>TIN.gun=true,()=>TIN.gun=false);
- hold('tWeap',()=>selW((ME.w+1)%3)); hold('tFlare',()=>dropFlare());
+ hold('tWeap',()=>selW((ME.w+1)%3)); hold('tFlare',()=>dropFlare()); hold('tWing',()=>wingCmd(WING.mode==='free'?'follow':WING.mode==='follow'?'attack':'free'));
  hold('tPause',()=>openPause()); hold('tMap',()=>toggleMap()); hold('tView',()=>CAM.mode=(CAM.mode+1)%3);
 }
 
@@ -1184,9 +1187,20 @@ function aiHeli(u,dt){
 function fireF(k,from,dir,tgt){ const p=fire(k,from,dir,{side:'f',tgt}); const d=dir.clone().normalize();
  if(isHostNet()) NET.bcast({t:'fire',k,o:[from.x,from.y,from.z].map(r1),d:[d.x,d.y,d.z].map(r3),tg:tgt||0,by:'AI'}); sfxAt(k==='hf'?'hf':'rkt',from,1); return p; }
 // 友軍僚機（AI）：找敵人、保持距離、用機砲／火箭／地獄火攻擊
+// 指揮僚機：free 自由攻擊／follow 跟著我（只還擊身邊的敵人）／attack 集中攻擊我瞄準的目標
+const WING={mode:'free',tgt:0};
+function wingCmd(m){
+ if(isClient()){ toast('只有房主可以指揮僚機','gold'); return; }
+ if(!([...UNITS.values()].some(u=>u.type==='fheli'&&u.alive))){ toast('目前沒有僚機可以指揮','gold'); return; }
+ if(m==='attack'){ const t=AIM.unit&&AIM.unit.alive&&(AIM.unit.side==='e')?AIM.unit:null; if(!t){ toast('先用準星對準敵人，再下「攻擊」指令','gold'); return; } WING.tgt=t.id; WING.mode='attack'; toast('🚁 僚機：集中攻擊目標！','gold'); }
+ else if(m==='follow'){ WING.mode='follow'; WING.tgt=0; toast('🚁 僚機：跟著我，只還擊近處的敵人','gold'); }
+ else { WING.mode='free'; WING.tgt=0; toast('🚁 僚機：自由攻擊','gold'); }
+ sfx('ping',.5); const b=$('tWing'); if(b) b.innerHTML='僚機<br>'+({free:'自由',follow:'跟隨',attack:'攻擊'})[WING.mode];
+}
 function aiFHeli(u,dt){
  let tgt=null,bs=1e9;
- for(const e of UNITS.values()){ if(!e.alive||e.side!=='e') continue; const du=e.pos.distanceTo(u.pos), dm=e.pos.distanceTo(ME.pos); if(du>7000||dm>8500) continue; const sc=du-(e.type==='sam'?900:0)-(e.air?600:0); if(sc<bs){ bs=sc; tgt=e; } }
+ if(WING.mode==='attack'){ const t=UNITS.get(WING.tgt); if(t&&t.alive&&t.side==='e') tgt=t; else { WING.mode='free'; toast('🚁 目標已消滅，僚機恢復自由攻擊','gold'); } }
+ if(!tgt) for(const e of UNITS.values()){ if(!e.alive||e.side!=='e') continue; const du=e.pos.distanceTo(u.pos), dm=e.pos.distanceTo(ME.pos); if(du>7000||dm>8500) continue; if(WING.mode==='follow'&&(du>2500||(dm>3500&&!ME.dead))) continue; const sc=du-(e.type==='sam'?900:0)-(e.air?600:0); if(sc<bs){ bs=sc; tgt=e; } }
  const lead=ME.dead?null:ME; let goal=u.pos.clone();
  if(tgt){ const stand=(tgt.type==='sam'||tgt.type==='aa'||tgt.type==='aaboat')?4300:(tgt.air?800:1100);
   const d=u.pos.clone().sub(tgt.pos); d.y=0; if(d.lengthSq()<1) d.set(1,0,0); d.normalize();
@@ -1475,7 +1489,7 @@ function clearRings(){ RINGS.forEach(r=>scene.remove(r)); RINGS=[]; }
 function syncRings(rings,ri){ if(!rings){ if(RINGS.length) clearRings(); return; }
  if(RINGS.length!==rings.length){ clearRings(); rings.forEach(r=>{ const m=new T.Mesh(new T.TorusGeometry(18,1.4,8,32),BMAT(0xffd75e,{transparent:true,opacity:.85})); m.position.set(r[0],groundY(r[0],r[1])+r[2],r[1]); scene.add(m); RINGS.push(m); }); }
  RINGS.forEach((m,i)=>{ m.visible=i>=ri; m.material=i===ri?(m._a||(m._a=BMAT(0xffd75e,{transparent:true,opacity:.9}))):(m._b||(m._b=BMAT(0x9fd3ff,{transparent:true,opacity:.35}))); m.lookAt(i<rings.length-1?V3(rings[i+1][0],m.position.y,rings[i+1][1]):camera.position); m.rotation.z+=.01; }); }
-function startMission(id){
+function startMission(id){ WING.mode="free"; WING.tgt=0; { const b=$("tWing"); if(b) b.innerHTML="僚機<br>自由"; }
  const def=findMission(id); clearWorld();
  MS={def,id,t:0,over:false,obj:[],marks:[],leaks:0,landed:0};
  ME.score=0; ME.kills=0; ME.deaths=0; for(const p of REM.values()){ p.score=0; p.kills=0; p.deaths=0; }
