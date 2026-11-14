@@ -115,7 +115,7 @@ h1.title{font-family:"Noto Serif TC","標楷體","DFKai-SB",serif;font-size:clam
     <h2 id="bName"></h2><div class="yr" id="bYear"></div>
     <p id="bText"></p>
     <p><span class="tag">任務</span><span id="bGoal"></span></p>
-    <p><span class="tag">提示</span><span id="bTips"></span></p>
+    <p><span class="tag">提示</span><span id="bTips" style="white-space:pre-line"></span></p>
     <div class="row"><button class="btn sec" id="bBack">返回</button><button class="btn" id="bGo">進入戰場</button></div>
   </div>
 </div>
@@ -279,6 +279,8 @@ def('n_dadao', {side:0,name:'大刀隊',sub:'敢死隊',cls:'inf',sym:'sword',N:
   desc:'近戰衝鋒，壓縮距離後殺傷力極高。',weapons:[{r:44,rof:.55,dmg:9.5,ap:.3,hit:.82,supp:4,mel:true,snd:'melee'}]});
 def('n_art',   {side:0,name:'山砲組',sub:'75mm山砲',cls:'inf',sym:'art',N:4,hp:80,spd:28,sight:250,cost:[260,90],bt:16,vet:1,setup:2.6,
   desc:'遠程重砲，威力大但慢。',weapons:[{r:720,minR:210,rof:6,dmg:72,aoe:80,ap:14,hit:.55,supp:32,ind:true,snd:'cannon',scat:60}]});
+def('n_guerrilla',{side:0,name:'遊擊隊',sub:'地方游擊武力',cls:'inf',sym:'inf',N:5,hp:75,spd:78,sight:250,cost:[80,0],bt:6,vet:1,fom:1,stealth:1,
+  desc:'隱蔽在林地與房舍中極難被發現，適合伏擊；正面對抗較弱。',weapons:[{r:225,rof:1,dmg:10,ap:1.1,hit:.64,supp:2.2}]});
 def('n_vick',  {side:0,name:'維克斯戰車',sub:'維克斯6噸',cls:'veh',sym:'tank',N:1,hp:230,spd:72,sight:300,cost:[240,70],bt:16,armor:9,fom:1,
   desc:'英製輕戰車，國軍少數的裝甲力量。',weapons:[{r:360,rof:2.8,dmg:46,ap:17,soft:.5,aoe:24,hit:.72,supp:10,snd:'cannon',tr:'#ffb347'},{r:260,rof:.5,burst:3,dmg:3,ap:3,hit:.55,supp:4.5,snd:'mg',tr:'#ffd36a'}]});
 def('n_t26',   {side:0,name:'T-26輕戰車',sub:'蘇製T-26',cls:'veh',sym:'tank',N:1,hp:320,spd:70,sight:300,cost:[280,80],bt:17,armor:15,fom:1,
@@ -417,6 +419,59 @@ function paintKunlun(m){
   sandLine(m,33,23,1,3); sandLine(m,40,23,1,3);
 }
 
+function paintXinkou(m){
+  rectT(m,0,0,72,48,T.FIELD); rectT(m,0,0,72,48,T.PADDY,[]);
+  hills(m,30,24,10,22,3,510); hills(m,44,12,10,8,3,511); hills(m,22,38,9,6,3,512); hills(m,56,34,8,7,2,513); hills(m,10,10,7,6,2,514);
+  scatterTrees(m,0,0,72,48,22,3,2.5,520);
+  river(m,[[40,0],[38,12],[42,26],[40,36],[44,47]],3.2);
+  stamp(m,40,19,1.6,T.FORD,[T.WATER]); stamp(m,43,31,1.6,T.FORD,[T.WATER]);
+  road(m,[[0,40],[14,36],[26,30],[36,26],[48,20],[60,10],[70,4]],2.2);
+  road(m,[[26,30],[30,44]],1.4); road(m,[[48,20],[60,32],[70,38]],1.4);
+  for(let i=0;i<m.w*m.h;i++) if(m.g[i]===T.ROAD) m.el[i]=0;
+  setHQ(m,0,2,36,7,4, 8,40, 10,38,'roc');
+  setHQ(m,1,62,2,8,4, 64,7, 60,9,'jp');
+  city(m,14,30,26,42,'mud',22,[2,3],[2,3]); city(m,44,14,56,26,'mud',24,[2,3],[2,3]); city(m,56,24,68,36,'mud',22,[2,3],[2,3]);
+  point(m,'南懷化高地',27,20); point(m,'紅溝',20,35); point(m,'忻口鎮',36,26); point(m,'雲中河渡口',41,19); point(m,'大白水',54,12);
+  for(const p of m.pts) clearAround(m,p.tx,p.ty,2);
+  for(const [x,y] of [[26,18],[29,23],[33,28],[18,34]]) bld(m,x,y,2,2,'bunker',400);
+  sandLine(m,24,20,1,3); sandLine(m,32,24,1,3); sandLine(m,38,25,3,1);
+}
+function paintWanjialing(m){
+  rectT(m,0,0,72,48,T.FIELD); rectT(m,0,30,26,18,T.PADDY);
+  hills(m,38,12,13,9,3,610); hills(m,52,32,11,8,3,611); hills(m,26,22,8,9,3,612); hills(m,64,10,7,7,2,613); hills(m,16,8,8,6,2,614);
+  scatterTrees(m,0,0,72,48,26,3,2.5,620);
+  river(m,[[0,26],[10,29],[20,27],[30,30]],3.4); // 鄱陽湖灣
+  blob(m,2,38,8,10,T.WATER,null,.5,630);
+  river(m,[[34,36],[46,28],[58,24],[72,26]],3);
+  stamp(m,40,32,1.5,T.FORD,[T.WATER]);
+  road(m,[[0,44],[16,40],[30,34],[44,26],[56,16],[70,6]],2.2);
+  road(m,[[44,26],[50,44]],1.4); road(m,[[30,34],[24,16]],1.4);
+  for(let i=0;i<m.w*m.h;i++) if(m.g[i]===T.ROAD) m.el[i]=0;
+  setHQ(m,0,10,40,7,4, 15,43, 17,40,'roc');
+  setHQ(m,1,62,2,8,4, 64,7, 60,9,'jp');
+  city(m,20,36,34,46,'mud',22,[2,3],[2,3]); city(m,46,18,58,28,'mud',24,[2,3],[2,3]); city(m,58,36,68,46,'mud',20,[2,3],[2,3]);
+  point(m,'德安',24,38); point(m,'張古山',38,13); point(m,'萬家嶺',50,24); point(m,'金官橋',40,32); point(m,'老鼠山',53,36);
+  for(const p of m.pts) clearAround(m,p.tx,p.ty,2);
+  sandLine(m,22,36,1,3); sandLine(m,36,14,3,1); sandLine(m,47,23,1,3);
+}
+function paintRengan(m){
+  rectT(m,0,0,72,48,T.FIELD);
+  for(let k=0;k<20;k++) blob(m,m.rng()*72,m.rng()*48,2.5+m.rng()*3,2+m.rng()*2.5,T.FOREST,[T.FIELD],.8,700+k);
+  hills(m,52,10,9,6,2,710); hills(m,12,12,7,6,2,711);
+  river(m,[[0,26],[14,27],[28,24],[44,26],[58,25],[72,27]],4.2); // 平墻河
+  stamp(m,24,25.5,1.6,T.FORD,[T.WATER]); stamp(m,50,26,1.6,T.FORD,[T.WATER]);
+  road(m,[[0,44],[16,36],[30,28],[44,26],[56,16],[70,4]],2.4);
+  road(m,[[30,28],[34,10]],1.4); road(m,[[44,26],[40,44]],1.4);
+  for(let i=0;i<m.w*m.h;i++){ if(m.g[i]===T.ROAD) m.el[i]=0; }
+  setHQ(m,0,2,40,7,4, 8,43, 10,40,'roc');
+  setHQ(m,1,62,2,8,4, 64,7, 60,9,'jp');
+  // 油田區（建築群）
+  city(m,40,12,58,24,'mud',34,[2,3],[2,3]); city(m,22,6,36,18,'mud',22,[2,3],[2,3]); city(m,8,30,24,42,'mud',16,[2,3],[2,3]);
+  point(m,'仁安羌油田',48,16); point(m,'平墻河南岸',30,29); point(m,'公路橋',44,25); point(m,'被圍英軍陣地',26,12); point(m,'日軍封鎖線',56,14);
+  for(const p of m.pts) clearAround(m,p.tx,p.ty,2);
+  sandLine(m,45,22,3,1); sandLine(m,54,13,1,3); sandLine(m,28,10,1,3);
+}
+
 const SCN=[
  {id:'songhu',aiK:.82,hq:['四行倉庫','日軍陸戰隊本部'],name:'淞滬會戰',sub:'閘北巷戰',year:'1937 年 10 月',paint:paintShanghai,w:72,h:48,seed:11,
   pal:{field:[150,142,124],paddy:[120,128,96],road:[172,160,134],water:[78,98,106],forest:[84,98,66],hill:[110,112,84],sky:'#7d7568'},
@@ -430,43 +485,86 @@ const SCN=[
   ai:{mix:{j_rifle:5,j_elite:3,j_lmg:2,j_hmg:2,j_grenade:1.5,j_gun:1},tank:{id:'j_t95',after:300,w:1.5},support:{kind:'naval',name:'日艦砲擊',first:170,every:[120,170]},at:'j_gun'},
   ability:{name:'砲兵支援',cost:60,cd:75,n:8,rad:62,dmg:46},
   events:[]},
- {id:'taierzhuang',aiK:.92,hq:['守軍指揮所','日軍前進指揮所'],name:'台兒莊戰役',sub:'城中死守',year:'1938 年 3–4 月',paint:paintTaierzhuang,w:72,h:48,seed:22,
+ {id:'taierzhuang',mech:'urban',mechTxt:'巷戰：建築與瓦礫掩體更強，大刀隊在城內跑得更快，敵軍戰車在城內變慢。',aiK:.92,hq:['守軍指揮所','日軍前進指揮所'],name:'台兒莊戰役',sub:'城中死守',year:'1938 年 3–4 月',paint:paintTaierzhuang,w:72,h:48,seed:22,
   pal:{field:[166,152,102],paddy:[150,146,100],road:[184,166,122],water:[96,118,112],forest:[104,118,66],hill:[140,130,90],sky:'#8a7f5c'},
   brief:'1938 年 3 至 4 月，李宗仁指揮的第五戰區，以孫連仲部固守台兒莊，並調集部隊從外圍包抄，日軍久攻不下並遭到反包圍，最後撤退。這是抗戰初期國軍少見的重大勝利，大大鼓舞了全國民心。\n本關為簡化版的守城戰，約五分鐘後友軍會從側翼趕到。',
   goal:'守住城牆內據點，撐到援軍抵達後反擊，摧毀日軍指揮所或耗盡其兵力。',
   tips:'城牆有缺口，把兵力集中堵缺口。大刀隊在巷戰近距離極強。',
-  roster:{0:['n_rifle','n_lmg','n_hmg','n_mortar','n_at','n_dadao'],1:['j_rifle','j_lmg','j_hmg','j_grenade','j_gun','j_t95','j_t89']},
+  roster:{0:['n_rifle','n_lmg','n_hmg','n_mortar','n_at','n_dadao','n_guerrilla'],1:['j_rifle','j_lmg','j_hmg','j_grenade','j_gun','j_t95','j_t89']},
   start:{0:[['n_rifle',27,28],['n_rifle',31,27],['n_rifle',34,26],['n_dadao',35,22],['n_hmg',33,25],['n_lmg',38,26],['n_rifle',22,25]],
          1:[['j_rifle',56,10],['j_rifle',60,12],['j_lmg',58,14],['j_hmg',62,10],['j_gun',64,9],['j_rifle',54,16]]},
   res:[380,90],
   ai:{mix:{j_rifle:5,j_lmg:2,j_hmg:2,j_grenade:1.5,j_gun:1.2},tank:{id:'j_t95',after:200,w:1.6,alt:'j_t89'},support:{kind:'air',name:'日機空襲',first:210,every:[130,190]},at:'j_gun'},
   ability:{name:'砲兵支援',cost:60,cd:80,n:7,rad:60,dmg:44},
   events:[{t:300,side:0,units:['n_rifle','n_rifle','n_dadao','n_dadao','n_lmg','n_mortar'],from:[1,24],to:[22,24],msg:'友軍從外圍趕到，從側翼增援！',snd:'bugle'}]},
- {id:'changsha',hq:['長沙守軍指揮所','日軍前進指揮所'],name:'長沙會戰',sub:'天爐戰法',year:'1941 年底',paint:paintChangsha,w:72,h:48,seed:33,
+ {id:'changsha',mech:'scorch',mechTxt:'焦土戰術：可放火封鎖道路，火場內敵軍持續受傷並減速（另有岳麓山砲擊）。',hq:['長沙守軍指揮所','日軍前進指揮所'],name:'長沙會戰',sub:'天爐戰法',year:'1941 年底',paint:paintChangsha,w:72,h:48,seed:33,
   pal:{field:[124,134,84],paddy:[106,128,96],road:[168,150,112],water:[90,118,128],forest:[70,98,58],hill:[102,114,72],sky:'#7b8460'},
   brief:'長沙在抗戰期間先後發生多次會戰。第九戰區司令長官薛岳採取「後退決戰」，誘敵深入後再反擊，被稱為「天爐戰法」。1941 年底至 1942 年初的第三次長沙會戰，日軍久攻長沙不下，撤退途中又遭追擊。\n本關有湘江西岸的重砲支援，砲擊支援冷卻較短。',
   goal:'守住長沙城周邊據點，趁日軍久攻疲憊時擊潰其兵力，或直搗指揮所。',
   tips:'稻田掩體少，盡量把兵放在村落與城內。砲擊支援冷卻短，要多用。',
-  roster:{0:['n_rifle','n_lmg','n_hmg','n_mortar','n_at','n_dadao','n_art'],1:['j_rifle','j_lmg','j_hmg','j_grenade','j_gun','j_t95','j_t97','j_art']},
+  roster:{0:['n_rifle','n_lmg','n_hmg','n_mortar','n_at','n_dadao','n_art','n_guerrilla'],1:['j_rifle','j_lmg','j_hmg','j_grenade','j_gun','j_t95','j_t97','j_art']},
   start:{0:[['n_rifle',17,38],['n_rifle',21,36],['n_rifle',21,22],['n_hmg',21,24],['n_lmg',19,26],['n_mortar',16,31],['n_dadao',24,26]],
          1:[['j_rifle',44,8],['j_rifle',48,7],['j_lmg',52,9],['j_hmg',46,10],['j_gun',58,7],['j_rifle',56,20],['j_rifle',58,24]]},
   res:[400,100],
   ai:{mix:{j_rifle:5,j_lmg:2,j_hmg:2,j_grenade:1.5,j_gun:1.2,j_art:.7},tank:{id:'j_t95',after:240,w:1.4,alt:'j_t97',altAfter:420},support:{kind:'art',name:'日軍砲擊',first:200,every:[140,200]},at:'j_gun'},
   ability:{name:'岳麓山砲擊',cost:40,cd:42,n:9,rad:64,dmg:50},
+  ability2:{name:'焦土放火',cost:35,cd:55,rad:96,life:24,dps:13},
   events:[{t:360,side:0,units:['n_rifle','n_rifle','n_lmg','n_at'],from:[70,44],to:[48,36],msg:'外線友軍回援長沙！',snd:'bugle'}]},
- {id:'kunlun',hq:['第五軍指揮所','日軍後方基地'],garrison:true,name:'崑崙關戰役',sub:'仰攻山地',year:'1939 年 12 月',paint:paintKunlun,w:72,h:48,seed:44,
+ {id:'kunlun',mech:'mountain',mechTxt:'山地作戰：站在高地（兩級以上）的步兵射程加遠，山坡掩體更好；仰攻會很吃力。',hq:['第五軍指揮所','日軍後方基地'],garrison:true,name:'崑崙關戰役',sub:'仰攻山地',year:'1939 年 12 月',paint:paintKunlun,w:72,h:48,seed:44,
   pal:{field:[104,130,76],paddy:[100,128,84],road:[160,138,100],water:[90,118,124],forest:[56,88,50],hill:[112,122,74],sky:'#5d7048'},
   brief:'1939 年底至 1940 年初，杜聿明率第五軍（含機械化的第 200 師）進攻廣西南寧北方的崑崙關，與日軍第五師團一部在山地高地展開激烈爭奪，傷亡慘重。國軍一度攻下崑崙關，日軍旅團長中村正雄戰死。\n本關為簡化的山地攻堅，日軍預先佔據高地與碉堡。',
   goal:'奪取崑崙關與周邊高地，耗盡日軍兵力，或摧毀日軍指揮所。',
   tips:'站在高處射程與視野更好，敵人在碉堡裡很硬，用迫擊砲、山砲與戰車慢慢轟開。',
-  roster:{0:['n_rifle','n_german','n_lmg','n_hmg','n_mortar','n_at','n_dadao','n_art','n_t26'],1:['j_rifle','j_elite','j_lmg','j_hmg','j_grenade','j_gun','j_art','j_at']},
+  roster:{0:['n_rifle','n_german','n_lmg','n_hmg','n_mortar','n_at','n_dadao','n_art','n_t26','n_guerrilla'],1:['j_rifle','j_elite','j_lmg','j_hmg','j_grenade','j_gun','j_art','j_at']},
   start:{0:[['n_german',9,9],['n_german',11,9],['n_rifle',13,10],['n_rifle',8,8],['n_hmg',10,10],['n_mortar',7,9],['n_dadao',14,11],['n_lmg',12,11]],
          1:[['j_elite',36,22],['j_elite',35,26],['j_elite',38,25],['j_hmg',34,23],['j_hmg',40,22],['j_gun',40,27],['j_rifle',26,15],['j_rifle',52,17],['j_lmg',17,29],['j_rifle',52,35],['j_grenade',37,27]]},
   res:[440,130],
   ai:{mix:{j_elite:4,j_rifle:3,j_lmg:2,j_hmg:2,j_grenade:1.5,j_gun:1.2,j_art:.8},tank:null,support:{kind:'air',name:'日機轟炸',first:150,every:[110,160]},at:'j_at'},
   ability:{name:'砲兵支援',cost:60,cd:70,n:8,rad:62,dmg:48},
   events:[{t:420,side:1,units:['j_elite','j_elite','j_gun','j_hmg'],from:[70,44],to:[44,28],msg:'日軍增援部隊抵達戰場！',snd:'whistle'}]},
+
+ {id:'xinkou',mech:'mountain',mechTxt:'山地作戰：站在高地（兩級以上）的步兵射程加遠，山坡掩體更好。後方游擊隊可在敵後伏擊。',aiK:.9,hq:['忻口前線指揮所','日軍前進指揮所'],name:'忻口會戰',sub:'晉北高地爭奪',year:'1937 年 10–11 月',paint:paintXinkou,w:72,h:48,seed:55,
+  pal:{field:[150,138,98],paddy:[150,140,100],road:[176,158,118],water:[96,118,116],forest:[92,106,64],hill:[132,124,86],sky:'#7f7656'},
+  brief:'1937 年 10 月，日軍沿同蒲路北段南下，國軍在山西忻口一帶依山構築防線，與日軍展開了約一個月的激戰，前線將領犧牲不少。戰事期間敵後的部隊也襲擾日軍補給線。本關是簡化改編版，重點在高地防守與反擊，並非完整史實。',
+  goal:'守住南懷化高地與忻口鎮，耗盡日軍兵力，或摧毀其前進指揮所。',
+  tips:'把機槍和迫擊砲放在高地上，視野與射程都更好。遊擊隊便宜又難被發現，適合埋伏在側翼。',
+  roster:{0:['n_rifle','n_german','n_lmg','n_hmg','n_mortar','n_at','n_dadao','n_guerrilla'],1:['j_rifle','j_elite','j_lmg','j_hmg','j_grenade','j_gun','j_t95']},
+  start:{0:[['n_rifle',8,38],['n_rifle',12,36],['n_german',14,34],['n_hmg',18,35],['n_mortar',10,40],['n_lmg',22,31],['n_rifle',26,22],['n_hmg',26,19]],
+         1:[['j_elite',58,12],['j_rifle',62,10],['j_rifle',56,16],['j_lmg',60,14],['j_hmg',54,12],['j_gun',64,8]]},
+  res:[400,100],
+  ai:{mix:{j_rifle:5,j_elite:2,j_lmg:2,j_hmg:2,j_grenade:1.5,j_gun:1.2},tank:{id:'j_t95',after:300,w:1.3},support:{kind:'art',name:'日軍砲擊',first:200,every:[140,200]},at:'j_gun'},
+  ability:{name:'砲兵支援',cost:60,cd:72,n:8,rad:62,dmg:46},
+  events:[{t:280,side:0,units:['n_guerrilla','n_guerrilla','n_guerrilla'],from:[70,30],to:[56,20],msg:'敵後游擊部隊出現在日軍側翼！',snd:'bugle'}]},
+ {id:'wanjialing',mech:'mountain',mechTxt:'山地作戰：站在高地（兩級以上）的步兵射程加遠，山坡掩體更好。',aiK:.8,hq:['德安指揮所','日軍第一○六師團前進所'],name:'萬家嶺大捷',sub:'武漢會戰·圍殲',year:'1938 年 9–10 月',paint:paintWanjialing,w:72,h:48,seed:66,
+  pal:{field:[128,140,88],paddy:[110,132,98],road:[170,152,112],water:[88,116,128],forest:[62,96,56],hill:[108,120,72],sky:'#667a52'},
+  brief:'1938 年 9 月底，武漢會戰期間，日軍一個師團沿南潯路突進江西德安一帶，深入山區。國軍集結部隊，從兩側包抄，將其困在萬家嶺附近，經過數日戰鬥，重創日軍。本關是簡化改編版：先穩住防線，援軍到時從兩翼反包圍。',
+  goal:'撐住德安，等友軍兩翼抵達後反擊，奪取萬家嶺並耗盡日軍兵力，或摧毀其指揮所。',
+  tips:'前期別深入，等兩支友軍增援出現再一起壓上。敵軍補給有限，久戰對你有利。',
+  roster:{0:['n_rifle','n_german','n_lmg','n_hmg','n_mortar','n_at','n_dadao','n_art','n_guerrilla'],1:['j_rifle','j_elite','j_lmg','j_hmg','j_grenade','j_gun','j_art']},
+  start:{0:[['n_rifle',22,38],['n_rifle',26,36],['n_german',28,34],['n_hmg',24,36],['n_lmg',30,34],['n_mortar',18,40],['n_rifle',16,40]],
+         1:[['j_elite',48,24],['j_rifle',52,22],['j_rifle',44,26],['j_hmg',50,26],['j_gun',58,12],['j_lmg',38,14],['j_rifle',40,13],['j_grenade',54,24]]},
+  res:[400,100],
+  ai:{mix:{j_rifle:5,j_elite:2,j_lmg:2,j_hmg:2,j_grenade:1.5,j_gun:1.3,j_art:.6},tank:null,support:{kind:'art',name:'日軍砲擊',first:220,every:[150,210]},at:'j_gun'},
+  ability:{name:'砲兵支援',cost:60,cd:70,n:8,rad:62,dmg:46},
+  events:[{t:210,side:0,units:['n_rifle','n_german','n_lmg','n_dadao','n_dadao'],from:[2,6],to:[20,14],msg:'西線友軍趕到，從側翼包抄！',snd:'bugle'},
+          {t:260,side:0,units:['n_rifle','n_rifle','n_mortar','n_hmg','n_german'],from:[70,44],to:[56,34],msg:'東線友軍趕到，切斷日軍退路！',snd:'bugle'}]},
+ {id:'rengan',mech:'jungle',mechTxt:'叢林作戰：林地掩體更好，步兵躲在樹林裡更難被打到。',aiK:.85,hq:['新三十八師前進所','日軍第三十三師團前進所'],name:'仁安羌解圍',sub:'緬甸·油田',year:'1942 年 4 月',paint:paintRengan,w:72,h:48,seed:77,
+  pal:{field:[176,158,104],paddy:[150,150,96],road:[190,170,124],water:[100,126,122],forest:[56,100,52],hill:[130,128,80],sky:'#7a8a56'},
+  brief:'1942 年 4 月，中國遠征軍入緬協同英軍作戰。英軍約七千人在緬甸仁安羌一帶被日軍包圍，缺水斷糧。孫立人率新編第三十八師一一三團趕到，在兵力懸殊下連日猛攻，終於將被圍英軍解救出來。本關是簡化改編版：突破平墻河防線，攻佔油田，解救被圍友軍。',
+  goal:'渡過平墻河，佔領油田與日軍封鎖線，救出被圍部隊；或摧毀日軍指揮所。',
+  tips:'河面只有淺灘可過，集中兵力搶灘。樹林裡掩體好，砲兵與迫擊砲可壓制油田建築裡的敵軍。',
+  roster:{0:['n_rifle','n_lmg','n_hmg','n_mortar','n_at','n_dadao','n_art','n_guerrilla'],1:['j_rifle','j_elite','j_lmg','j_hmg','j_grenade','j_gun','j_t95']},
+  start:{0:[['n_rifle',8,38],['n_rifle',12,36],['n_rifle',14,34],['n_lmg',16,36],['n_hmg',12,40],['n_mortar',6,40],['n_dadao',18,34],
+            ['n_rifle',26,13],['n_rifle',28,11],['n_lmg',24,12]],
+         1:[['j_elite',48,18],['j_rifle',52,15],['j_rifle',44,20],['j_hmg',50,22],['j_gun',56,12],['j_lmg',56,16],['j_rifle',34,12],['j_rifle',36,10],['j_grenade',46,14]]},
+  res:[380,100],
+  ai:{mix:{j_rifle:5,j_elite:3,j_lmg:2,j_hmg:2,j_grenade:1.5,j_gun:1.2},tank:{id:'j_t95',after:330,w:1.2},support:{kind:'air',name:'日機轟炸',first:200,every:[130,190]},at:'j_gun'},
+  ability:{name:'砲兵支援',cost:60,cd:72,n:8,rad:62,dmg:46},
+  events:[{t:320,side:0,units:['n_rifle','n_rifle','n_lmg','n_dadao','n_mortar'],from:[2,44],to:[14,34],msg:'後續部隊抵達，增援前線！',snd:'bugle'}]},
 ];
+const ORDER=['songhu','xinkou','taierzhuang','wanjialing','kunlun','changsha','rengan'];
+SCN.sort((a,b)=>ORDER.indexOf(a.id)-ORDER.indexOf(b.id));
+
 
 /* ================= 遊戲引擎 ================= */
 let G=null;
@@ -483,7 +581,7 @@ function newGame(si,di){
   G={sc,si,di,D,m,w:m.w,h:m.h,grid:m.g,elev:m.el,blds:m.blds,pts:m.pts,hqs:m.hq,units:[],fx:[],decals:[],sched:[],nextId:1,time:0,over:false,result:null,
      res:[{m:sc.res[0]*D.plRes,a:sc.res[1]*D.plRes},{m:sc.res[0]*D.aiRes*(sc.aiK||1),a:sc.res[1]*D.aiRes*(sc.aiK||1)}],tickets:[MAXTIX,MAXTIX],
      vis:[new Uint8Array(N),new Uint8Array(N)],seen:new Uint8Array(N),uvis:[new Set(),new Set()],visT:0,
-     passI:new Uint8Array(N),passV:new Uint8Array(N),dirty:[],sel:[],groups:{},amode:false,abMode:false,abCd:0,
+     passI:new Uint8Array(N),passV:new Uint8Array(N),dirty:[],sel:[],groups:{},amode:false,abMode:false,abCd:0,abCd2:0,fires:[],
      stats:{kills:[0,0],lost:[0,0]},evs:sc.events.map(e=>Object.assign({done:false},e)),
      aiS:{bT:4,oT:D.first,supT:(sc.ai.support?sc.ai.support.first*D.sup:1e9),lastWave:0,firstWave:D.first},toasts:[],income:[{m:0,a:0},{m:0,a:0}]};
   for(let i=0;i<N;i++) refreshPass(i);
@@ -499,7 +597,8 @@ function passTile(cls,tx,ty){ if(tx<0||ty<0||tx>=G.w||ty>=G.h)return false; cons
 function nearestPass(cls,tx,ty,R){ for(let r=1;r<=R;r++){ let best=null,bd=1e9; for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue; if(passTile(cls,tx+dx,ty+dy)){const d=dx*dx+dy*dy; if(d<bd){bd=d;best=[tx+dx,ty+dy];}} } if(best)return best; } return null; }
 function tileT(x,y){ const tx=tix(x),ty=tix(y); if(tx<0||ty<0||tx>=G.w||ty>=G.h)return T.WATER; return G.grid[ty*G.w+tx]; }
 function elevAt(x,y){ const tx=tix(x),ty=tix(y); if(tx<0||ty<0||tx>=G.w||ty>=G.h)return 0; return G.elev[ty*G.w+tx]; }
-function coverOf(u){ if(u.isHQ||u.def.cls==='veh')return 0; return TP[tileT(u.x,u.y)].c; }
+function coverOf(u){ if(u.isHQ||u.def.cls==='veh')return 0; const t=tileT(u.x,u.y); let c=TP[t].c; const m=G.sc.mech;
+  if(m==='urban'&&(t===T.BLDG||t===T.RUBBLE))c+=.15; else if(m==='mountain'&&t===T.HILL)c+=.2; else if(m==='jungle'&&t===T.FOREST)c+=.15; return Math.min(.85,c); }
 
 /* ---------- 尋路 ---------- */
 const PF={g:null,came:null,closed:null,heap:null,f:null,n:0};
@@ -552,7 +651,7 @@ function orderGroupMove(us,x,y,kind){
 }
 function enemiesOf(u){ return G.units.filter(e=>!e.dead&&e.side!==u.side); }
 function hqVisible(side,hq){ if(!hq.alive)return false; const W=G.w,v=G.vis[side]; const xs=[hq.x,hq.x+hq.w-1,(hq.x+hq.w/2)|0],ys=[hq.y,hq.y+hq.h-1,(hq.y+hq.h/2)|0]; for(const x of xs)for(const y of ys){ if(v[y*W+x])return true; } return false; }
-function canTarget(u,w,tgt){ const tx=tgt.isHQ?tgt.cx:tgt.x,ty=tgt.isHQ?tgt.cy:tgt.y; let d=dist(u.x,u.y,tx,ty); if(tgt.isHQ)d-=Math.max(tgt.w,tgt.h)*TILE*.45; if(d>w.r||d<w.minR)return false; if(w.ind)return true; return los(u.x,u.y,tx,ty); }
+function canTarget(u,w,tgt){ const tx=tgt.isHQ?tgt.cx:tgt.x,ty=tgt.isHQ?tgt.cy:tgt.y; let d=dist(u.x,u.y,tx,ty); if(tgt.isHQ)d-=Math.max(tgt.w,tgt.h)*TILE*.45; const rb=(G.sc.mech==='mountain'&&u.def.cls==='inf'&&elevAt(u.x,u.y)>=2)?1.15:1; if(d>w.r*rb||d<w.minR)return false; if(w.ind)return true; return los(u.x,u.y,tx,ty); }
 function scanTargets(u){
   const side=u.side, vs=G.uvis[side]; const cand=[]; for(const e of G.units){ if(e.dead||e.side===side)continue; if(vs.has(e.id))cand.push(e); }
   const eh=G.hqs[1-side]; const hqv=eh&&eh.alive&&hqVisible(side,eh);
@@ -588,7 +687,7 @@ function updUnit(u,dt){
   u.moving=false;
   if(want&&u.path&&u.pi<u.path.length){
     const wp=u.path[u.pi]; const dx=wp.x-u.x,dy=wp.y-u.y,L=Math.hypot(dx,dy);
-    const tt=TP[tileT(u.x,u.y)]; let sp=d.spd*(d.cls==='veh'?tt.sv:tt.si)*(u.supp>=100?.1:u.supp>=50?.55:1);
+    const tt=TP[tileT(u.x,u.y)]; let sp=d.spd*(d.cls==='veh'?tt.sv:tt.si)*(u.supp>=100?.1:u.supp>=50?.55:1); if(G.sc.mech==='urban'){ if(d.cls==='veh')sp*=.75; else if(d.sym==='sword')sp*=1.2; } if(G.fires&&G.fires.length&&u.side!==0&&G.fires.some(f=>dist(u.x,u.y,f.x,f.y)<f.r))sp*=.5;
     const step=sp*dt; if(L<=step){ u.x=wp.x;u.y=wp.y;u.pi++; } else { u.x+=dx/L*step;u.y+=dy/L*step; }
     if(L>.1){ u.fx+=(dx/L-u.fx)*Math.min(1,dt*8); u.fy+=(dy/L-u.fy)*Math.min(1,dt*8); const n=Math.hypot(u.fx,u.fy)||1; u.fx/=n;u.fy/=n; }
     u.moving=sp>5;
@@ -659,7 +758,7 @@ function computeVision(){
   const units=G.units;
   for(const u of units){ if(u.dead)continue; const sr=u.def.sight*(1+.12*elevAt(u.x,u.y))*(u.supp>=100?.8:1)/TILE; markCircle(G.vis[u.side],u.x/TILE,u.y/TILE,sr); }
   const stat=[[],[]]; for(const s of [0,1]){ const h=G.hqs[s]; if(h.alive)stat[s].push([h.cx,h.cy,10*TILE]); for(const p of G.pts)if(p.owner===s)stat[s].push([p.x,p.y,5*TILE]); for(const q of stat[s])markCircle(G.vis[s],q[0]/TILE,q[1]/TILE,q[2]/TILE); }
-  for(const e of units){ if(e.dead)continue; const os=1-e.side; const hid=G.time-e.lastFire>1.5&&coverOf(e)>=.35, rv=G.time-e.lastFire<1.2; const cf=hid?.5:1;
+  for(const e of units){ if(e.dead)continue; const os=1-e.side; const st=e.def.stealth, hid=G.time-e.lastFire>(st?1.2:1.5)&&coverOf(e)>=(st?.2:.35), rv=G.time-e.lastFire<1.2; const cf=(hid?(st?.3:.5):1)*(st&&!hid?.7:1);
     let seen=false; for(const o of units){ if(o.dead||o.side!==os)continue; const r=o.def.sight*(1+.12*elevAt(o.x,o.y))*cf*(rv?1.15:1); const dx=o.x-e.x,dy=o.y-e.y; if(Math.abs(dx)<r&&Math.abs(dy)<r&&dx*dx+dy*dy<r*r){seen=true;break;} }
     if(!seen&&!hid){ for(const q of stat[os]){ if(dist(q[0],q[1],e.x,e.y)<q[2]){seen=true;break;} } }
     if(seen)G.uvis[os].add(e.id); }
@@ -700,6 +799,9 @@ function barrage(side,kind,x,y,o){
   else { for(let i=0;i<n;i++){ const a=Math.random()*6.283,r=Math.sqrt(Math.random())*rad,bx=x+Math.cos(a)*r,by=y+Math.sin(a)*r; const td=delay+i*(dur/n)+rnd(0,.3);
       G.sched.push({t:G.time+td-1.1,fn:()=>{ G.fx.push({k:'shell',fall:1,x0:bx-60,y0:by-300,x:bx,y:by,t:0,dur:1.1,life:1.1,col:'#222',hi:280,land:()=>blast(bx,by,aoe,dmg,10,30,{side,def:{vet:0}},null)}); snd('whistle',bx,by,.8); }}); } }
 }
+function scorchAbility(x,y){ const ab=G.sc.ability2; if(!ab||G.abCd2>0||G.res[0].a<ab.cost)return false; G.res[0].a-=ab.cost; G.abCd2=ab.cd; G.fires.push({x,y,r:ab.rad,t:0,life:ab.life,dps:ab.dps,side:0}); toast(ab.name+'：烈火燃起，敵軍通過將受重創！','ok'); snd('boom',x,y,.8); return true; }
+function updFires(dt){ for(let i=G.fires.length-1;i>=0;i--){ const f=G.fires[i]; f.t+=dt; if(f.t>=f.life){ G.fires.splice(i,1); continue; }
+  for(const u of G.units){ if(u.dead||u.side===f.side)continue; if(dist(u.x,u.y,f.x,f.y)<f.r)applyHit(null,u,f.dps*dt*(u.def.cls==='veh'?.25:1),(u.def.cls==='veh'?0:14)*dt); } } }
 function playerAbility(x,y){ const ab=G.sc.ability; if(G.abCd>0||G.res[0].a<ab.cost)return false; G.res[0].a-=ab.cost; G.abCd=ab.cd; barrage(0,'art',x,y,{n:ab.n,rad:ab.rad,dmg:ab.dmg,aoe:56,delay:2.6,dur:4.5}); toast(ab.name+'：砲彈即將落下！','ok'); return true; }
 
 /* ---------- AI ---------- */
@@ -753,7 +855,7 @@ function separate(dt){ const us=G.units; for(let i=0;i<us.length;i++){ const a=u
     const wa=a.moving?.7:1,wb=b.moving?.7:1; const ax=a.x-nx*p*wa,ay=a.y-ny*p*wa,bx=b.x+nx*p*wb,by=b.y+ny*p*wb;
     if(passTile(a.def.cls,tix(ax),tix(ay))){a.x=ax;a.y=ay;} if(passTile(b.def.cls,tix(bx),tix(by))){b.x=bx;b.y=by;} } } }
 function step(dt){
-  if(G.over)return; G.time+=dt; if(G.abCd>0)G.abCd=Math.max(0,G.abCd-dt);
+  if(G.over)return; G.time+=dt; if(G.abCd>0)G.abCd=Math.max(0,G.abCd-dt); if(G.abCd2>0)G.abCd2=Math.max(0,G.abCd2-dt); updFires(dt);
   G.visT-=dt; if(G.visT<=0){G.visT=.25;computeVision();}
   for(const u of G.units)if(!u.dead)updUnit(u,dt);
   separate(dt); if(G.units.some(u=>u.dead))G.units=G.units.filter(u=>!u.dead);
@@ -922,6 +1024,8 @@ function drawDecals(c,x0,y0,x1,y1){ for(const d of G.decals){ if(d.x<x0||d.x>x1|
   if(d.k==='crater'){ const g=c.createRadialGradient(d.x,d.y,1,d.x,d.y,d.r); g.addColorStop(0,'rgba(20,14,8,.55)'); g.addColorStop(.7,'rgba(30,22,12,.4)'); g.addColorStop(1,'rgba(30,22,12,0)'); c.fillStyle=g; c.beginPath(); c.arc(d.x,d.y,d.r,0,6.3); c.fill(); }
   else if(d.k==='blood'){ c.fillStyle='rgba(90,20,16,.5)'; c.beginPath(); c.arc(d.x,d.y,d.r,0,6.3); c.fill(); }
   else if(d.k==='wreck'){ c.save(); c.translate(d.x,d.y); c.rotate(d.rot); c.fillStyle='#1c1b19'; c.fillRect(-16,-11,32,22); c.fillStyle='#2c2a26'; c.fillRect(-12,-8,24,16); c.fillStyle='#161513'; c.beginPath(); c.arc(0,0,7,0,6.3); c.fill(); c.strokeStyle='#161513'; c.lineWidth=3; c.beginPath(); c.moveTo(0,0); c.lineTo(15,-5); c.stroke(); c.restore(); } } }
+function drawFires(c){ if(!G.fires)return; for(const f of G.fires){ const k=Math.min(1,(f.life-f.t)/4); c.save(); c.globalAlpha=.28*k; const g=c.createRadialGradient(f.x,f.y,4,f.x,f.y,f.r); g.addColorStop(0,'#ffb347'); g.addColorStop(1,'rgba(200,40,10,0)'); c.fillStyle=g; c.beginPath(); c.arc(f.x,f.y,f.r,0,6.3); c.fill(); c.globalAlpha=.9*k;
+  for(let i=0;i<14;i++){ const a=i*2.4+f.t*.3, r=(i*37%100)/100*f.r*.9, fx=f.x+Math.cos(a)*r, fy=f.y+Math.sin(a)*r, h=8+6*Math.sin(f.t*9+i*1.7)+(i%3)*3; c.fillStyle=i%2?'#ff6a1a':'#ffd34a'; c.beginPath(); c.moveTo(fx-4,fy+3); c.quadraticCurveTo(fx,fy-h,fx+4,fy+3); c.closePath(); c.fill(); } c.restore(); } }
 function drawFx(c,x0,y0,x1,y1,pass){
   for(const f of G.fx){ const u=f.t/f.life; const inV=(x,y)=>x>x0-80&&x<x1+80&&y>y0-80&&y<y1+80;
     if(pass===0){
@@ -957,7 +1061,7 @@ function render(){
   ctx.strokeStyle='rgba(155,229,138,.35)'; ctx.lineWidth=1.5; for(const u of G.sel){ if(u.path&&u.pi<u.path.length){ ctx.beginPath(); ctx.moveTo(u.x,u.y); for(let i=u.pi;i<u.path.length;i++)ctx.lineTo(u.path[i].x,u.path[i].y); ctx.stroke(); } }
   const vis=[]; for(const u of G.units){ if(u.dead)continue; if(u.x<x0-60||u.x>x1+60||u.y<y0-60||u.y>y1+60)continue; if(u.side===1&&!G.uvis[0].has(u.id))continue; vis.push(u); }
   vis.sort((a,b)=>a.y-b.y); for(const u of vis){ if(u.def.cls==='veh')drawTank(ctx,u,t); else drawSquad(ctx,u,t); }
-  drawFx(ctx,x0,y0,x1,y1,0);
+  drawFx(ctx,x0,y0,x1,y1,0); drawFires(ctx);
   for(const u of vis)drawUnitUI(ctx,u,G.sel.includes(u));
   // 霧
   const W=G.w,H=G.h,v=G.vis[0],sn=G.seen,d=fogImg.data; for(let i=0;i<W*H;i++){ const tg=v[i]?0:(sn[i]?.5:.9); fogA[i]+=(tg-fogA[i])*.18; d[i*4]=8;d[i*4+1]=12;d[i*4+2]=10;d[i*4+3]=fogA[i]*255; } fogCtx.putImageData(fogImg,0,0);
@@ -966,7 +1070,7 @@ function render(){
   // 指令標記
   for(let i=marks.length-1;i>=0;i--){ const mk=marks[i]; mk.t+=.016; if(mk.t>mk.life){marks.splice(i,1);continue;} const u=mk.t/mk.life; ctx.strokeStyle=mk.col; ctx.globalAlpha=1-u; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(mk.x,mk.y,6+u*16,0,6.3); ctx.stroke(); ctx.globalAlpha=1; }
   // 砲擊瞄準
-  if(G.abMode&&UI.mouse){ const ab=G.sc.ability,p=s2w(UI.mouse.x,UI.mouse.y); ctx.strokeStyle='rgba(120,230,140,.9)'; ctx.lineWidth=2.5; ctx.setLineDash([8,6]); ctx.beginPath(); ctx.arc(p.x,p.y,ab.rad+30,0,6.3); ctx.stroke(); ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(p.x-10,p.y);ctx.lineTo(p.x+10,p.y);ctx.moveTo(p.x,p.y-10);ctx.lineTo(p.x,p.y+10); ctx.stroke(); }
+  if(G.abMode&&UI.mouse){ const ab=G.abMode===2?Object.assign({},G.sc.ability2,{rad:G.sc.ability2.rad-30}):G.sc.ability,p=s2w(UI.mouse.x,UI.mouse.y); ctx.strokeStyle='rgba(120,230,140,.9)'; ctx.lineWidth=2.5; ctx.setLineDash([8,6]); ctx.beginPath(); ctx.arc(p.x,p.y,ab.rad+30,0,6.3); ctx.stroke(); ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(p.x-10,p.y);ctx.lineTo(p.x+10,p.y);ctx.moveTo(p.x,p.y-10);ctx.lineTo(p.x,p.y+10); ctx.stroke(); }
   // 框選
   if(UI.box){ const a=s2w(UI.box.x0,UI.box.y0),b=s2w(UI.box.x1,UI.box.y1); ctx.fillStyle='rgba(120,230,140,.12)'; ctx.strokeStyle='rgba(155,229,138,.9)'; ctx.lineWidth=1.5/cam.z; ctx.fillRect(a.x,a.y,b.x-a.x,b.y-a.y); ctx.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y); }
 }
@@ -996,7 +1100,7 @@ function buildSelect(){
   SCN.forEach((s,i)=>{ const d=document.createElement('div'); d.className='card'; const st=prog[s.id]?'★'.repeat(prog[s.id])+'☆'.repeat(3-prog[s.id]):'';
     d.innerHTML='<h3>'+s.name+'</h3><div class="yr">'+s.sub+'　·　'+s.year+'</div><div class="st">'+st+'</div><p>'+s.goal+'</p>'; d.onclick=()=>{ Snd.play('click'); showBrief(i); }; box.appendChild(d); });
 }
-function showBrief(i){ UI.scn=i; const s=SCN[i]; $('bName').textContent=s.name+'　'+s.sub; $('bYear').textContent=s.year+'　·　難度：'+DIFFS[UI.diff].n; $('bText').textContent=s.brief; $('bGoal').textContent=s.goal; $('bTips').textContent=s.tips; showScr('scBrief'); }
+function showBrief(i){ UI.scn=i; const s=SCN[i]; $('bName').textContent=s.name+'　'+s.sub; $('bYear').textContent=s.year+'　·　難度：'+DIFFS[UI.diff].n; $('bText').textContent=s.brief; $('bGoal').textContent=s.goal; $('bTips').textContent=s.tips+(s.mechTxt?'\n【本戰特色】'+s.mechTxt:''); showScr('scBrief'); }
 
 /* 戰鬥開始 */
 function startBattle(si){
@@ -1023,8 +1127,9 @@ function showEnd(r){
   $('eTitle').textContent=r==='win'?'勝利':'戰敗'; $('eTitle').style.color=r==='win'?'#ffd34a':'#e86a60';
   $('eStars').textContent=r==='win'?'★'.repeat(stars)+'☆'.repeat(3-stars):'';
   $('eSub').textContent=r==='win'?'我軍擊潰敵軍，守住了陣地。':'我軍兵力耗盡，或指揮所被摧毀。再試一次吧！';
+  let tot={}; try{ tot=JSON.parse(localStorage.getItem('mmfactory_kangzhan_stats')||'{}'); }catch(e){} tot.p=(tot.p||0)+1; if(r==='win')tot.w=(tot.w||0)+1; tot.k=(tot.k||0)+G.stats.kills[0]; try{ localStorage.setItem('mmfactory_kangzhan_stats',JSON.stringify(tot)); }catch(e){}
   const tm=Math.floor(G.time),mm=Math.floor(tm/60),ss=('0'+(tm%60)).slice(-2);
-  $('eStats').innerHTML='<span>戰鬥時間</span><b>'+mm+':'+ss+'</b><span>擊毀敵軍</span><b>'+G.stats.kills[0]+' 隊</b><span>我軍損失</span><b>'+G.stats.lost[0]+' 隊</b><span>剩餘兵力</span><b>'+Math.round(G.tickets[0])+' / '+MAXTIX+'</b>';
+  $('eStats').innerHTML='<span>戰鬥時間</span><b>'+mm+':'+ss+'</b><span>擊毀敵軍</span><b>'+G.stats.kills[0]+' 隊</b><span>我軍損失</span><b>'+G.stats.lost[0]+' 隊</b><span>剩餘兵力</span><b>'+Math.round(G.tickets[0])+' / '+MAXTIX+'</b><span>累計戰績</span><b>'+(tot.w||0)+' 勝 / '+tot.p+' 戰</b>';
   $('eNext').style.display=(r==='win'&&UI.scn<SCN.length-1)?'':'none'; endBattleUI(); showScr('scEnd');
 }
 
@@ -1035,8 +1140,8 @@ function buildHUD(){
   const pp=$('prodp'); pp.innerHTML=''; prodBtns=[]; const ros=G.sc.roster[0];
   ros.forEach((id,i)=>{ const d=DEF[id],b=document.createElement('button'); b.className='pb'; b.innerHTML='<span class="hk">'+(HK[i]||'').toUpperCase()+'</span><span class="qn"></span><span class="nm">'+d.name+'</span><span class="ct">'+d.cost[0]+(d.cost[1]?' · <u>'+d.cost[1]+'</u>':'')+'</span><i class="pg"></i>'; b.title=d.name+'（'+d.sub+'）\n'+d.desc+'\n人力 '+d.cost[0]+(d.cost[1]?'　軍火 '+d.cost[1]:'');
     b.onclick=()=>{ Snd.init();Snd.resume(); doQueue(id); }; pp.appendChild(b); prodBtns.push({id,b,qn:b.querySelector('.qn'),pg:b.querySelector('.pg')}); });
-  const cm=$('cmds'); cm.innerHTML=''; const defs=[['all','全軍'],['stop','停止'],['amove','攻擊移動'],['ret','撤退'],['box','框選'],['clr','取消選取'],['ab',G.sc.ability.name]];
-  for(const [k,t] of defs){ const b=document.createElement('button'); b.id='c_'+k; b.textContent=t; if(k==='ab')b.className='ab'; b.onclick=()=>cmd(k); cm.appendChild(b); }
+  const cm=$('cmds'); cm.innerHTML=''; const defs=[['all','全軍'],['stop','停止'],['amove','攻擊移動'],['ret','撤退'],['box','框選'],['clr','取消選取'],['ab',G.sc.ability.name]].concat(G.sc.ability2?[['ab2',G.sc.ability2.name]]:[]);
+  for(const [k,t] of defs){ const b=document.createElement('button'); b.id='c_'+k; b.textContent=t; if(k==='ab'||k==='ab2')b.className='ab'; b.onclick=()=>cmd(k); cm.appendChild(b); }
 }
 function doQueue(id){ const why=canQueue(0,id); if(why){ toast(why,'bad'); return; } queueUnit(0,id); Snd.play('click'); hudTick(1); }
 function cmd(k){ if(!G||G.over)return; Snd.init();Snd.resume();
@@ -1046,7 +1151,8 @@ function cmd(k){ if(!G||G.over)return; Snd.init();Snd.resume();
   else if(k==='amove'){ if(G.sel.length){ G.amode=!G.amode; G.abMode=false; } else toast('先選取部隊','bad'); }
   else if(k==='ret'){ const h=G.hqs[0]; if(G.sel.length)orderGroupMove(G.sel,(h.rx+.5)*TILE,(h.ry+.5)*TILE,'retreat'); }
   else if(k==='box'){ UI.boxMode=!UI.boxMode; }
-  else if(k==='ab'){ if(G.abCd>0)toast('冷卻中','bad'); else if(G.res[0].a<G.sc.ability.cost)toast('軍火不足','bad'); else { G.abMode=!G.abMode; G.amode=false; } }
+  else if(k==='ab'){ if(G.abCd>0)toast('冷卻中','bad'); else if(G.res[0].a<G.sc.ability.cost)toast('軍火不足','bad'); else { G.abMode=G.abMode===1?false:1; G.amode=false; } }
+  else if(k==='ab2'){ const a2=G.sc.ability2; if(G.abCd2>0)toast('冷卻中','bad'); else if(G.res[0].a<a2.cost)toast('軍火不足','bad'); else { G.abMode=G.abMode===2?false:2; G.amode=false; } }
   hudTick(1); }
 function selInfo(){ const s=G.sel; if(!s.length)return '<span style="color:var(--dim)">'+(G.abMode?'點擊地圖指定砲擊位置':'未選取部隊。點選單位或拖曳框選，右下角生產新部隊。')+'</span>';
   if(s.length===1){ const u=s[0],d=u.def,f=u.hp/u.maxhp; const st=u.supp>=100?'<span style="color:#ff6a5a">被釘死</span>':u.supp>=50?'<span style="color:#ffd34a">被壓制</span>':(d.setup&&u.dep<d.setup?'架設中…':'正常'); const v=['','老練','精銳','傳奇'][u.vet];
@@ -1059,7 +1165,8 @@ function hudTick(force){
   $('sinfo').innerHTML=selInfo();
   const ab=$('c_ab'); if(ab){ ab.textContent=G.abCd>0?G.sc.ability.name+' '+Math.ceil(G.abCd)+'秒':G.sc.ability.name+'（軍火'+G.sc.ability.cost+'）'; ab.disabled=G.abCd>0||G.res[0].a<G.sc.ability.cost; ab.classList.toggle('on',G.abMode); }
   $('c_amove').classList.toggle('on',G.amode); $('c_box').classList.toggle('on',UI.boxMode);
-  hint(G.amode?'攻擊移動：點擊目的地（沿途遇敵就打）':G.abMode?'點擊地圖指定砲擊位置':'');
+  const a2=$('c_ab2'); if(a2){ const x=G.sc.ability2; a2.textContent=G.abCd2>0?x.name+' '+Math.ceil(G.abCd2)+'秒':x.name+'（軍火'+x.cost+'）'; a2.disabled=G.abCd2>0||G.res[0].a<x.cost; a2.classList.toggle('on',G.abMode===2); }
+  hint(G.amode?'攻擊移動：點擊目的地（沿途遇敵就打）':G.abMode===2?'點擊要放火的位置（敵軍進入火場會受傷、減速）':G.abMode?'點擊地圖指定砲擊位置':'');
 }
 
 /* 選取與指令 */
@@ -1074,7 +1181,7 @@ function commandAt(w){ const us=G.sel.filter(u=>!u.dead); if(!us.length)return; 
 function selectOwn(u,add,dbl){ if(dbl){ const x0=cam.x,y0=cam.y,x1=cam.x+vw/cam.z,y1=cam.y+vh/cam.z; G.sel=G.units.filter(o=>!o.dead&&o.side===0&&o.def.id===u.def.id&&o.x>x0&&o.x<x1&&o.y>y0&&o.y<y1); }
   else if(add){ const i=G.sel.indexOf(u); if(i>=0)G.sel.splice(i,1); else G.sel.push(u); } else G.sel=[u]; Snd.play('click'); hudTick(1); }
 function boxSelect(b,add){ const a=s2w(Math.min(b.x0,b.x1),Math.min(b.y0,b.y1)),c=s2w(Math.max(b.x0,b.x1),Math.max(b.y0,b.y1)); const r=G.units.filter(u=>!u.dead&&u.side===0&&u.x>=a.x&&u.x<=c.x&&u.y>=a.y&&u.y<=c.y); if(add){ for(const u of r)if(!G.sel.includes(u))G.sel.push(u); } else G.sel=r; if(r.length)Snd.play('click'); hudTick(1); }
-function abilityAt(w){ if(playerAbility(w.x,w.y)){ mark(w.x,w.y,'#7ce08c'); } G.abMode=false; hudTick(1); }
+function abilityAt(w){ if(G.abMode===2?scorchAbility(w.x,w.y):playerAbility(w.x,w.y)){ mark(w.x,w.y,'#7ce08c'); } G.abMode=false; hudTick(1); }
 function clickAt(sx,sy,btn,shift,type){ const w=s2w(sx,sy); const now=performance.now(); const dbl=now-UI.lastClick.t<340&&dist(sx,sy,UI.lastClick.x,UI.lastClick.y)<18; UI.lastClick={t:now,x:sx,y:sy};
   if(G.abMode){ if(btn===2){G.abMode=false;hudTick(1);return;} abilityAt(w); return; }
   if(type==='mouse'&&btn===2){ if(G.amode){G.amode=false;} commandAt(w); return; }
@@ -1116,6 +1223,7 @@ cv.addEventListener('wheel',e=>{ if(!UI.running||UI.paused)return; e.preventDefa
   mm.addEventListener('pointerdown',e=>{ if(!G)return; down=true; mm.setPointerCapture(e.pointerId); go(e); e.preventDefault(); }); mm.addEventListener('pointermove',e=>{ if(down)go(e); }); mm.addEventListener('pointerup',()=>down=false); mm.addEventListener('pointercancel',()=>down=false); })();
 // 鍵盤
 window.addEventListener('keydown',e=>{ if(!UI.running)return; const k=e.key.toLowerCase(); UI.keys[k]=true;
+  if(k==='e'&&!e.ctrlKey&&!e.metaKey){ UI.edgeOn=UI.edgeOn===false; toast(UI.edgeOn===false?'滑鼠邊緣捲動：關':'滑鼠邊緣捲動：開','ok'); return; }
   if(k==='escape'){ if(G.amode||G.abMode){G.amode=false;G.abMode=false;hudTick(1);} else setPause(!UI.paused); e.preventDefault(); return; }
   if(k===' '){ setPause(!UI.paused); e.preventDefault(); return; } if(UI.paused||G.over)return;
   if(k==='a'){ cmd('amove'); } else if(k==='s'){ cmd('stop'); } else if(k==='h'){ cmd('ret'); } else if(k==='f'){ cmd('ab'); } else if(k==='b'){ cmd('box'); }
@@ -1125,9 +1233,13 @@ window.addEventListener('keydown',e=>{ if(!UI.running)return; const k=e.key.toLo
 });
 window.addEventListener('keyup',e=>{ UI.keys[e.key.toLowerCase()]=false; });
 window.addEventListener('blur',()=>{ UI.keys={}; });
+window.addEventListener('pointermove',e=>{ if(e.pointerType==='mouse'&&!(e.buttons&1&&UI.box)) UI.edge={x:e.clientX,y:e.clientY,onCv:e.target===cv}; else if(e.pointerType!=='mouse') UI.edge=null; });
+document.addEventListener('mouseleave',()=>{ UI.edge=null; });
+window.addEventListener('blur',()=>{ UI.edge=null; });
 function updateCamera(dt){ let vx=0,vy=0; const K=UI.keys; if(K.arrowleft)vx-=1; if(K.arrowright)vx+=1; if(K.arrowup)vy-=1; if(K.arrowdown)vy+=1;
-  if(UI.mouse&&!P.size&&!UI.paused){ const m=UI.mouse; if(m.x<10)vx-=1; else if(m.x>vw-10)vx+=1; if(m.y<8)vy-=1; }
-  if(vx||vy){ const sp=900/cam.z; cam.x+=vx*sp*dt; cam.y+=vy*sp*dt; clampCam(); } }
+  if(UI.edge&&!UI.paused&&!UI.boxStart){ const m=UI.edge, Z=14, f=v=>Math.min(1,Math.max(0,(Z-v)/Z)); const dl=m.x, dr=vw-m.x, dt2=m.y, db=vh-m.y;
+    if(m.x>=-2&&m.x<=vw+2&&m.y>=-2&&m.y<=vh+2){ if(m.onCv&&UI.edgeOn!==false){ vx-=f(dl); vx+=f(dr); vy-=f(dt2); vy+=f(db); } } }
+  if(vx||vy){ const sp=(UI.edgeOnly?600:900)/cam.z; cam.x+=vx*sp*dt; cam.y+=vy*sp*dt; clampCam(); } }
 
 /* 主迴圈 */
 let lastTs=0,acc=0;
