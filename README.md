@@ -6,6 +6,8 @@
 
 🕹️ **麥麥的遊戲工廠 遊戲中心（全部遊戲）：https://s841148.github.io/fly-airline/games.html**
 
+🚁 **新遊戲・麥麥阿帕契（3D 攻擊直升機）：https://s841148.github.io/fly-airline/heli.html**
+
 🍔 **新遊戲・麥麥漢堡（3D 漢堡店模擬器）：https://s841148.github.io/fly-airline/burger.html**
 
 從台北桃園機場出發，經營你自己的航空公司：真實世界地圖與航線、商務艙和經濟艙定價、
