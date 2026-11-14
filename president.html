@@ -272,6 +272,7 @@ button:not([disabled]):active{transform:translateY(1px) scale(.98)}
 .fov{background:rgba(255,255,255,.04);border:1px solid rgba(232,187,95,.25);border-radius:6px;padding:8px 10px;margin:0 0 10px}.fov-h{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:.9rem}.fov-h span{color:var(--brass)}
 .fov-r{display:grid;grid-template-columns:5.5em 1fr auto;gap:8px;align-items:center;font-size:.8rem;margin:3px 0}.fov-n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fov-r small{color:var(--muted);white-space:nowrap}
 .fbar{display:flex;height:9px;background:rgba(0,0,0,.35);border-radius:5px;overflow:hidden}.fbar i{display:block;height:100%;transition:width .5s}.fbar .c{background:#6fae8a}.fbar .m{background:#d3a64f}
+.autosub{display:flex;gap:8px;align-items:flex-start;font-size:.8rem;color:var(--muted);margin:6px 0;line-height:1.4}.autosub input{margin-top:3px}
 .pban small{display:block;font-size:.4em;letter-spacing:.15em;color:var(--brass);margin-top:4px;white-space:normal;max-width:80vw}.pban.gold{color:#ffe08a}.pban.bad{color:#ff9a8d}
 @keyframes pban{0%{opacity:0;transform:translate(-50%,16px) scale(.6)}12%{opacity:1;transform:translate(-50%,0) scale(1.12)}22%,78%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-14px) scale(1)}}
 .flashp{fill:rgba(255,224,138,.5);stroke:#fff6c2;animation:flp .6s ease-in-out 4}.flashp.red{fill:rgba(220,70,58,.5);stroke:#ffb0a8}
@@ -1051,9 +1052,10 @@ function nm(t){t=String(t);if(!state||!state.W)return t;const W=state.W,me=tagNa
   if(W.me!=="158")t=t.replace(/立法院/g,"國會");
   t=locTerms(t);
   if(W.sc!=="m")for(const [a,b] of T36)if(t.includes(a))t=t.split(a).join(b);
+  if(W.sc==="g"||W.sc==="w")t=t.replace(/聯合國維和/g,W.sc==="g"?"國際調停":"國聯調停").replace(/聯合國/g,W.sc==="g"?"國際輿論":"國際聯盟");
   return t;}
 function nmDom(root){if(!state||!state.W||!root)return;const w36=state.W.sc!=="m";const tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
-  while((n=tw.nextNode())){const v=n.nodeValue;if(!v||v.length<2)continue;if(NMRE.test(v)||(w36&&T36RE.test(v))){const p=n.parentNode;if(p&&p.closest&&p.closest("#wmap"))continue;const nv=nm(v);if(nv!==v)n.nodeValue=nv;}}}
+  while((n=tw.nextNode())){const v=n.nodeValue;if(!v||v.length<2)continue;if(NMRE.test(v)||(w36&&T36RE.test(v))||((state.W.sc==="g"||state.W.sc==="w")&&/聯合國/.test(v))){const p=n.parentNode;if(p&&p.closest&&p.closest("#wmap"))continue;const nv=nm(v);if(nv!==v)n.nodeValue=nv;}}}
 function isDem(st){st=st||state;if(st&&st.W&&st.W.cplay)return st.W.cplay[10]==="d";const S=st&&SCN[st.sc];const P=S&&st.W&&S.play[st.W.me];return !P||P[10]==="d";}
 function govOf(t){const S=scn();if(S.play[t])return S.play[t][10]==="d"?"民主":"威權";return S.auth.includes(t)?"威權":"民主";}
 function colorOf(t){if(state.W.ccolor&&t===state.W.me)return state.W.ccolor;const f=FIXC[state.W.sc][t];if(f)return f;let h=7;for(const c of String(t))h=(h*31+c.charCodeAt(0))%3600;return `hsl(${h%360},${22+h%17}%,${44+(h>>3)%16}%)`;}
@@ -1267,7 +1269,7 @@ function declare(a,b){const W=state.W,me=W.me;if(a===b||atWar(a,b)||sameFac(a,b)
 function makePeace(e){const W=state.W;delete W.war[wk(W.me,e)];delete W.target[e];if(W.offer===e)W.offer=null;if(!myEnemies().length)W.extra=0;log(`與${tagName(e)}停戰`);syncWar();}
 function take(s,att,def){const W=state.W,me=W.me;if(W.fp&&W.fp[s]&&!isHum(att)&&alive(att)&&W.dv[att]!=null)W.dv[att]+=(W.fp[s].mil||0)*.6+(W.fp[s].civ||0)*.2;if(W.beach)delete W.beach[s];if(W.orig[s]==null)W.orig[s]=def;W.own[s]=att;if(W.orig[s]===att)delete W.orig[s];delete state.forts[s];
   const n=GBY[s].n;
-  if(att===me){applyFx({approval:2,prestige:2});state.ind.civ+=(hk()>=1?0:1)+Math.floor(GBY[s].a/1500);state.mp+=Math.min(6,1+GBY[s].a/400)*1.5*(1-.25*hk());if(!isHum(def)&&alive(def))W.dv[def]=divs(def)*(1+.04*hk());W.sup=clamp(W.sup+3,0,100);genXP(2);try{heroGain();}catch(_){}state.st2=state.st2||{};state.st2.taken=(state.st2.taken||0)+1;state.st2.tt=state.st2.tt||{};state.st2.tt[state.turn]=(state.st2.tt[state.turn]||0)+1;{const lv=dlv();if(lv>0){state.stats.tension=clamp(state.stats.tension+.5*lv,0,100);for(const t in W.rel)if(t!==def&&!sameFac(t,me))W.rel[t]=clamp((W.rel[t]||0)-.6*lv,-100,100);}}log(`我軍攻佔「${n}」！`);toast(`🚩 攻佔 ${n}`);setTimeout(()=>flashMap([s],"gold"),50);}
+  if(att===me){applyFx({approval:2,prestige:2});state.ind.civ+=(hk()>=1?0:1)+Math.floor(GBY[s].a/1500);state.mp+=Math.min(6,1+GBY[s].a/400)*1.5*(1-.25*hk());if(!isHum(def)&&alive(def))W.dv[def]=divs(def)*(1.1+.06*hk());W.sup=clamp(W.sup+3,0,100);genXP(2);try{heroGain();}catch(_){}state.st2=state.st2||{};state.st2.taken=(state.st2.taken||0)+1;state.st2.tt=state.st2.tt||{};state.st2.tt[state.turn]=(state.st2.tt[state.turn]||0)+1;{const lv=dlv();if(lv>0){state.stats.tension=clamp(state.stats.tension+.5*lv,0,100);for(const t in W.rel)if(t!==def&&!sameFac(t,me))W.rel[t]=clamp((W.rel[t]||0)-.6*lv,-100,100);}}log(`我軍攻佔「${n}」！`);toast(`🚩 攻佔 ${n}`);setTimeout(()=>flashMap([s],"gold"),50);}
   else if(def===me){try{heroHit();}catch(_){}applyFx({approval:-3,stability:-2,econ:-2});W.sup=clamp(W.sup-4,0,100);log(`「${n}」被${tagName(att)}攻佔…`);toast(`⚠ ${n} 失守`);}
   else if(scn().play[att]||scn().play[def])news(`${tagName(att)}攻佔「${n}」`);
   if(s===def)capitulate(def,att);}
@@ -1296,7 +1298,7 @@ function attack(att,def,k,touched){const W=state.W,me=W.me;if(att===me&&W.stance
   if(!tgt){const sc=x=>(x===def?-3:0)+hp(x)*(1+fortL(x)*.3)*(land(x)?1:2.5)-(W.prog[x]&&!atWar(W.prog[x].by,att)?W.prog[x].v/25:0);cand.sort((x,y)=>sc(x)-sc(y));tgt=cand[0];if(att===me)W.target[def]=tgt;}
   const w=W.war[k];let A=pow(att,def),D=pow(def,att);const af=w&&w.air!=null&&(att===me||def===me)?(w.air>=60?1.1:w.air<=40?.9:1):1;
   if(!land(tgt)){A*=.35;D*=1.15;}
-  {const dm=[1,1.06,1.15,1.28][dlv()+1];if(att===me&&tgt===def)D*=1+.08*hk();if(att===me){D*=dm;A*=supplyMul(tgt);}else if(def===me)A*=dm;}
+  {const dm=[1.14,1.22,1.34,1.5][dlv()+1];if(att===me&&tgt===def)D*=1+.08*hk();if(att===me){D*=dm;A*=supplyMul(tgt);}else if(def===me)A*=dm;}
   if(att===me){A*=(W.stance==="atk"?1.25+(hasT("tank1")?.1:0)+(hasT("tank2")?.1:0)+(hasT("tank3")?.1:0):1)*af*(W.surprise===state.turn?1.3:1);if(W.bomb===tgt)D*=bombMul(w);D*=(hasT("ew")?.92:1)*(hasT("cyber")?.94:1);}
   else if(def===me){A/=af;A*=(hasT("ew")?.92:1)*(hasT("cyber")?.94:1)*(easy()?.85:1);D*=W.stance==="def"?1.35:W.stance==="atk"?.9:1;}
   {const X=armyFx();if(att===me)A*=1.06*X.atk*(1+(MTN.has(ROOTOF(tgt))?X.sh.mtn*.8:0)+(!land(tgt)?X.sh.mar*1.5:0));if(def===me)D*=1.28*X.def;}
@@ -1332,7 +1334,7 @@ function worldStep(){const W=state.W,s=state.stats,me=W.me,S=scn();W.rep=[];cons
     if(state.turn===2)join("792","同盟國");if(state.turn===4)join("380","協約國");if(state.turn===5)join("100","同盟國");if(state.turn===8)join("642","協約國");if(state.turn===12)join("840","協約國");if(state.turn===13)join("156","協約國");}
   if(hsLast())for(const [ag,list] of S.aggr){if(ag===me||isHum(ag)||!alive(ag)||enemies(ag).length>=2)continue;
     for(const [tg,th,mt] of list){if(!alive(tg)||atWar(ag,tg)||sameFac(ag,tg))continue;if(s.tension<th||state.turn<mt)continue;
-      if(tg===me&&state.flags.peace&&rival()===ag)continue;if(tg===me&&pactWith(ag))continue;if(divs(ag)*qual(ag)<.7*divs(tg)*qual(tg))continue;declare(ag,tg);break;}}
+      if(tg===me&&state.flags.peace&&rival()===ag)continue;if(tg===me&&pactWith(ag))continue;if(divs(ag)*qual(ag)<1.0*divs(tg)*qual(tg))continue;declare(ag,tg);break;}}
   const rv=rival();if(s.tension>=100&&alive(rv)&&!atWar(rv,me)&&!sameFac(rv,me)&&!state.flags.peace&&!pactWith(rv)&&(fronts(rv,me).length||fronts(me,rv).length)){declare(rv,me);s.tension=85;}
   for(const k of Object.keys(W.war)){const w=W.war[k];if(!w)continue;const [a,b]=k.split("|");
     if(state.hs){if(a!==me&&b!==me&&(isHum(a)||isHum(b)||!hsLast()))continue;}w.t++;
@@ -1899,9 +1901,10 @@ function unSeenCheck(){const W=state.W,R=W.unRes;if(!state.hs||!R||state.pending
   log(`${unName()}：「${R.ti}」${pass?"通過":"被否決"}（贊成 ${R.yes}／${R.n} 國）`);
   state.pending={kind:"msg",kicker:unName(),stamp:pass?"通過":"否決",title:`「${R.ti}」${pass?"通過！":"被否決"}`,text:`贊成 ${R.yes} 國、反對或棄權 ${R.n-R.yes} 國。${state.hs.tags.map((t,i)=>`${esc(state.hs.names[i])} 投了「${VN[R.votes[t]]||"沒投"}」`).join("，")}。`};}
 function unText(p){const T=t=>tagName(t);return {sanc:[`經濟制裁${T(p.tgt)}`,`${T(p.tgt)}到處打仗，各國提案對它實施經濟制裁。${p.tgt===state.W.me?"<b>被制裁的是我們！</b>通過的話 8 季內每季少收 15% 稅、支持率下降。":"通過的話它的軍力會下降。"}`],
-  peace:[`派維和部隊停止${T(p.a)}和${T(p.b)}的戰爭`,"通過的話，兩國必須停戰。投贊成的國家要出 20 億維和經費。"],
+  peace:[state.W.sc==="m"||state.W.sc==="c"?`派維和部隊停止${T(p.a)}和${T(p.b)}的戰爭`:`出面調停${T(p.a)}和${T(p.b)}的戰爭`,state.W.sc==="m"||state.W.sc==="c"?"通過的話，兩國必須停戰。投贊成的國家要出 20 億維和經費。":"通過的話，兩國必須停戰。投贊成的國家要出 20 億調停經費。"],
   nuke:["全球禁止核武條約","通過的話，任何國家使用核武都會被全世界制裁。"],climate:["全球氣候協定","通過的話各國減碳：經濟 −2、穩定 +2、聲望 +3。"],
-  aid:["國際糧食援助計畫","幫助貧窮國家對抗飢荒。投贊成要出 15 億，聲望 +4。"]}[p.k];}
+  aid:[state.W.sc==="m"||state.W.sc==="c"?"國際糧食援助計畫":"國際賑災救濟基金","幫助受災和貧窮的國家。投贊成要出 15 億，聲望 +4。"]}[p.k];}
+function unIcon(){return state.W.sc==="g"?"🕊":state.W.sc==="w"?"🏛":"🇺🇳";}
 function unVote(v){const p=state.pending,W=state.W,me=W.me;state.pending=null;
   if(state.hs&&W.un){W.unv=W.unv||{};W.unlob=W.unlob||{};W.unv[me]=v;W.unlob[me]=p.lob||0;log(`${unName()}投票：${({y:"贊成",n:"反對",a:"棄權"})[v]}`);unCheck();if(!W.unRes||W.unRes.t!==state.turn||!W.unSeen||!(W.unRes&&W.unRes.votes[me]))toast("🗳 已投票，等對方也投完就會公布結果");save();render();return;}const tags=aiTags().filter(t=>!isHum(t)),fr=tags.filter(t=>(W.rel[t]||0)>=40||sameFac(t,me)).length/Math.max(1,tags.length);
   let y=p.base+(v==="y"?fr*.35:v==="n"?-fr*.35:0)+(v==="y"?1:v==="n"?-1:0)*p.lob*.08+(rng(996)-.5)*.12;if(p.k==="sanc"&&p.tgt===me&&v!=="y")y-=.05;
@@ -1942,12 +1945,12 @@ function persStep(){const W=state.W,me=W.me;if(state.pending&&state.pending.kind
   const tags=aiTags().filter(t=>!isHum(t));let acted=false;
   for(const t of tags){if(acted)break;const k=persOf(t),g=grudge(t);if(atWar(t,me)||sameFac(t,me)||pactWith(t))continue;
     const near=fronts(t,me).length>0;const strong=divs(t)*qual(t)>myPow()*.8;
-    if(k==="grudge"&&g>=3&&near&&strong&&rng(1201+hashS(t))<.12){declare(t,me);log(`${tagName(t)}記仇報復，向我國宣戰！`);acted=true;}
-    else if(k==="opp"&&myEnemies().length>=2&&near&&rng(1202+hashS(t))<.15){declare(t,me);log(`${tagName(t)}趁火打劫，向我國宣戰！`);acted=true;}
-    else if(k==="war"&&near&&state.stats.tension>=55&&divs(t)*qual(t)>myPow()*1.3&&rng(1203+hashS(t))<.05){declare(t,me);acted=true;}}
-  if(hsLast()&&rng(1204)<.25){const ag=tags.filter(t=>persOf(t)==="war"&&!enemies(t).length);const t=ag[Math.floor(rng(1205)*ag.length)];
+    if(k==="grudge"&&g>=3&&near&&strong&&rng(1201+hashS(t))<.08){declare(t,me);log(`${tagName(t)}記仇報復，向我國宣戰！`);acted=true;}
+    else if(k==="opp"&&myEnemies().length>=2&&near&&rng(1202+hashS(t))<.09){declare(t,me);log(`${tagName(t)}趁火打劫，向我國宣戰！`);acted=true;}
+    else if(k==="war"&&near&&state.stats.tension>=55&&divs(t)*qual(t)>myPow()*1.5&&rng(1203+hashS(t))<.03){declare(t,me);acted=true;}}
+  if(hsLast()&&rng(1204)<(.07+.02*Math.max(0,dlv()))&&Object.keys(W.war).filter(k=>{const [a,b]=k.split("|");return a!==me&&b!==me;}).length<3+Math.max(0,dlv())){const ag=tags.filter(t=>persOf(t)==="war"&&!enemies(t).length);const t=ag[Math.floor(rng(1205)*ag.length)];
     if(t){const nb=new Set();for(const s in W.own)if(W.own[s]===t)for(const n of NBR[s]){const o=W.own[n];if(o&&o!==t&&o!==me&&!isHum(o)&&!sameFac(o,t))nb.add(o);}
-      const v=[...nb].filter(o=>divs(o)*qual(o)*1.5<divs(t)*qual(t));if(v.length)declare(t,v[Math.floor(rng(1206)*v.length)]);}}
+      const v=[...nb].filter(o=>divs(o)*qual(o)*2.1<divs(t)*qual(t));if(v.length)declare(t,v[Math.floor(rng(1206)*v.length)]);}}
   if(myEnemies().length)for(const t of tags)if(persOf(t)==="loyal"&&sameFac(t,me)&&rng(1207+hashS(t))<.2){W.extra=(W.extra||0)+1;log(`忠誠的盟友${tagName(t)}派來 1 個師支援`);break;}}
 
 /* ================= 報紙頭條 ================= */
@@ -2443,7 +2446,8 @@ function endTurn0(){
     state.res.slots=state.res.slots.map(x=>{if(!x)return x;x.left--;if(x.left<=0){state.res.done.push(x.id);log(`科技研發完成：${TBY[x.id].n}`);state.flags["t_"+x.id]=true;if(TBY[x.id].fx)applyFx(TBY[x.id].fx);toast(`🔬 研發完成：${TBY[x.id].n}`);return null;}return x;});}
   if(state.active&&state.active.sub!=null){state.active.left--;if(state.active.left<=0){const fo=FBY[state.active.id],sb=fsubs(fo)[state.active.sub],D=fsubDone(fo.id);applyFx(sb.fx);D.push(sb.j);state.active=null;
     if(D.length>=fsubs(fo).length){state.done.push(fo.id);if(fo.flag)f[fo.flag]=true;if(fo.id==="d3a")state.W.core.forEach(x=>{if(state.W.own[x]===state.W.me)state.forts[x]=Math.min(3,(state.forts[x]||0)+1);});log(`🎉 國策完成：「${fo.n}」`);toast(`🎉 國策「${fo.n}」全部完成！`);}
-    else{log(`小國策完成：「${fo.n}・${sb.n}」（${D.length}/${fsubs(fo).length}）`);toast(`✅ ${fo.n}・${sb.n} 完成（${D.length}/${fsubs(fo).length}）`);}}}
+    else{log(`小國策完成：「${fo.n}・${sb.n}」（${D.length}/${fsubs(fo).length}）`);toast(`✅ ${fo.n}・${sb.n} 完成（${D.length}/${fsubs(fo).length}）`);
+      if(state.autoSub!==false){const nx=fsubs(fo).find(x=>!D.includes(x.j));if(nx&&state.pp>=nx.cost){state.pp-=nx.cost;state.active={id:fo.id,sub:nx.j,left:nx.t};log(`⏩ 自動接著推動「${fo.n}・${nx.n}」`);}else if(nx)log(`政治點數不夠，「${fo.n}・${nx.n}」要等你手動推動`);}}}}
   else if(state.active){state.active.left--;if(state.active.left<=0){const fo=FBY[state.active.id];applyFx(fo.fx);state.done.push(fo.id);
     if(fo.flag)f[fo.flag]=true;if(fo.id==="d3a")state.W.core.forEach(x=>{if(state.W.own[x]===state.W.me)state.forts[x]=Math.min(3,(state.forts[x]||0)+1);});log(`國策完成：「${fo.n}」`);state.active=null;}}
   const W=state.wonders;if(W.active){const wd=WBY[W.active.id];s.treasury-=wonderPer(wd);W.active.left--;
@@ -2633,11 +2637,12 @@ function renderFocusDetail(){const f=FBY[ui.sel];const st=focusState(f);let why=
   else if(st==="blocked")why="已經選了另一條路線，這個不能再選。";
   else if(st==="locked")why=f.reqN?`要先完成任三條路線的終點國策（目前 ${f.reqN.of.filter(x=>state.done.includes(x)).length}/3）。`:"要先完成上面連著的國策。";
   else if(state.active)why=`一次只能推一個小國策，「${FBY[state.active.id].n}${state.active.sub!=null?"・"+fsubs(FBY[state.active.id])[state.active.sub].n:""}」還在進行（剩 ${state.active.left} 季）。`;
-  const open=(st==="avail"||st==="part")&&!state.active&&!state.pending;let first=true;
+  const open=(st==="avail"||st==="part")&&!state.active&&!state.pending;let first=true;const AUTO=`<label class="autosub"><input type="checkbox" id="autoSub" ${state.autoSub!==false?"checked":""}> 小國策做完自動接著做下一個（自動扣政治點數，點數不夠會暫停）</label>`;
   $("#fdetail").innerHTML=`<div class="txt"><h4>${f.n} <small style="color:var(--muted);font-weight:400">（${D.length}/${L.length} 個小國策）</small></h4><p>${f.d}</p><div class="sec-t" style="margin:4px 0">全部完成的總效果（比以前強 60%）</div>${fxHtml(fbig(f),true)}${why?`<div class="why">${why}</div>`:""}</div>
-   <div class="fsubs">${L.map(sb=>{const dn=D.includes(sb.j),ac=state.active&&state.active.id===f.id&&state.active.sub===sb.j,ok=open&&!dn&&state.pp>=sb.cost;const id=ok&&first?(first=false,' id="goFocus"'):"";
+   ${AUTO}<div class="fsubs">${L.map(sb=>{const dn=D.includes(sb.j),ac=state.active&&state.active.id===f.id&&state.active.sub===sb.j,ok=open&&!dn&&state.pp>=sb.cost;const id=ok&&first?(first=false,' id="goFocus"'):"";
      return `<div class="fsub ${dn?"done":ac?"act":""}"><div><b>${dn?"✓ ":ac?"⏳ ":""}${sb.n}</b><div class="fxs" style="margin-top:3px">${Object.entries(sb.fx).map(([k,v])=>`<span class="fx ${(v>0)!==!!BAD_UP[k]?"up":"down"}">${LABEL[k]||k} ${v>0?"+":""}${v}</span>`).join("")}</div></div>
        ${dn?`<span class="fm">已完成</span>`:ac?`<span class="fm">剩 ${state.active.left} 季</span>`:`<button class="btn sm"${id} type="button" data-fsub="${sb.j}" ${ok?"":"disabled"}>推動（${sb.cost} 點・${sb.t} 季）</button>`}</div>`;}).join("")}</div>`;
+  {const ck=$("#autoSub");if(ck)ck.onchange=()=>{state.autoSub=ck.checked;save();};}
   $("#fdetail").querySelectorAll("[data-fsub]").forEach(b=>b.onclick=()=>startFocus(f.id,+b.dataset.fsub));nmDom($("#fdetail"));}
 function decCard(d){const left=(state.cd[d.id]||0)-state.turn;const s=state.stats;const pp=decPP(d);let why="";
   if(d.req&&!d.req(state))why=d.reqT||"條件不足";else if(d.north&&(era()>=ERAS.length||!rivalAlive()))why="已經沒有對手國";else if(d.id==="cutgov"&&(state.cuts||0)>=16)why="已經精簡到底";else if(left>0)why=`冷卻中，${left} 季後可用`;else if(pp&&state.pp<pp)why="政治點數不夠";else if(d.money&&s.treasury<d.money)why="國庫不夠";
@@ -3071,7 +3076,7 @@ function renderModal(){const v=$("#veil");const p=state.pending;v.classList.togg
      ${SPYOPS.map(([k,n,d,pp,m])=>`<button class="choice" type="button" data-sp="${k}" ${state.pp<pp||state.stats.treasury<m?"disabled":""}><strong>🕵 ${n}（${pp} 點${m?`＋${m} 億`:""}）</strong><small>${d}</small></button>`).join("")}</div><p style="margin:12px 0 0"><button class="pbtn" type="button" id="cancel">取消</button></p></div>`;
     v.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>spyDo(b.dataset.sp,o));$("#cancel").onclick=()=>{state.pending=null;render();};}
   else if(p.kind==="un"){const [ti,tx]=unText(p);
-    v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>${unName()}</span><span>${dateStr()}</span></div><span class="stamp">表決</span><h2>🇺🇳 ${ti}</h2><p>${tx}</p>
+    v.innerHTML=`<div class="dispatch" role="dialog" aria-modal="true"><div class="kicker"><span>${unName()}</span><span>${dateStr()}</span></div><span class="stamp">表決</span><h2>${unIcon()} ${ti}</h2><p>${tx}</p>
      <p style="font-size:.85rem">各國預估支持度約 ${Math.round(p.base*100)}%。和我們關係好的國家會跟著我們投票。${p.lob?`（已拉票 ${p.lob} 次）`:""}</p>
      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pbtn" type="button" data-un="y">👍 贊成</button><button class="pbtn" type="button" data-un="n">👎 反對</button><button class="pbtn" type="button" data-un="a">棄權</button><button class="pbtn" type="button" id="lob" ${state.pp<15||p.lob>=2?"disabled":""}>📣 先拉票（15 點）</button></div></div>`;
     v.querySelectorAll("[data-un]").forEach(b=>b.onclick=()=>unVote(b.dataset.un));$("#lob").onclick=()=>{if(state.pp<15)return;state.pp-=15;p.lob++;toast("📣 拉票成功，你這一票的影響力變大了");render();};}
