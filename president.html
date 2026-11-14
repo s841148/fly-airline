@@ -269,6 +269,9 @@ button:not([disabled]):active{transform:translateY(1px) scale(.98)}
 .tab{transition:color .2s,background-color .2s,box-shadow .2s}
 .season{position:fixed;left:50%;top:18px;padding:8px 28px;background:linear-gradient(90deg,transparent,rgba(20,28,26,.85) 20%,rgba(20,28,26,.85) 80%,transparent);z-index:60;pointer-events:none;font-family:var(--f-display);font-weight:900;font-size:clamp(20px,3.2vw,34px);color:var(--paper);letter-spacing:.14em;text-shadow:0 4px 24px rgba(0,0,0,.7),0 0 2px #000;white-space:nowrap;animation:sban 2.2s ease-out forwards}
 .pban{position:fixed;left:50%;top:22%;transform:translateX(-50%);padding:12px 34px;background:linear-gradient(90deg,transparent,rgba(20,28,26,.9) 15%,rgba(20,28,26,.9) 85%,transparent);z-index:70;pointer-events:none;font-family:var(--f-display);font-weight:900;font-size:clamp(22px,4vw,40px);color:var(--paper);letter-spacing:.12em;text-align:center;white-space:nowrap;text-shadow:0 4px 24px rgba(0,0,0,.7);animation:pban 2.6s ease both}
+.fov{background:rgba(255,255,255,.04);border:1px solid rgba(232,187,95,.25);border-radius:6px;padding:8px 10px;margin:0 0 10px}.fov-h{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:.9rem}.fov-h span{color:var(--brass)}
+.fov-r{display:grid;grid-template-columns:5.5em 1fr auto;gap:8px;align-items:center;font-size:.8rem;margin:3px 0}.fov-n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fov-r small{color:var(--muted);white-space:nowrap}
+.fbar{display:flex;height:9px;background:rgba(0,0,0,.35);border-radius:5px;overflow:hidden}.fbar i{display:block;height:100%;transition:width .5s}.fbar .c{background:#6fae8a}.fbar .m{background:#d3a64f}
 .pban small{display:block;font-size:.4em;letter-spacing:.15em;color:var(--brass);margin-top:4px;white-space:normal;max-width:80vw}.pban.gold{color:#ffe08a}.pban.bad{color:#ff9a8d}
 @keyframes pban{0%{opacity:0;transform:translate(-50%,16px) scale(.6)}12%{opacity:1;transform:translate(-50%,0) scale(1.12)}22%,78%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-14px) scale(1)}}
 .flashp{fill:rgba(255,224,138,.5);stroke:#fff6c2;animation:flp .6s ease-in-out 4}.flashp.red{fill:rgba(220,70,58,.5);stroke:#ffb0a8}
@@ -1610,7 +1613,7 @@ function sfx(k){if(!AU.ctx||AU.mode==="mute"||AU.ctx.state!=="running")return;co
 function audioHook(){if(!state){AU.lastP=AU.lastLog=undefined;return;}const p=state.pending,key=p?p.kind+(p.ev||p.title||p.k||p.tag||""):null,first=AU.lastLog===undefined;
   const l=state.log&&state.log[0]?state.log[0].text:"";
   if(!first){if(key&&key!==AU.lastP){if(p.kind==="aioff")sfx("letter");else if(p.kind==="msg"&&/開戰|宣戰|攻擊/.test((p.stamp||"")+(p.title||"")))sfx("war");else if(p.kind==="event"||p.kind==="msg")sfx("page");}
-    if(l&&l!==AU.lastLog){const NL2=[];for(const e of state.log){if(e.text===AU.lastLog||NL2.length>=8)break;NL2.push(e.text);}for(const l of NL2.reverse()){if(/投降/.test(l)&&state.W&&l.includes(tagName(state.W.me)))sfx("win");else if(/領土失守/.test(l)){sfx("lose");banner("💥 領土失守",l.replace(/^.*?，/,""),2);}else if(/接收佔領區|攻佔|奪下|登陸/.test(l)){sfx("capture");if(/接收佔領區/.test(l))banner("🏭 繳獲工廠",l.replace(/^.*?的 ?/,""),1);}else if(/座.{2,4}完工/.test(l)){sfx("build");banner("🏗 工廠完工",l.replace(/（.*$/,""),1);}else if(/小國策完成/.test(l)){sfx("sub");banner("✅ 小國策完成",l.replace(/^.*?：/,""));}else if(/國策完成/.test(l)){sfx("focus");banner("🎉 國策完成",l.replace(/^.*?：/,""),1);}else if(/達成成就/.test(l))sfx("ach");}}
+    if(l&&l!==AU.lastLog){const NL2=[];for(const e of state.log){if(e.text===AU.lastLog||NL2.length>=8)break;NL2.push(e.text);}for(const l of NL2.reverse()){if(/投降/.test(l)&&state.W&&l.includes(tagName(state.W.me)))sfx("win");else if(/領土失守/.test(l)){sfx("lose");banner("💥 領土失守",l.replace(/^.*?，/,""),2);}else if(/接收佔領區|攻佔|奪下|登陸/.test(l)){sfx("capture");if(/接收佔領區/.test(l))banner("🏭 繳獲工廠",l.replace(/^.*?的 ?/,""),1);}else if(/座.{2,4}完工/.test(l)){sfx("build");banner("🏗 工廠完工",l.replace(/（.*$/,""),1);}else if(/小國策完成/.test(l)){sfx("sub");banner("✅ 小國策完成",l.replace(/^.*?：/,""));}else if(/國策完成/.test(l)){sfx("focus");banner("🎉 國策完成",l.replace(/^.*?：/,""),1);}else if(/工業里程碑/.test(l)){sfx("focus");banner("🏭 工業里程碑",l.replace(/^.*?：/,""),1);}else if(/達成成就/.test(l))sfx("ach");}}
     if(state.over&&!AU.overDone){AU.overDone=1;sfx(/worldgov|chalwin|full/.test(state.over)?"win":"bad");}}
   if(!state.over)AU.overDone=0;AU.lastP=key;AU.lastLog=l;}
 function banner(t,sub,k){if(!state||state.over)return;try{document.querySelectorAll(".pban").forEach(x=>x.remove());const d=document.createElement("div");d.className="pban"+(k===2?" bad":k===1?" gold":"");d.innerHTML=`${t}<small>${sub||""}</small>`;document.body.appendChild(d);setTimeout(()=>d.remove(),2600);}catch(_){}}
@@ -2265,6 +2268,9 @@ const LAWS={econ:{title:"經濟法",opts:[["civil","民用經濟","民用工廠�
 function lawOk(k,id){const ws=state.W?state.W.sup||0:0;if(id==="war")return !!state.war||state.stats.tension>=70||ws>=60;if(id==="total")return !!state.war||state.stats.tension>=60||ws>=50;return true;}
 function wsTarget(){const s=state.stats,sc=state.W.sc;return clamp(18+s.tension*.45+(s.prestige-50)*.1+(sc==="w"||sc==="g"?10:0)+(state.laws&&state.laws.cons==="total"?5:0),5,85);}
 function prodL(){const I=state.ind,P=state.prod=state.prod||{arm:0,air:0,nav:0};let sum=P.arm+P.air+P.nav;while(sum>I.mil){for(const k of["nav","air","arm"])if(P[k]>0&&sum>I.mil){P[k]--;sum--;}}return {inf:I.mil-sum,arm:P.arm,air:P.air,nav:P.nav};}
+const CIVL=[["bld","🏗 建設","縮短蓋工廠的工期（每 4 座少 1 季，最少 2 季）"],["con","🛍 消費品","每座每季穩定 +0.05、支持率 +0.04（最多各 +1.2），但少賺 1.5 億"],["res","🔬 科研","每 2 座每季多 1 點政治點數（最多 +4），少賺 1.5 億"]];
+function cprodL(){const I=state.ind,P=state.prod=state.prod||{arm:0,air:0,nav:0};const C=P.c=P.c||{bld:0,con:0,res:0};let sum=C.bld+C.con+C.res;while(sum>I.civ){for(const k of["res","con","bld"])if(C[k]>0&&sum>I.civ){C[k]--;sum--;}}return {free:I.civ-sum,bld:C.bld,con:C.con,res:C.res};}
+function effL(){const P=state.prod=state.prod||{arm:0,air:0,nav:0};return P.eff=P.eff||{arm:1,air:1,nav:1};}
 function eqS(){return state.eq=state.eq||{arm:(state.ind?state.ind.mil:0)*4,air:0,nav:0};}
 function eqArmB(){const e=state.eq;if(state.tpls)return 0;if(!e||!e.arm)return 0;return .2*e.arm/(e.arm+ourDivs()*3+10);}
 const HERONM=["麥麥第一裝甲師","鐵血第七師","雷霆師","不死鳥師","飛虎師","黑豹師","閃電第九師","長城師","無敵海狼師","猛虎師"];
@@ -2302,7 +2308,7 @@ function milMul(){const L=state.laws;return (L.econ==="civil"?.7:L.econ==="war"?
 function slotsN(){return 2+(state.flags.tech?1:0);}
 function bq(){return state.bq||1;}
 function facOwned(){const W=state.W,me=W.me,S={civ:0,mil:0};for(const p in W.fp||{})if(W.own[p]===me){S.civ+=W.fp[p].civ||0;S.mil+=W.fp[p].mil||0;}return S;}
-function facCap(p){const g=GBY[p];if(!g)return 3;return clamp(Math.round(3+Math.log2(Math.max(g.a,20)/25)*1.3)+(state&&state.W&&state.W.core&&state.W.core.includes(p)?1:0),4,11);}
+function facCap(p){const g=GBY[p];if(!g)return 3;return clamp(Math.round(5+Math.log2(Math.max(g.a,20)/25)*1.7)+Math.floor((state&&state.done?state.done.length:0)/4)+(state&&state.flags&&state.flags.fort?1:0)+(state&&state.W&&state.W.core&&state.W.core.includes(p)?2:0),6,18);}
 function facUsed(p){const o=((state.W.fp||{})[p])||{};return(o.civ||0)+(o.mil||0);}
 function facRoom(p){return Math.max(0,facCap(p)-facUsed(p));}
 function facPlace(L,k,n){const W=state.W,me=W.me;let left=n;const own=Object.keys(W.own).filter(x=>W.own[x]===me&&GBY[x]);
@@ -2316,19 +2322,23 @@ function facSync(quiet){if(!state||!state.W||!state.ind||state.W.own[state.W.me]
     const u=I[k]-H[k];if(u){facAuto(k,u);H[k]=facOwned()[k];I[k]=H[k];}}
   if(!quiet&&state.facInit){const t=x=>[x.civ?`${x.civ} 座民用工廠`:"",x.mil?`${x.mil} 座軍工廠`:""].filter(Boolean).join("、");
     if(lost.civ||lost.mil){log(`🏭 領土失守，失去 ${t(lost)}`);toast(`🏭 失去 ${t(lost)}`);}if(got.civ||got.mil){log(`🏭 接收佔領區的 ${t(got)}`);toast(`🏭 接收 ${t(got)}！`);}}
-  state.facInit=1;}
+  state.facInit=(state.facInit||0)+1;try{facMile();}catch(_){}}
+function facOverview(){const W=state.W,me=W.me,L=Object.keys(W.fp||{}).filter(p=>W.own[p]===me&&GBY[p]).sort((a,b)=>facUsed(b)-facUsed(a));
+  if(!L.length)return `<p class="hint">還沒有登記在土地上的工廠。</p>`;let cap=0,used=0;for(const p of Object.keys(W.own))if(W.own[p]===me&&GBY[p]){cap+=facCap(p);used+=facUsed(p);}
+  return `<div class="fov"><div class="fov-h"><b>🗺 工廠分布</b><span>全國 ${used} / ${cap} 座（${Math.round(used/Math.max(1,cap)*100)}%）</span></div>${L.slice(0,8).map(p=>{const o=W.fp[p],c=facCap(p),u=facUsed(p);return `<div class="fov-r"><span class="fov-n">${GBY[p].n}</span><span class="fbar"><i class="c" style="width:${(o.civ||0)/c*100}%"></i><i class="m" style="width:${(o.mil||0)/c*100}%"></i></span><small>🏢${o.civ||0} 🏭${o.mil||0} / ${c}</small></div>`;}).join("")}${L.length>8?`<small class="hint">…還有 ${L.length-8} 塊地有工廠</small>`:""}</div>`;}
+function facMile(){const I=state.ind,tot=I.civ+I.mil,M=state.fmile=state.fmile||{};for(const m of[20,40,60,100,150])if(tot>=m&&!M[m]){M[m]=1;if(state.facInit>1){log(`🏭 工業里程碑：全國工廠突破 ${m} 座！`);applyFx({prestige:m>=100?4:2});}}}
 function facBuildStart(){const F=ui.fpick,I=state.ind;F.n=F.sel.length;const c=BUILD[F.type][1]*F.n;if(!F.sel.length||I.q||state.stats.treasury<c)return;state.stats.treasury-=c;I.q={type:F.type,left:buildTurns(F.n),n:F.n,locs:F.sel.slice()};
   log(`開始在 ${F.sel.map(x=>GBY[x].n).join("、")} 興建 ${F.n} 座${BUILD[F.type][0]}`);toast(`🏗 ${F.n} 座${BUILD[F.type][0]}開工`);ui.fpick=null;save();render();}
-function buildTurns(n=1){return Math.max(3,5-Math.floor(state.ind.civ/15)-(hasT("smart")?1:0))+Math.floor((n-1)/2);}
+function buildTurns(n=1){return Math.max(2,Math.max(3,5-Math.floor(state.ind.civ/15)-(hasT("smart")?1:0))+Math.floor((n-1)/2)-Math.floor(cprodL().bld/4));}
 const BUILD={civ:["民用工廠",40],mil:["軍工廠",50]};
 function budget(forTurn){const s=state.stats,cab=state.cab;const rate={low:.5,mid:.7,high:.9}[state.tax];
   const scale=1+Math.min(state.turn,40)*.0075;
-  const inc=[["稅收（經濟 × 稅率）",s.econ*rate*scale*Math.sqrt(B()/15)*(state.laws&&state.laws.econ==="war"?.8:1)],["民用工廠",state.ind?state.ind.civ*1.5*(state.laws.econ==="civil"?1.2:1)*(hasT("smart")?1.2:1):0],["新領土",state.newland?state.newland.integ/8:0],["佔領區",heldTiles()*3*(1-.3*hk())],["經濟部長招商",cab.econ==="chen"?6:0],["貿易協定",state.W?tradeInc():0],["資源出口",state.W?resExport():0]];
+  const inc=[["稅收（經濟 × 稅率）",s.econ*rate*scale*Math.sqrt(B()/15)*(state.laws&&state.laws.econ==="war"?.8:1)],["民用工廠",state.ind?cprodL().free*1.5*(state.laws.econ==="civil"?1.2:1)*(hasT("smart")?1.2:1):0],["新領土",state.newland?state.newland.integ/8:0],["佔領區",heldTiles()*3*(1-.3*hk())],["經濟部長招商",cab.econ==="chen"?6:0],["貿易協定",state.W?tradeInc():0],["資源出口",state.W?resExport():0]];
   const exp=[["政府基本開銷",25],["軍費（軍力越高越貴）",s.military*.2*Math.sqrt(B()/15)*(cab.def==="liu"?.75:1)*(1+((state.W&&state.W.comp)||{arm:0}).arm/100)],["社福支出成長",Math.min(state.turn,24)*.5],["國策維持費",state.done.length*.4],["佔領區治安費",state.W?heldTiles()*4*(1+.4*hk()):0],["超額軍隊維持費",state.W&&state.ind?Math.max(0,ourDivs()-B()*.9)*.6*hk():0],["精簡政府省下",-(state.cuts||0)],["借款還款",(state.debts||[]).reduce((a,d)=>a+d.per,0)]];
   if(!forTurn)exp.push(["國家級工程款",state.wonders&&state.wonders.active?wonderPer(WBY[state.wonders.active.id]):0],["戰爭開銷",state.war?Math.round(12*(cab.def==="liu"?.75:1)):0]);
   {const lv=dlv();if(lv>0)exp.push(["官僚浪費與通膨（難度）",inc.reduce((a,b)=>a+b[1],0)*.06*lv]);}
   const I=inc.reduce((a,b)=>a+b[1],0),E=exp.reduce((a,b)=>a+b[1],0);return{inc,exp,I,E,net:Math.round(I-E)};}
-function ppGain(){return Math.round(cardFx("pp"))+(easy()?11:8-Math.max(0,dlv()))+(hasT("quantum")?1:0)+(state.flags.aiCenter?2:0)+(state.done.includes("root")?1:0)+(state.flags.digital?1:0)+(state.seats>=51?2:-2);}
+function ppGain(){return Math.round(cardFx("pp"))+(easy()?11:8-Math.max(0,dlv()))+(hasT("quantum")?1:0)+(state.flags.aiCenter?2:0)+(state.done.includes("root")?1:0)+(state.flags.digital?1:0)+(state.seats>=51?2:-2)+(state.ind?Math.min(4,Math.floor(cprodL().res/2)):0);}
 const CN=["一","二","三","四","五","六","七","八","九","十"];
 const maxTurns=()=>(state.maxTerms||2)*16;
 function yr(t,st){st=st||state;return ((st&&SCN[st.sc])?SCN[st.sc].y:2026)+Math.floor(t/4);}
@@ -2422,7 +2432,9 @@ function endTurn0(){
   for(const k of["approval","econ","stability","military","prestige","tension"])s[k]=clamp(r1(s[k]),0,100);
   state.pp=Math.min(200,state.pp+ppGain());
   {const I=state.ind,L=state.laws,PL=prodL(),EQ=eqS(),mm=milMul();s.military=clamp(r1(s.military+PL.inf*.12*mm*15/B()),0,100);
-    EQ.arm=Math.min(400,r1(EQ.arm*(war?.9:1)+PL.arm*mm));EQ.air=Math.min(300,r1(EQ.air*(war?.94:1)+PL.air*mm*.8));EQ.nav=Math.min(200,r1(EQ.nav+PL.nav*mm*.5));
+    const EF=effL();for(const k of["arm","air","nav"]){EF[k]=PL[k]>0?Math.min(1,(EF[k]||.6)+.08):.6;}
+    {const CA=cprodL();if(CA.con){s.stability=clamp(s.stability+Math.min(1.2,CA.con*.05),0,100);s.approval=clamp(s.approval+Math.min(1.2,CA.con*.04),0,100);}}
+    EQ.arm=Math.min(400,r1(EQ.arm*(war?.9:1)+PL.arm*mm*EF.arm));EQ.air=Math.min(300,r1(EQ.air*(war?.94:1)+PL.air*mm*.8*EF.air));EQ.nav=Math.min(200,r1(EQ.nav+PL.nav*mm*.5*EF.nav));
     if(L.econ==="war")s.stability=clamp(s.stability-1,0,100);
     state.mp=Math.min(B()*(4.4-.6*hk())+heldPop()*6,r1(state.mp+{vol:.6,limited:1.2,total:2.4}[L.cons]*B()/15+occMp()));
     if(L.cons==="vol")s.approval=clamp(s.approval+.3,0,100);
@@ -2702,14 +2714,16 @@ function renderInd(){const I=state.ind,L=state.laws,R=state.res,dis=state.pendin
   const mg=r1({vol:.6,limited:1.2,total:2.4}[L.cons]*B()/15);
   h+=`<h3 style="margin-top:20px">工業</h3><p class="hint">民用工廠每季帶來收入；軍工廠每季自動生產軍力。人力決定最多能組幾個師。</p>
    <div class="forces" style="margin-bottom:12px">
-    <div class="force"><div class="k">民用工廠</div><div class="v">${I.civ} 座</div><div class="k">每季 +${Math.round(I.civ*1.5*(L.econ==="civil"?1.2:1)*(hasT("smart")?1.2:1))} 億</div></div>
+    <div class="force"><div class="k">民用工廠</div><div class="v">${I.civ} 座</div><div class="k">每季 +${Math.round(cprodL().free*1.5*(L.econ==="civil"?1.2:1)*(hasT("smart")?1.2:1))} 億（${cprodL().free} 座在賺錢）</div></div>
     <div class="force"><div class="k">軍工廠</div><div class="v">${I.mil} 座</div><div class="k">軍力每季 +${r1(I.mil*.12*milMul())}</div></div>
     <div class="force"><div class="k">人力</div><div class="v">${Math.round(state.mp)} 萬</div><div class="k">每季 +${r1(mg+occMp())}${occMp()>0?`（佔領區 +${occMp()}）`:""}・最多 ${mpCap()} 師</div></div></div>
+   ${facOverview()}
    <div class="nbr" style="margin-bottom:6px"><span class="dir">建設中</span>${I.q?`<h5>${I.q.n||1} 座${BUILD[I.q.type][0]}・還要 ${I.q.left} 季${I.q.locs?`（${I.q.locs.map(x=>GBY[x].n).join("、")}）`:""}</h5>`:`<h5 style="color:var(--muted)">沒有工程</h5>`}
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px"><span class="k" style="font-size:.8rem;color:var(--muted)">一次蓋幾座：</span><div class="stepper sm2"><button type="button" data-bq="${Math.max(1,bq()-1)}" aria-label="少一座">−</button><input id="bqIn" type="number" inputmode="numeric" min="1" max="40" value="${bq()}" aria-label="座數" style="width:3.6em;text-align:center;background:var(--desk);color:var(--paper);border:0;font:inherit"><button type="button" data-bq="${Math.min(40,bq()+1)}" aria-label="多一座">＋</button></div><div class="seg">${[1,5,10,20].map(n=>`<button type="button" data-bq="${n}" aria-pressed="${bq()===n}">${n}</button>`).join("")}<button type="button" data-bq="${clamp(Math.floor(state.stats.treasury/40),1,40)}" title="用國庫能蓋的最多數量">最多</button></div></div>
     <div class="waracts" style="margin-top:6px">${Object.entries(BUILD).map(([k,[n,c]])=>`<button class="btn" type="button" data-build="${k}" ${I.q||state.stats.treasury<c||state.pending?"disabled":""}>蓋${n}（每座 ${c} 億・${buildTurns(1)} 季起）▶ 選地點</button>`).join("")}</div><p class="hint" style="margin:6px 0 0">工廠會蓋在你選的土地上。⚠ 那塊地被敵人打下來，上面的工廠就全部歸敵人；搶回來就拿回來。</p></div>`;
   {const PL=prodL(),EQ=eqS(),mm=milMul(),LN=[["inf","🪖 步兵裝備","提升軍力（陸軍師的槍砲彈藥）",`軍力每季 +${r1(PL.inf*.12*mm*15/B())}`,""],["arm","🛡 戰車","供應師編制裡的戰車營",`需要 ${tankNeed()} 輛`,`庫存 ${Math.round(EQ.arm)} 輛`],["air","✈ 戰機","增加空軍數量，爭奪制空權",`空軍 +${Math.round(Math.min(30,EQ.air/4))}`,`庫存 ${Math.round(EQ.air)} 架`],["nav","⚓ 艦艇","組建海軍，提高登陸成功率（15 艘以上可登陸）",`登陸 +${Math.round(Math.min(.2,EQ.nav/120)*100)}%`,`庫存 ${Math.round(EQ.nav)} 艘`]];
-   h+=`<h3 style="margin-top:20px">生產線</h3><p class="hint">像鋼鐵雄心一樣，把軍工廠分配到不同生產線。沒分配的軍工廠都生產步兵裝備。戰爭中戰車和戰機會損耗。</p><div class="plines">${LN.map(([k,n,d,fx,st])=>`<div class="pline"><div><b>${n}</b><small>${d}</small></div><div class="pl-r"><span class="num">${fx}</span><small>${st}</small></div><div class="stepper sm2">${k==="inf"?`<span>${PL.inf} 座</span>`:`<button type="button" data-pl="${k}:-1" ${PL[k]<=0?"disabled":""} aria-label="減少">−</button><span>${PL[k]} 座</span><button type="button" data-pl="${k}:1" ${PL.inf<=0?"disabled":""} aria-label="增加">＋</button>`}</div></div>`).join("")}</div>`;}
+   {const CA=cprodL();h+=`<h3 style="margin-top:20px">民用工廠分配</h3><p class="hint">沒分配的民用工廠都在賺錢（每座每季 1.5 億）。可以拉去蓋房子、做消費品、搞科研。</p><div class="plines"><div class="pline"><div><b>💰 賺錢（未分配）</b><small>每座每季 1.5 億</small></div><div class="pl-r"><span class="num">+${Math.round(CA.free*1.5)} 億</span></div><div class="stepper sm2"><span>${CA.free} 座</span></div></div>${CIVL.map(([k,n,d])=>`<div class="pline"><div><b>${n}</b><small>${d}</small></div><div class="pl-r"></div><div class="stepper sm2"><button type="button" data-cl="${k}:-1" ${CA[k]<=0?"disabled":""} aria-label="減少">−</button><span>${CA[k]} 座</span><button type="button" data-cl="${k}:1" ${CA.free<=0?"disabled":""} aria-label="增加">＋</button></div></div>`).join("")}</div>`;}
+   h+=`<h3 style="margin-top:20px">生產線</h3><p class="hint">像鋼鐵雄心一樣，把軍工廠分配到不同生產線。沒分配的軍工廠都生產步兵裝備。生產線要開一陣子效率才會到 100%，來回調整會掉效率。戰爭中戰車和戰機會損耗。</p><div class="plines">${LN.map(([k,n,d,fx,st])=>`<div class="pline"><div><b>${n}</b><small>${d}</small></div><div class="pl-r"><span class="num">${fx}</span><small>${st}</small></div><div class="stepper sm2">${k==="inf"?`<span>${PL.inf} 座</span>`:`<button type="button" data-pl="${k}:-1" ${PL[k]<=0?"disabled":""} aria-label="減少">−</button><span>${PL[k]} 座${PL[k]>0?`・效率 ${Math.round((effL()[k]||1)*100)}%`:""}</span><button type="button" data-pl="${k}:1" ${PL.inf<=0?"disabled":""} aria-label="增加">＋</button>`}</div></div>`).join("")}</div>`;}
   h+=`<h3 style="margin-top:20px">科技研究</h3><p class="hint">研究不花錢，只花時間。同時可以研究 ${slotsN()} 項${state.flags.tech?"":"（完成「科技島計畫」多 1 個研究槽）"}。</p>
    <div class="slots">${R.slots.map((x,i)=>x?`<div class="slot on">研究槽 ${i+1}：<b>${TBY[x.id].n}</b>・剩 ${x.left} 季</div>`:`<div class="slot">研究槽 ${i+1}：空著，從下面選一項</div>`).join("")}</div>
    <div class="techs">${TECHS.map(([c,l])=>`<div class="tcat"><h5>${c}</h5>${l.map(([id])=>{const t=TBY[id],st=techState(t);
@@ -3230,7 +3244,7 @@ function showStart(){const v=$("#veil");v.hidden=false;const sv=loadSave();const
 document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest("#hflag")&&state&&!state.pending&&!state.over){state.pending={kind:"flag",f:JSON.parse(JSON.stringify(myFlag()))};render();}});
 document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest("#facBtn")&&state&&!state.over&&!state.pending){state.pending={kind:"fbuild",type:"civ",n:1};render();}});
 document.addEventListener("change",e=>{if(e.target&&e.target.id==="bqIn"&&state){state.bq=clamp(Math.round(+e.target.value)||1,1,40);save();render();}});
-document.addEventListener("click",e=>{const t=e.target.closest("[data-f],[data-mars],[data-alien],[data-zb],[data-dec],[data-tax],[data-tab],[data-post],[data-wonder],[data-law],[data-build],[data-tech],[data-bq],[data-pl],[data-tb],[data-ts],[data-tw],[data-tdel],[data-tadd],[data-dep],[data-airm],[data-blk],[data-act],[data-wst],[data-gen],[data-z],[data-mm],[data-comp]");if(!t||!state||t.disabled)return;
+document.addEventListener("click",e=>{const t=e.target.closest("[data-f],[data-mars],[data-alien],[data-zb],[data-dec],[data-tax],[data-tab],[data-post],[data-wonder],[data-law],[data-build],[data-tech],[data-bq],[data-pl],[data-cl],[data-tb],[data-ts],[data-tw],[data-tdel],[data-tadd],[data-dep],[data-airm],[data-blk],[data-act],[data-wst],[data-gen],[data-z],[data-mm],[data-comp]");if(!t||!state||t.disabled)return;
   if(t.dataset.f){ui.sel=t.dataset.f;renderTree();renderFocusDetail();}
   else if(t.dataset.dec){if(!state.pending)doDec(t.dataset.dec);}
   else if(t.dataset.tax){state.tax=t.dataset.tax;log(`稅率調整為「${{low:"低稅",mid:"中稅",high:"高稅"}[state.tax]}」`);save();render();}
@@ -3248,7 +3262,8 @@ document.addEventListener("click",e=>{const t=e.target.closest("[data-f],[data-m
   else if(t.dataset.dep){const [e,d]=t.dataset.dep.split(":");const E=actEn().filter(x=>x!==e);if(+d>0){const src=E.sort((a,b)=>divsOn(b)-divsOn(a))[0];if(src&&divsOn(src)>0)moveDivs(src,e,1);}else{const dst=E.sort((a,b)=>divsOn(a)-divsOn(b))[0];if(dst&&divsOn(e)>0)moveDivs(e,dst,1);}save();render();}
   else if(t.dataset.airm){const [e,k]=t.dataset.airm.split(":");state.W.airm=state.W.airm||{};state.W.airm[e]=k;save();render();}
   else if(t.dataset.blk){const e=t.dataset.blk,W=state.W;W.blk=W.blk||{};if(W.blk[e])W.blk[e]=0;else if(seaCtl(e)>=55){W.blk[e]=1;applyFx({tension:2});log(`海軍開始封鎖${tagName(e)}的港口`);}save();render();}
-  else if(t.dataset.pl){const [k,d]=t.dataset.pl.split(":");prodL();const P=state.prod;if(+d<0&&P[k]>0)P[k]--;else if(+d>0&&prodL().inf>0)P[k]++;save();render();}
+  else if(t.dataset.pl){const [k,d]=t.dataset.pl.split(":");prodL();const P=state.prod;if(+d<0&&P[k]>0)P[k]--;else if(+d>0&&prodL().inf>0)P[k]++;{const E=effL();if(E[k]!=null)E[k]=Math.max(.6,E[k]-.12);}save();render();}
+  else if(t.dataset.cl){const [k,d]=t.dataset.cl.split(":");const C=cprodL();const P=state.prod.c;if(+d<0&&P[k]>0)P[k]--;else if(+d>0&&C.free>0)P[k]++;save();render();}
   else if(t.dataset.law){const [k,id]=t.dataset.law.split(":");if(!state.pending&&state.laws[k]!==id&&lawOk(k,id)&&state.pp>=30){state.pp-=30;state.laws[k]=id;log(`${LAWS[k].title}改為「${LAWS[k].opts.find(o=>o[0]===id)[1]}」`);save();render();}}
   else if(t.dataset.build){const k=t.dataset.build,c=BUILD[k][1];if(!state.pending&&!state.ind.q&&state.stats.treasury>=c){ui.fpick={type:k,n:0,sel:[]};ui.tab="map";render();}}
   else if(t.dataset.bq){state.bq=clamp(Math.round(+t.dataset.bq)||1,1,40);save();render();}
