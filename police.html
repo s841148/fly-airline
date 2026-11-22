@@ -1,0 +1,2558 @@
+<!DOCTYPE html>
+<!--
+  台中警察日常
+  © 2026 麥麥的遊戲工廠. All rights reserved.
+  使用條款：本遊戲僅供個人免費遊玩，未經麥麥的遊戲工廠同意，不得複製、修改、轉載或用於商業用途。
+-->
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="copyright" content="© 2026 麥麥的遊戲工廠">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>台中警察日常 · 麥麥的遊戲工廠</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#000;font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;color:#fff;user-select:none;-webkit-user-select:none;touch-action:none}
+canvas#c{display:block;width:100vw;height:100vh}
+.hidden{display:none!important}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:5}
+.panel{background:rgba(10,18,35,.72);border:1px solid rgba(120,170,255,.35);border-radius:10px;padding:6px 10px;backdrop-filter:blur(3px)}
+#tl{position:absolute;left:10px;top:10px;font-size:14px;line-height:1.45;min-width:190px}
+#tl .big{font-size:20px;font-weight:800;letter-spacing:1px}
+#tl .duty{display:inline-block;padding:1px 8px;border-radius:6px;font-weight:700;font-size:13px}
+.on{background:#1f7bff}.off{background:#666}
+#tr{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+#money{font-size:18px;font-weight:800;color:#ffd84a}
+#mini{width:170px;height:170px;border-radius:12px;border:2px solid rgba(120,170,255,.5);background:#1b2433}
+#mission{position:absolute;left:50%;top:10px;transform:translateX(-50%);text-align:center;max-width:46vw;font-size:14px}
+#mission b{color:#7fd0ff;font-size:16px}
+#mission .obj{color:#fff}
+#mission .dist{color:#ffd84a;font-weight:700}
+#radio{position:absolute;left:10px;top:118px;width:min(360px,42vw);display:flex;flex-direction:column;gap:4px}
+.rmsg{background:rgba(0,30,10,.78);border-left:4px solid #3fe07a;padding:5px 8px;border-radius:6px;font-size:13px;line-height:1.4;transition:opacity 1s}
+.rmsg.warn{border-color:#ff5a4a;background:rgba(50,0,0,.78)}
+.rmsg.info{border-color:#ffd84a;background:rgba(40,30,0,.78)}
+#bl{position:absolute;left:10px;bottom:10px;width:220px;font-size:13px}
+.bar{height:10px;background:#333;border-radius:5px;overflow:hidden;margin:3px 0 6px}
+.bar i{display:block;height:100%;background:#e8443a;transition:width .2s}
+.bar.en i{background:#3fbcff}
+#weap{font-size:15px;font-weight:700}
+#speedo{position:absolute;right:190px;bottom:14px;font-size:30px;font-weight:900;text-align:right;text-shadow:0 2px 4px #000}
+#speedo small{font-size:13px;display:block;font-weight:600}
+#prompt{position:absolute;left:50%;bottom:22%;transform:translateX(-50%);font-size:17px;font-weight:700;padding:8px 16px;border-radius:10px;background:rgba(0,0,0,.65);border:1px solid #ffd84a;color:#ffd84a;white-space:nowrap}
+#cross{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px}
+#cross:before,#cross:after{content:"";position:absolute;background:rgba(255,255,255,.85);box-shadow:0 0 2px #000}
+#cross:before{left:10px;top:3px;width:2px;height:16px}
+#cross:after{top:10px;left:3px;height:2px;width:16px}
+#cross.hit:before,#cross.hit:after{background:#ff4040}
+#bubble{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-size:26px;font-weight:900;color:#fff;text-shadow:0 0 8px #1f7bff,0 2px 3px #000;white-space:nowrap}
+#toast{position:absolute;left:50%;top:22%;transform:translateX(-50%);padding:12px 26px;border-radius:14px;font-size:22px;font-weight:900;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#toast small{display:block;font-size:14px;font-weight:600;margin-top:4px}
+#toast.good{background:linear-gradient(135deg,#ffd84a,#ff9a3a);color:#3a1d00}
+#toast.bad{background:linear-gradient(135deg,#ff5a4a,#a3121d);color:#fff}
+#toast.rank{background:linear-gradient(135deg,#5cb8ff,#2a4fa8);color:#fff}
+#dmg{position:absolute;inset:0;box-shadow:inset 0 0 120px rgba(255,0,0,.8);opacity:0;transition:opacity .3s}
+#tired{position:absolute;inset:0;box-shadow:inset 0 0 160px rgba(0,0,0,.9);opacity:0}
+#fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:40;transition:opacity .6s;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800}
+#pursuit{position:absolute;left:50%;bottom:calc(22% + 56px);transform:translateX(-50%);width:260px;text-align:center;font-size:13px}
+#pursuit .bar i{background:#ffd84a}
+/* dialogs */
+.modal{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);pointer-events:auto}
+.box{width:min(560px,94vw);max-height:90vh;overflow:auto;background:#121a2c;border:2px solid #3d6fd6;border-radius:16px;padding:16px 18px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.box h2{margin:0 0 8px;font-size:21px;color:#7fd0ff}
+.box h3{margin:10px 0 4px;font-size:16px;color:#ffd84a}
+.box p,.box li{font-size:14px;line-height:1.6;margin:4px 0}
+.box table{width:100%;border-collapse:collapse;font-size:14px}
+.box td{padding:3px 6px;border-bottom:1px solid #243150}
+.box td:first-child{color:#9fb3d9;white-space:nowrap;width:30%}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{font-family:inherit;font-size:15px;font-weight:700;border:none;border-radius:10px;padding:10px 14px;cursor:pointer;background:#2a4fa8;color:#fff;box-shadow:0 3px 0 #16306b}
+.btn:hover{filter:brightness(1.15)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.g{background:#1e9b63;box-shadow:0 3px 0 #0e5a38}
+.btn.r{background:#c2312a;box-shadow:0 3px 0 #6e1410}
+.btn.y{background:#e0a514;color:#2a1c00;box-shadow:0 3px 0 #8a6200}
+.btn.gray{background:#4a5468;box-shadow:0 3px 0 #262c38}
+.chk{display:flex;align-items:center;gap:8px;padding:7px 10px;margin:4px 0;background:#1b2640;border-radius:8px;font-size:14px;cursor:pointer}
+.chk input{width:20px;height:20px}
+.res-good{color:#4fe3b5}.res-bad{color:#ff7a6a}
+.shopitem{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;margin:5px 0;background:#1b2640;border-radius:8px;font-size:15px}
+.shopitem small{color:#9fb3d9;display:block;font-size:12px}
+/* intro */
+#intro{position:fixed;inset:0;z-index:50;background:radial-gradient(900px 500px at 20% 0%,#1d3d7a,transparent 60%),radial-gradient(800px 500px at 100% 100%,#5a1220,transparent 60%),#070b16;display:flex;align-items:center;justify-content:center;pointer-events:auto;overflow:auto}
+#intro .in{width:min(640px,94vw);text-align:center;padding:20px}
+#intro h1{font-size:clamp(34px,7vw,58px);margin:0;letter-spacing:4px;text-shadow:0 0 20px #1f7bff}
+#intro h1 span{color:#ff4a4a;text-shadow:0 0 20px #ff2a2a}
+#intro .sub{color:#a9c1ef;margin:8px 0 18px;font-size:15px}
+#intro .btn{font-size:18px;padding:12px 22px;margin:5px}
+#intro .opts{margin:14px 0;font-size:15px}
+#intro select{font-size:15px;padding:6px;border-radius:8px;background:#1b2640;color:#fff;border:1px solid #3d6fd6;font-family:inherit}
+#intro .help{text-align:left;font-size:13px;color:#c9d6f2;background:rgba(255,255,255,.05);border-radius:12px;padding:10px 14px;line-height:1.7;margin-top:12px}
+#intro .copy{color:#7b88a8;font-size:12px;margin-top:14px}
+#loading{color:#ffd84a;margin-top:10px;font-size:14px}
+/* mobile controls */
+#touch{position:fixed;inset:0;z-index:10;pointer-events:none}
+#joy{position:absolute;left:3vw;bottom:5vh;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.3);pointer-events:auto}
+#joyk{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px;border-radius:50%;background:rgba(255,255,255,.45)}
+#look{position:absolute;right:0;top:0;width:58vw;height:100%;pointer-events:auto}
+.tb{position:absolute;width:58px;height:58px;border-radius:50%;background:rgba(20,30,60,.6);border:2px solid rgba(255,255,255,.4);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;pointer-events:auto;font-weight:800;font-family:inherit}
+.tb small{font-size:10px;position:absolute;bottom:-14px;white-space:nowrap;color:#fff;text-shadow:0 1px 2px #000}
+.tb.big{width:76px;height:76px;font-size:30px;background:rgba(190,40,40,.55)}
+.tb:active{background:rgba(255,216,74,.6)}
+#bigmap{position:fixed;inset:0;z-index:25;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;pointer-events:auto}
+#bigmap canvas{width:min(90vh,92vw);height:min(90vh,92vw);border-radius:14px;border:2px solid #3d6fd6}
+#rot{position:fixed;inset:0;z-index:60;background:#070b16;display:none;align-items:center;justify-content:center;text-align:center;font-size:20px;padding:20px}
+@media (orientation:portrait) and (pointer:coarse){#rot{display:flex}}
+@media (max-height:500px){#mini{width:120px;height:120px}#tl{font-size:12px;min-width:150px;padding:4px 8px}#tl .big{font-size:16px}#radio{top:96px}.rmsg{font-size:11px;padding:3px 6px}#mission{font-size:12px;max-width:40vw}#mission b{font-size:13px}.bar{height:7px;margin:2px 0 3px}}
+body.touch #bl{left:calc(3vw + 165px);bottom:6px;width:170px;font-size:11px;padding:4px 8px}
+body.touch #speedo{right:auto;left:calc(3vw + 345px);bottom:8px;font-size:24px;text-align:left}
+body.touch #toast{font-size:16px;padding:8px 16px;top:26%}body.touch #toast small{font-size:12px}
+body.touch #prompt{bottom:calc(6px + 80px);font-size:15px}
+body.touch #pursuit{bottom:auto;top:96px}
+body.touch #radio{width:min(300px,36vw)}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="dmg"></div><div id="tired"></div>
+  <div id="tl" class="panel">
+    <div class="big" id="clock">08:00</div>
+    <div id="dateline">第 1 天（週一）</div>
+    <div><span class="duty off" id="duty">下班</span> <span id="rank">警員</span></div>
+    <div style="font-size:12px;color:#a9c1ef">考績 <b id="merit">0</b></div>
+  </div>
+  <div id="tr"><div class="panel" id="money">$ 0</div><canvas id="mini" width="170" height="170"></canvas></div>
+  <div id="mission" class="panel hidden"></div>
+  <div id="pursuit" class="panel hidden"><div id="pursuitTxt">逼停嫌犯車輛</div><div class="bar"><i id="pursuitBar" style="width:0%"></i></div></div>
+  <div id="radio"></div>
+  <div id="bl" class="panel">
+    <div>❤️ 生命</div><div class="bar"><i id="hpbar" style="width:100%"></i></div>
+    <div>⚡ 體力</div><div class="bar en"><i id="enbar" style="width:100%"></i></div>
+    <div id="weap">空手</div>
+  </div>
+  <div id="speedo" class="hidden">0<small>km/h</small></div>
+  <div id="cross"></div>
+  <div id="prompt" class="hidden"></div>
+  <div id="bubble" class="hidden"></div>
+  <div id="toast" class="hidden"></div>
+</div>
+
+<div id="touch" class="hidden">
+  <div id="look"></div>
+  <div id="joy"><div id="joyk"></div></div>
+  <button class="tb big" id="tFire" style="right:4vw;bottom:24vh">🔫<small>開槍</small></button>
+  <button class="tb" id="tAct" style="right:15vw;bottom:8vh">E<small>互動</small></button>
+  <button class="tb" id="tCar" style="right:4vw;bottom:6vh">🚗<small>上下車</small></button>
+  <button class="tb" id="tShout" style="right:15vw;bottom:26vh">📢<small>喊話</small></button>
+  <button class="tb" id="tSiren" style="right:25vw;bottom:8vh">🚨<small>警笛</small></button>
+  <button class="tb" id="tRel" style="right:4vw;bottom:40vh">R<small>換彈</small></button>
+  <button class="tb" id="tWeap" style="right:15vw;bottom:42vh">🔄<small>武器</small></button>
+  <button class="tb" id="tRun" style="left:calc(3vw + 155px);bottom:calc(5vh + 96px)">🏃<small>跑/煞車</small></button>
+  <button class="tb" id="tMap" style="right:calc(10px + 180px);top:10px;width:46px;height:46px;font-size:18px">🗺</button>
+  <button class="tb" id="tMenu" style="right:calc(10px + 180px);top:66px;width:46px;height:46px;font-size:18px">☰</button>
+</div>
+
+<div id="bigmap" class="hidden"><canvas id="bigc" width="900" height="900"></canvas></div>
+<div id="modal" class="modal hidden"><div class="box" id="mbox"></div></div>
+<div id="fade"></div>
+<div id="rot">📱 請把手機橫過來玩<br><small style="font-size:14px;color:#9fb3d9">（橫拿手機效果最好）</small></div>
+
+<div id="intro">
+  <div class="in">
+    <div style="font-size:54px">🚓</div>
+    <h1>台中<span>警察</span>日常</h1>
+    <div class="sub">3D 第一人稱 · 打卡上班巡邏、攔檢、處理搶案，下班過自己的生活</div>
+    <div id="introBtns" class="hidden">
+      <button class="btn g" id="bNew">▶ 新的警察生涯</button>
+      <button class="btn" id="bCont">⏯ 繼續遊戲</button>
+      <div class="opts">難度：
+        <select id="diffSel"><option value="0">簡單（搶匪比較會投降）</option><option value="1" selected>普通（真實但不會太難）</option><option value="2">真實（中槍很痛）</option></select>
+      </div>
+    </div>
+    <div id="loading">載入中…</div>
+    <div class="help">
+      <b>🖥 電腦操作</b>：點畫面鎖定滑鼠 · WASD 移動 · 滑鼠看 · 左鍵開槍 · 右鍵瞄準 · Shift 跑步<br>
+      E 互動 · F 上下車 · Q 喊話「警察！不要動！」 · H 警笛 · R 換彈匣 · 1 手槍 / 2 電擊槍 · M 地圖 · Esc 選單<br>
+      開車：W 油門 · S 煞車/倒車 · A D 轉彎 · 空白鍵 手煞車<br>
+      <b>📱 手機</b>：橫拿手機，左邊搖桿移動 / 開車，右邊滑動看四周，按鈕操作。<br>
+      <b>👮 一天的流程</b>：早上 8:00 前到「大墩分局」打卡上班（領槍、開警車）→ 聽無線電派案 → 17:00 後回分局打卡下班 → 下班可以騎車亂逛、吃夜市、買車，回家睡覺到隔天。週日放假。
+    </div>
+    <div class="copy">© 2026 麥麥的遊戲工廠 版權所有 · 本遊戲為原創作品，地名街景為虛構重現，未經授權請勿轉載或作商業用途</div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>if(!window.THREE){document.getElementById('loading').textContent='⚠️ 3D 引擎載入失敗，請確認網路連線後重新整理。';}</script>
+<script>
+'use strict';
+/* ============ 台中警察日常 · © 2026 麥麥的遊戲工廠 ============ */
+const $ = id => document.getElementById(id);
+const rand = (a, b) => a + Math.random() * (b - a);
+const randi = (a, b) => Math.floor(rand(a, b + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const dist = (ax, az, bx, bz) => { const dx = ax - bx, dz = az - bz; return Math.sqrt(dx * dx + dz * dz); };
+function angDiff(a, b) { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; }
+const IS_TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
+function fmtMoney(n) { return '$ ' + Math.round(n).toLocaleString('en-US'); }
+function fmtTime(t) { t = ((t % 1440) + 1440) % 1440; const h = Math.floor(t / 60), m = Math.floor(t % 60); return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0'); }
+const WEEK = ['一', '二', '三', '四', '五', '六', '日'];
+function weekday(day) { return (day - 1) % 7; } // 0 = 週一
+function isWorkday(day) { return weekday(day) !== 6; }
+
+/* ---------- 遊戲狀態 ---------- */
+const RANKS = [
+  { name: '警員', need: 0, pay: 2400 },
+  { name: '巡佐', need: 120, pay: 2900 },
+  { name: '巡官', need: 300, pay: 3500 },
+  { name: '派出所所長', need: 600, pay: 4300 },
+  { name: '分局長', need: 1000, pay: 5400 },
+];
+const DIFF = [
+  { name: '簡單', acc: 0.55, dmg: 8, surrender: 0.62 },
+  { name: '普通', acc: 0.85, dmg: 13, surrender: 0.45 },
+  { name: '真實', acc: 1.2, dmg: 22, surrender: 0.3 },
+];
+const VEH_SPECS = {
+  police: { name: '巡邏警車', kind: 'car', max: 46, acc: 10, price: 0, color: 0xf4f6f8 },
+  pscooter: { name: '警用機車', kind: 'scooter', max: 28, acc: 9, price: 0, color: 0xf4f6f8 },
+  scooter: { name: '我的白牌機車', kind: 'scooter', max: 22, acc: 7, price: 0, color: 0x2a6fd6 },
+  escooter: { name: '電動機車', kind: 'scooter', max: 26, acc: 10, price: 68000, color: 0x26c2a4 },
+  usedcar: { name: '二手小轎車', kind: 'car', max: 38, acc: 7, price: 180000, color: 0x9a9ea6 },
+  suv: { name: '全新休旅車', kind: 'car', max: 42, acc: 8, price: 1050000, color: 0x22324a },
+  sport: { name: '跑車', kind: 'car', max: 68, acc: 15, price: 3600000, color: 0xe2231a },
+};
+function newState() {
+  return {
+    v: 1, day: 1, time: 7 * 60, money: 20000, merit: 0, rank: 0, onDuty: false, clockIn: 0, workedToday: false,
+    hp: 100, energy: 100, weapon: 0, ammo: 15, reserve: 45, taser: 4,
+    pen: { rep: 0, dem: 0, major: 0 }, award: { com: 0, mer: 0 },
+    stats: { tickets: 0, arrests: 0, robbery: 0, patrol: 0, check: 0, days: 0 },
+    owned: ['scooter'], log: [], diff: 1, absentChecked: 0,
+  };
+}
+let S = newState();
+const SAVE_KEY = 'mmPolice_v1';
+function saveGame() { safeSet(SAVE_KEY, JSON.stringify(S)); }
+function loadGame() { try { const t = safeGet(SAVE_KEY); if (!t) return null; const o = JSON.parse(t); return Object.assign(newState(), o); } catch (e) { return null; } }
+
+/* ---------- 音效（WebAudio 合成） ---------- */
+const AU = {
+  ctx: null, master: null, siren: null, engine: null,
+  init() {
+    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      this.master = this.ctx.createGain(); this.master.gain.value = 0.55; this.master.connect(this.ctx.destination);
+      const nb = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.5, this.ctx.sampleRate);
+      const d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      this.noise = nb;
+      // engine hum
+      const o = this.ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 40;
+      const f = this.ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 300;
+      const g = this.ctx.createGain(); g.gain.value = 0;
+      o.connect(f); f.connect(g); g.connect(this.master); o.start();
+      this.engine = { o, g };
+      // siren
+      const so = this.ctx.createOscillator(); so.type = 'square'; so.frequency.value = 700;
+      const sg = this.ctx.createGain(); sg.gain.value = 0;
+      const sf = this.ctx.createBiquadFilter(); sf.type = 'lowpass'; sf.frequency.value = 2200;
+      so.connect(sf); sf.connect(sg); sg.connect(this.master); so.start();
+      this.siren = { o: so, g: sg };
+    } catch (e) { this.ctx = null; }
+  },
+  noiseBurst(dur, vol, freq, q) {
+    if (!this.ctx) return;
+    const s = this.ctx.createBufferSource(); s.buffer = this.noise;
+    const f = this.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq || 1200; f.Q.value = q || 0.7;
+    const g = this.ctx.createGain(); const t = this.ctx.currentTime;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    s.connect(f); f.connect(g); g.connect(this.master); s.start(t); s.stop(t + dur + 0.05);
+  },
+  tone(freq, dur, vol, type, slide) {
+    if (!this.ctx) return;
+    const o = this.ctx.createOscillator(); o.type = type || 'sine'; const g = this.ctx.createGain(); const t = this.ctx.currentTime;
+    o.frequency.setValueAtTime(freq, t); if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(this.master); o.start(t); o.stop(t + dur + 0.05);
+  },
+  shot(d) { const v = d == null ? 0.9 : clamp(1 - d / 120, 0.05, 0.9); this.noiseBurst(0.25, v, 900, 0.5); this.tone(140, 0.15, v * 0.6, 'square', 50); },
+  taser() { this.noiseBurst(0.6, 0.35, 3500, 6); },
+  radio() { this.tone(1400, 0.08, 0.15, 'square'); setTimeout(() => this.tone(1800, 0.08, 0.15, 'square'), 90); },
+  click() { this.tone(900, 0.05, 0.1, 'square'); },
+  bump() { this.noiseBurst(0.3, 0.6, 200, 0.8); },
+  good() { [660, 880, 1100].forEach((f, i) => setTimeout(() => this.tone(f, 0.18, 0.18, 'triangle'), i * 110)); },
+  bad() { [400, 300].forEach((f, i) => setTimeout(() => this.tone(f, 0.25, 0.18, 'sawtooth'), i * 160)); },
+  honk() { this.tone(420, 0.3, 0.12, 'square'); },
+  cuff() { this.tone(2400, 0.05, 0.12, 'square'); setTimeout(() => this.tone(2000, 0.05, 0.12, 'square'), 70); },
+  update(sirenOn, engineSpeed, inVeh) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    if (this.siren) {
+      this.siren.g.gain.setTargetAtTime(sirenOn ? 0.09 : 0, t, 0.05);
+      if (sirenOn) { const ph = (performance.now() / 1000) % 1.6; this.siren.o.frequency.setTargetAtTime(ph < 0.8 ? 650 + ph * 900 : 1370 - (ph - 0.8) * 900, t, 0.02); }
+    }
+    if (this.engine) {
+      this.engine.g.gain.setTargetAtTime(inVeh ? 0.05 + Math.min(Math.abs(engineSpeed) / 40, 1) * 0.06 : 0, t, 0.1);
+      this.engine.o.frequency.setTargetAtTime(35 + Math.abs(engineSpeed) * 3, t, 0.1);
+    }
+  }
+};
+function speak(text) {
+  try {
+    if (!window.speechSynthesis) return;
+    const u = new SpeechSynthesisUtterance(text); u.lang = 'zh-TW'; u.rate = 1.15; u.pitch = 0.85; u.volume = 1;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  } catch (e) { }
+}
+
+/* ---------- 隨機人名、車號 ---------- */
+const SURN = '陳林黃張李王吳劉蔡楊許鄭謝洪郭邱曾廖賴徐周葉蘇莊呂江何蕭羅高潘簡朱鍾彭游詹胡施沈余盧梁趙顏柯翁魏孫戴'.split('');
+const GIVN = ['志明', '春嬌', '家豪', '雅婷', '俊傑', '怡君', '建宏', '淑芬', '冠宇', '佳穎', '宗翰', '美玲', '承恩', '思妤', '文雄', '秀英', '子軒', '欣怡', '明哲', '玉珍', '柏翰', '詩涵', '國華', '慧君', '品妍', '育誠', '信宏', '惠美'];
+function randName() { return pick(SURN) + pick(GIVN); }
+function randPlate(kind) {
+  const L = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  if (kind === 'scooter') return randi(100, 999) + '-' + L[randi(0, 23)] + L[randi(0, 23)] + L[randi(0, 23)];
+  return L[randi(0, 23)] + L[randi(0, 23)] + L[randi(0, 23)] + '-' + String(randi(0, 9999)).padStart(4, '0');
+}
+function randID() { const L = 'BBBBLLMN'; return pick(L.split('')) + (Math.random() < .5 ? '1' : '2') + String(randi(0, 9999999)).padStart(7, '0').slice(0, 3) + '****' + randi(0, 9); }
+const CAR_COLORS = [0xf2f2f2, 0x111111, 0x9a9ea6, 0xc0c4cc, 0x8a1c1c, 0x1d3f7a, 0x2f5d3a, 0xd9c7a3, 0x5c5c66, 0xe0e0d8, 0x7a2b8a, 0xc96f19];
+const COLOR_NAMES = { 0xf2f2f2: '白色', 0x111111: '黑色', 0x9a9ea6: '銀色', 0xc0c4cc: '銀色', 0x8a1c1c: '紅色', 0x1d3f7a: '藍色', 0x2f5d3a: '綠色', 0xd9c7a3: '香檳色', 0x5c5c66: '灰色', 0xe0e0d8: '白色', 0x7a2b8a: '紫色', 0xc96f19: '橘色' };
+
+/* ---------- 畫布貼圖工具 ---------- */
+function canvasTex(w, h, draw) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); draw(g, w, h);
+  const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return t;
+}
+const FONT = '"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif';
+function signTex(text, opt) {
+  opt = opt || {};
+  const w = opt.w || 512, h = opt.h || 128;
+  return canvasTex(w, h, (g) => {
+    g.fillStyle = opt.bg || '#c22'; g.fillRect(0, 0, w, h);
+    if (opt.stripe) { g.fillStyle = opt.stripe; g.fillRect(0, h * 0.78, w, h * 0.12); }
+    if (opt.border) { g.strokeStyle = opt.border; g.lineWidth = 8; g.strokeRect(4, 4, w - 8, h - 8); }
+    g.fillStyle = opt.fg || '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    const lines = String(text).split('\n');
+    const fs = opt.fs || Math.min(h * 0.62 / lines.length, w / (Math.max(...lines.map(l => l.length)) + 0.6));
+    g.font = '900 ' + fs + 'px ' + FONT;
+    lines.forEach((l, i) => g.fillText(l, w / 2, h / 2 + (i - (lines.length - 1) / 2) * fs * 1.12));
+  });
+}
+
+/* ================= 城市：仿台中 ================= */
+const scene = new THREE.Scene();
+const XR = [-400, -320, -240, -160, -80, 0, 80, 160, 240, 320, 400];
+const ZR = XR.slice();
+const VNAMES = ['中華路', '三民路', '英才路', '五權路', '忠明路', '大墩路', '黎明路', '文心路', '河南路', '朝富路', '環中東路'];
+const HNAMES = ['環中路', '漢口路', '崇德路', '市政路', '健行路', '台灣大道', '公益路', '大業路', '向上路', '美村路', '五權西路'];
+function vW(i) { const x = XR[i]; return x === 160 ? 22 : x === -160 ? 18 : 14; }
+function hW(j) { const z = ZR[j]; return z === 0 ? 28 : z === 80 ? 18 : 14; }
+const LIMIT = 500;
+
+/* ---------- 碰撞盒與空間格 ---------- */
+const COLS = []; const CGRID = new Map(); const CELL = 20; let colStamp = 1;
+function ckey(gx, gz) { return gx * 10007 + gz; }
+function addCol(x0, x1, z0, z1, h, tag) {
+  const c = { x0: Math.min(x0, x1), x1: Math.max(x0, x1), z0: Math.min(z0, z1), z1: Math.max(z0, z1), h: h || 12, tag: tag || '', s: 0 };
+  COLS.push(c);
+  for (let gx = Math.floor(c.x0 / CELL); gx <= Math.floor(c.x1 / CELL); gx++)
+    for (let gz = Math.floor(c.z0 / CELL); gz <= Math.floor(c.z1 / CELL); gz++) {
+      const k = ckey(gx, gz); let a = CGRID.get(k); if (!a) { a = []; CGRID.set(k, a); } a.push(c);
+    }
+  return c;
+}
+function colsNear(x, z, r) {
+  colStamp++; const out = [];
+  for (let gx = Math.floor((x - r) / CELL); gx <= Math.floor((x + r) / CELL); gx++)
+    for (let gz = Math.floor((z - r) / CELL); gz <= Math.floor((z + r) / CELL); gz++) {
+      const a = CGRID.get(ckey(gx, gz)); if (!a) continue;
+      for (const c of a) if (c.s !== colStamp) { c.s = colStamp; out.push(c); }
+    }
+  return out;
+}
+// 圓形推出碰撞，回傳是否撞到
+function collideCircle(p, r, ylow) {
+  let hit = false;
+  for (const c of colsNear(p.x, p.z, r + 1)) {
+    if (ylow != null && c.h < ylow) continue;
+    const cx = clamp(p.x, c.x0, c.x1), cz = clamp(p.z, c.z0, c.z1);
+    let dx = p.x - cx, dz = p.z - cz; const d2 = dx * dx + dz * dz;
+    if (d2 < r * r) {
+      hit = true;
+      if (d2 > 1e-6) { const d = Math.sqrt(d2); p.x = cx + dx / d * r; p.z = cz + dz / d * r; }
+      else { // 在盒子裡面：推到最近的邊
+        const l = p.x - c.x0, rr = c.x1 - p.x, t = p.z - c.z0, b = c.z1 - p.z; const m = Math.min(l, rr, t, b);
+        if (m === l) p.x = c.x0 - r; else if (m === rr) p.x = c.x1 + r; else if (m === t) p.z = c.z0 - r; else p.z = c.z1 + r;
+      }
+    }
+  }
+  if (p.x < -LIMIT) { p.x = -LIMIT; hit = true; } if (p.x > LIMIT) { p.x = LIMIT; hit = true; }
+  if (p.z < -LIMIT) { p.z = -LIMIT; hit = true; } if (p.z > LIMIT) { p.z = LIMIT; hit = true; }
+  return hit;
+}
+// 射線 vs 建築盒（3D），回傳距離
+function rayCols(ox, oy, oz, dx, dy, dz, maxT) {
+  colStamp++; let best = maxT;
+  const steps = Math.ceil(maxT / (CELL * 0.5));
+  for (let s = 0; s <= steps; s++) {
+    const t = Math.min(s * CELL * 0.5, maxT); const px = ox + dx * t, pz = oz + dz * t;
+    for (let gx = Math.floor(px / CELL) - 1; gx <= Math.floor(px / CELL) + 1; gx++)
+      for (let gz = Math.floor(pz / CELL) - 1; gz <= Math.floor(pz / CELL) + 1; gz++) {
+        const a = CGRID.get(ckey(gx, gz)); if (!a) continue;
+        for (const c of a) {
+          if (c.s === colStamp) continue; c.s = colStamp;
+          if (c.tag === 'glass') continue;
+          let t0 = 0, t1 = best; let ok = true;
+          const sl = (o, d, a0, a1) => {
+            if (Math.abs(d) < 1e-9) { if (o < a0 || o > a1) ok = false; return; }
+            let ta = (a0 - o) / d, tb = (a1 - o) / d; if (ta > tb) { const q = ta; ta = tb; tb = q; }
+            if (ta > t0) t0 = ta; if (tb < t1) t1 = tb; if (t0 > t1) ok = false;
+          };
+          sl(ox, dx, c.x0, c.x1); if (ok) sl(oy, dy, 0, c.h); if (ok) sl(oz, dz, c.z0, c.z1);
+          if (ok && t0 < best && t0 >= 0) best = t0;
+        }
+      }
+    if (best < t) break;
+  }
+  return best;
+}
+function losClear(ax, ay, az, bx, by, bz) {
+  const dx = bx - ax, dy = by - ay, dz = bz - az; const L = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+  return rayCols(ax, ay, az, dx / L, dy / L, dz / L, L) >= L - 0.3;
+}
+
+/* ---------- 幾何合併 ---------- */
+const MERGE = {};
+function addGeo(key, mat, geo) { (MERGE[key] || (MERGE[key] = { mat, geos: [] })).geos.push(geo); }
+function mergeGeos(list) {
+  let n = 0; const ni = list.map(g => { const q = g.index ? g.toNonIndexed() : g; n += q.attributes.position.count; return q; });
+  const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2); let o = 0;
+  for (const g of ni) {
+    const c = g.attributes.position.count;
+    pos.set(g.attributes.position.array, o * 3); nor.set(g.attributes.normal.array, o * 3);
+    if (g.attributes.uv) uv.set(g.attributes.uv.array, o * 2);
+    o += c;
+  }
+  const m = new THREE.BufferGeometry();
+  m.setAttribute('position', new THREE.BufferAttribute(pos, 3)); m.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); m.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  m.computeBoundingSphere(); return m;
+}
+function flushMerges() {
+  for (const k in MERGE) { const e = MERGE[k]; if (!e.geos.length) continue; const mesh = new THREE.Mesh(mergeGeos(e.geos), e.mat); mesh.matrixAutoUpdate = false; mesh.updateMatrix(); scene.add(mesh); e.geos = []; }
+}
+// 盒子：x,z 中心、y 底部
+function boxGeo(w, h, d, x, y, z, uv) {
+  const g = new THREE.BoxGeometry(w, h, d);
+  const a = g.attributes.uv;
+  if (uv === 'facade') {
+    const bay = 16, fl = 12.8; // 貼圖一張 = 4 間 × 4 層
+    for (let f = 0; f < 6; f++) for (let v = 0; v < 4; v++) {
+      const i = f * 4 + v; let u = a.getX(i), vv = a.getY(i);
+      if (f === 2 || f === 3) { a.setXY(i, 0.01, 0.01); continue; }
+      const W = (f < 2) ? d : w; a.setXY(i, u * W / bay, vv * h / fl);
+    }
+  } else if (uv === 'world') {
+    g.translate(x, y + h / 2, z);
+    const p = g.attributes.position; for (let i = 0; i < p.count; i++) a.setXY(i, p.getX(i) / 3, p.getZ(i) / 3);
+    return g;
+  } else if (uv === 'shop') {
+    for (let f = 0; f < 6; f++) for (let v = 0; v < 4; v++) { const i = f * 4 + v; if (f === 2 || f === 3) { a.setXY(i, 0.01, 0.01); continue; } const W = (f < 2) ? d : w; a.setXY(i, a.getX(i) * W / 16, a.getY(i)); }
+  } else if (typeof uv === 'number') { for (let i = 0; i < a.count; i++) a.setXY(i, a.getX(i) * uv, a.getY(i) * uv); }
+  g.translate(x, y + h / 2, z); return g;
+}
+// 任意四邊形（p 為 [x,y,z]）
+function quadGeo(p0, p1, p2, p3, uvr) {
+  uvr = uvr || [0, 0, 1, 1];
+  const g = new THREE.BufferGeometry();
+  const pos = new Float32Array([...p0, ...p1, ...p2, ...p0, ...p2, ...p3]);
+  const v1 = new THREE.Vector3(p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]), v2 = new THREE.Vector3(p3[0] - p0[0], p3[1] - p0[1], p3[2] - p0[2]);
+  const nn = new THREE.Vector3().crossVectors(v1, v2).normalize();
+  const nor = new Float32Array(18); for (let i = 0; i < 6; i++) { nor[i * 3] = nn.x; nor[i * 3 + 1] = nn.y; nor[i * 3 + 2] = nn.z; }
+  const [u0, v0, u1, v1_] = uvr;
+  const uv = new Float32Array([u0, v0, u1, v0, u1, v1_, u0, v0, u1, v1_, u0, v1_]);
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  return g;
+}
+function flatQuad(x0, z0, x1, z1, y, uvr) { return quadGeo([x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0], uvr); }
+
+/* ---------- 材質與貼圖 ---------- */
+const MAT = {};
+const NIGHT_MATS = []; // {mat, base} 夜晚發光
+function nightMat(m, base) { NIGHT_MATS.push({ m, base }); return m; }
+function facadeTex(style, lit) {
+  return canvasTex(256, 256, (g, w, h) => {
+    const T = 64; // 每格
+    const pal = {
+      old: ['#cfc4ad', '#bdb29a', '#d8d0bf', '#b9a98f'], white: ['#e9e7e1', '#dedbd2'], glass: ['#5d86a8'], dark: ['#2e3d4f'], brick: ['#a5644a', '#97583f'], tile: ['#d7d2c4', '#c9c2b0'],
+    }[style];
+    g.fillStyle = lit ? '#000' : pal[0]; g.fillRect(0, 0, w, h);
+    for (let fy = 0; fy < 4; fy++) for (let bx = 0; bx < 4; bx++) {
+      const x = bx * T, y = fy * T;
+      if (!lit && pal.length > 1 && (style === 'old' || style === 'tile')) { g.fillStyle = pal[(fy + bx * 3) % pal.length]; g.fillRect(x, y, T, T); }
+      const on = Math.random() < (style === 'glass' || style === 'dark' ? 0.55 : 0.45);
+      if (style === 'glass' || style === 'dark') {
+        if (lit) { g.fillStyle = on ? (Math.random() < .5 ? '#ffe9b0' : '#cfe6ff') : '#000'; g.fillRect(x + 3, y + 6, T - 6, T - 12); }
+        else {
+          const gr = g.createLinearGradient(x, y, x + T, y + T); gr.addColorStop(0, style === 'glass' ? '#8fb4d4' : '#4a5d72'); gr.addColorStop(1, style === 'glass' ? '#3f6a8f' : '#1b2633');
+          g.fillStyle = gr; g.fillRect(x + 2, y + 5, T - 4, T - 10); g.fillStyle = style === 'glass' ? '#c9d6e0' : '#6a7888'; g.fillRect(x, y, T, 4);
+        }
+      } else {
+        const wx = x + 12, wy = y + 14, ww = T - 24, wh = T - 30;
+        if (lit) { if (on) { g.fillStyle = Math.random() < .7 ? '#ffd890' : '#bfe0ff'; g.fillRect(wx, wy, ww, wh); } }
+        else {
+          g.fillStyle = '#41505e'; g.fillRect(wx, wy, ww, wh);
+          g.fillStyle = 'rgba(180,210,230,.35)'; g.fillRect(wx + 2, wy + 2, ww / 2 - 3, wh - 4);
+          if (style === 'old') { g.strokeStyle = '#6b6b6b'; g.lineWidth = 2; for (let k = 0; k <= 5; k++) { g.beginPath(); g.moveTo(wx - 4 + k * (ww + 8) / 5, wy - 4); g.lineTo(wx - 4 + k * (ww + 8) / 5, wy + wh + 4); g.stroke(); } g.strokeRect(wx - 4, wy - 4, ww + 8, wh + 8); }
+          if (style === 'old' && Math.random() < .3) { g.fillStyle = '#ddd'; g.fillRect(wx + ww - 14, wy + wh - 10, 14, 10); } // 冷氣
+        }
+      }
+    }
+  });
+}
+function makeFacadeMat(style) {
+  const map = facadeTex(style, false), em = facadeTex(style, true);
+  [map, em].forEach(t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; });
+  const m = new THREE.MeshLambertMaterial({ map, emissive: 0xffffff, emissiveMap: em, emissiveIntensity: 0 });
+  return nightMat(m, 0.95);
+}
+function storefrontTex() {
+  return canvasTex(512, 128, (g, w, h) => {
+    g.fillStyle = '#3a3a3a'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 4; i++) {
+      const x = i * 128; const k = Math.random();
+      if (k < 0.35) { g.fillStyle = '#9aa0a6'; g.fillRect(x + 6, 20, 116, 108); g.strokeStyle = '#7c8288'; for (let y = 24; y < 128; y += 6) { g.beginPath(); g.moveTo(x + 6, y); g.lineTo(x + 122, y); g.stroke(); } }
+      else { g.fillStyle = pick(['#f4e6c8', '#e7f1f7', '#fff2d6', '#e8e8e8']); g.fillRect(x + 6, 20, 116, 108); g.fillStyle = 'rgba(40,60,80,.5)'; g.fillRect(x + 10, 26, 108, 70); g.fillStyle = pick(['#c33', '#36c', '#2a2', '#e90']); g.fillRect(x + 6, 4, 116, 16); }
+    }
+  });
+}
+const SIGN_TEXTS = ['牛肉麵', '早餐店', '藥局', '眼鏡行', '手機通訊', '鍋貼水餃', '電器行', '補習班', '牙醫診所', '髮廊', '五金行', '茶行', '麵包店', '火鍋', '小吃部', '服飾', '機車行', '書局', '中醫診所', '咖啡', '卡拉OK', '便當', '水果行', '手搖飲', '汽車美容', '當舖', '海產', '滷味', '冰店', '銀樓', '房屋仲介', '安親班'];
+let SIGN_ATLAS;
+function buildSignAtlas() {
+  SIGN_ATLAS = canvasTex(1024, 1024, (g) => {
+    const bgs = ['#d42020', '#f4c400', '#1d5fc4', '#1d8f3a', '#ffffff', '#e5641a', '#7a1fa0', '#0a7f8a'];
+    SIGN_TEXTS.forEach((t, k) => {
+      const cx = (k % 8) * 128, cy = Math.floor(k / 8) * 256; const bg = bgs[k % bgs.length];
+      g.fillStyle = bg; g.fillRect(cx + 4, cy + 4, 120, 248);
+      g.strokeStyle = bg === '#ffffff' ? '#d42020' : '#fff'; g.lineWidth = 5; g.strokeRect(cx + 9, cy + 9, 110, 238);
+      g.fillStyle = (bg === '#f4c400' || bg === '#ffffff') ? '#b01010' : '#fff';
+      const chars = t.split(''); const fs = Math.min(70, 220 / chars.length);
+      g.font = '900 ' + fs + 'px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle';
+      chars.forEach((ch, i) => g.fillText(ch, cx + 64, cy + 128 + (i - (chars.length - 1) / 2) * fs * 1.05));
+    });
+  });
+}
+function initMaterials() {
+  MAT.f_old = makeFacadeMat('old'); MAT.f_white = makeFacadeMat('white'); MAT.f_glass = makeFacadeMat('glass'); MAT.f_dark = makeFacadeMat('dark'); MAT.f_brick = makeFacadeMat('brick'); MAT.f_tile = makeFacadeMat('tile');
+  const sf = storefrontTex(); sf.wrapS = THREE.RepeatWrapping;
+  MAT.store = nightMat(new THREE.MeshLambertMaterial({ map: sf, emissive: 0xffffff, emissiveMap: sf, emissiveIntensity: 0 }), 0.6);
+  const asph = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#3b3d40'; g.fillRect(0, 0, w, h); for (let i = 0; i < 3000; i++) { const v = randi(45, 80); g.fillStyle = `rgb(${v},${v},${v + 2})`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); } });
+  asph.wrapS = asph.wrapT = THREE.RepeatWrapping; MAT.road = new THREE.MeshLambertMaterial({ map: asph });
+  const tile = canvasTex(128, 128, (g, w, h) => { g.fillStyle = '#b4aea4'; g.fillRect(0, 0, w, h); g.strokeStyle = '#9a948a'; g.lineWidth = 3; for (let i = 0; i <= 4; i++) { g.beginPath(); g.moveTo(i * 32, 0); g.lineTo(i * 32, h); g.stroke(); g.beginPath(); g.moveTo(0, i * 32); g.lineTo(w, i * 32); g.stroke(); } for (let i = 0; i < 300; i++) { g.fillStyle = 'rgba(0,0,0,.05)'; g.fillRect(Math.random() * w, Math.random() * h, 3, 3); } });
+  tile.wrapS = tile.wrapT = THREE.RepeatWrapping; MAT.walk = new THREE.MeshLambertMaterial({ map: tile });
+  const grass = canvasTex(128, 128, (g, w, h) => { g.fillStyle = '#4f8a3a'; g.fillRect(0, 0, w, h); for (let i = 0; i < 1500; i++) { g.fillStyle = Math.random() < .5 ? '#5c9a44' : '#437a31'; g.fillRect(Math.random() * w, Math.random() * h, 2, 3); } });
+  grass.wrapS = grass.wrapT = THREE.RepeatWrapping; MAT.grass = new THREE.MeshLambertMaterial({ map: grass });
+  const paddy = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#6aa83e'; g.fillRect(0, 0, w, h); g.strokeStyle = '#8a7a4a'; g.lineWidth = 6; g.strokeRect(0, 0, w, h); g.strokeStyle = 'rgba(40,90,30,.6)'; g.lineWidth = 2; for (let y = 8; y < h; y += 10) { g.beginPath(); g.moveTo(4, y); g.lineTo(w - 4, y); g.stroke(); } });
+  paddy.wrapS = paddy.wrapT = THREE.RepeatWrapping; MAT.paddy = new THREE.MeshLambertMaterial({ map: paddy });
+  MAT.white = new THREE.MeshBasicMaterial({ color: 0xeeeeee }); MAT.yellow = new THREE.MeshBasicMaterial({ color: 0xf0c020 });
+  MAT.roof = new THREE.MeshLambertMaterial({ color: 0x777b80 });
+  MAT.pole = new THREE.MeshLambertMaterial({ color: 0x55595e });
+  MAT.dark = new THREE.MeshLambertMaterial({ color: 0x222428 });
+  MAT.lamp = nightMat(new THREE.MeshLambertMaterial({ color: 0x999999, emissive: 0xfff0c0, emissiveIntensity: 0 }), 1.2);
+  MAT.trunk = new THREE.MeshLambertMaterial({ color: 0x6b4a2b });
+  MAT.leaf = new THREE.MeshLambertMaterial({ color: 0x2f7a32 });
+  MAT.leaf2 = new THREE.MeshLambertMaterial({ color: 0x3f8f3a });
+  MAT.water = new THREE.MeshLambertMaterial({ color: 0x3f7fa8, emissive: 0x0a2a40, emissiveIntensity: 0.4 });
+  MAT.glass = new THREE.MeshLambertMaterial({ color: 0x9fd0ee, transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthWrite: false });
+  MAT.inwall = new THREE.MeshLambertMaterial({ color: 0xf2f0ea, emissive: 0xf2f0ea, emissiveIntensity: 0.35 });
+  MAT.infloor = new THREE.MeshLambertMaterial({ color: 0xdcdcd4, emissive: 0xdcdcd4, emissiveIntensity: 0.25 });
+  MAT.shelf = new THREE.MeshLambertMaterial({ color: 0xc8c8c8, emissive: 0x777777, emissiveIntensity: 0.3 });
+  MAT.goods = new THREE.MeshLambertMaterial({ map: canvasTex(128, 64, (g, w, h) => { for (let i = 0; i < 16; i++) { g.fillStyle = pick(['#e33', '#fc3', '#3a3', '#36f', '#f80', '#fff', '#a3f']); g.fillRect(i * 8, Math.random() * 20, 7, 64); } }), emissive: 0x444444, emissiveIntensity: 0.4 });
+  MAT.fridge = new THREE.MeshLambertMaterial({ color: 0xdff2ff, emissive: 0xbfe6ff, emissiveIntensity: 0.6 });
+  MAT.counter = new THREE.MeshLambertMaterial({ color: 0x8a5a32, emissive: 0x3a2a1a, emissiveIntensity: 0.4 });
+  MAT.cone = new THREE.MeshLambertMaterial({ color: 0xff5a10, emissive: 0x401000, emissiveIntensity: 0.5 });
+  MAT.redbox = new THREE.MeshLambertMaterial({ color: 0xc41a1a });
+  MAT.lot = new THREE.MeshLambertMaterial({ color: 0x55585c });
+  MAT.lantern = nightMat(new THREE.MeshLambertMaterial({ color: 0xd02020, emissive: 0xff3a2a, emissiveIntensity: 0 }), 1.3);
+  MAT.bulb = nightMat(new THREE.MeshLambertMaterial({ color: 0xffeeaa, emissive: 0xffdd88, emissiveIntensity: 0 }), 1.5);
+  // 紅綠燈：NS / EW 各三色
+  for (const ax of ['ns', 'ew']) for (const c of ['R', 'Y', 'G']) MAT['tl' + ax + c] = new THREE.MeshBasicMaterial({ color: 0x222222 });
+  MAT.signs = new THREE.MeshLambertMaterial({ map: SIGN_ATLAS, side: THREE.DoubleSide, emissive: 0xffffff, emissiveMap: SIGN_ATLAS, emissiveIntensity: 0 }); nightMat(MAT.signs, 0.7);
+}
+function texMat(tex, night, opts) { const m = new THREE.MeshLambertMaterial(Object.assign({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.15 }, opts || {})); if (night) nightMat(m, night); return m; }
+function addMesh(geo, mat, x, y, z, ry) { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (ry) m.rotation.y = ry; scene.add(m); return m; }
+const SIGN_CACHE = {};
+function signBoard(text, opt, w, h, x, y, z, ry, night) {
+  const key = text + '|' + JSON.stringify(opt) + '|' + night;
+  const mat = SIGN_CACHE[key] || (SIGN_CACHE[key] = texMat(signTex(text, opt), night == null ? 0.8 : night, { side: THREE.DoubleSide }));
+  return addMesh(new THREE.PlaneGeometry(w, h), mat, x, y, z, ry || 0);
+}
+
+/* ---------- 區塊 ---------- */
+const BLOCKS = [];
+const SITES = { stores: [], bank: null, station: null, home: null, dealer: null, hospital: null, market: null };
+const PATROL_BOXES = [];
+const CHECK_SITES = [];
+const STATIC_INTERACT = []; // {x,z,r,label(),ok(),act()}
+function blockOf(i, j) { return BLOCKS.find(b => b.i === i && b.j === j); }
+function blockAtXZ(x, z) { return BLOCKS.find(b => x >= b.x0 && x <= b.x1 && z >= b.z0 && z <= b.z1); }
+function roadNameAt(x, z) {
+  let best = 1e9, name = '';
+  for (let i = 0; i < XR.length; i++) { const d = Math.abs(x - XR[i]); if (d < best) { best = d; name = VNAMES[i]; } }
+  for (let j = 0; j < ZR.length; j++) { const d = Math.abs(z - ZR[j]); if (d < best) { best = d; name = HNAMES[j]; } }
+  return name;
+}
+function nearCross(x, z) { // 最近路口名
+  let bi = 0, bj = 0, bd = 1e9;
+  for (let i = 0; i < XR.length; i++) for (let j = 0; j < ZR.length; j++) { const d = dist(x, z, XR[i], ZR[j]); if (d < bd) { bd = d; bi = i; bj = j; } }
+  return VNAMES[bi] + '與' + HNAMES[bj] + '口';
+}
+
+function buildCity() {
+  buildSignAtlas(); initMaterials();
+  // 大地（郊區稻田）
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), MAT.paddy); ground.rotation.x = -Math.PI / 2; ground.position.y = -0.02;
+  MAT.paddy.map.repeat.set(1400 / 40, 1400 / 40); scene.add(ground);
+  // 道路
+  const RW = MAT.road;
+  for (let i = 0; i < XR.length; i++) { const w = vW(i); const x = XR[i]; addGeo('road', RW, flatQuad(x - w / 2, -420, x + w / 2, 420, 0.02, [0, 0, w / 8, 840 / 8])); }
+  for (let j = 0; j < ZR.length; j++) {
+    const w = hW(j), z = ZR[j];
+    const segs = [-420, ...XR, 420];
+    for (let k = 0; k < segs.length - 1; k++) {
+      let a = segs[k], b = segs[k + 1];
+      const ia = XR.indexOf(a), ib = XR.indexOf(b);
+      if (ia >= 0) a += vW(ia) / 2; if (ib >= 0) b -= vW(ib) / 2;
+      addGeo('road', RW, flatQuad(a, z - w / 2, b, z + w / 2, 0.02, [0, 0, (b - a) / 8, w / 8]));
+    }
+  }
+  // 標線
+  for (let i = 0; i < XR.length; i++) for (let j = -1; j < ZR.length; j++) {
+    const x = XR[i], w = vW(i); const za = j < 0 ? -420 : ZR[j] + hW(j) / 2, zb = j + 1 >= ZR.length ? 420 : ZR[j + 1] - hW(j + 1) / 2;
+    laneMarks('v', x, w, za, zb);
+  }
+  for (let j = 0; j < ZR.length; j++) for (let i = -1; i < XR.length; i++) {
+    const z = ZR[j], w = hW(j); const xa = i < 0 ? -420 : XR[i] + vW(i) / 2, xb = i + 1 >= XR.length ? 420 : XR[i + 1] - vW(i + 1) / 2;
+    laneMarks('h', z, w, xa, xb);
+  }
+  // 區塊
+  for (let i = 0; i < XR.length - 1; i++) for (let j = 0; j < ZR.length - 1; j++) {
+    const b = { i, j, x0: XR[i] + vW(i) / 2, x1: XR[i + 1] - vW(i + 1) / 2, z0: ZR[j] + hW(j) / 2, z1: ZR[j + 1] - hW(j + 1) / 2, type: 'gen' };
+    b.cx = (b.x0 + b.x1) / 2; b.cz = (b.z0 + b.z1) / 2;
+    BLOCKS.push(b);
+    addGeo('walk', MAT.walk, boxGeo(b.x1 - b.x0, 0.18, b.z1 - b.z0, b.cx, 0, b.cz, 'world'));
+  }
+  const bk = (x, z) => blockAtXZ(x, z);
+  bk(40, 40).type = 'station'; bk(-280, 200).type = 'home'; bk(120, 200).type = 'dealer'; bk(-120, -200).type = 'hospital';
+  bk(-280, -120).type = 'market'; bk(-40, -200).type = 'park'; bk(280, -120).type = 'lake'; bk(-40, -40).type = 'bank';
+  [[-120, 120], [120, -40], [280, 120], [-200, 200], [200, 280]].forEach(([x, z]) => bk(x, z).type = 'store');
+  for (const b of BLOCKS) {
+    const x = b.cx, z = b.cz;
+    if (b.type !== 'gen') continue;
+    if (x > 160 && z < 0) b.type = 'tower';
+    else if (z > 160 && x < 160) b.type = 'res';
+    else if (x < -80) b.type = 'old';
+    else b.type = 'mid';
+  }
+  for (const b of BLOCKS) {
+    switch (b.type) {
+      case 'station': buildStation(b); break;
+      case 'home': buildHome(b); break;
+      case 'dealer': buildDealer(b); break;
+      case 'hospital': buildHospital(b); break;
+      case 'market': buildMarket(b); break;
+      case 'park': buildPark(b, false); break;
+      case 'lake': buildPark(b, true); break;
+      case 'bank': buildShop(b, 'bank'); break;
+      case 'store': buildShop(b, 'store'); break;
+      default: fillBlock(b, b.type, null);
+    }
+  }
+  streetFurniture();
+  // 巡邏箱
+  const cand = BLOCKS.filter(b => ['old', 'mid', 'res', 'tower'].includes(b.type));
+  for (let k = 0; k < 18 && cand.length; k++) {
+    const b = cand.splice(randi(0, cand.length - 1), 1)[0];
+    const corner = randi(0, 3); const x = corner % 2 ? b.x1 - 1.2 : b.x0 + 1.2, z = corner < 2 ? b.z0 + 1.2 : b.z1 - 1.2;
+    addGeo('pole', MAT.pole, boxGeo(0.1, 1.3, 0.1, x, 0, z));
+    addGeo('redbox', MAT.redbox, boxGeo(0.45, 0.55, 0.3, x, 1.2, z));
+    PATROL_BOXES.push({ x, z, name: nearCross(x, z) });
+  }
+  // 酒測路檢點
+  CHECK_SITES.push({ x: -120, z: 7, yaw: -Math.PI / 2, dir: [1, 0], name: '台灣大道（五權路至忠明路）' });
+  CHECK_SITES.push({ x: 160 - 5.5, z: 120, yaw: Math.PI, dir: [0, 1], name: '文心路（公益路至大業路）' });
+  CHECK_SITES.push({ x: -160 + 4.5, z: -200, yaw: 0, dir: [0, -1], name: '五權路（崇德路至漢口路）' });
+  CHECK_SITES.push({ x: 200, z: 80 + 4.5, yaw: -Math.PI / 2, dir: [1, 0], name: '公益路（文心路至河南路）' });
+  flushMerges();
+}
+function laneMarks(axis, c, w, a, b) {
+  // c=道路中心座標, a..b 沿路方向範圍
+  const L = b - a; if (L < 6) return;
+  const put = (off, len, gap, mat, key, thick) => {
+    for (let s = a + 2; s < b - 2; s += len + gap) {
+      const e = Math.min(s + len, b - 2);
+      if (axis === 'v') addGeo(key, mat, flatQuad(c + off - thick / 2, s, c + off + thick / 2, e, 0.035));
+      else addGeo(key, mat, flatQuad(s, c + off - thick / 2, e, c + off + thick / 2, 0.035));
+    }
+  };
+  if (w >= 18) { put(-0.2, L, 0, MAT.yellow, 'myel', 0.15); put(0.2, L, 0, MAT.yellow, 'myel', 0.15); }
+  else put(0, L, 0, MAT.yellow, 'myel', 0.15);
+  const lanes = w >= 22 ? [w / 6, w / 3] : w >= 18 ? [w / 4] : [];
+  for (const o of lanes) { put(o, 3, 5, MAT.white, 'mwhite', 0.12); put(-o, 3, 5, MAT.white, 'mwhite', 0.12); }
+  // 邊線
+  put(w / 2 - 0.6, L, 0, MAT.white, 'mwhite', 0.12); put(-w / 2 + 0.6, L, 0, MAT.white, 'mwhite', 0.12);
+  // 斑馬線（路口兩端）
+  for (const end of [a, b]) {
+    const sgn = end === a ? 1 : -1;
+    for (let k = -w / 2 + 1; k < w / 2 - 1; k += 1.2) {
+      const p0 = end + sgn * 0.6, p1 = end + sgn * 3.6;
+      if (axis === 'v') addGeo('mwhite', MAT.white, flatQuad(c + k, Math.min(p0, p1), c + k + 0.6, Math.max(p0, p1), 0.036));
+      else addGeo('mwhite', MAT.white, flatQuad(Math.min(p0, p1), c + k, Math.max(p0, p1), c + k + 0.6, 0.036));
+    }
+    // 停止線
+    const s0 = end + sgn * 4.2;
+    if (axis === 'v') addGeo('mwhite', MAT.white, flatQuad(c + (sgn > 0 ? -w / 2 + 0.5 : 0), s0, c + (sgn > 0 ? 0 : w / 2 - 0.5), s0 + 0.4, 0.036));
+    else addGeo('mwhite', MAT.white, flatQuad(s0, c + (sgn > 0 ? 0 : -w / 2 + 0.5), s0 + 0.4, c + (sgn > 0 ? w / 2 - 0.5 : 0), 0.036));
+  }
+}
+
+/* ---------- 一般建築 ---------- */
+function building(x0, x1, z0, z1, h, style, lot, signs) {
+  const w = x1 - x0, d = z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const fm = { old: MAT.f_old, white: MAT.f_white, glass: MAT.f_glass, dark: MAT.f_dark, brick: MAT.f_brick, tile: MAT.f_tile }[style];
+  const shopBase = (style === 'old' || style === 'tile' || style === 'brick' || style === 'white') && h < 40;
+  if (shopBase) {
+    addGeo('store', MAT.store, boxGeo(w, 3.6, d, cx, 0, cz, 'shop'));
+    addGeo('f_' + style, fm, boxGeo(w + 0.6, h - 3.6, d + 0.6, cx, 3.6, cz, 'facade'));
+  } else addGeo('f_' + style, fm, boxGeo(w, h, d, cx, 0, cz, 'facade'));
+  // 屋頂水塔 / 設備
+  if (h < 40 && Math.random() < 0.7) addGeo('roof', MAT.roof, boxGeo(2.2, 1.8, 2.2, cx + rand(-w / 4, w / 4), h, cz + rand(-d / 4, d / 4)));
+  else if (h >= 40) addGeo('roof', MAT.roof, boxGeo(w * 0.5, 3, d * 0.5, cx, h, cz));
+  addCol(x0 - (shopBase ? 0.3 : 0), x1 + (shopBase ? 0.3 : 0), z0 - (shopBase ? 0.3 : 0), z1 + (shopBase ? 0.3 : 0), h, 'bld');
+  // 直式招牌
+  if (signs && lot) {
+    const sides = [];
+    if (z1 > lot.z1 - 3) sides.push('s'); if (z0 < lot.z0 + 3) sides.push('n'); if (x1 > lot.x1 - 3) sides.push('e'); if (x0 < lot.x0 + 3) sides.push('w');
+    for (const sd of sides) {
+      const n = randi(1, 3);
+      for (let k = 0; k < n; k++) {
+        const id = randi(0, SIGN_TEXTS.length - 1); const u0 = (id % 8) / 8, v1 = 1 - Math.floor(id / 8) * 0.25, v0 = v1 - 0.25;
+        const y0 = rand(4.2, Math.min(h - 3.5, 9)), y1 = y0 + 3.2; const out = 1.4;
+        if (sd === 's' || sd === 'n') {
+          const z = sd === 's' ? z1 + 0.3 : z0 - 0.3, zo = sd === 's' ? z + out : z - out, x = x0 + (k + 0.5) * w / n + rand(-1, 1);
+          addGeo('signs', MAT.signs, quadGeo([x, y0, z], [x, y0, zo], [x, y1, zo], [x, y1, z], [u0 + 0.004, v0 + 0.002, u0 + 0.121, v1 - 0.002]));
+        } else {
+          const x = sd === 'e' ? x1 + 0.3 : x0 - 0.3, xo = sd === 'e' ? x + out : x - out, z = z0 + (k + 0.5) * d / n + rand(-1, 1);
+          addGeo('signs', MAT.signs, quadGeo([x, y0, z], [xo, y0, z], [xo, y1, z], [x, y1, z], [u0 + 0.004, v0 + 0.002, u0 + 0.121, v1 - 0.002]));
+        }
+      }
+    }
+  }
+}
+function lotOf(b) { return { x0: b.x0 + 3.2, x1: b.x1 - 3.2, z0: b.z0 + 3.2, z1: b.z1 - 3.2 }; }
+function fillBlock(b, type, reserve) {
+  const lot = lotOf(b); const W = lot.x1 - lot.x0, D = lot.z1 - lot.z0;
+  let nx, nz;
+  if (type === 'tower') { nx = 2; nz = 2; } else if (type === 'old') { nx = 3; nz = 3; } else { nx = randi(2, 3); nz = 2; }
+  const pw = W / nx, pd = D / nz;
+  for (let a = 0; a < nx; a++) for (let c = 0; c < nz; c++) {
+    let x0 = lot.x0 + a * pw + 1, x1 = x0 + pw - 2, z0 = lot.z0 + c * pd + 1, z1 = z0 + pd - 2;
+    if (reserve && !(x1 < reserve.x0 || x0 > reserve.x1 || z1 < reserve.z0 || z0 > reserve.z1)) continue;
+    if (type === 'tower') {
+      if (Math.random() < 0.35) { // 廣場 + 樹
+        addTree((x0 + x1) / 2, (z0 + z1) / 2, 1.3); continue;
+      }
+      const sh = rand(2, 5); building(x0 + sh, x1 - sh, z0 + sh, z1 - sh, rand(50, 150), Math.random() < .5 ? 'glass' : 'dark', lot, false);
+    } else if (type === 'old') {
+      // 細長透天厝並排
+      const n = randi(2, 4); const sw = (x1 - x0) / n;
+      for (let k = 0; k < n; k++) building(x0 + k * sw, x0 + (k + 1) * sw - 0.15, z0, z1, randi(3, 6) * 3.2 + 3.6, pick(['old', 'old', 'tile', 'brick']), lot, true);
+    } else if (type === 'res') {
+      building(x0 + 1, x1 - 1, z0 + 1, z1 - 1, randi(8, 15) * 3.2, pick(['white', 'tile', 'brick']), lot, Math.random() < .5);
+    } else {
+      building(x0, x1, z0, z1, randi(5, 13) * 3.2 + 3.6, pick(['white', 'tile', 'old', 'glass']), lot, true);
+    }
+  }
+}
+function addTree(x, z, s) {
+  s = s || 1;
+  addGeo('trunk', MAT.trunk, boxGeo(0.3 * s, 2.4 * s, 0.3 * s, x, 0, z));
+  const g = new THREE.IcosahedronGeometry(1.6 * s, 0); g.translate(x, 3.4 * s, z); addGeo(Math.random() < .5 ? 'leaf' : 'leaf2', Math.random() < .5 ? MAT.leaf : MAT.leaf2, g);
+}
+
+/* ---------- 街道家具：路燈、紅綠燈、行道樹 ---------- */
+function streetFurniture() {
+  // 路燈（沿路每 40m 兩側）
+  for (let i = 0; i < XR.length; i++) {
+    const x = XR[i], w = vW(i);
+    for (let z = -400; z <= 400; z += 40) for (const sd of [-1, 1]) { if (ZR.includes(z)) continue; lampAt(x + sd * (w / 2 + 1), z + 20 * (sd > 0 ? 0 : 1) - 10, sd > 0 ? 'w' : 'e'); }
+  }
+  for (let j = 0; j < ZR.length; j++) {
+    const z = ZR[j], w = hW(j);
+    for (let x = -400; x <= 400; x += 40) for (const sd of [-1, 1]) { if (XR.includes(x)) continue; lampAt(x + 20 * (sd > 0 ? 0 : 1) - 10, z + sd * (w / 2 + 1), sd > 0 ? 'n' : 's'); }
+  }
+  // 行道樹：台灣大道、文心路
+  for (let x = -395; x < 400; x += 16) { if (XR.some(v => Math.abs(v - x) < 12)) continue; addTree(x, -14 - 1.6, 0.9); addTree(x, 14 + 1.6, 0.9); }
+  for (let z = -395; z < 400; z += 16) { if (ZR.some(v => Math.abs(v - z) < 16)) continue; addTree(160 - 11 - 1.6, z, 0.9); addTree(160 + 11 + 1.6, z, 0.9); }
+  // 紅綠燈
+  for (let i = 0; i < XR.length; i++) for (let j = 0; j < ZR.length; j++) {
+    const x = XR[i], z = ZR[j], wx = vW(i) / 2 + 0.8, wz = hW(j) / 2 + 0.8;
+    // 角落：NW, NE, SW, SE
+    trafficLight(x - wx, z - wz, 'ew', -1, 0); // 面向東行（從西來的車）看得到
+    trafficLight(x + wx, z + wz, 'ew', 1, 0);
+    trafficLight(x + wx, z - wz, 'ns', 0, -1);
+    trafficLight(x - wx, z + wz, 'ns', 0, 1);
+  }
+}
+function lampAt(x, z, facing) {
+  addGeo('pole', MAT.pole, boxGeo(0.16, 7, 0.16, x, 0, z));
+  const dx = facing === 'w' ? -1.4 : facing === 'e' ? 1.4 : 0, dz = facing === 'n' ? -1.4 : facing === 's' ? 1.4 : 0;
+  addGeo('pole', MAT.pole, boxGeo(Math.abs(dx) + 0.12, 0.12, Math.abs(dz) + 0.12, x + dx / 2, 6.9, z + dz / 2));
+  addGeo('lamp', MAT.lamp, boxGeo(0.6, 0.18, 0.6, x + dx, 6.75, z + dz));
+}
+function trafficLight(x, z, axis, fx, fz) {
+  // fx/fz：燈面朝向（看燈的車來的方向）
+  addGeo('pole', MAT.pole, boxGeo(0.18, 5.2, 0.18, x, 0, z));
+  const hx = x + fx * 0, hz = z + fz * 0;
+  const horiz = axis === 'ew';
+  // 燈箱（橫式）
+  const L = 1.5;
+  addGeo('dark', MAT.dark, boxGeo(horiz ? 0.35 : L, 0.5, horiz ? L : 0.35, hx, 4.7, hz));
+  ['R', 'Y', 'G'].forEach((c, k) => {
+    const o = (k - 1) * 0.45;
+    const px = hx + (horiz ? fx * 0.2 : o), pz = hz + (horiz ? o : fz * 0.2);
+    addGeo('tl' + axis + c, MAT['tl' + axis + c], boxGeo(horiz ? 0.08 : 0.32, 0.32, horiz ? 0.32 : 0.08, px, 4.79, pz));
+  });
+}
+// 紅綠燈時相（全城同步）
+const TL = { t: 0, cyc: 32 };
+function lightState(axis) { // axis 'ns' 南北向車流 / 'ew'
+  const t = TL.t % TL.cyc;
+  if (axis === 'ns') return t < 13 ? 'G' : t < 16 ? 'Y' : 'R';
+  return t < 16 ? 'R' : t < 29 ? 'G' : 'Y';
+}
+const TL_COL = { R: 0xff2a1a, Y: 0xffb000, G: 0x20ff60 };
+function updateLights(dt) {
+  TL.t += dt;
+  for (const ax of ['ns', 'ew']) { const s = lightState(ax); for (const c of ['R', 'Y', 'G']) MAT['tl' + ax + c].color.setHex(s === c ? TL_COL[c] : 0x202020); }
+}
+
+/* ---------- 特殊地點 ---------- */
+function buildStation(b) {
+  const lot = lotOf(b);
+  // 停車場
+  addGeo('lot', MAT.lot, boxGeo(lot.x1 - lot.x0, 0.2, 30, (lot.x0 + lot.x1) / 2, 0, lot.z0 + 15));
+  const x0 = lot.x0 + 6, x1 = lot.x1 - 6, z0 = lot.z0 + 32, z1 = lot.z1 - 1;
+  addGeo('f_white', MAT.f_white, boxGeo(x1 - x0, 14, z1 - z0, (x0 + x1) / 2, 0, (z0 + z1) / 2, 'facade'));
+  addCol(x0, x1, z0, z1, 14, 'bld');
+  const cx = (x0 + x1) / 2;
+  // 門廊 + 招牌
+  addGeo('f_white', MAT.f_white, boxGeo(12, 0.6, 4, cx, 4, z0 - 2));
+  addGeo('pole', MAT.pole, boxGeo(0.4, 4, 0.4, cx - 5.5, 0, z0 - 3.6)); addGeo('pole', MAT.pole, boxGeo(0.4, 4, 0.4, cx + 5.5, 0, z0 - 3.6));
+  signBoard('台中市政府警察局　大墩分局', { bg: '#0b3d91', fg: '#fff', w: 1024, h: 128, stripe: '#ffd84a' }, 26, 3, cx, 8.5, z0 - 0.05, 0, 0.6);
+  signBoard('POLICE', { bg: '#0b3d91', fg: '#fff', w: 256, h: 64 }, 4, 1, cx, 5.5, z0 - 4.05, 0, 0.6);
+  // 旗桿
+  addGeo('pole', MAT.pole, boxGeo(0.15, 11, 0.15, lot.x0 + 3, 0, lot.z0 + 3));
+  addMesh(new THREE.PlaneGeometry(2.4, 1.6), texMat(canvasTex(96, 64, g => { g.fillStyle = '#d00'; g.fillRect(0, 0, 96, 64); g.fillStyle = '#0033a0'; g.fillRect(0, 0, 48, 32); g.fillStyle = '#fff'; g.beginPath(); g.arc(24, 16, 8, 0, 7); g.fill(); }), 0, { side: THREE.DoubleSide }), lot.x0 + 4.3, 10, lot.z0 + 3);
+  // 停車格
+  for (let k = 0; k < 6; k++) addGeo('mwhite', MAT.white, flatQuad(lot.x0 + 8 + k * 6, lot.z0 + 8, lot.x0 + 8.15 + k * 6, lot.z0 + 14, 0.22));
+  SITES.station = { x: cx, z: z0 - 2.5, door: { x: cx, z: z0 - 1.5 }, car: { x: lot.x0 + 11, z: lot.z0 + 11, yaw: 0 }, scooter: { x: lot.x0 + 23, z: lot.z0 + 11, yaw: 0 }, lot: { x0: lot.x0, x1: lot.x1, z0: lot.z0, z1: lot.z0 + 30 }, name: '大墩分局' };
+}
+function buildHome(b) {
+  const lot = lotOf(b);
+  const x0 = lot.x0 + 10, x1 = lot.x1 - 10, z0 = lot.z0 + 6, z1 = lot.z1 - 16;
+  building(x0, x1, z0, z1, 12 * 3.2, 'tile', lot, false);
+  const cx = (x0 + x1) / 2;
+  signBoard('大墩華廈', { bg: '#3a2a1a', fg: '#ffd890', w: 512, h: 128 }, 6, 1.5, cx, 4.4, z1 + 0.35, 0, 0.9);
+  addGeo('lot', MAT.lot, boxGeo(x1 - x0 + 8, 0.2, 13, cx, 0, z1 + 7.5));
+  addGeo('dark', MAT.dark, boxGeo(2.4, 2.6, 0.2, cx, 0.2, z1 + 0.35)); // 大門
+  fillBlock(b, 'res', { x0: x0 - 4, x1: x1 + 4, z0: z0 - 4, z1: z1 + 16 });
+  SITES.home = { x: cx, z: z1 + 1.5, door: { x: cx, z: z1 + 1.2 }, park: [{ x: cx - 8, z: z1 + 8, yaw: Math.PI }, { x: cx - 3, z: z1 + 8, yaw: Math.PI }, { x: cx + 3, z: z1 + 8, yaw: Math.PI }, { x: cx + 9, z: z1 + 8, yaw: Math.PI }], name: '家（大墩華廈）' };
+}
+function buildDealer(b) {
+  const lot = lotOf(b);
+  const x0 = lot.x0 + 6, x1 = lot.x1 - 6, z0 = lot.z0 + 4, z1 = lot.z0 + 26;
+  addGeo('glassbox', MAT.f_glass, boxGeo(x1 - x0, 7, z1 - z0, (x0 + x1) / 2, 0, (z0 + z1) / 2, 'facade'));
+  addCol(x0, x1, z0, z1, 7, 'bld');
+  signBoard('大墩車業　新車・二手車・機車', { bg: '#111', fg: '#ffd84a', w: 1024, h: 128 }, 20, 2.4, (x0 + x1) / 2, 8.4, z1 + 0.2, 0, 0.9);
+  addGeo('lot', MAT.lot, boxGeo(lot.x1 - lot.x0, 0.2, lot.z1 - z1 - 2, (lot.x0 + lot.x1) / 2, 0, (z1 + 2 + lot.z1) / 2));
+  SITES.dealer = { x: (x0 + x1) / 2, z: z1 + 2.5, display: [], name: '大墩車業' };
+  const keys = ['escooter', 'usedcar', 'suv', 'sport'];
+  keys.forEach((k, n) => SITES.dealer.display.push({ key: k, x: x0 + 6 + n * ((x1 - x0 - 12) / 3), z: z1 + 14, yaw: 0.4 }));
+  fillBlock(b, 'mid', { x0: lot.x0, x1: lot.x1, z0: lot.z0, z1: lot.z1 - 0 });
+}
+function buildHospital(b) {
+  const lot = lotOf(b);
+  const x0 = lot.x0 + 5, x1 = lot.x1 - 5, z0 = lot.z0 + 4, z1 = lot.z1 - 14;
+  building(x0, x1, z0, z1, 26, 'white', lot, false);
+  const cx = (x0 + x1) / 2;
+  signBoard('大墩醫院', { bg: '#fff', fg: '#c00', w: 512, h: 128, border: '#c00' }, 12, 3, cx, 22, z1 + 0.35, 0, 0.9);
+  signBoard('✚ 急診', { bg: '#c00', fg: '#fff', w: 256, h: 96 }, 4, 1.5, cx + 10, 4.5, z1 + 0.35, 0, 1.2);
+  addGeo('lot', MAT.lot, boxGeo(x1 - x0, 0.2, 12, cx, 0, z1 + 7));
+  SITES.hospital = { x: cx, z: z1 + 3, name: '大墩醫院' };
+}
+function buildPark(b, lake) {
+  const lot = { x0: b.x0 + 1, x1: b.x1 - 1, z0: b.z0 + 1, z1: b.z1 - 1 };
+  addGeo('grass', MAT.grass, boxGeo(lot.x1 - lot.x0, 0.22, lot.z1 - lot.z0, b.cx, 0, b.cz, 'world'));
+  if (lake) {
+    const g = new THREE.CircleGeometry(20, 24); g.rotateX(-Math.PI / 2); g.translate(b.cx, 0.25, b.cz); addGeo('water', MAT.water, g);
+    addCol(b.cx - 14, b.cx + 14, b.cz - 14, b.cz + 14, 0.4, 'low');
+    signBoard('秋紅谷景觀公園', { bg: '#2a5a2a', fg: '#fff', w: 512, h: 96 }, 6, 1.1, b.cx, 1.4, lot.z1 - 2, 0, 0.5);
+  } else signBoard('大墩公園', { bg: '#2a5a2a', fg: '#fff', w: 512, h: 96 }, 5, 1, b.cx, 1.4, lot.z1 - 2, 0, 0.5);
+  for (let k = 0; k < 26; k++) { const x = rand(lot.x0 + 3, lot.x1 - 3), z = rand(lot.z0 + 3, lot.z1 - 3); if (lake && dist(x, z, b.cx, b.cz) < 24) continue; addTree(x, z, rand(0.9, 1.5)); }
+}
+function buildMarket(b) {
+  const lot = lotOf(b);
+  addGeo('lot', MAT.lot, boxGeo(lot.x1 - lot.x0, 0.2, lot.z1 - lot.z0, b.cx, 0, b.cz));
+  const STALL_FOOD = [
+    { n: '大雞排', p: 85, hp: 30, en: 10 }, { n: '珍珠奶茶', p: 65, hp: 10, en: 25 }, { n: '臭豆腐', p: 70, hp: 25, en: 8 }, { n: '大腸包小腸', p: 75, hp: 28, en: 10 },
+    { n: '蚵仔煎', p: 80, hp: 30, en: 10 }, { n: '滷味', p: 90, hp: 30, en: 8 }, { n: '烤玉米', p: 60, hp: 18, en: 6 }, { n: '地瓜球', p: 50, hp: 15, en: 8 }, { n: '豬血糕', p: 45, hp: 15, en: 5 }, { n: '炭烤香腸', p: 40, hp: 14, en: 5 },
+  ];
+  const DECO = ['射氣球', '撈金魚', '套圈圈', '飾品', '服飾', '手機殼'];
+  const stalls = [];
+  const laneZ = b.cz, laneX = b.cx;
+  // 東西向巷道兩側
+  let fi = 0;
+  for (let x = lot.x0 + 3; x < lot.x1 - 3; x += 4.4) {
+    if (Math.abs(x - laneX) < 5) continue;
+    for (const sd of [-1, 1]) { stalls.push({ x, z: laneZ + sd * 5, face: sd > 0 ? 'n' : 's' }); }
+  }
+  for (let z = lot.z0 + 3; z < lot.z1 - 3; z += 4.4) {
+    if (Math.abs(z - laneZ) < 9) continue;
+    for (const sd of [-1, 1]) stalls.push({ x: laneX + sd * 5, z, face: sd > 0 ? 'w' : 'e' });
+  }
+  SITES.market = { x: b.cx, z: b.cz, stalls: [], name: '一中街夜市', lot };
+  stalls.forEach((s, k) => {
+    const food = fi < STALL_FOOD.length && k % 2 === 0 ? STALL_FOOD[fi++] : null;
+    const name = food ? food.n : pick(DECO);
+    const col = pick(['#d42020', '#e5641a', '#1d5fc4', '#1d8f3a', '#7a1fa0', '#c4a000']);
+    addGeo('counter', MAT.counter, boxGeo(3.4, 1, 2.2, s.x, 0.2, s.z));
+    addCol(s.x - 1.8, s.x + 1.8, s.z - 1.2, s.z + 1.2, 1.2, 'low');
+    const cm = MAT['can' + col] || (MAT['can' + col] = new THREE.MeshLambertMaterial({ color: new THREE.Color(col) }));
+    addGeo('can' + col, cm, boxGeo(3.8, 0.15, 2.8, s.x, 2.5, s.z));
+    addGeo('pole', MAT.pole, boxGeo(0.08, 2.4, 0.08, s.x - 1.8, 0.2, s.z - 1.3)); addGeo('pole', MAT.pole, boxGeo(0.08, 2.4, 0.08, s.x + 1.8, 0.2, s.z - 1.3));
+    addGeo('pole', MAT.pole, boxGeo(0.08, 2.4, 0.08, s.x - 1.8, 0.2, s.z + 1.3)); addGeo('pole', MAT.pole, boxGeo(0.08, 2.4, 0.08, s.x + 1.8, 0.2, s.z + 1.3));
+    const ry = { n: Math.PI, s: 0, w: -Math.PI / 2, e: Math.PI / 2 }[s.face];
+    const fx = { n: 0, s: 0, w: -1, e: 1 }[s.face] * 1.42, fz = { n: -1, s: 1, w: 0, e: 0 }[s.face] * 1.42;
+    signBoard(name, { bg: col, fg: '#fff', w: 256, h: 80 }, 2.3, 0.6, s.x + fx, 2.15, s.z + fz, ry, 1.0);
+    addGeo('bulb', MAT.bulb, boxGeo(0.25, 0.25, 0.25, s.x, 2.35, s.z));
+    if (food) SITES.market.stalls.push({ x: s.x + fx * 1.4, z: s.z + fz * 1.4, food });
+  });
+  // 燈籠串
+  const lan = (x, y, z) => { const g = new THREE.SphereGeometry(0.28, 8, 6); g.scale(1, 1.25, 1); g.translate(x, y, z); addGeo('lantern', MAT.lantern, g); };
+  for (let x = lot.x0 + 2; x < lot.x1 - 2; x += 2.2) lan(x, 3.6 + Math.sin(x * 0.7) * 0.15, laneZ);
+  for (let z = lot.z0 + 2; z < lot.z1 - 2; z += 2.2) lan(laneX, 3.6 + Math.sin(z * 0.7) * 0.15, z);
+  addGeo('pole', MAT.pole, boxGeo(lot.x1 - lot.x0 - 2, 0.03, 0.03, b.cx, 3.95, laneZ)); addGeo('pole', MAT.pole, boxGeo(0.03, 0.03, lot.z1 - lot.z0 - 2, laneX, 3.95, b.cz));
+  // 牌樓
+  for (const [x, z, ry] of [[lot.x0 + 0.5, laneZ, Math.PI / 2], [lot.x1 - 0.5, laneZ, -Math.PI / 2]]) {
+    addGeo('pole', MAT.pole, boxGeo(0.4, 6, 0.4, x, 0, z - 4)); addGeo('pole', MAT.pole, boxGeo(0.4, 6, 0.4, x, 0, z + 4));
+    signBoard('一中街夜市', { bg: '#b01010', fg: '#ffd84a', w: 512, h: 128, border: '#ffd84a' }, 8, 2, x, 6, z, ry, 1.1);
+  }
+}
+// 超商 / 銀行（可以走進去）
+function buildShop(b, kind) {
+  const lot = lotOf(b);
+  const W = kind === 'bank' ? 20 : 14, D = kind === 'bank' ? 14 : 11, H = kind === 'bank' ? 5.5 : 4.2, T = 0.25;
+  const cx = b.cx + (kind === 'bank' ? 0 : rand(-12, 12)), z1 = lot.z1 + 1.2, z0 = z1 - D, x0 = cx - W / 2, x1 = cx + W / 2;
+  const floors = kind === 'bank' ? 6 : randi(3, 8);
+  // 上層建築
+  addGeo('f_' + (kind === 'bank' ? 'glass' : 'tile'), kind === 'bank' ? MAT.f_glass : MAT.f_tile, boxGeo(W + 0.4, floors * 3.2, D + 6, cx, H, z0 + (D + 6) / 2 - 6, 'facade'));
+  addCol(x0 - 0.2, x1 + 0.2, z0 - 6, z0, H + floors * 3.2, 'bld');
+  // 牆
+  const wall = (ax0, ax1, az0, az1) => { addGeo('inwall', MAT.inwall, boxGeo(ax1 - ax0, H, az1 - az0, (ax0 + ax1) / 2, 0, (az0 + az1) / 2)); addCol(ax0, ax1, az0, az1, H, 'wall'); };
+  wall(x0, x1, z0, z0 + T); wall(x0, x0 + T, z0, z1); wall(x1 - T, x1, z0, z1);
+  const dw = 3.2;
+  const gl = (ax0, ax1) => { addGeo('glass', MAT.glass, boxGeo(ax1 - ax0, H - 0.6, 0.12, (ax0 + ax1) / 2, 0.2, z1 - 0.06)); addCol(ax0, ax1, z1 - 0.15, z1, H, 'glass'); };
+  gl(x0 + T, cx - dw / 2); gl(cx + dw / 2, x1 - T);
+  addGeo('inwall', MAT.inwall, boxGeo(W, 0.6, 0.2, cx, H - 0.6, z1 - 0.1));
+  addGeo('infloor', MAT.infloor, flatQuad(x0, z0, x1, z1, 0.21, [0, 0, W / 2, D / 2]));
+  addGeo('inwall', MAT.inwall, quadGeo([x0, H - 0.01, z1], [x0, H - 0.01, z0], [x1, H - 0.01, z0], [x1, H - 0.01, z1]));
+  const site = { kind, x0, x1, z0, z1, cx, door: { x: cx, z: z1 + 1.2 }, name: '', H, bi: b.i, bj: b.j };
+  if (kind === 'store') {
+    const names = ['麥麥超商 文心店', '麥麥超商 公益店', '麥麥超商 河南店', '麥麥超商 英才店', '麥麥超商 大業店'];
+    site.name = names[SITES.stores.length % names.length];
+    signBoard('麥麥超商　MM MART', { bg: '#fff', fg: '#127a3a', w: 1024, h: 128, stripe: '#ff7a00' }, W - 1, 1.1, cx, H - 0.35, z1 + 0.25, 0, 1.0);
+    // 櫃檯
+    const ctrX = x1 - 3.2, ctrZ = z1 - 4;
+    addGeo('counter', MAT.counter, boxGeo(4.4, 1.1, 1, ctrX, 0.2, ctrZ)); addCol(ctrX - 2.2, ctrX + 2.2, ctrZ - 0.5, ctrZ + 0.5, 1.2, 'low');
+    addGeo('counter', MAT.counter, boxGeo(1, 1.1, 3, x1 - 1.2, 0.2, ctrZ - 2)); addCol(x1 - 1.7, x1 - 0.7, ctrZ - 3.5, ctrZ - 0.5, 1.2, 'low');
+    site.counter = { x: ctrX, z: ctrZ + 1.2 }; site.clerk = { x: ctrX, z: ctrZ - 1, yaw: 0 };
+    for (let k = 0; k < 3; k++) {
+      const sz = z0 + 2.2 + k * 2.4, sx0 = x0 + 1.5, sx1 = x0 + 7.5;
+      addGeo('shelf', MAT.shelf, boxGeo(sx1 - sx0, 1.6, 0.8, (sx0 + sx1) / 2, 0.2, sz)); addGeo('goods', MAT.goods, boxGeo(sx1 - sx0 - 0.2, 1.2, 0.9, (sx0 + sx1) / 2, 0.45, sz)); addCol(sx0, sx1, sz - 0.4, sz + 0.4, 1.8, 'low');
+    }
+    addGeo('fridge', MAT.fridge, boxGeo(W - 5, 2.2, 0.6, cx - 1.5, 0.2, z0 + 0.6)); addCol(x0, x1 - 3, z0, z0 + 0.95, 2.4, 'low');
+    SITES.stores.push(site);
+  } else {
+    site.name = '麥麥商業銀行 台中分行';
+    signBoard('麥麥商業銀行', { bg: '#0b2a5a', fg: '#ffd84a', w: 1024, h: 128 }, W - 2, 1.5, cx, H + 1.5, z1 + 0.45, 0, 1.0);
+    const ctrZ = z0 + 4.5;
+    addGeo('counter', MAT.counter, boxGeo(W - 4, 1.2, 1, cx, 0.2, ctrZ)); addCol(x0 + 2, x1 - 2, ctrZ - 0.5, ctrZ + 0.5, 1.3, 'low');
+    addGeo('glass', MAT.glass, boxGeo(W - 4, 1.2, 0.08, cx, 1.4, ctrZ));
+    for (let k = 0; k < 3; k++) { const bx = x0 + 4 + k * 6; addGeo('shelf', MAT.shelf, boxGeo(3, 0.5, 0.8, bx, 0.2, z1 - 4)); addCol(bx - 1.5, bx + 1.5, z1 - 4.4, z1 - 3.6, 0.7, 'low'); }
+    site.counter = { x: cx, z: ctrZ + 1.2 }; site.clerk = { x: cx - 3, z: ctrZ - 1.2, yaw: 0 }; site.clerk2 = { x: cx + 3, z: ctrZ - 1.2, yaw: 0 };
+    SITES.bank = site;
+  }
+  // 門前路邊（給逃逸車）
+  const j = b.j + 1; const rz = ZR[j], w = hW(j);
+  site.curb = { x: cx + 6, z: rz - w / 2 + 1.8, yaw: Math.PI / 2 };
+  site.road = HNAMES[j];
+  fillBlock(b, b.x0 < -80 ? 'old' : 'mid', { x0: x0 - 3, x1: x1 + 3, z0: z0 - 8, z1: z1 + 4 });
+}
+function insideShop(x, z) { for (const s of [...SITES.stores, SITES.bank]) if (s && x > s.x0 && x < s.x1 && z > s.z0 && z < s.z1) return s; return null; }
+
+/* ================= 人物與車輛 ================= */
+const PMAT = {};
+function pm(c, em) { const k = c + '_' + (em || 0); return PMAT[k] || (PMAT[k] = new THREE.MeshLambertMaterial({ color: c, emissive: em ? c : 0x000000, emissiveIntensity: em || 0 })); }
+const SKINS = [0xf1c9a5, 0xe0b088, 0xc99a6e, 0xf5d5b8, 0xd8a884];
+const SHIRTS = [0xffffff, 0x2a4fa8, 0xd94040, 0x3a8a4a, 0xf2c94c, 0x222222, 0x8a5ac8, 0xe07a30, 0x6ab0e0, 0xcccccc, 0xf08aa8];
+const PANTS = [0x1f2a44, 0x333333, 0x5a4a3a, 0x6a7a8a, 0x2a2a2a, 0xc8b89a];
+function bx(w, h, d, mat, x, y, z) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x || 0, y || 0, z || 0); return m; }
+function makePerson(o) {
+  o = o || {};
+  const skin = pm(o.skin || pick(SKINS)), shirt = pm(o.shirt != null ? o.shirt : pick(SHIRTS)), pants = pm(o.pants != null ? o.pants : pick(PANTS));
+  const g = new THREE.Group(); const body = new THREE.Group(); g.add(body);
+  const legL = new THREE.Group(), legR = new THREE.Group(); legL.position.set(-0.11, 0.92, 0); legR.position.set(0.11, 0.92, 0);
+  legL.add(bx(0.17, 0.88, 0.2, pants, 0, -0.44, 0)); legR.add(bx(0.17, 0.88, 0.2, pants, 0, -0.44, 0));
+  legL.add(bx(0.18, 0.1, 0.3, pm(0x1a1a1a), 0, -0.88, 0.05)); legR.add(bx(0.18, 0.1, 0.3, pm(0x1a1a1a), 0, -0.88, 0.05));
+  body.add(legL, legR);
+  const torso = bx(0.46, 0.62, 0.26, shirt, 0, 1.24, 0); body.add(torso);
+  if (o.police) { body.add(bx(0.48, 0.1, 0.28, pm(0x111111), 0, 0.96, 0)); body.add(bx(0.1, 0.08, 0.02, pm(0xffd84a), -0.12, 1.42, 0.14)); body.add(bx(0.4, 0.34, 0.06, pm(0x1a2a1a), 0, 1.25, 0.15)); }
+  if (o.vest) body.add(bx(0.48, 0.4, 0.3, pm(0xd8ff30, 0.2), 0, 1.24, 0));
+  const armL = new THREE.Group(), armR = new THREE.Group(); armL.position.set(-0.31, 1.52, 0); armR.position.set(0.31, 1.52, 0);
+  armL.add(bx(0.13, 0.62, 0.15, shirt, 0, -0.3, 0)); armR.add(bx(0.13, 0.62, 0.15, shirt, 0, -0.3, 0));
+  armL.add(bx(0.12, 0.12, 0.12, skin, 0, -0.66, 0)); armR.add(bx(0.12, 0.12, 0.12, skin, 0, -0.66, 0));
+  body.add(armL, armR);
+  const gun = bx(0.07, 0.12, 0.28, pm(0x151515), 0, -0.7, 0.1); gun.visible = false; armR.add(gun);
+  const head = new THREE.Group(); head.position.set(0, 1.76, 0); body.add(head);
+  if (o.robber) {
+    head.add(bx(0.32, 0.32, 0.32, pm(0x1a1a1a), 0, 0, 0)); head.add(bx(0.26, 0.1, 0.04, pm(0x444a55), 0, 0.02, 0.165));
+  } else {
+    head.add(bx(0.26, 0.28, 0.26, skin, 0, 0, 0));
+    head.add(bx(0.27, 0.08, 0.27, pm(o.hair || pick([0x111111, 0x2a1a10, 0x3a2a1a, 0x777777])), 0, 0.14, -0.01));
+    head.add(bx(0.04, 0.04, 0.02, pm(0x111111), -0.06, 0.03, 0.135)); head.add(bx(0.04, 0.04, 0.02, pm(0x111111), 0.06, 0.03, 0.135));
+    if (o.police) { head.add(bx(0.3, 0.1, 0.32, pm(0x13203a), 0, 0.18, 0.01)); head.add(bx(0.3, 0.03, 0.12, pm(0x0a0f1a), 0, 0.13, 0.2)); head.add(bx(0.06, 0.06, 0.02, pm(0xffd84a), 0, 0.2, 0.17)); }
+    if (o.helmet) head.add(bx(0.32, 0.22, 0.32, pm(o.helmet), 0, 0.1, 0));
+    if (o.apron) body.add(bx(0.47, 0.5, 0.27, pm(o.apron), 0, 1.2, 0.01));
+  }
+  return { g, body, legL, legR, armL, armR, head, gun, phase: Math.random() * 6 };
+}
+function posePerson(P, pose, dt, speed) {
+  const b = P.body; b.position.y = 0; b.rotation.set(0, 0, 0);
+  P.legL.rotation.set(0, 0, 0); P.legR.rotation.set(0, 0, 0); P.armL.rotation.set(0, 0, 0); P.armR.rotation.set(0, 0, 0);
+  if (pose === 'walk' || pose === 'run') {
+    P.phase += dt * (speed || 1.4) * 4.2; const s = Math.sin(P.phase) * (pose === 'run' ? 0.9 : 0.55);
+    P.legL.rotation.x = s; P.legR.rotation.x = -s; P.armL.rotation.x = -s * 0.8; P.armR.rotation.x = s * 0.8;
+    if (pose === 'run') b.rotation.x = 0.15;
+  } else if (pose === 'aim') {
+    P.armR.rotation.x = -Math.PI / 2; P.armL.rotation.x = -1.35; P.armL.rotation.z = -0.5;
+  } else if (pose === 'hands') {
+    P.armL.rotation.x = Math.PI * 0.92; P.armR.rotation.x = Math.PI * 0.92; P.armL.rotation.z = 0.15; P.armR.rotation.z = -0.15;
+  } else if (pose === 'kneel') {
+    b.position.y = -0.42; P.legL.rotation.x = -1.5; P.legR.rotation.x = -1.5;
+    P.armL.rotation.x = Math.PI * 0.92; P.armR.rotation.x = Math.PI * 0.92;
+  } else if (pose === 'cuffed') {
+    b.position.y = -0.42; P.legL.rotation.x = -1.5; P.legR.rotation.x = -1.5; P.armL.rotation.x = 0.5; P.armR.rotation.x = 0.5; P.armL.rotation.z = 0.35; P.armR.rotation.z = -0.35;
+  } else if (pose === 'down') {
+    b.rotation.x = -Math.PI / 2; b.position.y = 0.15; b.position.z = 0;
+  } else if (pose === 'stun') {
+    b.rotation.x = -Math.PI / 2; b.position.y = 0.15; P.phase += dt * 30; P.armL.rotation.z = Math.sin(P.phase) * 0.3; P.legR.rotation.x = Math.sin(P.phase * 1.3) * 0.2;
+  } else if (pose === 'talk') {
+    P.phase += dt * 3; P.armR.rotation.x = -0.6 + Math.sin(P.phase) * 0.3;
+  }
+}
+
+/* ---------- 車輛模型 ---------- */
+const VMAT = {};
+function vm(c) { return VMAT[c] || (VMAT[c] = new THREE.MeshLambertMaterial({ color: c })); }
+const GLASS_DARK = new THREE.MeshLambertMaterial({ color: 0x1a2530, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
+const HEAD_MAT = nightMat(new THREE.MeshLambertMaterial({ color: 0xeeeeee, emissive: 0xfff4d0, emissiveIntensity: 0 }), 1.4);
+const TAIL_MAT = nightMat(new THREE.MeshLambertMaterial({ color: 0x881010, emissive: 0xff2010, emissiveIntensity: 0 }), 1.0);
+let POLICE_SIDE;
+function policeSideMat() {
+  if (!POLICE_SIDE) POLICE_SIDE = new THREE.MeshLambertMaterial({
+    map: canvasTex(512, 128, (g, w, h) => {
+      g.fillStyle = '#f4f6f8'; g.fillRect(0, 0, w, h); g.fillStyle = '#0b3d91'; g.fillRect(0, 46, w, 40); g.fillStyle = '#ffd84a'; g.fillRect(0, 86, w, 8);
+      g.fillStyle = '#fff'; g.font = '900 34px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('警察 POLICE  110', w / 2, 67);
+    })
+  });
+  return POLICE_SIDE;
+}
+function wheel(r, wdt) { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, wdt, 12), vm(0x151515)); m.rotation.z = Math.PI / 2; return m; }
+function makeVehicle(kind, color, police, opts) {
+  opts = opts || {};
+  const g = new THREE.Group(); const parts = {};
+  if (kind === 'car') {
+    const L = opts.L || 4.4, W = 1.8, sport = opts.sport, suv = opts.suv;
+    const bodyH = suv ? 0.95 : sport ? 0.55 : 0.72, base = 0.32;
+    const paint = vm(color);
+    if (police) {
+      const side = policeSideMat();
+      const mats = [side, side, paint, paint, paint, paint];
+      const m = new THREE.Mesh(new THREE.BoxGeometry(W, bodyH, L), mats); m.position.y = base + bodyH / 2; g.add(m);
+    } else g.add(bx(W, bodyH, L, paint, 0, base + bodyH / 2, 0));
+    const top = base + bodyH; const cabH = suv ? 0.85 : sport ? 0.5 : 0.68, cabL = suv ? 2.9 : sport ? 1.8 : 2.3, cz = suv ? 0.35 : 0.15;
+    // 車頂與柱子
+    g.add(bx(W - 0.14, 0.07, cabL - 0.2, paint, 0, top + cabH, cz));
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(bx(0.08, cabH, 0.1, paint, sx * (W / 2 - 0.1), top + cabH / 2, cz + sz * (cabL / 2 - 0.15)));
+    // 玻璃
+    const gm = opts.clearGlass ? MAT.glass : GLASS_DARK;
+    g.add(bx(W - 0.24, cabH - 0.05, 0.04, gm, 0, top + cabH / 2, cz - cabL / 2 + 0.1));
+    g.add(bx(W - 0.24, cabH - 0.05, 0.04, gm, 0, top + cabH / 2, cz + cabL / 2 - 0.1));
+    for (const sx of [-1, 1]) g.add(bx(0.03, cabH - 0.08, cabL - 0.4, gm, sx * (W / 2 - 0.09), top + cabH / 2, cz));
+    // 儀表板、方向盤（左駕）
+    if (!opts.driver) {
+      g.add(bx(W - 0.2, 0.16, 0.4, vm(0x1c1c1c), 0, top - 0.02, cz - cabL / 2 + 0.3));
+      const sw = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.022, 6, 16), vm(0x111111)); sw.position.set(-0.4, top + 0.02, cz - cabL / 2 + 0.62); sw.rotation.x = -0.5; g.add(sw); parts.wheel = sw;
+      for (const sx of [-0.4, 0.4]) { g.add(bx(0.5, 0.5, 0.15, vm(0x2a2a2a), sx, top + 0.1, cz + 0.55)); }
+    }
+    // 車燈
+    for (const sx of [-0.62, 0.62]) { g.add(bx(0.4, 0.14, 0.05, HEAD_MAT, sx, base + bodyH * 0.6, -L / 2 - 0.01)); g.add(bx(0.4, 0.14, 0.05, TAIL_MAT, sx, base + bodyH * 0.65, L / 2 + 0.01)); }
+    g.add(bx(0.5, 0.14, 0.03, vm(0xf4f4f0), 0, base + 0.25, L / 2 + 0.02)); // 車牌
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const wh = wheel(0.33, 0.24); wh.position.set(sx * (W / 2 - 0.05), 0.33, sz * (L / 2 - 0.8)); g.add(wh); }
+    if (police) {
+      const red = new THREE.MeshLambertMaterial({ color: 0x660000, emissive: 0xff0000, emissiveIntensity: 0 });
+      const blue = new THREE.MeshLambertMaterial({ color: 0x000066, emissive: 0x0040ff, emissiveIntensity: 0 });
+      g.add(bx(1.2, 0.12, 0.3, vm(0x222222), 0, top + cabH + 0.1, cz));
+      const r = bx(0.55, 0.14, 0.28, red, -0.32, top + cabH + 0.2, cz), b = bx(0.55, 0.14, 0.28, blue, 0.32, top + cabH + 0.2, cz);
+      g.add(r, b); parts.red = red; parts.blue = blue;
+    }
+    if (opts.driver) { const d = new THREE.Group(); d.add(bx(0.44, 0.5, 0.26, pm(pick(SHIRTS)), 0, top + 0.12, 0)); d.add(bx(0.24, 0.26, 0.24, pm(pick(SKINS)), 0, top + 0.52, 0)); d.add(bx(0.25, 0.08, 0.25, pm(0x1a1a1a), 0, top + 0.66, 0)); d.position.set(-0.4, 0, cz + 0.25); g.add(d); parts.driver = { g: d }; }
+    parts.eyeY = top + 0.52; parts.seat = { x: -0.4, z: cz + 0.15 };
+  } else {
+    // 機車
+    const paint = vm(color);
+    g.add(bx(0.36, 0.42, 1.25, paint, 0, 0.5, 0.05));
+    g.add(bx(0.32, 0.12, 0.62, vm(0x1a1a1a), 0, 0.78, 0.22)); // 座墊
+    g.add(bx(0.3, 0.75, 0.14, paint, 0, 0.72, -0.55));
+    const hb = bx(0.62, 0.05, 0.05, vm(0x222222), 0, 1.12, -0.62); g.add(hb); parts.wheel = hb;
+    g.add(bx(0.22, 0.12, 0.08, vm(0x1a1a1a), 0, 1.12, -0.6)); // 儀表
+    g.add(bx(0.18, 0.12, 0.05, HEAD_MAT, 0, 1.0, -0.65)); g.add(bx(0.2, 0.08, 0.04, TAIL_MAT, 0, 0.72, 0.68));
+    const w1 = wheel(0.26, 0.12), w2 = wheel(0.26, 0.12); w1.position.set(0, 0.26, -0.62); w2.position.set(0, 0.26, 0.6); g.add(w1, w2);
+    if (police) {
+      g.add(bx(0.4, 0.3, 0.3, vm(0xf4f6f8), 0, 0.95, 0.55));
+      const red = new THREE.MeshLambertMaterial({ color: 0x660000, emissive: 0xff0000, emissiveIntensity: 0 });
+      const blue = new THREE.MeshLambertMaterial({ color: 0x000066, emissive: 0x0040ff, emissiveIntensity: 0 });
+      const r = bx(0.12, 0.1, 0.1, red, -0.12, 1.15, 0.6), b = bx(0.12, 0.1, 0.1, blue, 0.12, 1.15, 0.6); g.add(r, b); parts.red = red; parts.blue = blue;
+      g.add(bx(0.37, 0.12, 0.6, vm(0x0b3d91), 0, 0.55, 0.05));
+    }
+    if (opts.driver) {
+      const d = makePerson({ helmet: pick([0xffffff, 0xd94040, 0x2a4fa8, 0xf2c94c, 0x222222]) });
+      d.g.position.set(0, 0.05, 0.25); d.g.rotation.y = Math.PI; d.legL.rotation.x = -1.2; d.legR.rotation.x = -1.2; d.armL.rotation.x = -1.1; d.armR.rotation.x = -1.1; d.body.position.y = -0.18;
+      g.add(d.g); parts.driver = d;
+    }
+    parts.eyeY = 1.62; parts.seat = { x: 0, z: 0.25 };
+  }
+  return { g, parts };
+}
+
+// 把同材質的零件合併，減少繪製次數（給路上的車用）
+function compactGroup(g) {
+  const by = new Map(); const rm = [];
+  for (const c of g.children) {
+    if (!c.isMesh || Array.isArray(c.material)) continue;
+    c.updateMatrix(); const geo = c.geometry.clone(); geo.applyMatrix4(c.matrix);
+    if (!by.has(c.material)) by.set(c.material, []); by.get(c.material).push(geo); rm.push(c);
+  }
+  for (const c of rm) g.remove(c);
+  for (const [m, list] of by) g.add(new THREE.Mesh(mergeGeos(list), m));
+}
+
+/* ---------- 車流 ---------- */
+const TRAFFIC = [];
+function segInfo(i, j, ni, nj) {
+  const ax = ni !== i ? 'ew' : 'ns';
+  const ax0 = XR[i], az0 = ZR[j], bx0 = XR[ni], bz0 = ZR[nj];
+  const L = Math.abs(bx0 - ax0) + Math.abs(bz0 - az0);
+  const dx = Math.sign(bx0 - ax0), dz = Math.sign(bz0 - az0);
+  const w = ax === 'ew' ? hW(j) : vW(i);
+  const crossW = ax === 'ew' ? vW(ni) : hW(nj);
+  return { ax, x0: ax0, z0: az0, L, dx, dz, rx: -dz, rz: dx, w, crossW };
+}
+function neighbors(i, j) { const o = []; if (i > 0) o.push([i - 1, j]); if (i < XR.length - 1) o.push([i + 1, j]); if (j > 0) o.push([i, j - 1]); if (j < ZR.length - 1) o.push([i, j + 1]); return o; }
+class NPCVeh {
+  constructor(kind) {
+    this.kind = kind; this.color = kind === 'car' ? pick(CAR_COLORS) : pick([0xf2f2f2, 0x111111, 0xd94040, 0x2a4fa8, 0x9a9ea6, 0x26c2a4, 0xf2c94c]);
+    this.model = pick(kind === 'car' ? ['轎車', '轎車', '休旅車', '小貨車'] : ['機車', '機車', '電動機車']);
+    const { g, parts } = makeVehicle(kind, this.color, false, { driver: true, suv: this.model === '休旅車', L: this.model === '小貨車' ? 4.8 : 4.4 });
+    compactGroup(g);
+    this.mesh = g; this.parts = parts; scene.add(g);
+    this.plate = randPlate(kind); this.state = 'drive'; this.speed = 0; this.stuck = 0; this.ghost = 0; this.hp = 100;
+    this.radius = kind === 'car' ? 1.9 : 0.9;
+  }
+  place(i, j, ni, nj, s) {
+    this.i = i; this.j = j; this.ni = ni; this.nj = nj; this.seg = segInfo(i, j, ni, nj); this.s = s;
+    this.maxSp = this.kind === 'car' ? rand(10, 14) : rand(9, 12.5);
+    this.off = this.kind === 'car' ? this.seg.w * 0.25 : this.seg.w / 2 - 1.3; this.offT = this.off;
+    this.calcPos(); this.mesh.position.set(this.x, 0, this.z); this.yaw = Math.atan2(-this.seg.dx, -this.seg.dz); this.mesh.rotation.y = this.yaw;
+    this.state = 'drive'; this.speed = this.maxSp * 0.7; this.runRed = false; this.mesh.visible = true;
+  }
+  calcPos() { const g = this.seg; this.x = g.x0 + g.dx * this.s + g.rx * this.off; this.z = g.z0 + g.dz * this.s + g.rz * this.off; }
+  nextSeg(flee) {
+    const opts = neighbors(this.ni, this.nj).filter(([a, b]) => !(a === this.i && b === this.j));
+    let ch;
+    if (flee) {
+      let best = -1e9; for (const o of opts) { const d = dist(XR[o[0]], ZR[o[1]], P.x, P.z) + rand(0, 60); if (d > best) { best = d; ch = o; } }
+    } else {
+      const straight = opts.find(([a, b]) => a - this.ni === this.ni - this.i && b - this.nj === this.nj - this.j);
+      ch = (straight && Math.random() < 0.6) ? straight : pick(opts);
+    }
+    if (!ch) ch = [this.i, this.j];
+    this.i = this.ni; this.j = this.nj; this.ni = ch[0]; this.nj = ch[1]; this.seg = segInfo(this.i, this.j, this.ni, this.nj); this.s = 0;
+    this.offT = this.kind === 'car' ? this.seg.w * 0.25 : this.seg.w / 2 - 1.3; this.off = this.offT;
+    this.runRed = !flee && Math.random() < 0.03;
+  }
+  update(dt) {
+    if (this.state === 'gone') return;
+    if (this.state === 'stopped' || this.state === 'parked') { this.speed = 0; return; }
+    const g = this.seg; let v = this.maxSp;
+    if (this.state === 'flee') {
+      v = 26; const toEnd = g.L - this.s; v = Math.min(v, 11 + toEnd * 0.9);
+    } else if (this.state === 'pull') {
+      this.offT = g.w / 2 - 1.1; v = Math.max(0, this.speed - 5 * dt); if (v < 0.2 && Math.abs(this.off - this.offT) < 0.2) { this.state = 'stopped'; this.speed = 0; return; }
+    } else {
+      // 紅綠燈
+      const sStop = g.L - (g.crossW / 2 + 5);
+      const st = lightState(g.ax);
+      if (st !== 'G' && !this.runRed && this.s < sStop + 0.3) {
+        const room = sStop - this.s;
+        if (!(st === 'Y' && room < this.speed * 1.2)) v = Math.min(v, Math.sqrt(Math.max(0, 2 * 4 * (room - 0.3))));
+      }
+      // 前方障礙
+      if (this.ghost <= 0) {
+        const fx = -Math.sin(this.yaw), fz = -Math.cos(this.yaw);
+        const chk = (ox, oz, r) => {
+          const rx = ox - this.x, rz = oz - this.z; const along = rx * fx + rz * fz; if (along < 0 || along > 14) return;
+          const lat = Math.abs(rx * -fz + rz * fx); if (lat > r + (this.kind === 'car' ? 1.1 : 0.5)) return;
+          v = Math.min(v, Math.max(0, (along - 3 - r) * 1.3));
+        };
+        for (const o of TRAFFIC) if (o !== this && o.state !== 'gone' && Math.abs(o.x - this.x) < 15 && Math.abs(o.z - this.z) < 15) chk(o.x, o.z, o.kind === 'car' ? 1.0 : 0.5);
+        if (P.mode === 'foot') chk(P.x, P.z, 0.4); else if (P.veh) chk(P.veh.x, P.veh.z, P.veh.spec.kind === 'car' ? 1 : 0.5);
+        for (const h of MHUMANS) if (h.alive !== false) chk(h.x, h.z, 0.4);
+      }
+    }
+    if (this.speed < 0.3 && this.state === 'drive' && lightState(g.ax) === 'G') { this.stuck += dt; if (this.stuck > 7) { this.ghost = 2.5; this.stuck = 0; if (Math.random() < 0.5 && dist(this.x, this.z, P.x, P.z) < 30) AU.honk(); } } else if (this.speed > 1) this.stuck = 0;
+    if (this.ghost > 0) this.ghost -= dt;
+    const acc = this.state === 'flee' ? 9 : 3.5;
+    this.speed += clamp(v - this.speed, -9 * dt, acc * dt);
+    this.s += this.speed * dt;
+    this.off += clamp(this.offT - this.off, -2 * dt, 2 * dt);
+    if (this.s >= g.L) { this.s -= g.L; this.nextSeg(this.state === 'flee'); }
+    this.calcPos();
+    const ty = Math.atan2(-this.seg.dx, -this.seg.dz);
+    this.yaw += angDiff(this.yaw, ty) * Math.min(1, dt * 6);
+    const k = Math.min(1, dt * 10);
+    this.mesh.position.x += (this.x - this.mesh.position.x) * k; this.mesh.position.z += (this.z - this.mesh.position.z) * k;
+    this.mesh.rotation.y = this.yaw;
+  }
+  get px() { return this.mesh.position.x; } get pz() { return this.mesh.position.z; }
+}
+function randomSegNear(cx, cz, dmin, dmax) {
+  for (let tries = 0; tries < 40; tries++) {
+    const i = randi(0, XR.length - 1), j = randi(0, ZR.length - 1); const nb = pick(neighbors(i, j)); const g = segInfo(i, j, nb[0], nb[1]);
+    const s = rand(8, g.L - 24); const x = g.x0 + g.dx * s, z = g.z0 + g.dz * s; const d = dist(x, z, cx, cz);
+    if (d < dmin || d > dmax) continue;
+    if (TRAFFIC.some(o => o.state !== 'gone' && dist(o.x, o.z, x, z) < 14)) continue;
+    return [i, j, nb[0], nb[1], s];
+  }
+  return null;
+}
+function initTraffic() {
+  const nc = IS_TOUCH ? 22 : 34, ns = IS_TOUCH ? 10 : 16;
+  for (let k = 0; k < nc + ns; k++) { const v = new NPCVeh(k < nc ? 'car' : 'scooter'); const r = randomSegNear(P.x, P.z, 20, 190) || [5, 5, 6, 5, 20]; v.place(...r); TRAFFIC.push(v); }
+}
+function updateTraffic(dt) {
+  for (const v of TRAFFIC) {
+    v.update(dt);
+    if (v.state === 'drive' && !v.flag && dist(v.x, v.z, P.x, P.z) > 210) { const r = randomSegNear(P.x, P.z, 90, 190); if (r) v.place(...r); }
+  }
+}
+
+/* ---------- 行人 ---------- */
+const PEDS = [];
+class Ped {
+  constructor() { this.P = makePerson({}); scene.add(this.P.g); this.state = 'walk'; this.hp = 100; this.kind = 'ped'; }
+  placeIn(b, market) {
+    this.b = b; this.market = market;
+    if (market) { const L = SITES.market.lot; this.rect = { x0: L.x0 + 3, x1: L.x1 - 3, z0: SITES.market.z - 2.2, z1: SITES.market.z + 2.2 }; if (Math.random() < .5) this.rect = { x0: SITES.market.x - 2.2, x1: SITES.market.x + 2.2, z0: L.z0 + 3, z1: L.z1 - 3 }; }
+    else this.rect = { x0: b.x0 + 1.5, x1: b.x1 - 1.5, z0: b.z0 + 1.5, z1: b.z1 - 1.5 };
+    const r = this.rect; this.per = 2 * ((r.x1 - r.x0) + (r.z1 - r.z0)); this.t = rand(0, this.per); this.dir = Math.random() < .5 ? 1 : -1;
+    this.speed = rand(1.1, 1.6); this.state = 'walk'; this.hp = 100; this.timer = 0; this.alive = true; this.P.g.visible = true; this.calc();
+  }
+  calc() {
+    const r = this.rect, w = r.x1 - r.x0, h = r.z1 - r.z0; let t = ((this.t % this.per) + this.per) % this.per;
+    if (t < w) { this.x = r.x0 + t; this.z = r.z0; } else if ((t -= w) < h) { this.x = r.x1; this.z = r.z0 + t; } else if ((t -= h) < w) { this.x = r.x1 - t; this.z = r.z1; } else { t -= w; this.x = r.x0; this.z = r.z1 - t; }
+  }
+  update(dt) {
+    const p = this.P;
+    if (this.state === 'down') { this.timer -= dt; posePerson(p, 'down', dt); if (this.timer <= 0) this.recycle(); return; }
+    let sp = this.speed, pose = 'walk';
+    if (this.state === 'flee') { sp = 5; pose = 'run'; this.timer -= dt; if (this.timer <= 0) this.state = 'walk'; }
+    if (this.state === 'idle') { sp = 0; pose = 'idle'; this.timer -= dt; if (this.timer <= 0) this.state = 'walk'; }
+    const ox = this.x, oz = this.z;
+    this.t += sp * dt * this.dir; this.calc();
+    const dx = this.x - ox, dz = this.z - oz;
+    if (sp > 0 && (dx || dz)) p.g.rotation.y = Math.atan2(dx, dz);
+    p.g.position.set(this.x, 0.18, this.z);
+    posePerson(p, pose, dt, sp);
+    if (this.state === 'walk' && Math.random() < dt * 0.02) { this.state = 'idle'; this.timer = rand(2, 6); }
+  }
+  scare(x, z) { if (this.state === 'down') return; this.state = 'flee'; this.timer = rand(6, 10); const r = this.rect; const cx = (r.x0 + r.x1) / 2, cz = (r.z0 + r.z1) / 2; this.dir = Math.random() < .5 ? 1 : -1; }
+  knock(t) { this.state = 'down'; this.timer = t || 20; this.alive = false; }
+  recycle() {
+    const night = isNight();
+    const marketOK = night && dist(P.x, P.z, SITES.market.x, SITES.market.z) < 160;
+    if (marketOK && Math.random() < 0.45) { this.placeIn(null, true); return; }
+    const cands = BLOCKS.filter(b => { const d = dist(b.cx, b.cz, P.x, P.z); return d > 30 && d < 140 && b.type !== 'park' && b.type !== 'lake'; });
+    const b = cands.length ? pick(cands) : pick(BLOCKS); this.P = this.P; this.placeIn(b, false);
+    // 換衣服顏色（重新上色）
+  }
+}
+function initPeds() {
+  const n = IS_TOUCH ? 26 : 40;
+  for (let k = 0; k < n; k++) { const pd = new Ped(); PEDS.push(pd); pd.recycle(); }
+}
+function updatePeds(dt) {
+  for (const pd of PEDS) {
+    const d = dist(pd.x, pd.z, P.x, P.z);
+    if (d > 160 && pd.state !== 'down') { pd.recycle(); continue; }
+    if (d < 120) pd.update(dt); else pd.P.g.position.set(pd.x, 0.18, pd.z);
+  }
+}
+function scareNear(x, z, r) { for (const pd of PEDS) if (dist(pd.x, pd.z, x, z) < r) pd.scare(x, z); }
+
+/* ---------- 任務用的人物（搶匪、店員、駕駛） ---------- */
+const MHUMANS = [];
+function spawnHuman(opts, x, z, yaw) {
+  const P_ = makePerson(opts); P_.g.position.set(x, 0.2, z); P_.g.rotation.y = yaw || 0; scene.add(P_.g);
+  const h = Object.assign({ P: P_, x, z, yaw: yaw || 0, hp: 100, alive: true, state: 'idle', pose: 'idle', role: 'civ', y0: 0.2, timer: 0 }, opts.data || {});
+  MHUMANS.push(h); return h;
+}
+function removeHuman(h) { scene.remove(h.P.g); const k = MHUMANS.indexOf(h); if (k >= 0) MHUMANS.splice(k, 1); }
+
+/* ================= 玩家：移動、開車、武器 ================= */
+const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.08, 1500);
+camera.rotation.order = 'YXZ'; scene.add(camera);
+const P = { x: 0, z: 0, yaw: 0, pitch: 0, mode: 'foot', veh: null, lookYaw: 0, lookT: 0, bob: 0, moving: false, run: false, hurtT: 99, aim: 0 };
+const KEYS = {}; const INP = { mx: 0, my: 0, joyX: 0, joyY: 0, run: false, fireHeld: false, aim: false };
+function isNight() { return S.time < 330 || S.time > 1110; }
+
+/* ---------- 玩家可駕駛的車 ---------- */
+const PVEHS = [];
+class PVeh {
+  constructor(key, x, z, yaw) {
+    this.key = key; this.spec = VEH_SPECS[key]; this.police = key === 'police' || key === 'pscooter';
+    const { g, parts } = makeVehicle(this.spec.kind, this.spec.color, this.police, { sport: key === 'sport', suv: key === 'suv', clearGlass: true, L: key === 'sport' ? 4.3 : 4.5 });
+    this.mesh = g; this.parts = parts; scene.add(g);
+    this.x = x; this.z = z; this.yaw = yaw || 0; this.speed = 0; this.steer = 0; this.siren = false; this.flash = 0; this.home = { x, z, yaw: yaw || 0 };
+    this.sync();
+  }
+  sync() { this.mesh.position.set(this.x, 0, this.z); this.mesh.rotation.y = this.yaw; }
+  circles() {
+    const fx = -Math.sin(this.yaw), fz = -Math.cos(this.yaw);
+    if (this.spec.kind === 'car') return [[this.x + fx * 1.3, this.z + fz * 1.3, 1.0], [this.x - fx * 1.3, this.z - fz * 1.3, 1.0]];
+    return [[this.x, this.z, 0.6]];
+  }
+  reset() { this.x = this.home.x; this.z = this.home.z; this.yaw = this.home.yaw; this.speed = 0; this.siren = false; this.sync(); }
+}
+let POLICE_CAR, POLICE_SCOOT;
+function initPlayerVehicles() {
+  const st = SITES.station;
+  POLICE_CAR = new PVeh('police', st.car.x, st.car.z, st.car.yaw); PVEHS.push(POLICE_CAR);
+  POLICE_SCOOT = new PVeh('pscooter', st.scooter.x, st.scooter.z, st.scooter.yaw); PVEHS.push(POLICE_SCOOT);
+  respawnOwned();
+  // 車行展示車（靜態）
+  for (const d of SITES.dealer.display) { const sp = VEH_SPECS[d.key]; const { g } = makeVehicle(sp.kind, sp.color, false, { sport: d.key === 'sport', suv: d.key === 'suv' }); g.position.set(d.x, 0.2, d.z); g.rotation.y = d.yaw; scene.add(g); addCol(d.x - 1.6, d.x + 1.6, d.z - 1.6, d.z + 1.6, 1.4, 'low'); }
+}
+function respawnOwned() {
+  for (let k = PVEHS.length - 1; k >= 0; k--) if (!PVEHS[k].police) { if (P.veh === PVEHS[k]) continue; scene.remove(PVEHS[k].mesh); PVEHS.splice(k, 1); }
+  S.owned.forEach((key, n) => { if (P.veh && P.veh.key === key) return; const sp = SITES.home.park[n % SITES.home.park.length]; PVEHS.push(new PVeh(key, sp.x, sp.z, sp.yaw)); });
+}
+
+/* ---------- 輸入 ---------- */
+const canvas = document.getElementById('c');
+let pointerLocked = false;
+addEventListener('keydown', e => {
+  if (e.repeat) { KEYS[e.code] = true; return; }
+  KEYS[e.code] = true; AU.init();
+  if (!GAME.running) return;
+  if (MODAL.open) { if (e.code === 'Escape') MODAL.escape(); return; }
+  switch (e.code) {
+    case 'KeyE': doInteract(); break;
+    case 'KeyF': toggleVehicle(); break;
+    case 'KeyQ': shout(); break;
+    case 'KeyH': toggleSiren(); break;
+    case 'KeyR': reload(); break;
+    case 'Digit1': setWeapon(0); break;
+    case 'Digit2': setWeapon(1); break;
+    case 'KeyM': toggleMap(); break;
+    case 'Escape': case 'Tab': e.preventDefault(); openPause(); break;
+  }
+});
+addEventListener('keyup', e => { KEYS[e.code] = false; });
+canvas.addEventListener('click', () => { AU.init(); if (!IS_TOUCH && GAME.running && !MODAL.open && !pointerLocked) canvas.requestPointerLock && canvas.requestPointerLock(); });
+document.addEventListener('pointerlockchange', () => { pointerLocked = document.pointerLockElement === canvas; if (!pointerLocked && GAME.running && !MODAL.open && !IS_TOUCH) openPause(); });
+addEventListener('mousemove', e => { if (pointerLocked) { INP.mx += e.movementX; INP.my += e.movementY; } });
+addEventListener('mousedown', e => { if (!pointerLocked) return; if (e.button === 0) { INP.fireHeld = true; fire(); } if (e.button === 2) INP.aim = true; });
+addEventListener('mouseup', e => { if (e.button === 0) INP.fireHeld = false; if (e.button === 2) INP.aim = false; });
+addEventListener('contextmenu', e => e.preventDefault());
+function releasePointer() { if (document.exitPointerLock && pointerLocked) document.exitPointerLock(); }
+
+// 觸控
+function initTouch() {
+  $('touch').classList.remove('hidden'); document.body.classList.add('touch');
+  const joy = $('joy'), knob = $('joyk'); let jid = null, jcx = 0, jcy = 0;
+  joy.addEventListener('touchstart', e => { e.preventDefault(); AU.init(); const t = e.changedTouches[0]; jid = t.identifier; const r = joy.getBoundingClientRect(); jcx = r.left + r.width / 2; jcy = r.top + r.height / 2; mv(t); }, { passive: false });
+  const mv = t => { let dx = t.clientX - jcx, dy = t.clientY - jcy; const L = Math.hypot(dx, dy), R = 60; if (L > R) { dx *= R / L; dy *= R / L; } knob.style.transform = `translate(${dx}px,${dy}px)`; INP.joyX = dx / R; INP.joyY = -dy / R; };
+  joy.addEventListener('touchmove', e => { e.preventDefault(); for (const t of e.changedTouches) if (t.identifier === jid) mv(t); }, { passive: false });
+  const end = e => { for (const t of e.changedTouches) if (t.identifier === jid) { jid = null; INP.joyX = INP.joyY = 0; knob.style.transform = ''; } };
+  joy.addEventListener('touchend', end); joy.addEventListener('touchcancel', end);
+  const look = $('look'); const lt = {};
+  look.addEventListener('touchstart', e => { e.preventDefault(); AU.init(); for (const t of e.changedTouches) lt[t.identifier] = [t.clientX, t.clientY]; }, { passive: false });
+  look.addEventListener('touchmove', e => { e.preventDefault(); for (const t of e.changedTouches) { const o = lt[t.identifier]; if (!o) continue; INP.mx += (t.clientX - o[0]) * 2.2; INP.my += (t.clientY - o[1]) * 2.2; lt[t.identifier] = [t.clientX, t.clientY]; } }, { passive: false });
+  const lend = e => { for (const t of e.changedTouches) delete lt[t.identifier]; };
+  look.addEventListener('touchend', lend); look.addEventListener('touchcancel', lend);
+  const tap = (id, fn, hold) => {
+    const el = $(id);
+    el.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); AU.init(); if (!GAME.running || MODAL.open) return; fn(true); }, { passive: false });
+    if (hold) { el.addEventListener('touchend', e => { e.preventDefault(); hold(); }); el.addEventListener('touchcancel', () => hold()); }
+  };
+  tap('tFire', () => { INP.fireHeld = true; fire(); }, () => { INP.fireHeld = false; });
+  tap('tAct', doInteract); tap('tCar', toggleVehicle); tap('tShout', shout); tap('tSiren', toggleSiren); tap('tRel', reload);
+  tap('tWeap', () => setWeapon(S.weapon === 0 ? 1 : 0)); tap('tRun', () => { INP.run = true; }, () => { INP.run = false; });
+  tap('tMap', toggleMap); tap('tMenu', openPause);
+}
+
+/* ---------- 第一人稱手與槍 ---------- */
+const VIEW = new THREE.Group(); camera.add(VIEW);
+const gunModel = new THREE.Group();
+{
+  const blk = pm(0x161616), skin = pm(0xe0b088), sleeve = pm(0x2a3d6a);
+  gunModel.add(bx(0.05, 0.07, 0.24, blk, 0, 0.02, -0.1)); gunModel.add(bx(0.045, 0.11, 0.06, blk, 0, -0.05, -0.0));
+  gunModel.add(bx(0.09, 0.09, 0.12, skin, 0, -0.06, 0.04)); gunModel.add(bx(0.11, 0.11, 0.3, sleeve, 0.02, -0.08, 0.24));
+}
+const taserModel = new THREE.Group();
+{
+  const y = pm(0xf2d21a), blk = pm(0x161616), skin = pm(0xe0b088), sleeve = pm(0x2a3d6a);
+  taserModel.add(bx(0.06, 0.08, 0.22, y, 0, 0.02, -0.09)); taserModel.add(bx(0.06, 0.06, 0.03, blk, 0, 0.02, -0.21)); taserModel.add(bx(0.045, 0.11, 0.06, blk, 0, -0.05, 0));
+  taserModel.add(bx(0.09, 0.09, 0.12, skin, 0, -0.06, 0.04)); taserModel.add(bx(0.11, 0.11, 0.3, sleeve, 0.02, -0.08, 0.24));
+}
+const flashMesh = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffd27a }));
+flashMesh.position.set(0, 0.03, -0.26); flashMesh.visible = false; gunModel.add(flashMesh);
+VIEW.add(gunModel, taserModel); VIEW.position.set(0.22, -0.2, -0.38); VIEW.visible = false; VIEW.scale.setScalar(0.75);
+let recoil = 0, fireCD = 0, reloadT = 0, shoutCD = 0;
+function setWeapon(w) { if (!S.onDuty) { radio('下班時間沒有配槍（槍枝已繳回械彈室）。', 'info'); return; } S.weapon = w; AU.click(); updateHUD(true); }
+
+/* ---------- 射擊判定 ---------- */
+function humanSpheres(h) {
+  const pose = h.pose; const y0 = h.y0 || 0;
+  if (pose === 'down' || pose === 'stun') return [];
+  if (pose === 'kneel' || pose === 'cuffed') return [[0.55, 0.3], [0.9, 0.28], [1.32, 0.19, 1]];
+  return [[0.5, 0.26], [0.95, 0.28], [1.3, 0.27], [1.75, 0.18, 1]].map(a => [a[0] + y0, a[1], a[2]]);
+}
+function raySphere(o, d, cx, cy, cz, r) {
+  const ox = o.x - cx, oy = o.y - cy, oz = o.z - cz; const b = ox * d.x + oy * d.y + oz * d.z; const c = ox * ox + oy * oy + oz * oz - r * r;
+  const disc = b * b - c; if (disc < 0) return -1; const t = -b - Math.sqrt(disc); return t > 0 ? t : -1;
+}
+function castShot(maxD) {
+  const o = camera.getWorldPosition(new THREE.Vector3()); const d = camera.getWorldDirection(new THREE.Vector3());
+  const spread = P.aim > 0.5 ? 0.004 : (P.moving ? 0.03 : 0.012);
+  d.x += rand(-spread, spread); d.y += rand(-spread, spread); d.z += rand(-spread, spread); d.normalize();
+  let best = { t: rayCols(o.x, o.y, o.z, d.x, d.y, d.z, maxD), h: null, head: false };
+  if (o.y + d.y * best.t < 0) best.t = Math.min(best.t, -o.y / d.y);
+  const test = (h) => {
+    if (Math.abs(h.x - o.x) > maxD || Math.abs(h.z - o.z) > maxD) return;
+    for (const s of humanSpheres(h)) { const t = raySphere(o, d, h.x, s[0], h.z, s[1]); if (t > 0 && t < best.t) best = { t, h, head: !!s[2] }; }
+  };
+  for (const h of MHUMANS) if (h.alive) test(h);
+  for (const pd of PEDS) if (pd.alive && pd.P.g.visible) test(Object.assign(pd, { pose: 'walk', y0: 0.18 }));
+  best.point = o.clone().addScaledVector(d, best.t); best.o = o; best.d = d;
+  return best;
+}
+const FX = [];
+function spawnFX(p, color, size, life) { const m = new THREE.Mesh(new THREE.SphereGeometry(size, 5, 4), new THREE.MeshBasicMaterial({ color, transparent: true })); m.position.copy(p); scene.add(m); FX.push({ m, life, max: life }); }
+function lineFX(a, b, color, life) { const g = new THREE.BufferGeometry().setFromPoints([a, b]); const m = new THREE.Line(g, new THREE.LineBasicMaterial({ color, transparent: true })); scene.add(m); FX.push({ m, life, max: life }); }
+function updateFX(dt) { for (let k = FX.length - 1; k >= 0; k--) { const f = FX[k]; f.life -= dt; f.m.material.opacity = Math.max(0, f.life / f.max); if (f.life <= 0) { scene.remove(f.m); f.m.geometry.dispose(); FX.splice(k, 1); } } }
+function fire() {
+  if (!GAME.running || MODAL.open) return;
+  if (!S.onDuty || P.mode !== 'foot') return;
+  if (fireCD > 0 || reloadT > 0) return;
+  if (S.weapon === 0) {
+    if (S.ammo <= 0) { AU.click(); radio('彈匣空了！按 R 換彈匣。', 'warn'); return; }
+    S.ammo--; fireCD = 0.24; recoil = 1; AU.shot(); flashMesh.visible = true; setTimeout(() => flashMesh.visible = false, 50);
+    const r = castShot(180);
+    scareNear(P.x, P.z, 70);
+    if (r.h) { spawnFX(r.point, 0xaa0000, 0.08, 0.4); $('cross').classList.add('hit'); setTimeout(() => $('cross').classList.remove('hit'), 150); }
+    else spawnFX(r.point, 0xbbbbbb, 0.07, 0.5);
+    MIS.onShot(r, 'gun');
+  } else {
+    if (S.taser <= 0) { AU.click(); radio('電擊槍彈匣用完了（下次上班補充）。', 'warn'); return; }
+    S.taser--; fireCD = 1.3; recoil = 0.5; AU.taser();
+    const r = castShot(9.5);
+    lineFX(r.o.clone().add(new THREE.Vector3(0, -0.15, 0)), r.point, 0xffff60, 0.6);
+    MIS.onShot(r, 'taser');
+  }
+  updateHUD(true);
+}
+function reload() {
+  if (!S.onDuty || S.weapon !== 0 || reloadT > 0) return;
+  if (S.ammo >= 15) return; if (S.reserve <= 0) { radio('沒有備用彈匣了。', 'warn'); return; }
+  reloadT = 1.4; AU.click();
+}
+function shout() {
+  if (shoutCD > 0 || !GAME.running) return; shoutCD = 2.2;
+  const lines = S.onDuty ? ['警察！不要動！', '警察！把武器放下！', '警察！雙手舉高！趴下！'] : ['我是警察！不要動！'];
+  const t = pick(lines); showBubble('📢 ' + t); speak(t);
+  MIS.onShout();
+}
+function toggleSiren() {
+  if (P.mode !== 'vehicle' || !P.veh.police) return;
+  P.veh.siren = !P.veh.siren; AU.click();
+  if (P.veh.siren && !S.onDuty) MIS.offDutyAbuse('下班時間開啟警車警笛');
+}
+
+/* ---------- 上下車 ---------- */
+function nearestPVeh(r) { let best = null, bd = r; for (const v of PVEHS) { const d = dist(v.x, v.z, P.x, P.z); if (d < bd) { bd = d; best = v; } } return best; }
+function toggleVehicle() {
+  if (!GAME.running || MODAL.open) return;
+  if (P.mode === 'vehicle') {
+    const v = P.veh; if (Math.abs(v.speed) > 4) { radio('車速太快，先停車再下車。', 'info'); return; }
+    v.speed = 0;
+    const sx = -Math.cos(v.yaw), sz = Math.sin(v.yaw); // 左側
+    const cand = [[v.x + sx * 2, v.z + sz * 2], [v.x - sx * 2, v.z - sz * 2], [v.x + Math.sin(v.yaw) * 3.2, v.z + Math.cos(v.yaw) * 3.2]];
+    let ok = cand[0]; for (const c of cand) { const p = { x: c[0], z: c[1] }; if (!collideCircle(p, 0.4)) { ok = c; break; } }
+    P.x = ok[0]; P.z = ok[1]; P.mode = 'foot'; P.yaw = v.yaw; P.veh = null; P.lookYaw = 0;
+    $('speedo').classList.add('hidden');
+    return;
+  }
+  const v = nearestPVeh(3.6);
+  if (!v) { const nv = TRAFFIC.find(t => dist(t.px, t.pz, P.x, P.z) < 3.5); if (nv) radio('這不是你的車喔！', 'info'); return; }
+  if (v.police && !S.onDuty) { radio('下班時間不能開警車，請騎自己的車。', 'info'); return; }
+  P.mode = 'vehicle'; P.veh = v; P.lookYaw = 0; P.pitch = -0.05;
+  $('speedo').classList.remove('hidden');
+}
+
+/* ---------- 每幀更新 ---------- */
+function updatePlayer(dt) {
+  const sens = IS_TOUCH ? 0.0032 : 0.0022;
+  const lookX = INP.mx * sens, lookY = INP.my * sens; INP.mx = INP.my = 0;
+  fireCD -= dt; shoutCD -= dt; P.hurtT += dt;
+  if (reloadT > 0) { reloadT -= dt; if (reloadT <= 0) { const need = 15 - S.ammo; const take = Math.min(need, S.reserve); S.ammo += take; S.reserve -= take; updateHUD(true); } }
+  recoil = Math.max(0, recoil - dt * 6);
+  const tired = S.energy < 15;
+  if (P.mode === 'foot') {
+    P.yaw -= lookX; P.pitch = clamp(P.pitch - lookY, -1.45, 1.45);
+    let fx = 0, fz = 0;
+    if (KEYS.KeyW || KEYS.ArrowUp) fz += 1; if (KEYS.KeyS || KEYS.ArrowDown) fz -= 1; if (KEYS.KeyA || KEYS.ArrowLeft) fx -= 1; if (KEYS.KeyD || KEYS.ArrowRight) fx += 1;
+    fx += INP.joyX; fz += INP.joyY;
+    const L = Math.hypot(fx, fz); if (L > 1) { fx /= L; fz /= L; }
+    P.run = (KEYS.ShiftLeft || KEYS.ShiftRight || INP.run || (IS_TOUCH && L > 0.95)) && !tired && S.energy > 3;
+    const sp = (P.run ? 6.8 : 3.8) * (tired ? 0.7 : 1) * (P.aim > 0.5 ? 0.6 : 1);
+    const sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
+    const mx = (-sy * fz + cy * fx) * sp * dt, mz = (-cy * fz - sy * fx) * sp * dt;
+    P.x += mx; P.z += mz; P.moving = L > 0.1;
+    const p = { x: P.x, z: P.z }; collideCircle(p, 0.35); P.x = p.x; P.z = p.z;
+    // 車輛（擋人＋撞人）
+    for (const v of TRAFFIC) {
+      if (v.state === 'gone' || Math.abs(v.px - P.x) > 6 || Math.abs(v.pz - P.z) > 6) continue;
+      const fxv = -Math.sin(v.yaw), fzv = -Math.cos(v.yaw); const n = v.kind === 'car' ? [1.3, -1.3] : [0];
+      for (const o of n) {
+        const cx = v.px + fxv * o, cz = v.pz + fzv * o, r = (v.kind === 'car' ? 1.0 : 0.55) + 0.35; const d = dist(P.x, P.z, cx, cz);
+        if (d < r) {
+          const k = (r - d) / (d || 1); P.x += (P.x - cx) * k; P.z += (P.z - cz) * k;
+          if (v.speed > 5 && P.hurtT > 1) { hurtPlayer(Math.round(v.speed * 1.6), v.px, v.pz); radio('你被車撞了！小心車輛。', 'warn'); }
+        }
+      }
+    }
+    for (const v of PVEHS) for (const c of v.circles()) { const d = dist(P.x, P.z, c[0], c[1]), r = c[2] + 0.35; if (d < r) { const k = (r - d) / (d || 1); P.x += (P.x - c[0]) * k; P.z += (P.z - c[1]) * k; } }
+    if (P.moving) P.bob += dt * (P.run ? 11 : 7.5);
+    const onWalk = !!blockAtXZ(P.x, P.z);
+    camera.position.set(P.x, (onWalk ? 0.18 : 0) + 1.62 + Math.sin(P.bob) * (P.moving ? 0.035 : 0), P.z);
+    camera.rotation.set(P.pitch + recoil * 0.04, P.yaw, 0);
+    // 瞄準
+    P.aim = lerp(P.aim, (INP.aim && S.onDuty) ? 1 : 0, Math.min(1, dt * 10));
+    camera.fov = 72 - P.aim * 24; camera.updateProjectionMatrix();
+    VIEW.visible = S.onDuty; gunModel.visible = S.weapon === 0; taserModel.visible = S.weapon === 1;
+    VIEW.position.set(0.22 - P.aim * 0.22, -0.2 + P.aim * 0.06 + (reloadT > 0 ? -0.15 : 0) + Math.sin(P.bob * 2) * 0.004, -0.38 + recoil * 0.05);
+    VIEW.rotation.x = recoil * 0.25 + (reloadT > 0 ? -0.6 : 0);
+  } else {
+    driveVehicle(dt, lookX, lookY);
+  }
+  // 體力
+  S.energy = clamp(S.energy - dt * GAME.tscale * (P.run ? 0.2 : 0.085), 0, 100);
+  if (P.hurtT > 6 && S.hp < 100) S.hp = Math.min(100, S.hp + dt * 2.5);
+  if (S.energy <= 0) collapse();
+  // 警示燈
+  for (const v of PVEHS) if (v.police) {
+    v.flash += dt;
+    const on = v.siren; const ph = Math.floor(v.flash * 6) % 2;
+    v.parts.red.emissiveIntensity = on && ph ? 2 : 0; v.parts.blue.emissiveIntensity = on && !ph ? 2 : 0;
+  }
+  AU.update(P.veh && P.veh.siren, P.veh ? P.veh.speed : 0, P.mode === 'vehicle');
+}
+function driveVehicle(dt, lookX, lookY) {
+  const v = P.veh, sp = v.spec, car = sp.kind === 'car';
+  let thr = 0, st = 0;
+  if (KEYS.KeyW || KEYS.ArrowUp) thr += 1; if (KEYS.KeyS || KEYS.ArrowDown) thr -= 1; if (KEYS.KeyA || KEYS.ArrowLeft) st += 1; if (KEYS.KeyD || KEYS.ArrowRight) st -= 1;
+  thr += INP.joyY; st -= INP.joyX; thr = clamp(thr, -1, 1); st = clamp(st, -1, 1);
+  const hand = KEYS.Space || INP.run;
+  if (thr > 0.05) { if (v.speed < -0.5) v.speed += 14 * thr * dt; else v.speed += sp.acc * thr * (1 - v.speed / sp.max) * dt * 1.4; }
+  else if (thr < -0.05) { if (v.speed > 0.5) v.speed += 16 * thr * dt; else v.speed = Math.max(-9, v.speed + sp.acc * 0.6 * thr * dt); }
+  else { const drag = (1.2 + 0.012 * v.speed * v.speed) * dt; v.speed = Math.abs(v.speed) < drag ? 0 : v.speed - Math.sign(v.speed) * drag; }
+  if (hand) v.speed *= Math.max(0, 1 - 2.5 * dt);
+  v.steer += (st - v.steer) * Math.min(1, dt * (car ? 5 : 7));
+  const sAbs = Math.abs(v.speed);
+  const rate = (car ? 1.35 : 1.9) * clamp(sAbs / 7, 0, 1) * (1 - 0.55 * clamp(sAbs / sp.max, 0, 1)) * (hand ? 1.6 : 1);
+  v.yaw += v.steer * rate * Math.sign(v.speed) * dt;
+  const fx = -Math.sin(v.yaw), fz = -Math.cos(v.yaw);
+  v.x += fx * v.speed * dt; v.z += fz * v.speed * dt;
+  // 撞建築
+  let cx = 0, cz = 0, hit = false;
+  for (const c of v.circles()) { const p = { x: c[0], z: c[1] }; if (collideCircle(p, c[2], 0.5)) { hit = true; cx += p.x - c[0]; cz += p.z - c[1]; } }
+  if (hit) { v.x += cx; v.z += cz; if (sAbs > 6) { AU.bump(); if (sAbs > 16) hurtPlayer(Math.round(sAbs * 0.6)); } v.speed *= sAbs > 6 ? -0.25 : 0.5; }
+  // 撞車流
+  for (const n of TRAFFIC) {
+    if (n.state === 'gone' || Math.abs(n.px - v.x) > 8 || Math.abs(n.pz - v.z) > 8) continue;
+    const nfx = -Math.sin(n.yaw), nfz = -Math.cos(n.yaw); const nc = n.kind === 'car' ? [[1.3, 1.0], [-1.3, 1.0]] : [[0, 0.55]];
+    for (const c of v.circles()) for (const q of nc) {
+      const qx = n.px + nfx * q[0], qz = n.pz + nfz * q[0]; const d = dist(c[0], c[1], qx, qz), r = c[2] + q[1];
+      if (d < r) {
+        const k = (r - d) / (d || 1); v.x += (c[0] - qx) * k; v.z += (c[1] - qz) * k;
+        if (Math.abs(v.speed) > 3) { AU.bump(); MIS.onRam(n, Math.abs(v.speed)); if (n.state === 'drive') { n.speed = 0; n.stuck = 0; } }
+        v.speed *= 0.55;
+      }
+    }
+  }
+  // 撞行人
+  for (const pd of PEDS) {
+    if (!pd.alive || Math.abs(pd.x - v.x) > 4 || Math.abs(pd.z - v.z) > 4) continue;
+    for (const c of v.circles()) if (dist(c[0], c[1], pd.x, pd.z) < c[2] + 0.4) {
+      if (sAbs > 3.5) { pd.knock(25); AU.bump(); MIS.civHitByCar(); v.speed *= 0.6; }
+      else { pd.scare(v.x, v.z); }
+    }
+  }
+  for (const o of PVEHS) if (o !== v) for (const c of v.circles()) for (const q of o.circles()) { const d = dist(c[0], c[1], q[0], q[1]), r = c[2] + q[2]; if (d < r) { const k = (r - d) / (d || 1); v.x += (c[0] - q[0]) * k; v.z += (c[1] - q[1]) * k; v.speed *= 0.5; } }
+  v.sync();
+  // 鏡頭
+  P.lookYaw = clamp(P.lookYaw - lookX, -2.2, 2.2); P.pitch = clamp(P.pitch - lookY, -0.8, 0.6);
+  if (Math.abs(lookX) < 1e-4) { P.lookT += dt; if (P.lookT > 1.5) P.lookYaw *= Math.max(0, 1 - dt * 2.5); } else P.lookT = 0;
+  const seat = v.parts.seat, eyeY = v.parts.eyeY;
+  const sx = seat.x, sz = seat.z; const cyw = Math.cos(v.yaw), syw = Math.sin(v.yaw);
+  camera.position.set(v.x + sx * cyw + sz * syw, eyeY, v.z - sx * syw + sz * cyw);
+  camera.rotation.set(P.pitch, v.yaw + P.lookYaw, 0);
+  if (camera.fov !== 72) { camera.fov = 72; camera.updateProjectionMatrix(); }
+  if (v.parts.wheel) v.parts.wheel.rotation.z = v.steer * (car ? 1.6 : 0.5);
+  VIEW.visible = false;
+  P.x = v.x; P.z = v.z; P.yaw = v.yaw + P.lookYaw; P.moving = sAbs > 0.5;
+  $('speedo').innerHTML = Math.round(sAbs * 3.6) + '<small>km/h' + (v.police ? (v.siren ? ' · 🚨警笛開' : ' · H 警笛') : '') + '</small>';
+}
+function hurtPlayer(dmg, fx, fz) {
+  if (!GAME.running) return;
+  S.hp -= dmg; P.hurtT = 0; const el = $('dmg'); el.style.opacity = 1; setTimeout(() => el.style.opacity = 0, 250);
+  if (S.hp <= 0) { S.hp = 0; playerDown(); }
+}
+
+/* ================= 勤務、任務、考績 ================= */
+/* ---------- 考績與獎懲 ---------- */
+const PEN_INFO = { rep: { n: '申誡', pts: 10 }, dem: { n: '記過', pts: 30 }, major: { n: '記大過', pts: 80 } };
+function addLog(t) { S.log.unshift('第' + S.day + '天 ' + fmtTime(S.time) + '　' + t); S.log = S.log.slice(0, 40); }
+function award(points, money, reason, level) {
+  S.merit += points; S.money += money;
+  let title = '考績 +' + points;
+  if (level === 'com') { S.award.com++; title = '🎖 嘉獎一次'; } else if (level === 'mer') { S.award.mer++; title = '🏅 記功一次'; }
+  toast('good', title + (money ? '　獎金 ' + fmtMoney(money) : ''), reason); AU.good();
+  addLog('👍 ' + reason + '（考績 +' + points + (money ? '，獎金 ' + money : '') + '）');
+  checkRank(); updateHUD(true);
+}
+function punish(level, reason) {
+  const info = PEN_INFO[level]; S.pen[level]++; S.merit = Math.max(0, S.merit - info.pts);
+  toast('bad', '⚠️ ' + info.n + '一次', reason); AU.bad(); radio('督察組：' + reason + '，' + info.n + '一次。', 'warn');
+  addLog('👎 ' + info.n + '：' + reason);
+  // 三次申誡 = 一次記過，三次記過 = 一次記大過
+  if (S.pen.rep >= 3) { S.pen.rep -= 3; S.pen.dem++; radio('累積三次申誡，折算為記過一次。', 'warn'); }
+  if (S.pen.dem >= 3) { S.pen.dem -= 3; S.pen.major++; radio('累積三次記過，折算為記大過一次。', 'warn'); }
+  if (S.pen.major >= 3) setTimeout(dismissed, 1500);
+  updateHUD(true);
+}
+function checkRank() {
+  while (S.rank < RANKS.length - 1 && S.merit >= RANKS[S.rank + 1].need) {
+    S.rank++; setTimeout(() => { toast('rank', '🎉 升官了！' + RANKS[S.rank].name, '日薪調整為 ' + fmtMoney(RANKS[S.rank].pay)); AU.good(); }, 2600);
+    addLog('⭐ 升任 ' + RANKS[S.rank].name);
+  }
+}
+function dismissed() {
+  MODAL.show(`<h2>🚫 免職處分</h2><p>累積三支大過，依規定予以免職。</p><p>你可以重新報考警察，從警員重新開始（存款和買的車會保留）。</p>`,
+    [['重新報考警察', 'g', () => { S.rank = 0; S.merit = 0; S.pen = { rep: 0, dem: 0, major: 0 }; S.award = { com: 0, mer: 0 }; if (S.onDuty) offDutyNow(); MODAL.close(); addLog('重新報考警察'); updateHUD(true); }]]);
+}
+
+/* ---------- 地圖標記 ---------- */
+const MARK = new THREE.Group();
+{
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 70, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0xffd84a, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide }));
+  beam.position.y = 35; MARK.add(beam);
+  const arr = new THREE.Mesh(new THREE.ConeGeometry(0.8, 1.6, 8), new THREE.MeshBasicMaterial({ color: 0xffd84a })); arr.rotation.x = Math.PI; arr.position.y = 4; MARK.add(arr); MARK.userData.arr = arr;
+  MARK.visible = false; scene.add(MARK);
+}
+
+/* ---------- 任務系統 ---------- */
+const MIS = {
+  cur: null, timer: 10, warnedT: 0, abuseDay: 0, shotT: -99, redScan: 0,
+  start(m) {
+    this.cur = m; m.t = 0; radio('📻 ' + m.radio, 'radio'); AU.radio();
+    if (m.speak) speak(m.speak);
+  },
+  end(ok, msg) {
+    const m = this.cur; if (!m) return;
+    if (m.cleanup) m.cleanup();
+    this.cur = null; this.timer = S.time >= 17 * 60 ? rand(40, 70) : rand(18, 40);
+    PURSUIT.stop(); MARK.visible = false;
+    if (msg) radio(msg, ok ? 'info' : 'warn');
+    updateMissionUI();
+  },
+  cancel() { if (!this.cur) return; S.merit = Math.max(0, S.merit - 5); addLog('取消勤務：' + this.cur.title + '（考績 -5）'); this.end(false, '勤務指揮中心：收到，' + this.cur.title + ' 改派其他同仁。（考績 -5）'); },
+  update(dt) {
+    if (this.cur) {
+      const m = this.cur; m.t += dt; m.update && m.update(dt);
+      const tg = this.cur && this.cur.target && this.cur.target();
+      if (tg) { MARK.visible = true; MARK.position.set(tg.x, 0, tg.z); MARK.userData.arr.position.y = 4 + Math.sin(performance.now() / 300) * 0.5; const d = dist(P.x, P.z, tg.x, tg.z); MARK.scale.setScalar(d < 25 ? 0.5 : 1); }
+      else MARK.visible = false;
+    } else if (S.onDuty) {
+      this.timer -= dt;
+      if (this.timer <= 0) newCall();
+      // 目擊闖紅燈
+      this.redScan -= dt;
+      if (this.redScan <= 0) {
+        this.redScan = 0.5;
+        for (const v of TRAFFIC) {
+          if (!v.runRed || v.state !== 'drive' || v.flag) continue;
+          const g = v.seg, sStop = g.L - (g.crossW / 2 + 5);
+          if (lightState(g.ax) === 'R' && v.s > sStop && v.s < sStop + 6 && dist(v.x, v.z, P.x, P.z) < 70) { misTraffic(v, '闖紅燈', true); break; }
+        }
+      }
+    }
+    PURSUIT.update(dt);
+    updateMissionUI();
+  },
+  interacts() { return this.cur && this.cur.interacts ? this.cur.interacts() : []; },
+  onShot(r, type) {
+    const h = r.h;
+    if (this.cur && this.cur.onShot && this.cur.onShot(r, type)) return;
+    if (h) {
+      if (h.kind === 'ped' || h.role === 'civ' || h.role === 'clerk' || h.role === 'driver') {
+        if (type === 'gun') { if (h.kind === 'ped') h.knock(40); else { h.alive = false; h.pose = 'down'; h.state = 'down'; } punish('major', '開槍誤擊無辜民眾'); }
+        else { if (h.kind === 'ped') h.knock(8); else { h.state = 'stun'; h.pose = 'stun'; h.timer = 6; } punish('dem', '對無辜民眾使用電擊槍'); }
+        return;
+      }
+    }
+    if (type === 'gun' && (!this.cur || this.cur.type !== 'robbery') && performance.now() - this.shotT > 30000) { this.shotT = performance.now(); punish('dem', '沒有危害情況下開槍（違反警械使用規定）'); }
+  },
+  onShout() { if (this.cur && this.cur.onShout) this.cur.onShout(); },
+  onRam(n, sp) { if (PURSUIT.car === n) PURSUIT.prog += 0.1 + sp / 120; },
+  civHitByCar() { punish('dem', '駕車撞傷路人'); if (!S.onDuty) { S.money -= 8000; radio('賠償對方醫藥費 $8,000。', 'warn'); } },
+  offDutyAbuse(reason) { if (this.abuseDay === S.day) return; this.abuseDay = S.day; punish('dem', reason); },
+};
+function updateMissionUI() {
+  const el = $('mission'); const m = MIS.cur;
+  if (!m) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  const tg = m.target && m.target(); const d = tg ? Math.round(dist(P.x, P.z, tg.x, tg.z)) : null;
+  el.innerHTML = `<b>${m.icon || '📻'} ${m.title}</b><div class="obj">${m.obj ? m.obj() : ''}</div>${d != null ? `<div class="dist">📍 ${d} 公尺</div>` : ''}`;
+}
+function newCall() {
+  const r = Math.random(); const hour = S.time / 60;
+  const bankOpen = hour >= 9 && hour < 15.5;
+  if (S.stats.days === 0 && !S._firstCall) { S._firstCall = true; misPatrol(); return; }
+  if (r < 0.36) misTraffic(null, Math.random() < 0.6 ? '超速' : '闖紅燈');
+  else if (r < 0.58) misRobbery(bankOpen && Math.random() < 0.35 ? 'bank' : 'store');
+  else if (r < 0.82) misPatrol();
+  else misCheckpoint();
+}
+
+/* ---------- 追車 ---------- */
+const PURSUIT = {
+  car: null, prog: 0, lost: 0, onCaught: null, onLost: null,
+  start(car, onCaught, onLost) { this.car = car; this.prog = 0; this.lost = 0; this.onCaught = onCaught; this.onLost = onLost; car.state = 'flee'; car.ghost = 999; $('pursuit').classList.remove('hidden'); radio('🚨 嫌犯加速逃逸！開警笛追上去，靠近或撞擊車輛把它逼停！', 'warn'); },
+  stop() { this.car = null; $('pursuit').classList.add('hidden'); },
+  update(dt) {
+    const c = this.car; if (!c) return;
+    const d = dist(P.x, P.z, c.px, c.pz);
+    const close = P.mode === 'vehicle' && P.veh.police && P.veh.siren && d < 12;
+    if (close) this.prog += dt * 0.2; else if (d > 30) this.prog = Math.max(0, this.prog - dt * 0.05);
+    if (d > 280) { this.lost += dt; } else this.lost = Math.max(0, this.lost - dt);
+    $('pursuitBar').style.width = Math.min(100, this.prog * 100) + '%';
+    $('pursuitTxt').textContent = (d > 280 ? '⚠️ 快跟丟了！' : P.veh && P.veh.siren ? '逼停嫌犯車輛' : '開警笛（H）逼停嫌犯') + '　' + Math.round(d) + 'm';
+    if (this.prog >= 1) { c.state = 'stopped'; c.speed = 0; c.ghost = 0; const cb = this.onCaught; this.stop(); cb && cb(c); }
+    else if (this.lost > 16) { const cb = this.onLost; this.stop(); cb && cb(c); }
+  }
+};
+
+/* ---------- 駕駛資料 ---------- */
+function genDriver(ctx, car) {
+  const r1 = Math.random();
+  return {
+    name: randName(), id: randID(), age: randi(19, 72), plate: car.plate,
+    lic: r1 < 0.06 ? 'none' : r1 < 0.11 ? 'expired' : 'ok',
+    alc: Math.random() < (ctx === 'check' ? 0.3 : 0.12) ? Math.round(rand(0.1, 0.75) * 100) / 100 : 0,
+    wanted: Math.random() < 0.07, stolen: Math.random() < 0.04,
+  };
+}
+const LAW = {
+  超速: '依道路交通管理處罰條例第 40 條舉發超速',
+  闖紅燈: '依道路交通管理處罰條例第 53 條舉發闖紅燈',
+  無照: '依道路交通管理處罰條例第 21 條舉發駕照無效（無照或過期）駕駛',
+  酒駕: '依道路交通管理處罰條例第 35 條舉發酒後駕車（呼氣酒精濃度達 0.15 mg/L）',
+  拒檢: '依道路交通管理處罰條例第 60 條舉發拒絕停車受檢',
+  公危: '呼氣酒精濃度達 0.25 mg/L 以上，涉犯刑法第 185 條之 3 公共危險罪，以現行犯逮捕',
+};
+
+/* ---------- 盤查對話 ---------- */
+function stopDialog(ctx, car, drv, reason, fled, done) {
+  const st = { lic: false, query: false, alc: false, querying: false, tick: { orig: false, nolic: false, dui: false, flee: false }, arrest: false };
+  const render = () => {
+    const smell = drv.alc >= 0.1;
+    let h = `<h2>🚔 ${ctx === 'check' ? '酒測臨檢' : '交通攔查'}</h2>
+    <table><tr><td>車號</td><td><b>${car.plate}</b>（${COLOR_NAMES[car.color] || ''}${car.model}）</td></tr>
+    <tr><td>攔查原因</td><td>${reason}${fled ? '・<span class="res-bad">拒絕停車、加速逃逸</span>' : ''}</td></tr>
+    <tr><td>駕駛狀況</td><td>${smell ? '😵 講話時<b class="res-bad">有明顯酒味</b>、眼睛泛紅' : drv.wanted || car.stolen ? '😰 神色緊張、一直看旁邊' : '🙂 態度配合'}</td></tr></table>`;
+    h += `<h3>① 查證</h3>`;
+    h += st.lic ? `<p>🪪 駕照：${drv.name}（${drv.age} 歲）${drv.id}　—　${drv.lic === 'ok' ? '<span class="res-good">駕照有效</span>' : drv.lic === 'expired' ? '<span class="res-bad">駕照已過期</span>' : '<span class="res-bad">拿不出駕照（查無駕照資料）</span>'}</p>` : '';
+    h += st.query ? `<p>📡 車籍與通緝查詢：${drv.stolen ? '<span class="res-bad">⚠️ 這輛車是失竊車輛！</span>' : '車籍正常'}　·　${drv.wanted ? '<span class="res-bad">⚠️ 駕駛是通緝犯！</span>' : '駕駛無通緝'}</p>` : st.querying ? '<p>📡 無線電查詢中…</p>' : '';
+    h += st.alc ? `<p>🌬 酒測值：<b class="${drv.alc >= 0.15 ? 'res-bad' : 'res-good'}">${drv.alc.toFixed(2)} mg/L</b>（${drv.alc >= 0.25 ? '達公共危險罪標準 0.25' : drv.alc >= 0.15 ? '超過 0.15 違規標準' : '未超標'}）</p>` : '';
+    h += `<div class="btns">
+      <button class="btn" data-a="lic" ${st.lic ? 'disabled' : ''}>🪪 請出示駕照、行照</button>
+      <button class="btn" data-a="query" ${st.query || st.querying ? 'disabled' : ''}>📡 無線電查車籍與通緝</button>
+      <button class="btn" data-a="alc" ${st.alc ? 'disabled' : ''}>🌬 酒精檢測</button></div>`;
+    h += `<h3>② 處理</h3>`;
+    const ck = (k, label) => `<label class="chk"><input type="checkbox" data-t="${k}" ${st.tick[k] ? 'checked' : ''}> ${label}</label>`;
+    if (reason !== '路檢') h += ck('orig', '📝 開罰單：' + reason);
+    if (fled) h += ck('flee', '📝 開罰單：拒絕停車受檢');
+    if (st.lic) h += ck('nolic', '📝 開罰單：無照／駕照過期駕駛');
+    if (st.alc) h += ck('dui', '📝 開罰單：酒後駕車');
+    h += `<label class="chk"><input type="checkbox" data-t="arrest" ${st.arrest ? 'checked' : ''}> 🔗 當場逮捕（通緝犯／失竊車／公共危險）</label>`;
+    h += `<div class="btns"><button class="btn g" data-a="done">✅ 完成處理</button></div>`;
+    $('mbox').innerHTML = h;
+    $('mbox').querySelectorAll('[data-a]').forEach(b => b.onclick = () => act(b.dataset.a));
+    $('mbox').querySelectorAll('[data-t]').forEach(c => c.onchange = () => { if (c.dataset.t === 'arrest') st.arrest = c.checked; else st.tick[c.dataset.t] = c.checked; });
+  };
+  const act = a => {
+    AU.click();
+    if (a === 'lic') st.lic = true;
+    if (a === 'alc') st.alc = true;
+    if (a === 'query') { st.querying = true; AU.radio(); setTimeout(() => { st.querying = false; st.query = true; if (MODAL.open) render(); }, 1300); }
+    if (a === 'done') { finish(); return; }
+    render();
+  };
+  const finish = () => {
+    const res = []; let pts = 6, money = 800, bad = null; const add = (ok, t) => res.push(`<li class="${ok ? 'res-good' : 'res-bad'}">${ok ? '✔' : '✘'} ${t}</li>`);
+    const needArrest = drv.wanted || drv.stolen || drv.alc >= 0.25, needDui = drv.alc >= 0.15, needLic = drv.lic !== 'ok';
+    if (reason !== '路檢') { if (st.tick.orig) { add(true, LAW[reason]); pts += 5; S.stats.tickets++; } else add(false, '漏開：' + reason + '（駕駛確實違規）'); }
+    if (fled) { if (st.tick.flee) { add(true, LAW.拒檢); pts += 5; } else add(false, '漏開：拒絕停車受檢'); }
+    if (needLic) { if (st.tick.nolic) { add(true, LAW.無照); pts += 6; S.stats.tickets++; } else { add(false, st.lic ? '駕照有問題卻沒有舉發' : '沒有檢查駕照，漏掉無照駕駛'); pts -= 4; } }
+    else if (st.tick.nolic) { add(false, '駕照明明有效卻開無照罰單'); bad = bad || ['rep', '違法開立罰單']; }
+    if (needDui) { if (st.tick.dui) { add(true, LAW.酒駕); pts += 8; S.stats.tickets++; } else { add(false, st.alc ? '酒測超標卻沒有舉發' : '駕駛有酒味卻沒有酒測，漏掉酒駕'); pts -= 8; if (!st.alc) bad = bad || ['rep', '未依規定對酒駕嫌疑人實施酒測']; } }
+    else if (st.tick.dui) { add(false, '酒測未超標卻開酒駕罰單'); bad = bad || ['rep', '違法開立罰單']; }
+    if (needArrest) {
+      const why = [drv.wanted ? '通緝犯' : '', drv.stolen ? '失竊車' : '', drv.alc >= 0.25 ? '公共危險（酒駕）' : ''].filter(Boolean).join('、');
+      if (st.arrest) { add(true, '逮捕到案：' + why + (drv.alc >= 0.25 ? '。' + LAW.公危 : '')); pts += 20; money += 3000; S.stats.arrests++; }
+      else { add(false, '放走了應該逮捕的人（' + why + '）' + (st.query || drv.alc >= 0.25 ? '' : '：沒有無線電查詢')); bad = ['dem', '盤查疏失，放走' + why]; pts = 0; }
+    } else if (st.arrest) { add(false, '沒有法律依據卻逮捕民眾'); bad = ['dem', '違法逮捕民眾']; pts = 0; }
+    if (!needArrest && !needDui && !needLic && reason === '路檢' && !st.arrest) add(true, '駕駛沒有問題，致謝後放行');
+    MODAL.show(`<h2>📋 處理結果</h2><ul style="padding-left:18px">${res.join('')}</ul>`, [['確定', 'g', () => { MODAL.close(); if (bad) punish(bad[0], bad[1]); else award(Math.max(2, pts), money, (ctx === 'check' ? '酒測臨檢' : '交通攔查') + '處理完成', pts >= 25 ? 'com' : null); done(st.arrest); }]]);
+  };
+  MODAL.custom(render);
+}
+
+/* ---------- 任務：交通違規攔查 ---------- */
+function misTraffic(car, reason, witnessed) {
+  if (!car) {
+    const c = TRAFFIC.filter(v => v.state === 'drive' && !v.flag && v.kind === 'car' && (d => d > 70 && d < 230)(dist(v.x, v.z, P.x, P.z)));
+    if (!c.length) { MIS.timer = 5; return; } car = pick(c);
+  }
+  car.flag = true; if (reason === '超速') car.maxSp = 20;
+  const drv = genDriver('stop', car); car.stolen = drv.stolen;
+  const road = roadNameAt(car.x, car.z);
+  let st = 'find', hintT = 0, driverH = null, fled = false;
+  const finishCar = (arrested) => {
+    if (driverH) { removeHuman(driverH); driverH = null; }
+    if (arrested) { car.state = 'gone'; car.mesh.visible = false; setTimeout(() => { car.flag = false; const r = randomSegNear(P.x, P.z, 100, 190) || [5, 5, 6, 5, 20]; car.place(...r); }, 4000); }
+    else { car.state = 'drive'; car.offT = car.kind === 'car' ? car.seg.w * 0.25 : car.seg.w / 2 - 1.3; car.maxSp = rand(10, 14); car.flag = false; car.ghost = 1; }
+    MIS.end(true);
+  };
+  const m = {
+    type: 'traffic', icon: '🚗', title: '交通違規攔查',
+    radio: witnessed ? `你目擊 ${COLOR_NAMES[car.color] || ''}${car.model} ${car.plate} 闖紅燈！開警笛（H）示意靠邊停車。` : `勤務指揮中心呼叫：${road}有一輛${COLOR_NAMES[car.color] || ''}${car.model}，車號 ${car.plate}，${reason}，請前往攔查。`,
+    target: () => st === 'stopped' ? driverSpot() : { x: car.px, z: car.pz },
+    obj: () => ({ find: `找到${COLOR_NAMES[car.color] || ''}${car.model}（${car.plate}），坐警車開警笛跟在後面`, pulling: '駕駛正在靠邊停車…', stopped: '下車，走到駕駛座車窗旁按 E 盤查', pursuit: '追捕逃逸車輛！' }[st]),
+    update(dt) {
+      const d = dist(P.x, P.z, car.px, car.pz);
+      if (st === 'find') {
+        if (P.mode === 'vehicle' && P.veh.police && P.veh.siren && d < 35) {
+          const fleeP = drv.wanted || drv.stolen ? 0.5 : 0.1;
+          if (Math.random() < fleeP) { st = 'pursuit'; fled = true; PURSUIT.start(car, () => { st = 'stopped'; spawnDriverOut(true); radio('嫌犯車輛已被逼停！下車控制駕駛。', 'info'); }, () => { car.flag = false; car.state = 'drive'; MIS.end(false, '勤務指揮中心：目標車輛跟丟了，已通報監視器追查。'); }); }
+          else { st = 'pulling'; car.state = 'pull'; radio('駕駛看到警示燈，靠邊停車中。', 'info'); }
+        } else if (d < 40) { hintT += dt; if (hintT > 6 && P.mode === 'vehicle' && P.veh.police && !P.veh.siren) { radio('提示：按 H（手機按 🚨）開警笛示意駕駛停車。', 'info'); hintT = -20; } }
+        if (d > 340 || m.t > 240) { car.flag = false; car.maxSp = 12; MIS.end(false, '勤務指揮中心：目標已離開轄區，取消攔查。'); }
+      } else if (st === 'pulling') { if (car.state === 'stopped') { st = 'stopped'; radio('車輛已靠邊。下車走到駕駛座車窗旁盤查（E）。', 'info'); } }
+    },
+    interacts() {
+      if (st !== 'stopped' || P.mode !== 'foot') return [];
+      const sp = driverSpot();
+      return [{ x: sp.x, z: sp.z, r: 2.4, label: '盤查駕駛', act: () => stopDialog('stop', car, drv, reason, fled, finishCar) }];
+    },
+    cleanup() { if (driverH) { removeHuman(driverH); driverH = null; } if (car.state !== 'gone' && car.flag) { car.flag = false; car.state = 'drive'; } },
+  };
+  const driverSpot = () => { if (driverH) return { x: driverH.x, z: driverH.z }; const lx = -Math.cos(car.yaw), lz = Math.sin(car.yaw); return { x: car.px + lx * 1.5, z: car.pz + lz * 1.5 }; };
+  const spawnDriverOut = () => { const lx = -Math.cos(car.yaw), lz = Math.sin(car.yaw); driverH = spawnHuman({ data: { role: 'driver' } }, car.px + lx * 1.6, car.pz + lz * 1.6, car.yaw + Math.PI); driverH.pose = 'hands'; driverH.state = 'hands'; if (car.parts.driver) car.parts.driver.g.visible = false; };
+  MIS.start(m);
+}
+
+/* ---------- 任務：搶案 ---------- */
+function misRobbery(kind) {
+  const site = kind === 'bank' ? SITES.bank : pick(SITES.stores);
+  const nR = kind === 'bank' ? randi(2, 3) : randi(1, 2);
+  const robbers = []; const civs = [];
+  const D = DIFF[S.diff];
+  const spots = kind === 'bank'
+    ? [[site.cx - 4, site.z1 - 3], [site.cx + 3, site.z0 + 6.5], [site.cx - 6, site.z0 + 7], [site.cx + 6, site.z1 - 2.5]]
+    : [[site.cx - 2, site.z1 - 2], [site.counter.x - 0.8, site.counter.z + 0.4], [site.x0 + 8.8, site.z0 + 3.4]];
+  for (let k = 0; k < nR; k++) {
+    const [x, z] = spots[k % spots.length];
+    const h = spawnHuman({ robber: true, shirt: pick([0x222222, 0x3a3a44, 0x2a3a2a]), pants: 0x1a1a1a, data: { role: 'robber' } }, x, z, 0);
+    h.P.gun.visible = true; h.state = 'hold'; h.pose = 'aim'; h.shootT = rand(1, 2); h.moveT = 0; h.tx = x; h.tz = z; h.rolled = false; h.threat = false; h.shouts = 0;
+    robbers.push(h);
+  }
+  const clerk = spawnHuman({ shirt: 0xffffff, apron: kind === 'bank' ? 0x0b2a5a : 0x127a3a, data: { role: 'clerk' } }, site.clerk.x, site.clerk.z, 0); clerk.pose = 'hands'; civs.push(clerk);
+  if (site.clerk2) { const c2 = spawnHuman({ shirt: 0xffffff, apron: 0x0b2a5a, data: { role: 'clerk' } }, site.clerk2.x, site.clerk2.z, 0); c2.pose = 'hands'; civs.push(c2); }
+  // 逃逸車
+  let getaway = null, gaState = 'none', gaRobber = null;
+  if (Math.random() < 0.38) {
+    getaway = new NPCVeh('car'); getaway.color = 0x111111;
+    const j = site.bj + 1, i = site.bi; const s = XR[i + 1] - site.curb.x;
+    getaway.place(i + 1, j, i, j, s); getaway.off = getaway.offT = hW(j) / 2 - 1.8; getaway.calcPos(); getaway.mesh.position.set(getaway.x, 0, getaway.z);
+    getaway.state = 'parked'; getaway.flag = true; TRAFFIC.push(getaway); gaState = 'parked';
+  }
+  let st = 'go', arrived = false, warned = false, earlyShotPun = false, deadCount = 0;
+  const all = () => robbers.concat(gaRobber ? [gaRobber] : []);
+  const m = {
+    type: 'robbery', icon: '🔫', title: (kind === 'bank' ? '銀行' : '超商') + '持槍搶案',
+    radio: `緊急！${site.name}（${site.road}）發生持槍搶案，嫌犯 ${nR} 名${getaway ? '，門口可能有接應車輛' : ''}，請立即前往！注意安全，到場先喊話（Q）。`,
+    speak: '緊急，持槍搶案，請立即前往',
+    target: () => st === 'go' ? site.door : (gaState === 'flee' ? { x: getaway.px, z: getaway.pz } : null),
+    obj: () => {
+      if (st === 'go') return `前往 ${site.name}`;
+      const left = all().filter(h => h.state !== 'cuffed' && h.state !== 'down').length;
+      return `制伏搶匪：剩下 ${left} 名${gaState === 'flee' ? '・追捕逃逸車輛' : ''}<br><small>先喊話（Q）要求投降，投降的走過去按 E 上手銬</small>`;
+    },
+    update(dt) {
+      const dDoor = dist(P.x, P.z, site.door.x, site.door.z);
+      if (st === 'go' && dDoor < 55) { st = 'scene'; radio('到達現場。保持距離，找掩護，先喊話要求嫌犯放下武器。', 'info'); scareNear(site.door.x, site.door.z, 50); }
+      if (getaway && gaState === 'parked' && dDoor < 40) {
+        gaState = 'flee'; PURSUIT.start(getaway, (c) => {
+          gaState = 'caught'; const lx = -Math.cos(c.yaw), lz = Math.sin(c.yaw);
+          gaRobber = spawnHuman({ robber: true, shirt: 0x222222, pants: 0x111111, data: { role: 'robber' } }, c.px + lx * 1.7, c.pz + lz * 1.7, c.yaw + Math.PI);
+          gaRobber.P.gun.visible = true; gaRobber.shootT = 1.5; gaRobber.moveT = 0; gaRobber.tx = gaRobber.x; gaRobber.tz = gaRobber.z; gaRobber.shouts = 0; gaRobber.open = true;
+          if (c.parts.driver) c.parts.driver.g.visible = false;
+          if (Math.random() < 0.65) { gaRobber.state = 'surrender'; gaRobber.pose = 'kneel'; gaRobber.P.gun.visible = false; radio('接應的嫌犯下車投降！過去上手銬（E）。', 'info'); }
+          else { gaRobber.state = 'fight'; gaRobber.pose = 'aim'; gaRobber.threat = true; radio('接應嫌犯持槍下車！小心！', 'warn'); }
+        }, () => { gaState = 'lost'; radio('接應車輛跟丟了，已通報攔截。', 'warn'); });
+      }
+      for (const h of all()) robberAI(h, dt, site, D);
+      for (const c of civs) posePerson(c.P, c.pose, dt);
+      // 完成判定
+      const done = all().every(h => h.state === 'cuffed' || h.state === 'down') && (gaState === 'none' || gaState === 'caught' && gaRobber && (gaRobber.state === 'cuffed' || gaRobber.state === 'down') || gaState === 'lost');
+      if (done && st !== 'go' && st !== 'done') {
+        st = 'done';
+        const cuffed = all().filter(h => h.state === 'cuffed').length, dead = all().filter(h => h.state === 'down').length;
+        const civOK = civs.every(c => c.alive);
+        let pts = 15 + cuffed * 22 + dead * 8 + (civOK ? 15 : 0), money = 2500 + cuffed * 2500 + dead * 800;
+        if (gaState === 'lost') pts -= 15;
+        S.stats.robbery++; S.stats.arrests += cuffed;
+        const lines = `逮捕 ${cuffed} 名${dead ? '、擊傷 ' + dead + ' 名（送醫）' : ''}${civOK ? '，人質（店員）平安' : ''}`;
+        setTimeout(() => { MIS.end(true, '勤務指揮中心：辛苦了！搶案處理完畢，' + lines + '。支援警力會把嫌犯帶回。'); award(pts, money, (kind === 'bank' ? '銀行' : '超商') + '搶案：' + lines, cuffed >= 2 && dead === 0 ? 'mer' : cuffed >= 1 ? 'com' : null); }, 1200);
+      }
+    },
+    interacts() {
+      const out = [];
+      for (const h of all()) if ((h.state === 'surrender' || h.state === 'stun') && P.mode === 'foot') out.push({ x: h.x, z: h.z, r: 2.2, label: '上手銬逮捕', act: () => { h.state = 'cuffed'; h.pose = 'cuffed'; h.P.gun.visible = false; AU.cuff(); radio('嫌犯已上銬。', 'info'); } });
+      return out;
+    },
+    onShout() {
+      if (st === 'go') return;
+      warned = true;
+      for (const h of all()) {
+        if (!['hold', 'alert', 'fight'].includes(h.state)) continue;
+        const d = dist(P.x, P.z, h.x, h.z); if (d > 38) continue;
+        h.shouts++;
+        let p = D.surrender * (h.shouts > 2 ? 0.4 : 1) + (aimingAt(h) ? 0.18 : 0) + (all().some(o => o.state === 'cuffed' || o.state === 'down') ? 0.12 : 0);
+        if (Math.random() < p) surrender(h); else if (h.state === 'hold') { h.state = 'alert'; h.timer = 1.2; showBubble('搶匪：「不要過來！」'); }
+      }
+    },
+    onShot(r, type) {
+      if (st === 'go' && dist(P.x, P.z, site.door.x, site.door.z) > 60) return false;
+      for (const h of all()) if (h.state === 'hold') { h.state = 'alert'; h.timer = 0.8; }
+      const h = r.h; if (!h || h.role !== 'robber') { if (h && (h.role === 'clerk')) return false; return !h; }
+      if (type === 'taser') { if (['hold', 'alert', 'fight', 'surrender'].includes(h.state)) { h.state = 'stun'; h.pose = 'stun'; h.timer = 7; h.P.gun.visible = false; radio('電擊命中！趁嫌犯倒地快上手銬（E）。', 'info'); } return true; }
+      if (h.state === 'surrender' || h.state === 'cuffed' || h.state === 'stun') { punish('major', '對已投降、失去抵抗能力的嫌犯開槍'); }
+      else if (!h.threat && !warned && !earlyShotPun) { earlyShotPun = true; punish('rep', '未先喊話警告就開槍'); }
+      h.hp -= r.head ? 100 : 40; h.threat = true;
+      if (h.hp <= 0) { h.state = 'down'; h.pose = 'down'; h.alive = true; h.P.gun.visible = false; h.hp = 0; h.downT = 0; radio('嫌犯中彈倒地，已呼叫救護車。', 'info'); }
+      else if (!h.rolled && h.hp < 50) { h.rolled = true; if (Math.random() < 0.55) surrender(h, '別開槍！我投降！'); }
+      else if (h.state === 'hold' || h.state === 'alert') h.state = 'fight';
+      return true;
+    },
+    cleanup() {
+      for (const h of all()) removeHuman(h); for (const c of civs) removeHuman(c);
+      if (getaway) { const k = TRAFFIC.indexOf(getaway); if (k >= 0) TRAFFIC.splice(k, 1); scene.remove(getaway.mesh); }
+    },
+  };
+  MIS.start(m);
+}
+function aimingAt(h) {
+  const o = camera.getWorldPosition(new THREE.Vector3()), d = camera.getWorldDirection(new THREE.Vector3());
+  return raySphere(o, d, h.x, 1.1, h.z, 0.9) > 0;
+}
+function surrender(h, line) { h.state = 'surrender'; h.pose = 'kneel'; h.P.gun.visible = false; showBubble('搶匪：「' + (line || pick(['好好好！我投降！', '不要開槍！', '我放下了！'])) + '」'); radio('嫌犯放下武器投降了！走過去按 E 上手銬。', 'info'); }
+function robberAI(h, dt, site, D) {
+  const P_ = h.P; const camY = camera.position.y;
+  if (h.state === 'down') { posePerson(P_, 'down', dt); P_.g.position.set(h.x, h.y0 || 0.2, h.z); return; }
+  if (h.state === 'stun') { h.timer -= dt; posePerson(P_, 'stun', dt); if (h.timer <= 0) { h.state = 'surrender'; h.pose = 'kneel'; } P_.g.position.set(h.x, 0.2, h.z); return; }
+  if (h.state === 'surrender' || h.state === 'cuffed') { posePerson(P_, h.pose, dt); P_.g.position.set(h.x, 0.2, h.z); return; }
+  const d = dist(h.x, h.z, P.x, P.z);
+  const see = d < 45 && losClear(h.x, 1.6, h.z, P.x, camY, P.z);
+  if (h.state === 'hold') {
+    if (see && d < 20) { h.state = 'alert'; h.timer = 1.4; showBubble('搶匪：「警察來了！」'); }
+    posePerson(P_, 'aim', dt);
+  } else if (h.state === 'alert') {
+    h.timer -= dt; h.threat = true; h.yaw = Math.atan2(P.x - h.x, P.z - h.z); posePerson(P_, 'aim', dt);
+    if (h.timer <= 0) h.state = 'fight';
+  } else if (h.state === 'fight') {
+    h.threat = true;
+    h.yaw = Math.atan2(P.x - h.x, P.z - h.z);
+    h.moveT -= dt;
+    if (h.moveT <= 0) {
+      h.moveT = rand(1.8, 3.5);
+      if (h.open) { h.tx = h.x + rand(-4, 4); h.tz = h.z + rand(-4, 4); }
+      else { h.tx = clamp(h.x + rand(-3, 3), site.x0 + 0.8, site.x1 - 0.8); h.tz = clamp(h.z + rand(-3, 3), site.z0 + 1.2, site.z1 - 1); }
+    }
+    const mdx = h.tx - h.x, mdz = h.tz - h.z, md = Math.hypot(mdx, mdz);
+    if (md > 0.3) { h.x += mdx / md * 1.7 * dt; h.z += mdz / md * 1.7 * dt; const p = { x: h.x, z: h.z }; collideCircle(p, 0.35); h.x = p.x; h.z = p.z; posePerson(P_, 'walk', dt, 1.5); P_.armR.rotation.x = -Math.PI / 2; }
+    else posePerson(P_, 'aim', dt);
+    h.shootT -= dt;
+    if (h.shootT <= 0 && see) {
+      h.shootT = rand(1.1, 2.2);
+      AU.shot(d); spawnFX(new THREE.Vector3(h.x + Math.sin(h.yaw) * 0.6, 1.45, h.z + Math.cos(h.yaw) * 0.6), 0xffd27a, 0.1, 0.08);
+      let p = clamp(0.58 - d / 45, 0.07, 0.5) * D.acc * (P.moving ? 0.75 : 1) * (P.mode === 'vehicle' ? 0.6 : 1);
+      if (Math.random() < p) { hurtPlayer(D.dmg + randi(-3, 4), h.x, h.z); radio('你中彈了！找掩護！', 'warn'); }
+      scareNear(h.x, h.z, 50);
+    }
+  }
+  P_.g.rotation.y = h.yaw; P_.g.position.set(h.x, 0.2, h.z);
+}
+
+/* ---------- 任務：巡邏簽巡邏箱 ---------- */
+function misPatrol() {
+  const boxes = PATROL_BOXES.slice().sort((a, b) => dist(a.x, a.z, P.x, P.z) - dist(b.x, b.z, P.x, P.z)).slice(0, 8);
+  const pickd = []; while (pickd.length < 3 && boxes.length) pickd.push(boxes.splice(randi(0, boxes.length - 1), 1)[0]);
+  let idx = 0;
+  const m = {
+    type: 'patrol', icon: '🚶', title: '巡邏勤務',
+    radio: `勤務指揮中心：請執行巡邏勤務，到 ${pickd.length} 個巡邏箱簽巡邏表。第一個在${pickd[0].name}。`,
+    target: () => pickd[idx],
+    obj: () => `到紅色巡邏箱簽到（${idx}/${pickd.length}）：${pickd[idx] ? pickd[idx].name : ''}`,
+    interacts() { const b = pickd[idx]; if (!b || P.mode !== 'foot') return []; return [{ x: b.x, z: b.z, r: 2.4, label: '簽巡邏表', act: () => { AU.click(); idx++; S.stats.patrol++; if (idx >= pickd.length) { MIS.end(true, '勤務指揮中心：巡邏完畢，辛苦了。'); award(12, 1500, '完成巡邏勤務'); } else radio('已簽到。下一個巡邏箱在' + pickd[idx].name + '。', 'info'); } }]; },
+    update() { if (P.mode === 'vehicle' && pickd[idx] && dist(P.x, P.z, pickd[idx].x, pickd[idx].z) < 8 && !this._h) { this._h = 1; radio('巡邏箱要下車簽（F 下車，E 簽到）。', 'info'); } },
+  };
+  MIS.start(m);
+}
+
+/* ---------- 任務：酒測臨檢 ---------- */
+function misCheckpoint() {
+  const site = pick(CHECK_SITES);
+  let st = 'go', count = 0, car = null, drv = null; const N = 5; const props = [];
+  const fx = site.dir[0], fz = site.dir[1];
+  const setup = () => {
+    // 交通錐與告示牌
+    for (let k = 0; k < 6; k++) { const c = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.75, 8), MAT.cone); c.position.set(site.x - fx * (12 - k * 2.4) + fz * 2.2, 0.38, site.z - fz * (12 - k * 2.4) - fx * 2.2); scene.add(c); props.push(c); }
+    const s = signBoard('酒測臨檢　請停車受檢', { bg: '#c00', fg: '#fff', w: 512, h: 128 }, 3.2, 0.8, site.x - fx * 14 - fz * 0 + fz * 2.6, 1.6, site.z - fz * 14 - fx * 2.6, Math.atan2(-fx, -fz) + Math.PI, 1.2);
+    props.push(s);
+  };
+  const nextCar = () => {
+    car = new NPCVeh(Math.random() < 0.75 ? 'car' : 'scooter'); car.state = 'stopped'; car.flag = true;
+    car.x = site.x; car.z = site.z; car.yaw = site.yaw; car.mesh.position.set(site.x, 0, site.z); car.mesh.rotation.y = site.yaw;
+    TRAFFIC.push(car); drv = genDriver('check', car);
+  };
+  const dropCar = () => { if (!car) return; const k = TRAFFIC.indexOf(car); if (k >= 0) TRAFFIC.splice(k, 1); scene.remove(car.mesh); car = null; };
+  const m = {
+    type: 'check', icon: '🌬', title: '酒測臨檢勤務',
+    radio: `勤務指揮中心：今晚加強取締酒駕，請到${site.name}設置臨檢站，攔查 ${N} 輛車。`,
+    target: () => st === 'go' ? site : (car ? driverSpot() : null),
+    obj: () => st === 'go' ? '前往臨檢地點' : `盤查第 ${count + 1}/${N} 輛：走到駕駛旁按 E`,
+    update() {
+      if (st === 'go' && dist(P.x, P.z, site.x, site.z) < 16) { st = 'run'; setup(); nextCar(); radio('臨檢站設置完成，第一輛車停下來了。', 'info'); }
+    },
+    interacts() {
+      if (st !== 'run' || !car || P.mode !== 'foot') return [];
+      const sp = driverSpot();
+      return [{ x: sp.x, z: sp.z, r: 2.4, label: '盤查駕駛', act: () => stopDialog('check', car, drv, '路檢', false, () => { dropCar(); count++; S.stats.check++; if (count >= N) { MIS.end(true, '勤務指揮中心：臨檢勤務結束，收隊。'); award(10, 1500, '完成酒測臨檢勤務'); } else setTimeout(() => { if (MIS.cur === m) { nextCar(); radio('下一輛車停下來了。', 'info'); } }, 1500); }) }];
+    },
+    cleanup() { dropCar(); props.forEach(p => scene.remove(p)); },
+  };
+  const driverSpot = () => { const lx = -Math.cos(car.yaw), lz = Math.sin(car.yaw); return { x: car.px + lx * 1.5, z: car.pz + lz * 1.5 }; };
+  MIS.start(m);
+}
+
+/* ---------- 打卡上下班 ---------- */
+function clockIn() {
+  if (S.onDuty) return;
+  const late = isWorkday(S.day) && !S.workedToday && S.time > 8 * 60 + 30;
+  S.onDuty = true; S.clockIn = S.time; S.workedToday = true;
+  S.ammo = 15; S.reserve = 45; S.taser = 4; S.weapon = 0;
+  POLICE_CAR.reset(); POLICE_SCOOT.reset();
+  MIS.timer = 8;
+  toast('rank', '👮 打卡上班　' + fmtTime(S.time), '已換上制服、到械彈室領槍（手槍 1 把、彈匣 4 個、電擊槍）');
+  radio('📻 勤務指揮中心：' + RANKS[S.rank].name + '早安！今天也請注意安全。巡邏警車停在分局前面。', 'radio'); AU.radio();
+  if (late) punish('rep', '上班遲到（超過 08:30 才打卡）');
+  if (!isWorkday(S.day)) radio('今天是休假日，算自願加班。', 'info');
+  updateHUD(true);
+}
+function payToday() {
+  let mins = S.time - S.clockIn; if (mins < 0) mins += 1440;
+  const reg = Math.min(mins, Math.max(0, 17 * 60 - S.clockIn)), ot = Math.max(0, mins - reg);
+  const hourly = RANKS[S.rank].pay / 8;
+  return { pay: Math.round(Math.max(0, reg) / 60 * hourly + ot / 60 * hourly * 1.34), mins, ot };
+}
+function offDutyNow() {
+  S.onDuty = false; if (MIS.cur) MIS.end(false); S.weapon = 0; POLICE_CAR.siren = false; POLICE_SCOOT.siren = false;
+}
+function clockOut() {
+  const st = SITES.station;
+  if (P.mode === 'vehicle') { radio('請下車再打卡。', 'info'); return; }
+  const doOut = (extraPen) => {
+    if (MIS.cur) MIS.cancel();
+    const p = payToday(); S.money += p.pay; S.stats.days++;
+    offDutyNow();
+    if (extraPen) { POLICE_CAR.reset(); POLICE_SCOOT.reset(); punish('rep', extraPen); }
+    toast('good', '🕔 打卡下班　薪水 ' + fmtMoney(p.pay), '今天工作 ' + Math.floor(p.mins / 60) + ' 小時 ' + Math.round(p.mins % 60) + ' 分' + (p.ot > 0 ? '（含加班 ' + Math.round(p.ot) + ' 分）' : ''));
+    addLog('下班，領薪水 ' + p.pay); updateHUD(true); saveGame();
+  };
+  const far = [POLICE_CAR, POLICE_SCOOT].find(v => dist(v.x, v.z, st.x, st.z) > 45);
+  const early = isWorkday(S.day) && S.time < 17 * 60 && S.time > S.clockIn;
+  if (far) {
+    MODAL.show(`<h2>🚓 警車還沒停回分局</h2><p>${far.spec.name}還停在外面。要自己開回來，還是請同仁幫忙開回（會被申誡一次）？</p>`,
+      [['我自己開回來', 'g', () => MODAL.close()], ['請同仁開回（申誡）', 'r', () => { MODAL.close(); if (early) punish('rep', '提早下班（早退）'); doOut('警車沒有歸還就下班'); }]]);
+    return;
+  }
+  if (early) {
+    MODAL.show(`<h2>⏰ 還沒到下班時間</h2><p>現在 ${fmtTime(S.time)}，下班時間是 17:00。提早打卡會被記<b>申誡</b>（早退）。確定要下班嗎？</p>`,
+      [['繼續上班', 'g', () => MODAL.close()], ['早退下班', 'r', () => { MODAL.close(); punish('rep', '提早下班（早退）'); doOut(); }]]);
+    return;
+  }
+  doOut();
+}
+
+/* ---------- 送醫 ---------- */
+function toHospital(msg, hp, en) {
+  if (MIS.cur) MIS.end(false, '勤務指揮中心：同仁受傷送醫，任務改派其他同仁。');
+  if (P.mode === 'vehicle') { P.veh.speed = 0; P.veh = null; P.mode = 'foot'; $('speedo').classList.add('hidden'); }
+  fadeTo(msg, () => {
+    const h = SITES.hospital; P.x = h.x; P.z = h.z + 2; P.yaw = Math.PI; P.pitch = 0;
+    S.hp = hp; S.energy = Math.max(S.energy, en || 0); S.time += 120;
+    if (!S.onDuty) { S.money -= 1500; radio('醫藥費 $1,500。', 'warn'); } else radio('因公受傷，醫藥費由公費負擔。', 'info');
+  });
+}
+function playerDown() { toHospital('🚑 你受了重傷，被送到大墩醫院…', 60, 0); }
+function collapse() { toHospital('😵 體力透支暈倒了，被送到大墩醫院…（記得回家睡覺）', 80, 45); }
+
+/* ---------- 睡覺 ---------- */
+function goSleep() {
+  if (S.onDuty) { radio('還在上班中！先回分局打卡下班。', 'info'); return; }
+  MODAL.close();
+  fadeTo('😴 睡覺中…', () => {
+    const target = 7 * 60;
+    if (S.time >= target) {
+      if (S.time < 12 * 60) S.time = 12 * 60; checkAbsent();
+      S.day++; S.workedToday = false;
+    }
+    S.time = target; S.energy = 100; S.hp = 100;
+    respawnOwned(); POLICE_CAR.reset(); POLICE_SCOOT.reset();
+    const h = SITES.home; P.x = h.x; P.z = h.z + 1.5; P.yaw = Math.PI; P.pitch = 0;
+    saveGame();
+    setTimeout(() => { toast('rank', '☀️ 第 ' + S.day + ' 天（週' + WEEK[weekday(S.day)] + '）早上 07:00', isWorkday(S.day) ? '08:00 要到大墩分局打卡上班（08:30 後算遲到）' : '今天週日放假！'); }, 700);
+  });
+}
+function checkAbsent() {
+  if (S.absentChecked === S.day) return; S.absentChecked = S.day;
+  if (isWorkday(S.day) && !S.workedToday && !S.onDuty) punish('dem', '無故曠職（中午 12:00 前沒有到班）');
+}
+
+/* ---------- 商店、車行、醫院 ---------- */
+const STORE_ITEMS = [
+  { n: '🍙 御飯糰', p: 35, hp: 12, en: 6 }, { n: '🍱 便當', p: 89, hp: 35, en: 18 }, { n: '🥚 茶葉蛋', p: 13, hp: 6, en: 2 },
+  { n: '☕ 熱美式', p: 55, hp: 0, en: 30 }, { n: '⚡ 能量飲料', p: 49, hp: 0, en: 40 }, { n: '🩹 急救包', p: 199, hp: 50, en: 0 },
+];
+function buyFood(it) {
+  if (S.money < it.p) { radio('錢不夠喔。', 'warn'); return false; }
+  S.money -= it.p; S.hp = Math.min(100, S.hp + it.hp); S.energy = Math.min(100, S.energy + it.en); AU.click(); updateHUD(true); return true;
+}
+function storeMenu(site) {
+  if (MIS.cur && MIS.cur.type === 'robbery' && MIS.cur.title.includes('超商')) { radio('現在不是買東西的時候！', 'warn'); return; }
+  const render = () => {
+    $('mbox').innerHTML = `<h2>🏪 ${site.name}</h2><p>店員：「歡迎光臨～」　💰 ${fmtMoney(S.money)}　❤️ ${Math.round(S.hp)}　⚡ ${Math.round(S.energy)}</p>` +
+      STORE_ITEMS.map((it, k) => `<div class="shopitem"><div>${it.n}<small>${it.hp ? '生命 +' + it.hp + ' ' : ''}${it.en ? '體力 +' + it.en : ''}</small></div><button class="btn y" data-k="${k}">$${it.p} 購買</button></div>`).join('') +
+      `<div class="btns"><button class="btn gray" id="mclose">離開</button></div>`;
+    $('mbox').querySelectorAll('[data-k]').forEach(b => b.onclick = () => { buyFood(STORE_ITEMS[+b.dataset.k]); render(); });
+    $('mclose').onclick = () => MODAL.close();
+  };
+  MODAL.custom(render);
+}
+function marketOpen() { return S.time >= 17 * 60 || S.time < 60; }
+function stallMenu(stall) {
+  if (!marketOpen()) { radio('夜市要傍晚 17:00 才開始營業喔。', 'info'); return; }
+  const it = stall.food;
+  MODAL.show(`<h2>🏮 ${it.n}</h2><p>老闆：「少年欸，來一份嗎？」</p><div class="shopitem"><div>${it.n}<small>生命 +${it.hp}　體力 +${it.en}</small></div><b>$${it.p}</b></div>`,
+    [['買一份', 'y', () => { if (buyFood({ p: it.p, hp: it.hp, en: it.en })) { MODAL.close(); toast('good', '😋 好吃！', it.n + ' 生命 +' + it.hp); } }], ['不用了', 'gray', () => MODAL.close()]]);
+}
+function dealerMenu() {
+  const render = () => {
+    const keys = ['escooter', 'usedcar', 'suv', 'sport'];
+    $('mbox').innerHTML = `<h2>🚘 大墩車業</h2><p>業務：「歡迎參觀！買了車會停在你家樓下。」　💰 ${fmtMoney(S.money)}</p>` +
+      keys.map(k => { const v = VEH_SPECS[k]; const own = S.owned.includes(k); return `<div class="shopitem"><div>${v.kind === 'car' ? '🚗' : '🛵'} ${v.name}<small>極速約 ${Math.round(v.max * 3.6)} km/h</small></div>${own ? '<b class="res-good">已擁有</b>' : `<button class="btn y" data-k="${k}" ${S.money < v.price ? 'disabled' : ''}>${fmtMoney(v.price)}</button>`}</div>`; }).join('') +
+      `<p style="color:#9fb3d9;font-size:12px">提示：每次任務都有績效獎金，存錢就能買車。</p><div class="btns"><button class="btn gray" id="mclose">離開</button></div>`;
+    $('mbox').querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
+      const k = b.dataset.k, v = VEH_SPECS[k]; if (S.money < v.price) return;
+      S.money -= v.price; S.owned.push(k); respawnOwned(); AU.good(); toast('good', '🎉 買到 ' + v.name + '！', '已經停在你家（大墩華廈）樓下'); addLog('買了 ' + v.name); saveGame(); render();
+    });
+    $('mclose').onclick = () => MODAL.close();
+  };
+  MODAL.custom(render);
+}
+function initStaticInteracts() {
+  const st = SITES.station, home = SITES.home;
+  STATIC_INTERACT.push({ x: st.x, z: st.z, r: 3, label: () => S.onDuty ? '打卡下班' : '打卡上班（領槍、換制服）', act: () => S.onDuty ? clockOut() : clockIn() });
+  STATIC_INTERACT.push({
+    x: home.door.x, z: home.door.z, r: 2.6, label: () => '回家', act: () => {
+      MODAL.show(`<h2>🏠 我家（大墩華廈）</h2><p>現在 ${fmtTime(S.time)}　❤️ ${Math.round(S.hp)}　⚡ ${Math.round(S.energy)}</p>`,
+        [['😴 睡覺到明天早上', 'g', goSleep], ['💾 存檔', '', () => { saveGame(); MODAL.close(); toast('good', '💾 已存檔', ''); }], ['出門', 'gray', () => MODAL.close()]]);
+    }
+  });
+  for (const s of SITES.stores) STATIC_INTERACT.push({ x: s.counter.x, z: s.counter.z, r: 2.2, label: () => '結帳櫃檯：買東西', act: () => storeMenu(s) });
+  for (const s of SITES.market.stalls) STATIC_INTERACT.push({ x: s.x, z: s.z, r: 1.8, label: () => marketOpen() ? '買' + s.food.n + '　$' + s.food.p : s.food.n + '（17:00 開賣）', act: () => stallMenu(s) });
+  STATIC_INTERACT.push({ x: SITES.dealer.x, z: SITES.dealer.z, r: 3, label: () => '看車、買車', act: dealerMenu });
+  STATIC_INTERACT.push({
+    x: SITES.hospital.x, z: SITES.hospital.z, r: 3, label: () => '醫院掛號', act: () => {
+      if (S.hp >= 99) { radio('你很健康，不用看醫生。', 'info'); return; }
+      MODAL.show(`<h2>🏥 大墩醫院</h2><p>治療傷口，生命回滿。${S.onDuty ? '因公受傷免費。' : '自費 $500。'}</p>`, [['治療', 'g', () => { if (!S.onDuty) { if (S.money < 500) { radio('錢不夠。', 'warn'); return; } S.money -= 500; } S.hp = 100; S.time += 30; MODAL.close(); updateHUD(true); }], ['離開', 'gray', () => MODAL.close()]]);
+    }
+  });
+}
+
+/* ================= 介面 ================= */
+const GAME = { running: false, tscale: 1, mapOpen: false };
+function radio(msg, type) {
+  const box = $('radio'); const d = document.createElement('div');
+  d.className = 'rmsg ' + (type === 'warn' ? 'warn' : type === 'info' ? 'info' : ''); d.textContent = msg; box.appendChild(d);
+  while (box.children.length > (IS_TOUCH ? 2 : 4)) box.removeChild(box.firstChild);
+  setTimeout(() => { d.style.opacity = 0; setTimeout(() => d.remove(), 1000); }, type === 'radio' ? 12000 : 8000);
+}
+let bubbleT = 0;
+function showBubble(t) { const b = $('bubble'); b.textContent = t; b.classList.remove('hidden'); clearTimeout(bubbleT); bubbleT = setTimeout(() => b.classList.add('hidden'), 2200); }
+const TOASTQ = []; let toastBusy = false;
+function toast(kind, title, sub) { TOASTQ.push([kind, title, sub]); if (!toastBusy) nextToast(); }
+function nextToast() {
+  const t = TOASTQ.shift(); const el = $('toast'); if (!t) { toastBusy = false; el.classList.add('hidden'); return; }
+  toastBusy = true; el.className = t[0]; el.innerHTML = t[1] + (t[2] ? '<small>' + t[2] + '</small>' : ''); el.classList.remove('hidden');
+  setTimeout(() => { el.classList.add('hidden'); setTimeout(nextToast, 250); }, 2800);
+}
+function fadeTo(msg, cb) {
+  const f = $('fade'); f.textContent = msg || ''; f.style.opacity = 1; f.style.pointerEvents = 'auto';
+  setTimeout(() => { cb && cb(); setTimeout(() => { f.style.opacity = 0; f.style.pointerEvents = 'none'; }, 900); }, 700);
+}
+/* ---------- HUD ---------- */
+let hudT = 0;
+function updateHUD(force) {
+  hudT -= 1; if (!force && hudT > 0) return; hudT = 10;
+  $('clock').textContent = fmtTime(S.time) + (isNight() ? ' 🌙' : ' ☀️');
+  $('dateline').textContent = '第 ' + S.day + ' 天（週' + WEEK[weekday(S.day)] + '）' + (isWorkday(S.day) ? '' : ' 休假');
+  const du = $('duty'); du.textContent = S.onDuty ? '執勤中' : '下班'; du.className = 'duty ' + (S.onDuty ? 'on' : 'off');
+  $('rank').textContent = RANKS[S.rank].name;
+  const nx = RANKS[S.rank + 1]; $('merit').textContent = S.merit + (nx ? ' / ' + nx.need + '（升' + nx.name + '）' : '（最高職等）');
+  $('money').textContent = fmtMoney(S.money);
+  $('hpbar').style.width = clamp(S.hp, 0, 100) + '%'; $('enbar').style.width = clamp(S.energy, 0, 100) + '%';
+  $('weap').textContent = !S.onDuty ? '🙋 便服（下班中）' : P.mode === 'vehicle' ? (P.veh.police ? '🚓 ' + P.veh.spec.name : '🚗 ' + P.veh.spec.name) : S.weapon === 0 ? `🔫 手槍 ${S.ammo} / ${S.reserve}${reloadT > 0 ? ' 換彈中…' : ''}` : `⚡ 電擊槍 ${S.taser} 發`;
+  $('tired').style.opacity = S.energy < 15 ? 0.7 : S.energy < 30 ? 0.3 : 0;
+  $('cross').style.display = S.onDuty && P.mode === 'foot' ? 'block' : 'none';
+}
+/* ---------- 互動提示 ---------- */
+let curAct = null;
+function findInteract() {
+  if (MODAL.open) return null;
+  if (P.mode === 'vehicle') return null;
+  let best = null, bd = 1e9;
+  const list = STATIC_INTERACT.concat(MIS.interacts());
+  for (const it of list) { const d = dist(P.x, P.z, it.x, it.z); if (d < it.r && d < bd) { bd = d; best = it; } }
+  return best;
+}
+function updatePrompt() {
+  curAct = findInteract(); const el = $('prompt'); let t = '';
+  const key = IS_TOUCH ? '' : 'E ';
+  if (curAct) t = '【' + key + '】' + (typeof curAct.label === 'function' ? curAct.label() : curAct.label);
+  if (P.mode === 'foot') { const v = nearestPVeh(3.6); if (v) t += (t ? '　' : '') + '【' + (IS_TOUCH ? '🚗' : 'F') + '】上車：' + v.spec.name; }
+  else if (Math.abs(P.veh.speed) < 3) t = '【' + (IS_TOUCH ? '🚗' : 'F') + '】下車';
+  if (t) { el.textContent = t.replace(/【】/g, ''); el.classList.remove('hidden'); } else el.classList.add('hidden');
+}
+function doInteract() { if (!GAME.running || MODAL.open) return; const it = curAct || findInteract(); if (it) { AU.click(); it.act(); } }
+/* ---------- 對話框 ---------- */
+const MODAL = {
+  open: false, esc: null,
+  show(html, buttons) {
+    this.open = true; releasePointer(); $('modal').classList.remove('hidden');
+    $('mbox').innerHTML = html + '<div class="btns">' + (buttons || []).map((b, k) => `<button class="btn ${b[1] || ''}" data-k="${k}">${b[0]}</button>`).join('') + '</div>';
+    $('mbox').querySelectorAll('.btns [data-k]').forEach(el => el.onclick = () => { AU.click(); buttons[+el.dataset.k][2](); });
+    this.esc = buttons && buttons.length ? buttons[buttons.length - 1][2] : () => this.close();
+  },
+  custom(render) { this.open = true; releasePointer(); $('modal').classList.remove('hidden'); this.esc = null; render(); },
+  close() { this.open = false; $('modal').classList.add('hidden'); if (!IS_TOUCH && GAME.running && !GAME.mapOpen) { try { canvas.requestPointerLock && canvas.requestPointerLock(); } catch (e) { } } },
+  escape() { if (this.esc) this.esc(); },
+};
+function openPause() {
+  if (!GAME.running || MODAL.open) return;
+  const online = /^https?:$/.test(location.protocol);
+  MODAL.show(`<h2>⏸ 暫停</h2><p>${RANKS[S.rank].name}・考績 ${S.merit}・存款 ${fmtMoney(S.money)}</p>`, [
+    ['▶ 繼續', 'g', () => { MODAL.close(); }],
+    ['📋 考績與紀錄', '', showRecord],
+    ...(MIS.cur ? [['❌ 放棄目前勤務（考績 -5）', 'r', () => { MIS.cancel(); MODAL.close(); }]] : []),
+    ['⚙️ 難度：' + DIFF[S.diff].name, '', () => { S.diff = (S.diff + 1) % 3; MODAL.close(); openPause(); }],
+    ['💾 存檔', '', () => { saveGame(); MODAL.close(); toast('good', '💾 已存檔', ''); }],
+    ['❓ 操作說明', '', showHelp],
+    ...(online ? [['🎮 遊戲中心', 'gray', () => { location.href = 'games.html'; }]] : []),
+    ['🔄 重新開始', 'gray', () => MODAL.show('<h2>確定重新開始？</h2><p>目前進度會被清除。</p>', [['確定重來', 'r', () => { safeSet(SAVE_KEY, ''); location.reload(); }], ['取消', 'gray', () => MODAL.close()]])],
+  ]);
+  MODAL.esc = () => MODAL.close();
+}
+function showRecord() {
+  const s = S.stats;
+  MODAL.show(`<h2>📋 考績與紀錄</h2>
+  <table><tr><td>職等</td><td>${RANKS[S.rank].name}（日薪 ${fmtMoney(RANKS[S.rank].pay)}）</td></tr>
+  <tr><td>考績分數</td><td>${S.merit}${RANKS[S.rank + 1] ? '（' + RANKS[S.rank + 1].need + ' 分升' + RANKS[S.rank + 1].name + '）' : ''}</td></tr>
+  <tr><td>獎勵</td><td>嘉獎 ${S.award.com} 次・記功 ${S.award.mer} 次</td></tr>
+  <tr><td>懲處</td><td>申誡 ${S.pen.rep}・記過 ${S.pen.dem}・記大過 <b class="${S.pen.major ? 'res-bad' : ''}">${S.pen.major}</b>（三支大過免職）</td></tr>
+  <tr><td>工作</td><td>上班 ${s.days} 天・開罰單 ${s.tickets} 張・逮捕 ${s.arrests} 人・搶案 ${s.robbery} 件・巡邏箱 ${s.patrol} 次・臨檢 ${s.check} 車</td></tr>
+  <tr><td>我的車</td><td>${S.owned.map(k => VEH_SPECS[k].name).join('、')}</td></tr></table>
+  <h3>最近紀錄</h3><div style="max-height:200px;overflow:auto;font-size:13px;line-height:1.7">${S.log.length ? S.log.map(l => '<div>' + l + '</div>').join('') : '還沒有紀錄'}</div>`,
+    [['返回', 'g', () => { MODAL.close(); openPause(); }]]);
+}
+function showHelp() {
+  MODAL.show(`<h2>❓ 怎麼玩</h2>
+  <h3>👮 一天的流程</h3><p>早上 07:00 在家醒來 → 騎車到「大墩分局」（地圖藍色 👮）→ 在門口按 E 打卡上班，會換制服、領手槍和電擊槍 → 開分局前的巡邏警車出勤 → 聽無線電派案 → 17:00 後回分局打卡下班領薪水 → 下班可以去夜市（17:00 開）、超商、車行，回家睡覺到隔天。週日放假。</p>
+  <h3>🚔 勤務</h3><p><b>交通攔查</b>：找到目標車，坐警車開警笛（H）跟在後面，駕駛會靠邊停。下車走到駕駛座窗邊按 E，先查證件、查通緝、看有沒有酒味要酒測，再決定開什麼罰單或逮捕。<br>
+  <b>搶案</b>：到現場先找掩護、喊話（Q）要嫌犯放下武器。投降的走過去按 E 上手銬。嫌犯開槍才還擊，沒警告就開槍、或對投降的人開槍會被懲處。電擊槍（2）可以不傷人制伏。<br>
+  <b>巡邏</b>：到紅色巡邏箱下車按 E 簽巡邏表。<b>酒測臨檢</b>：到臨檢點設站，盤查 5 輛車。</p>
+  <h3>⭐ 考績</h3><p>任務做得好加考績、領獎金，累積考績升官：警員 → 巡佐 → 巡官 → 派出所所長 → 分局長。遲到、早退、曠職、亂開槍、撞人會被申誡或記過，三次申誡＝一次記過，三次記過＝一次大過，三支大過免職。</p>
+  <h3>🎮 按鍵</h3><p>WASD 移動・滑鼠看・左鍵開槍・右鍵瞄準・Shift 跑・E 互動・F 上下車・Q 喊話・H 警笛・R 換彈・1 手槍・2 電擊槍・M 地圖・Esc 暫停<br>開車：W 油門・S 煞車倒車・A D 轉彎・空白鍵 手煞車</p>`,
+    [['返回', 'g', () => { MODAL.close(); openPause(); }]]);
+}
+/* ---------- 小地圖 ---------- */
+let MAPIMG;
+function buildMapImage() {
+  const c = document.createElement('canvas'); c.width = c.height = 1000; const g = c.getContext('2d');
+  g.fillStyle = '#5f8a46'; g.fillRect(0, 0, 1000, 1000);
+  const T = (v) => v + 500;
+  for (const b of BLOCKS) {
+    g.fillStyle = { park: '#4f8a3a', lake: '#4f8a3a', market: '#a8584a', station: '#3a5aa8', home: '#a88a3a', dealer: '#6a6a7a', hospital: '#c8c8c8', tower: '#5a6a80', store: '#6a7a6a', bank: '#6a6a8a' }[b.type] || '#7a7468';
+    g.fillRect(T(b.x0), T(b.z0), b.x1 - b.x0, b.z1 - b.z0);
+    if (b.type === 'lake') { g.fillStyle = '#3f7fa8'; g.beginPath(); g.arc(T(b.cx), T(b.cz), 20, 0, 7); g.fill(); }
+  }
+  g.fillStyle = '#d8d4c8';
+  for (let i = 0; i < XR.length; i++) g.fillRect(T(XR[i]) - vW(i) / 2, T(-420), vW(i), 840);
+  for (let j = 0; j < ZR.length; j++) g.fillRect(T(-420), T(ZR[j]) - hW(j) / 2, 840, hW(j));
+  g.fillStyle = '#333'; g.font = 'bold 11px ' + FONT; g.textAlign = 'center';
+  for (let i = 0; i < XR.length; i++) { g.save(); g.translate(T(XR[i]) + 3, T(-300)); g.rotate(Math.PI / 2); g.fillText(VNAMES[i], 0, 0); g.restore(); }
+  for (let j = 0; j < ZR.length; j++) g.fillText(HNAMES[j], T(-280), T(ZR[j]) + 4);
+  MAPIMG = c;
+}
+const ICONS = () => [
+  [SITES.station, '👮', '大墩分局'], [SITES.home, '🏠', '我家'], [SITES.market, '🏮', '一中街夜市'], [SITES.dealer, '🚘', '車行'], [SITES.hospital, '🏥', '醫院'], [SITES.bank, '🏦', '銀行'],
+  ...SITES.stores.map(s => [s, '🏪', '超商']),
+];
+function drawMini() {
+  const c = $('mini'), g = c.getContext('2d'), W = c.width, sc = 0.62;
+  g.save(); g.fillStyle = '#1b2433'; g.fillRect(0, 0, W, W);
+  g.translate(W / 2, W / 2); g.rotate(P.yaw); g.scale(sc, sc);
+  g.drawImage(MAPIMG, -P.x - 500, -P.z - 500);
+  g.font = '22px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const drawIcon = (x, z, ic) => { g.save(); g.translate(x - P.x, z - P.z); g.rotate(-P.yaw); g.fillText(ic, 0, 0); g.restore(); };
+  for (const [s, ic] of ICONS()) if (s) drawIcon(s.x != null ? s.x : s.cx, s.z != null ? s.z : (s.z1 + 2), ic);
+  const tg = MIS.cur && MIS.cur.target && MIS.cur.target();
+  if (PURSUIT.car) { g.fillStyle = '#ff3030'; g.beginPath(); g.arc(PURSUIT.car.px - P.x, PURSUIT.car.pz - P.z, 9, 0, 7); g.fill(); }
+  g.restore();
+  if (tg) { // 目標（超出範圍就畫在邊緣）
+    let dx = tg.x - P.x, dz = tg.z - P.z; const cs = Math.cos(P.yaw), sn = Math.sin(P.yaw);
+    let mx = (dx * cs - dz * sn) * sc, my = (dx * sn + dz * cs) * sc; const R = W / 2 - 10; const L = Math.hypot(mx, my);
+    if (L > R) { mx *= R / L; my *= R / L; }
+    g.fillStyle = '#ffd84a'; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath(); g.arc(W / 2 + mx, W / 2 + my, 7, 0, 7); g.fill(); g.stroke();
+  }
+  // 玩家箭頭
+  g.fillStyle = S.onDuty ? '#5cb8ff' : '#fff'; g.strokeStyle = '#000'; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(W / 2, W / 2 - 9); g.lineTo(W / 2 + 6, W / 2 + 7); g.lineTo(W / 2, W / 2 + 3); g.lineTo(W / 2 - 6, W / 2 + 7); g.closePath(); g.fill(); g.stroke();
+  // 北方
+  g.save(); g.translate(W / 2, W / 2); g.rotate(P.yaw); g.fillStyle = '#ff5a4a'; g.font = 'bold 13px sans-serif'; g.textAlign = 'center'; g.fillText('北', 0, -W / 2 + 14); g.restore();
+}
+function toggleMap() {
+  GAME.mapOpen = !GAME.mapOpen; $('bigmap').classList.toggle('hidden', !GAME.mapOpen);
+  if (!GAME.mapOpen) return;
+  releasePointer();
+  const c = $('bigc'), g = c.getContext('2d'); const s = 900 / 1000;
+  g.save(); g.scale(s, s); g.drawImage(MAPIMG, 0, 0);
+  g.font = '26px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const [st, ic, nm] of ICONS()) if (st) { const x = (st.x != null ? st.x : st.cx) + 500, z = (st.z != null ? st.z : st.z1 + 2) + 500; g.fillText(ic, x, z); g.font = 'bold 13px ' + FONT; g.fillStyle = '#fff'; g.strokeStyle = '#000'; g.lineWidth = 3; g.strokeText(nm, x, z + 20); g.fillText(nm, x, z + 20); g.font = '26px sans-serif'; }
+  const tg = MIS.cur && MIS.cur.target && MIS.cur.target();
+  if (tg) { g.fillStyle = '#ffd84a'; g.strokeStyle = '#000'; g.lineWidth = 3; g.beginPath(); g.arc(tg.x + 500, tg.z + 500, 12, 0, 7); g.fill(); g.stroke(); }
+  g.translate(P.x + 500, P.z + 500); g.rotate(-P.yaw); g.fillStyle = '#5cb8ff'; g.strokeStyle = '#000'; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(0, -16); g.lineTo(11, 12); g.lineTo(0, 6); g.lineTo(-11, 12); g.closePath(); g.fill(); g.stroke();
+  g.restore();
+  g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(10, 10, 300, 34); g.fillStyle = '#fff'; g.font = 'bold 16px ' + FONT; g.textAlign = 'left'; g.fillText('🗺 台中市（按 M 或點一下關閉）', 20, 33);
+}
+$('bigmap').addEventListener('click', toggleMap);
+$('bigmap').addEventListener('touchstart', e => { e.preventDefault(); toggleMap(); }, { passive: false });
+
+/* ================= 主程式 ================= */
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: !IS_TOUCH, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, IS_TOUCH ? 1.25 : 1.75));
+renderer.setSize(innerWidth, innerHeight);
+scene.fog = new THREE.Fog(0xbfd8ee, 120, 480);
+const hemi = new THREE.HemisphereLight(0xdfefff, 0x5a5040, 0.75); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff4e0, 0.85); sun.position.set(200, 300, 100); scene.add(sun);
+const amb = new THREE.AmbientLight(0xffffff, 0.15); scene.add(amb);
+const torch = new THREE.SpotLight(0xfff2d8, 0, 70, 0.55, 0.5, 1.2); scene.add(torch); scene.add(torch.target);
+const sirenLight = new THREE.PointLight(0xff2020, 0, 30, 2); scene.add(sirenLight);
+addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
+
+const SKY_DAY = new THREE.Color(0x9ccbf0), SKY_DUSK = new THREE.Color(0xf0a070), SKY_NIGHT = new THREE.Color(0x0a1222);
+function nightFactor() {
+  const t = S.time;
+  if (t < 330) return 1; if (t < 400) return 1 - (t - 330) / 70; if (t < 1065) return 0; if (t < 1135) return (t - 1065) / 70; return 1;
+}
+function updateSky() {
+  const nf = nightFactor(); const t = S.time;
+  const dusk = (t > 1020 && t < 1150) || (t > 320 && t < 420) ? 1 - Math.abs(nf - 0.5) * 2 : 0;
+  const c = SKY_DAY.clone().lerp(SKY_NIGHT, nf).lerp(SKY_DUSK, dusk * 0.5);
+  scene.background = c; scene.fog.color.copy(c);
+  scene.fog.near = 120 - nf * 60; scene.fog.far = 480 - nf * 160;
+  const ang = (t / 1440) * Math.PI * 2 - Math.PI / 2;
+  sun.position.set(Math.cos(ang) * 300 + P.x, Math.max(40, Math.sin(ang) * 300), 120 + P.z); sun.target.position.set(P.x, 0, P.z); sun.target.updateMatrixWorld();
+  sun.intensity = 0.85 * (1 - nf) + 0.08; sun.color.setHex(nf > 0.5 ? 0x8aa0ff : 0xfff4e0);
+  hemi.intensity = 0.75 * (1 - nf) + 0.22; amb.intensity = 0.15 + nf * 0.12;
+  for (const n of NIGHT_MATS) n.m.emissiveIntensity = n.base * nf + (n.m === MAT.signs ? 0.05 : 0);
+  // 手電筒 / 車燈
+  torch.intensity = nf > 0.3 ? (P.mode === 'vehicle' ? 2.2 : (S.onDuty ? 1.4 : 0.8)) : 0;
+  if (torch.intensity > 0) {
+    const d = camera.getWorldDirection(new THREE.Vector3());
+    if (P.mode === 'vehicle') { const v = P.veh; const fx = -Math.sin(v.yaw), fz = -Math.cos(v.yaw); torch.position.set(v.x + fx * 2.3, 0.8, v.z + fz * 2.3); torch.target.position.set(v.x + fx * 30, 0, v.z + fz * 30); torch.angle = 0.6; }
+    else { torch.position.copy(camera.position); torch.target.position.copy(camera.position).addScaledVector(d, 10); torch.angle = 0.42; }
+    torch.target.updateMatrixWorld();
+  }
+  // 警示燈打光
+  const pv = P.veh && P.veh.police && P.veh.siren ? P.veh : null;
+  if (pv) { const ph = Math.floor(pv.flash * 6) % 2; sirenLight.color.setHex(ph ? 0xff2020 : 0x2050ff); sirenLight.intensity = 0.6 + nf * 0.6; sirenLight.position.set(pv.x, 2.4, pv.z); } else sirenLight.intensity = 0;
+}
+
+/* ---------- 時間 ---------- */
+let lastHour = -1;
+function updateTime(dt) {
+  S.time += dt * GAME.tscale;
+  if (S.time >= 1440) { S.time -= 1440; S.day++; S.workedToday = S.onDuty; if (S.onDuty) S.clockIn -= 1440; toast('rank', '🌙 午夜 00:00　第 ' + S.day + ' 天', '記得回家睡覺，不然體力會不夠'); }
+  if (S.time >= 12 * 60) checkAbsent();
+  const hr = Math.floor(S.time / 60);
+  if (hr !== lastHour) {
+    lastHour = hr;
+    if (hr === 7 && isWorkday(S.day) && !S.onDuty) radio('⏰ 07:00 了！08:00 前到大墩分局打卡上班（08:30 後算遲到）。', 'info');
+    if (hr === 8 && isWorkday(S.day) && !S.workedToday) radio('⏰ 08:00 上班時間到了，快去分局打卡！', 'warn');
+    if (hr === 17 && S.onDuty) radio('📻 17:00 下班時間到了，可以回分局打卡下班（繼續上班算加班費）。', 'radio');
+    if (hr === 17 && !S.onDuty) radio('🏮 一中街夜市開始營業了！', 'info');
+    if (hr === 23 && !S.onDuty) radio('🌙 很晚了，回家睡覺吧（走到大墩華廈門口按 E）。', 'info');
+    if (hr % 3 === 0) saveGame();
+  }
+}
+
+/* ---------- 主迴圈 ---------- */
+let lastT = performance.now(), frame = 0;
+function loop(now) {
+  requestAnimationFrame(loop);
+  let dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+  if (!GAME.running) { renderer.render(scene, camera); return; }
+  const paused = MODAL.open || GAME.mapOpen;
+  if (!paused) {
+    updateTime(dt);
+    updateLights(dt);
+    updatePlayer(dt);
+    updateTraffic(dt);
+    updatePeds(dt);
+    MIS.update(dt);
+    for (const h of MHUMANS) if (h.role !== 'robber' && h.role !== 'clerk') { posePerson(h.P, h.pose || 'idle', dt); h.P.g.position.set(h.x, 0.2, h.z); }
+    updateFX(dt);
+  } else AU.update(false, 0, false);
+  frame++;
+  updateSky();
+  updatePrompt();
+  updateHUD(false);
+  if (frame % 3 === 0) drawMini();
+  renderer.render(scene, camera);
+}
+
+// 測試用：快速模擬（不畫圖）
+function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); } }
+
+/* ---------- 開始 ---------- */
+function startGame(fresh) {
+  if (fresh) { S = newState(); S.diff = +$('diffSel').value; }
+  $('intro').classList.add('hidden'); $('hud').classList.remove('hidden');
+  if (IS_TOUCH) initTouch();
+  const h = SITES.home; P.x = h.x; P.z = h.z + 1.5; P.yaw = Math.PI; P.pitch = 0; P.mode = 'foot';
+  if (S.onDuty) { const st = SITES.station; P.x = st.x; P.z = st.z - 2; P.yaw = Math.PI; }
+  respawnOwned();
+  initTraffic(); initPeds();
+  GAME.running = true; AU.init();
+  updateHUD(true);
+  if (fresh) {
+    MODAL.show(`<h2>👮 歡迎加入台中市政府警察局！</h2>
+      <p>你是剛從警察學校畢業的新進<b>警員</b>，分發到<b>大墩分局</b>。</p>
+      <p>🏠 你現在在家（大墩華廈）門口，樓下停著你的機車。<br>🕗 08:00 前要到分局打卡上班（小地圖上的 👮，黃色光柱會帶路）。<br>🛵 走到機車旁按 <b>F</b>（手機按 🚗）騎車。</p>
+      <p style="color:#9fb3d9">把每件勤務處理好、依法行政，考績好就能一路升到分局長！</p>`, [['出門上班 🚓', 'g', () => { MODAL.close(); if (!IS_TOUCH) canvas.requestPointerLock && canvas.requestPointerLock(); }]]);
+    STARTGUIDE.on = true;
+  } else toast('rank', '歡迎回來，' + RANKS[S.rank].name, '第 ' + S.day + ' 天 ' + fmtTime(S.time));
+}
+// 新手導引：上班前的黃色光柱指向分局
+const STARTGUIDE = { on: false };
+const _origTarget = MIS.update.bind(MIS);
+MIS.update = function (dt) {
+  _origTarget(dt);
+  if (!this.cur && !S.onDuty && isWorkday(S.day) && !S.workedToday && S.time > 6 * 60 && S.time < 12 * 60) {
+    const st = SITES.station; MARK.visible = true; MARK.position.set(st.x, 0, st.z); MARK.scale.setScalar(dist(P.x, P.z, st.x, st.z) < 25 ? 0.5 : 1);
+    const el = $('mission'); el.classList.remove('hidden'); el.innerHTML = `<b>🕗 準備上班</b><div class="obj">到大墩分局門口按 E 打卡（08:30 前）</div><div class="dist">📍 ${Math.round(dist(P.x, P.z, st.x, st.z))} 公尺</div>`;
+  } else if (!this.cur) { MARK.visible = false; }
+};
+
+function boot() {
+  if (!window.THREE) { $('loading').textContent = '⚠️ 3D 引擎載入失敗，請確認網路連線後重新整理。'; return; }
+  try {
+    buildCity(); buildMapImage(); initPlayerVehicles(); initStaticInteracts();
+  } catch (e) { $('loading').textContent = '⚠️ 載入錯誤：' + e.message; console.error(e); return; }
+  P.x = SITES.home.x; P.z = SITES.home.z + 1.5; P.yaw = Math.PI;
+  camera.position.set(SITES.station.x - 60, 40, SITES.station.z + 80); camera.lookAt(SITES.station.x, 0, SITES.station.z);
+  $('loading').classList.add('hidden'); $('introBtns').classList.remove('hidden');
+  const sv = loadGame();
+  if (!sv) $('bCont').classList.add('hidden');
+  $('bNew').onclick = () => { if (sv && !confirm('要開始新的警察生涯嗎？舊的存檔會被覆蓋。')) return; startGame(true); };
+  $('bCont').onclick = () => { S = sv; startGame(false); };
+  requestAnimationFrame(loop);
+}
+boot();
+
+</script>
+</body>
+</html>
