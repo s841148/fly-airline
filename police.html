@@ -24,6 +24,7 @@ canvas#c{display:block;width:100vw;height:100vh}
 .on{background:#1f7bff}.off{background:#666}
 #tr{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 #money{font-size:18px;font-weight:800;color:#ffd84a}
+#navbox{width:170px;font-size:14px;font-weight:700;border-width:2px;line-height:1.3;text-align:left}#navbox .arr{font-size:24px;vertical-align:middle;color:#fff}#navbox small{color:#c9d6f2;font-weight:600}
 #mini{width:170px;height:170px;border-radius:12px;border:2px solid rgba(120,170,255,.5);background:#1b2433}
 #mission{position:absolute;left:50%;top:10px;transform:translateX(-50%);text-align:center;max-width:46vw;font-size:14px}
 #mission b{color:#7fd0ff;font-size:16px}
@@ -104,13 +105,14 @@ canvas#c{display:block;width:100vw;height:100vh}
 #bigmap canvas{width:min(90vh,92vw);height:min(90vh,92vw);border-radius:14px;border:2px solid #3d6fd6}
 #rot{position:fixed;inset:0;z-index:60;background:#070b16;display:none;align-items:center;justify-content:center;text-align:center;font-size:20px;padding:20px}
 @media (orientation:portrait) and (pointer:coarse){#rot{display:flex}}
-@media (max-height:500px){#mini{width:120px;height:120px}#tl{font-size:12px;min-width:150px;padding:4px 8px}#tl .big{font-size:16px}#radio{top:96px}.rmsg{font-size:11px;padding:3px 6px}#mission{font-size:12px;max-width:40vw}#mission b{font-size:13px}.bar{height:7px;margin:2px 0 3px}}
+@media (max-height:500px){#mini{width:120px;height:120px}#navbox{width:120px;font-size:11px;padding:3px 6px}#navbox .arr{font-size:16px}#tl{font-size:12px;min-width:150px;padding:4px 8px}#tl .big{font-size:16px}#radio{top:96px}.rmsg{font-size:11px;padding:3px 6px}#mission{font-size:12px;max-width:40vw}#mission b{font-size:13px}.bar{height:7px;margin:2px 0 3px}}
 body.touch #bl{left:calc(3vw + 165px);bottom:6px;width:170px;font-size:11px;padding:4px 8px}
 body.touch #speedo{right:auto;left:calc(3vw + 345px);bottom:8px;font-size:24px;text-align:left}
 body.touch #toast{font-size:16px;padding:8px 16px;top:26%}body.touch #toast small{font-size:12px}
 body.touch #prompt{bottom:calc(6px + 80px);font-size:15px}
 body.touch #pursuit{bottom:auto;top:96px}
 body.touch #radio{width:min(300px,36vw)}
+body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;width:auto;max-width:34vw;white-space:nowrap}body.touch #navbox br{display:none}body.touch #navbox small{margin-left:6px}
 </style>
 </head>
 <body>
@@ -124,7 +126,7 @@ body.touch #radio{width:min(300px,36vw)}
     <div><span class="duty off" id="duty">下班</span> <span id="rank">警員</span></div>
     <div style="font-size:12px;color:#a9c1ef">考績 <b id="merit">0</b></div>
   </div>
-  <div id="tr"><div class="panel" id="money">$ 0</div><canvas id="mini" width="170" height="170"></canvas></div>
+  <div id="tr"><div class="panel" id="money">$ 0</div><canvas id="mini" width="170" height="170"></canvas><div id="navbox" class="panel hidden"></div></div>
   <div id="mission" class="panel hidden"></div>
   <div id="pursuit" class="panel hidden"><div id="pursuitTxt">逼停嫌犯車輛</div><div class="bar"><i id="pursuitBar" style="width:0%"></i></div></div>
   <div id="radio"></div>
@@ -152,10 +154,11 @@ body.touch #radio{width:min(300px,36vw)}
   <button class="tb" id="tWeap" style="right:15vw;bottom:42vh">🔄<small>武器</small></button>
   <button class="tb" id="tRun" style="left:calc(3vw + 155px);bottom:calc(5vh + 96px)">🏃<small>跑/煞車</small></button>
   <button class="tb" id="tMap" style="right:calc(10px + 180px);top:10px;width:46px;height:46px;font-size:18px">🗺</button>
+  <button class="tb" id="tRadio" style="right:25vw;bottom:26vh">📻<small>電台</small></button>
   <button class="tb" id="tMenu" style="right:calc(10px + 180px);top:66px;width:46px;height:46px;font-size:18px">☰</button>
 </div>
 
-<div id="bigmap" class="hidden"><canvas id="bigc" width="900" height="900"></canvas></div>
+<div id="bigmap" class="hidden"><canvas id="bigc" width="900" height="900"></canvas><button id="mapClose" class="btn r" style="position:absolute;right:14px;top:14px;font-size:20px">✕ 關閉</button></div>
 <div id="modal" class="modal hidden"><div class="box" id="mbox"></div></div>
 <div id="fade"></div>
 <div id="rot">📱 請把手機橫過來玩<br><small style="font-size:14px;color:#9fb3d9">（橫拿手機效果最好）</small></div>
@@ -175,7 +178,7 @@ body.touch #radio{width:min(300px,36vw)}
     <div id="loading">載入中…</div>
     <div class="help">
       <b>🖥 電腦操作</b>：點畫面鎖定滑鼠 · WASD 移動 · 滑鼠看 · 左鍵開槍 · 右鍵瞄準 · Shift 跑步<br>
-      E 互動 · F 上下車 · Q 喊話「警察！不要動！」 · H 警笛 · R 換彈匣 · 1 手槍 / 2 電擊槍 · M 地圖 · Esc 選單<br>
+      E 互動 · F 上下車 · Q 喊話「警察！不要動！」 · H 警笛 · R 換彈匣 · 1 手槍 / 2 電擊槍 · M 地圖（點地圖設導航）· N 車上電台 · Esc 選單<br>
       開車：W 油門 · S 煞車/倒車 · A D 轉彎 · 空白鍵 手煞車<br>
       <b>📱 手機</b>：橫拿手機，左邊搖桿移動 / 開車，右邊滑動看四周，按鈕操作。<br>
       <b>👮 一天的流程</b>：早上 8:00 前到「大墩分局」打卡上班（領槍、開警車）→ 聽無線電派案 → 17:00 後回分局打卡下班 → 下班可以騎車亂逛、吃夜市、買車，回家睡覺到隔天。週日放假。
@@ -226,6 +229,8 @@ const VEH_SPECS = {
   usedcar: { name: '二手小轎車', kind: 'car', max: 38, acc: 7, price: 180000, color: 0x9a9ea6 },
   suv: { name: '全新休旅車', kind: 'car', max: 42, acc: 8, price: 1050000, color: 0x22324a },
   sport: { name: '跑車', kind: 'car', max: 68, acc: 15, price: 3600000, color: 0xe2231a },
+  civcar: { name: '徵用的民眾汽車', kind: 'car', max: 38, acc: 8, price: 0, color: 0x999999 },
+  civscoot: { name: '徵用的民眾機車', kind: 'scooter', max: 24, acc: 8, price: 0, color: 0x999999 },
 };
 function newState() {
   return {
@@ -1094,8 +1099,8 @@ function makeVehicle(kind, color, police, opts) {
     if (police) {
       const side = policeSideMat();
       const mats = [side, side, paint, paint, paint, paint];
-      const m = new THREE.Mesh(new THREE.BoxGeometry(W, bodyH, L), mats); m.position.y = base + bodyH / 2; g.add(m);
-    } else g.add(bx(W, bodyH, L, paint, 0, base + bodyH / 2, 0));
+      const m = new THREE.Mesh(new THREE.BoxGeometry(W, bodyH, L, 4, 2, 8), mats); m.position.y = base + bodyH / 2; g.add(m); parts.body = m;
+    } else { const m = new THREE.Mesh(new THREE.BoxGeometry(W, bodyH, L, 4, 2, 8), paint); m.position.y = base + bodyH / 2; g.add(m); parts.body = m; }
     const top = base + bodyH; const cabH = suv ? 0.85 : sport ? 0.5 : 0.68, cabL = suv ? 2.9 : sport ? 1.8 : 2.3, cz = suv ? 0.35 : 0.15;
     // 車頂與柱子
     g.add(bx(W - 0.14, 0.07, cabL - 0.2, paint, 0, top + cabH, cz));
@@ -1183,14 +1188,14 @@ class NPCVeh {
     compactGroup(g);
     this.mesh = g; this.parts = parts; scene.add(g);
     this.plate = randPlate(kind); this.state = 'drive'; this.speed = 0; this.stuck = 0; this.ghost = 0; this.hp = 100;
-    this.radius = kind === 'car' ? 1.9 : 0.9;
+    this.radius = kind === 'car' ? 1.9 : 0.9; this.hp = 100;
   }
   place(i, j, ni, nj, s) {
     this.i = i; this.j = j; this.ni = ni; this.nj = nj; this.seg = segInfo(i, j, ni, nj); this.s = s;
     this.maxSp = this.kind === 'car' ? rand(10, 14) : rand(9, 12.5);
     this.off = this.kind === 'car' ? this.seg.w * 0.25 : this.seg.w / 2 - 1.3; this.offT = this.off;
     this.calcPos(); this.mesh.position.set(this.x, 0, this.z); this.yaw = Math.atan2(-this.seg.dx, -this.seg.dz); this.mesh.rotation.y = this.yaw;
-    this.state = 'drive'; this.speed = this.maxSp * 0.7; this.runRed = false; this.mesh.visible = true;
+    this.state = 'drive'; this.speed = this.maxSp * 0.7; this.runRed = false; this.mesh.visible = true; this.hp = 100;
   }
   calcPos() { const g = this.seg; this.x = g.x0 + g.dx * this.s + g.rx * this.off; this.z = g.z0 + g.dz * this.s + g.rz * this.off; }
   nextSeg(flee) {
@@ -1209,7 +1214,7 @@ class NPCVeh {
   }
   update(dt) {
     if (this.state === 'gone') return;
-    if (this.state === 'stopped' || this.state === 'parked') { this.speed = 0; return; }
+    if (this.state === 'stopped' || this.state === 'parked' || this.state === 'broken') { this.speed = 0; return; }
     const g = this.seg; let v = this.maxSp;
     if (this.state === 'flee') {
       v = 26; const toEnd = g.L - this.s; v = Math.min(v, 11 + toEnd * 0.9);
@@ -1269,7 +1274,7 @@ function initTraffic() {
 function updateTraffic(dt) {
   for (const v of TRAFFIC) {
     v.update(dt);
-    if (v.state === 'drive' && !v.flag && dist(v.x, v.z, P.x, P.z) > 210) { const r = randomSegNear(P.x, P.z, 90, 190); if (r) v.place(...r); }
+    if ((v.state === 'drive' || v.state === 'broken') && !v.flag && dist(v.x, v.z, P.x, P.z) > 210) { const r = randomSegNear(P.x, P.z, 90, 190); if (r) v.place(...r); }
   }
 }
 
@@ -1345,9 +1350,10 @@ function isNight() { return S.time < 330 || S.time > 1110; }
 /* ---------- 玩家可駕駛的車 ---------- */
 const PVEHS = [];
 class PVeh {
-  constructor(key, x, z, yaw) {
-    this.key = key; this.spec = VEH_SPECS[key]; this.police = key === 'police' || key === 'pscooter';
-    const { g, parts } = makeVehicle(this.spec.kind, this.spec.color, this.police, { sport: key === 'sport', suv: key === 'suv', clearGlass: true, L: key === 'sport' ? 4.3 : 4.5 });
+  constructor(key, x, z, yaw, color) {
+    this.key = key; this.spec = VEH_SPECS[key]; this.police = key === 'police' || key === 'pscooter'; this.color = color != null ? color : this.spec.color;
+    this.hp = 100; this.wreck = false; this.burning = null; this.civ = key === 'civcar' || key === 'civscoot';
+    const { g, parts } = makeVehicle(this.spec.kind, this.color, this.police, { sport: key === 'sport', suv: key === 'suv', clearGlass: true, L: key === 'sport' ? 4.3 : 4.5 });
     this.mesh = g; this.parts = parts; scene.add(g);
     this.x = x; this.z = z; this.yaw = yaw || 0; this.speed = 0; this.steer = 0; this.siren = false; this.flash = 0; this.home = { x, z, yaw: yaw || 0 };
     this.sync();
@@ -1391,12 +1397,13 @@ addEventListener('keydown', e => {
     case 'Digit1': setWeapon(0); break;
     case 'Digit2': setWeapon(1); break;
     case 'KeyM': toggleMap(); break;
+    case 'KeyN': RADIO.cycle(); break;
     case 'Escape': case 'Tab': e.preventDefault(); openPause(); break;
   }
 });
 addEventListener('keyup', e => { KEYS[e.code] = false; });
 canvas.addEventListener('click', () => { AU.init(); if (!IS_TOUCH && GAME.running && !MODAL.open && !pointerLocked) canvas.requestPointerLock && canvas.requestPointerLock(); });
-document.addEventListener('pointerlockchange', () => { pointerLocked = document.pointerLockElement === canvas; if (!pointerLocked && GAME.running && !MODAL.open && !IS_TOUCH) openPause(); });
+document.addEventListener('pointerlockchange', () => { pointerLocked = document.pointerLockElement === canvas; if (!pointerLocked && GAME.running && !MODAL.open && !GAME.mapOpen && !IS_TOUCH) openPause(); });
 addEventListener('mousemove', e => { if (pointerLocked) { INP.mx += e.movementX; INP.my += e.movementY; } });
 addEventListener('mousedown', e => { if (!pointerLocked) return; if (e.button === 0) { INP.fireHeld = true; fire(); } if (e.button === 2) INP.aim = true; });
 addEventListener('mouseup', e => { if (e.button === 0) INP.fireHeld = false; if (e.button === 2) INP.aim = false; });
@@ -1425,7 +1432,7 @@ function initTouch() {
   tap('tFire', () => { INP.fireHeld = true; fire(); }, () => { INP.fireHeld = false; });
   tap('tAct', doInteract); tap('tCar', toggleVehicle); tap('tShout', shout); tap('tSiren', toggleSiren); tap('tRel', reload);
   tap('tWeap', () => setWeapon(S.weapon === 0 ? 1 : 0)); tap('tRun', () => { INP.run = true; }, () => { INP.run = false; });
-  tap('tMap', toggleMap); tap('tMenu', openPause);
+  tap('tMap', toggleMap); tap('tMenu', openPause); tap('tRadio', () => RADIO.cycle());
 }
 
 /* ---------- 第一人稱手與槍 ---------- */
@@ -1527,21 +1534,40 @@ function toggleVehicle() {
     const cand = [[v.x + sx * 2, v.z + sz * 2], [v.x - sx * 2, v.z - sz * 2], [v.x + Math.sin(v.yaw) * 3.2, v.z + Math.cos(v.yaw) * 3.2]];
     let ok = cand[0]; for (const c of cand) { const p = { x: c[0], z: c[1] }; if (!collideCircle(p, 0.4)) { ok = c; break; } }
     P.x = ok[0]; P.z = ok[1]; P.mode = 'foot'; P.yaw = v.yaw; P.veh = null; P.lookYaw = 0;
-    $('speedo').classList.add('hidden');
+    $('speedo').classList.add('hidden'); RADIO.off();
     return;
   }
   const v = nearestPVeh(3.6);
-  if (!v) { const nv = TRAFFIC.find(t => dist(t.px, t.pz, P.x, P.z) < 3.5); if (nv) radio('這不是你的車喔！', 'info'); return; }
+  if (!v) { const nv = TRAFFIC.find(t => t.state !== 'gone' && dist(t.px, t.pz, P.x, P.z) < 3.8); if (nv) commandeer(nv); return; }
+  if (v.wreck) { radio('這台車已經燒毀了。', 'info'); return; }
   if (v.police && !S.onDuty) { radio('下班時間不能開警車，請騎自己的車。', 'info'); return; }
   P.mode = 'vehicle'; P.veh = v; P.lookYaw = 0; P.pitch = -0.05;
   $('speedo').classList.remove('hidden');
+}
+
+// 徵用民眾車輛
+function commandeer(n) {
+  if (!S.onDuty) { radio('這是民眾的車！下班時間你只是一般人，不能搶車。', 'warn'); return; }
+  if (n.flag) { radio('這台車是盤查中的車輛，不能徵用。', 'info'); return; }
+  if (n.state === 'broken') { radio('這台車已經壞了，開不動。', 'info'); return; }
+  if (n.speed > 2.5) { radio('車子還在開，等它停下來（例如紅燈時）再徵用。', 'info'); return; }
+  const urgent = MIS.cur && (MIS.cur.type === 'robbery' || PURSUIT.car || MIS.cur.type === 'traffic');
+  const t = '警察！緊急狀況，徵用你的車！'; showBubble('📢 ' + t); speak(t);
+  const key = n.kind === 'car' ? 'civcar' : 'civscoot';
+  const v = new PVeh(key, n.px, n.pz, n.yaw, n.color); PVEHS.push(v);
+  const k = TRAFFIC.indexOf(n); if (k >= 0) TRAFFIC.splice(k, 1); scene.remove(n.mesh);
+  const lx = -Math.cos(n.yaw), lz = Math.sin(n.yaw);
+  const h = spawnHuman({ data: { role: 'civ' } }, n.px + lx * 1.8, n.pz + lz * 1.8, n.yaw + Math.PI / 2); h.walk = { vx: lx * 1.6, vz: lz * 1.6, t: 12 }; h.pose = 'walk';
+  P.mode = 'vehicle'; P.veh = v; P.lookYaw = 0; P.pitch = -0.05; $('speedo').classList.remove('hidden');
+  if (!urgent) punish('rep', '沒有緊急情況卻徵用民眾車輛（民眾投訴）');
+  else radio('已徵用民眾車輛。用完記得歸還，撞壞要國家賠償。', 'info');
 }
 
 /* ---------- 每幀更新 ---------- */
 function updatePlayer(dt) {
   const sens = IS_TOUCH ? 0.0032 : 0.0022;
   const lookX = INP.mx * sens, lookY = INP.my * sens; INP.mx = INP.my = 0;
-  fireCD -= dt; shoutCD -= dt; P.hurtT += dt;
+  fireCD -= dt; shoutCD -= dt; P.hurtT += dt; if (P.shake > 0) P.shake = Math.max(0, P.shake - dt * 1.5);
   if (reloadT > 0) { reloadT -= dt; if (reloadT <= 0) { const need = 15 - S.ammo; const take = Math.min(need, S.reserve); S.ammo += take; S.reserve -= take; updateHUD(true); } }
   recoil = Math.max(0, recoil - dt * 6);
   const tired = S.energy < 15;
@@ -1573,7 +1599,7 @@ function updatePlayer(dt) {
     if (P.moving) P.bob += dt * (P.run ? 11 : 7.5);
     const onWalk = !!blockAtXZ(P.x, P.z);
     camera.position.set(P.x, (onWalk ? 0.18 : 0) + 1.62 + Math.sin(P.bob) * (P.moving ? 0.035 : 0), P.z);
-    camera.rotation.set(P.pitch + recoil * 0.04, P.yaw, 0);
+    camera.rotation.set(P.pitch + recoil * 0.04 + shakeOff(), P.yaw + shakeOff(), 0);
     // 瞄準
     P.aim = lerp(P.aim, (INP.aim && S.onDuty) ? 1 : 0, Math.min(1, dt * 10));
     camera.fov = 72 - P.aim * 24; camera.updateProjectionMatrix();
@@ -1596,7 +1622,8 @@ function updatePlayer(dt) {
   AU.update(P.veh && P.veh.siren, P.veh ? P.veh.speed : 0, P.mode === 'vehicle');
 }
 function driveVehicle(dt, lookX, lookY) {
-  const v = P.veh, sp = v.spec, car = sp.kind === 'car';
+  const v = P.veh, car = v.spec.kind === 'car';
+  const dmgK = v.burning != null ? 0.4 : v.hp < 30 ? 0.55 : v.hp < 60 ? 0.85 : 1; const sp = { max: v.spec.max * dmgK, acc: v.spec.acc * dmgK, kind: v.spec.kind };
   let thr = 0, st = 0;
   if (KEYS.KeyW || KEYS.ArrowUp) thr += 1; if (KEYS.KeyS || KEYS.ArrowDown) thr -= 1; if (KEYS.KeyA || KEYS.ArrowLeft) st += 1; if (KEYS.KeyD || KEYS.ArrowRight) st -= 1;
   thr += INP.joyY; st -= INP.joyX; thr = clamp(thr, -1, 1); st = clamp(st, -1, 1);
@@ -1613,8 +1640,9 @@ function driveVehicle(dt, lookX, lookY) {
   v.x += fx * v.speed * dt; v.z += fz * v.speed * dt;
   // 撞建築
   let cx = 0, cz = 0, hit = false;
-  for (const c of v.circles()) { const p = { x: c[0], z: c[1] }; if (collideCircle(p, c[2], 0.5)) { hit = true; cx += p.x - c[0]; cz += p.z - c[1]; } }
-  if (hit) { v.x += cx; v.z += cz; if (sAbs > 6) { AU.bump(); if (sAbs > 16) hurtPlayer(Math.round(sAbs * 0.6)); } v.speed *= sAbs > 6 ? -0.25 : 0.5; }
+  let ix = 0, iz = 0;
+  for (const c of v.circles()) { const p = { x: c[0], z: c[1] }; if (collideCircle(p, c[2], 0.5)) { hit = true; cx += p.x - c[0]; cz += p.z - c[1]; const pl = Math.hypot(p.x - c[0], p.z - c[1]) || 1; ix = c[0] - (p.x - c[0]) / pl * c[2]; iz = c[1] - (p.z - c[1]) / pl * c[2]; } }
+  if (hit) { v.x += cx; v.z += cz; if (sAbs > 6) { AU.bump(); damageVeh(v, (sAbs - 4) * 1.6, ix, iz); P.shake = Math.max(P.shake || 0, Math.min(0.8, sAbs / 30)); if (sAbs > 16) hurtPlayer(Math.round(sAbs * 0.6)); } v.speed *= sAbs > 6 ? -0.25 : 0.5; }
   // 撞車流
   for (const n of TRAFFIC) {
     if (n.state === 'gone' || Math.abs(n.px - v.x) > 8 || Math.abs(n.pz - v.z) > 8) continue;
@@ -1623,7 +1651,7 @@ function driveVehicle(dt, lookX, lookY) {
       const qx = n.px + nfx * q[0], qz = n.pz + nfz * q[0]; const d = dist(c[0], c[1], qx, qz), r = c[2] + q[1];
       if (d < r) {
         const k = (r - d) / (d || 1); v.x += (c[0] - qx) * k; v.z += (c[1] - qz) * k;
-        if (Math.abs(v.speed) > 3) { AU.bump(); MIS.onRam(n, Math.abs(v.speed)); if (n.state === 'drive') { n.speed = 0; n.stuck = 0; } }
+        if (Math.abs(v.speed) > 3) { AU.bump(); const rs = Math.abs(v.speed); damageVeh(v, (rs - 3) * 0.9, (c[0] + qx) / 2, (c[1] + qz) / 2); MIS.onRam(n, rs); if (n.state === 'drive') { n.speed = 0; n.stuck = 0; } }
         v.speed *= 0.55;
       }
     }
@@ -1644,13 +1672,14 @@ function driveVehicle(dt, lookX, lookY) {
   const seat = v.parts.seat, eyeY = v.parts.eyeY;
   const sx = seat.x, sz = seat.z; const cyw = Math.cos(v.yaw), syw = Math.sin(v.yaw);
   camera.position.set(v.x + sx * cyw + sz * syw, eyeY, v.z - sx * syw + sz * cyw);
-  camera.rotation.set(P.pitch, v.yaw + P.lookYaw, 0);
+  camera.rotation.set(P.pitch + shakeOff(), v.yaw + P.lookYaw + shakeOff(), 0);
   if (camera.fov !== 72) { camera.fov = 72; camera.updateProjectionMatrix(); }
   if (v.parts.wheel) v.parts.wheel.rotation.z = v.steer * (car ? 1.6 : 0.5);
   VIEW.visible = false;
   P.x = v.x; P.z = v.z; P.yaw = v.yaw + P.lookYaw; P.moving = sAbs > 0.5;
-  $('speedo').innerHTML = Math.round(sAbs * 3.6) + '<small>km/h' + (v.police ? (v.siren ? ' · 🚨警笛開' : ' · H 警笛') : '') + '</small>';
+  $('speedo').innerHTML = Math.round(sAbs * 3.6) + '<small>km/h' + (v.police ? (v.siren ? ' · 🚨警笛開' : ' · H 警笛') : '') + '</small><small>🔧 車況 ' + Math.round(v.hp) + '%　' + (RADIO.idx ? STATIONS[RADIO.idx].name : (IS_TOUCH ? '📻 電台' : 'N 電台')) + '</small>';
 }
+function shakeOff() { return P.shake > 0 ? rand(-1, 1) * P.shake * 0.03 : 0; }
 function hurtPlayer(dmg, fx, fz) {
   if (!GAME.running) return;
   S.hp -= dmg; P.hurtT = 0; const el = $('dmg'); el.style.opacity = 1; setTimeout(() => el.style.opacity = 0, 250);
@@ -1752,7 +1781,11 @@ const MIS = {
     if (type === 'gun' && (!this.cur || this.cur.type !== 'robbery') && performance.now() - this.shotT > 30000) { this.shotT = performance.now(); punish('dem', '沒有危害情況下開槍（違反警械使用規定）'); }
   },
   onShout() { if (this.cur && this.cur.onShout) this.cur.onShout(); },
-  onRam(n, sp) { if (PURSUIT.car === n) PURSUIT.prog += 0.1 + sp / 120; },
+  onRam(n, sp) {
+    n.hp -= sp * 1.5;
+    if (PURSUIT.car === n) { PURSUIT.prog += 0.1 + sp / 120; if (n.hp < 25) { PURSUIT.prog = 5; radio('嫌犯車輛被撞壞，冒煙停下來了！', 'info'); } }
+    else if (n.hp <= 0 && !n.flag && n.state === 'drive') n.state = 'broken';
+  },
   civHitByCar() { punish('dem', '駕車撞傷路人'); if (!S.onDuty) { S.money -= 8000; radio('賠償對方醫藥費 $8,000。', 'warn'); } },
   offDutyAbuse(reason) { if (this.abuseDay === S.day) return; this.abuseDay = S.day; punish('dem', reason); },
 };
@@ -2112,7 +2145,7 @@ function clockIn() {
   const late = isWorkday(S.day) && !S.workedToday && S.time > 8 * 60 + 30;
   S.onDuty = true; S.clockIn = S.time; S.workedToday = true;
   S.ammo = 15; S.reserve = 45; S.taser = 4; S.weapon = 0;
-  POLICE_CAR.reset(); POLICE_SCOOT.reset();
+  for (const pv of [POLICE_CAR, POLICE_SCOOT]) { if (pv.wreck || pv.hp < 100) restoreVeh(pv); else pv.reset(); }
   MIS.timer = 8;
   toast('rank', '👮 打卡上班　' + fmtTime(S.time), '已換上制服、到械彈室領槍（手槍 1 把、彈匣 4 個、電擊槍）');
   radio('📻 勤務指揮中心：' + RANKS[S.rank].name + '早安！今天也請注意安全。巡邏警車停在分局前面。', 'radio'); AU.radio();
@@ -2179,7 +2212,9 @@ function goSleep() {
       S.day++; S.workedToday = false;
     }
     S.time = target; S.energy = 100; S.hp = 100;
-    respawnOwned(); POLICE_CAR.reset(); POLICE_SCOOT.reset();
+    const wrecked = PVEHS.filter(v => !v.police && !v.civ && (v.wreck || v.hp < 100)).length;
+    if (wrecked) { S.money -= wrecked * 3000; setTimeout(() => radio('🔧 你的車已經送修好了，修車費 ' + fmtMoney(wrecked * 3000) + '。', 'info'), 1500); }
+    respawnOwned(); for (const pv of [POLICE_CAR, POLICE_SCOOT]) if (pv.wreck || pv.hp < 100) restoreVeh(pv); POLICE_CAR.reset(); POLICE_SCOOT.reset();
     const h = SITES.home; P.x = h.x; P.z = h.z + 1.5; P.yaw = Math.PI; P.pitch = 0;
     saveGame();
     setTimeout(() => { toast('rank', '☀️ 第 ' + S.day + ' 天（週' + WEEK[weekday(S.day)] + '）早上 07:00', isWorkday(S.day) ? '08:00 要到大墩分局打卡上班（08:30 後算遲到）' : '今天週日放假！'); }, 700);
@@ -2250,6 +2285,310 @@ function initStaticInteracts() {
     }
   });
 }
+
+/* ================= GPS 導航 ================= */
+const NAV = { way: null, path: null, color: '#ffd84a', t: 0, tgtKey: '', instr: '', arrows: [] };
+// 找最近的道路段，回傳投影點與兩端節點
+function nearestRoad(x, z) {
+  let best = null;
+  for (let i = 0; i < XR.length; i++) { // 南北向
+    const d = Math.abs(x - XR[i]); if (best && d >= best.d) continue;
+    const zc = clamp(z, ZR[0], ZR[ZR.length - 1]); let j = 0; while (j < ZR.length - 2 && zc > ZR[j + 1]) j++;
+    best = { d: d + Math.abs(z - zc), px: XR[i], pz: zc, a: [i, j], b: [i, j + 1], la: zc - ZR[j], lb: ZR[j + 1] - zc };
+  }
+  for (let j = 0; j < ZR.length; j++) { // 東西向
+    const d = Math.abs(z - ZR[j]); if (d >= best.d) continue;
+    const xc = clamp(x, XR[0], XR[XR.length - 1]); let i = 0; while (i < XR.length - 2 && xc > XR[i + 1]) i++;
+    best = { d: d + Math.abs(x - xc), px: xc, pz: ZR[j], a: [i, j], b: [i + 1, j], la: xc - XR[i], lb: XR[i + 1] - xc };
+  }
+  return best;
+}
+function findPath(sx, sz, tx, tz) {
+  const A = nearestRoad(sx, sz), B = nearestRoad(tx, tz);
+  const key = (n) => n[0] * 100 + n[1];
+  // 同一段路
+  if (key(A.a) === key(B.a) && key(A.b) === key(B.b)) return [[sx, sz], [A.px, A.pz], [B.px, B.pz], [tx, tz]];
+  const distM = new Map(), prev = new Map(), done = new Set();
+  distM.set(key(A.a), A.la); distM.set(key(A.b), A.lb); prev.set(key(A.a), null); prev.set(key(A.b), null);
+  const goal = new Map([[key(B.a), B.la], [key(B.b), B.lb]]);
+  let bestGoal = null, bestCost = 1e9;
+  while (true) {
+    let u = null, ud = 1e9;
+    for (const [k, d] of distM) if (!done.has(k) && d < ud) { ud = d; u = k; }
+    if (u == null || ud >= bestCost) break;
+    done.add(u);
+    if (goal.has(u) && ud + goal.get(u) < bestCost) { bestCost = ud + goal.get(u); bestGoal = u; }
+    const i = Math.floor(u / 100), j = u % 100;
+    for (const [ni, nj] of neighbors(i, j)) {
+      const nk = key([ni, nj]); const nd = ud + Math.abs(XR[ni] - XR[i]) + Math.abs(ZR[nj] - ZR[j]);
+      if (!distM.has(nk) || nd < distM.get(nk)) { distM.set(nk, nd); prev.set(nk, u); }
+    }
+  }
+  if (bestGoal == null) return [[sx, sz], [tx, tz]];
+  const nodes = []; for (let k = bestGoal; k != null; k = prev.get(k)) nodes.unshift(k);
+  const pts = [[sx, sz], [A.px, A.pz]];
+  for (const k of nodes) pts.push([XR[Math.floor(k / 100)], ZR[k % 100]]);
+  pts.push([B.px, B.pz], [tx, tz]);
+  // 去掉重複點
+  return pts.filter((p, n) => n === 0 || Math.hypot(p[0] - pts[n - 1][0], p[1] - pts[n - 1][1]) > 0.5);
+}
+function guideActive() { return !MIS.cur && !S.onDuty && isWorkday(S.day) && !S.workedToday && S.time > 6 * 60 && S.time < 12 * 60; }
+function navTarget() {
+  if (NAV.way) return { x: NAV.way.x, z: NAV.way.z, color: '#c060ff', name: '自訂目的地' };
+  const tg = MIS.cur && MIS.cur.target && MIS.cur.target();
+  if (tg) return { x: tg.x, z: tg.z, color: '#ffd84a', name: MIS.cur.title };
+  if (guideActive()) return { x: SITES.station.x, z: SITES.station.z, color: '#ffd84a', name: '大墩分局' };
+  return null;
+}
+function setWaypoint(x, z) {
+  if (NAV.way && dist(NAV.way.x, NAV.way.z, x, z) < 18) { NAV.way = null; radio('已取消導航目的地。', 'info'); }
+  else { NAV.way = { x, z }; radio('📍 已設定目的地：' + nearCross(x, z) + '附近，跟著路面箭頭走。', 'info'); }
+  NAV.t = 0;
+}
+// 路面箭頭
+const ARROW_GEO = (() => {
+  const s = new THREE.Shape(); s.moveTo(0, 1.3); s.lineTo(1.2, -0.3); s.lineTo(0.6, -0.3); s.lineTo(0, 0.4); s.lineTo(-0.6, -0.3); s.lineTo(-1.2, -0.3); s.closePath();
+  const g = new THREE.ShapeGeometry(s); g.rotateX(-Math.PI / 2); return g;
+})();
+const ARROW_MAT_Y = new THREE.MeshBasicMaterial({ color: 0xffd84a, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide });
+const ARROW_MAT_P = new THREE.MeshBasicMaterial({ color: 0xc060ff, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide });
+for (let k = 0; k < 14; k++) { const m = new THREE.Mesh(ARROW_GEO, ARROW_MAT_Y); m.visible = false; m.renderOrder = 2; scene.add(m); NAV.arrows.push(m); }
+const WAY_BEAM = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 70, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0xc060ff, transparent: true, opacity: 0.25, depthWrite: false, side: THREE.DoubleSide }));
+WAY_BEAM.position.y = 35; WAY_BEAM.visible = false; scene.add(WAY_BEAM);
+
+function updateNav(dt) {
+  const tg = navTarget(); const box = $('navbox');
+  WAY_BEAM.visible = !!NAV.way; if (NAV.way) WAY_BEAM.position.set(NAV.way.x, 35, NAV.way.z);
+  if (!tg) { NAV.path = null; NAV.arrows.forEach(a => a.visible = false); box.classList.add('hidden'); return; }
+  const dTarget = dist(P.x, P.z, tg.x, tg.z);
+  if (NAV.way && dTarget < 15) { NAV.way = null; toast('good', '🏁 已抵達目的地', ''); AU.good(); return; }
+  NAV.t -= dt;
+  const key = Math.round(tg.x) + ',' + Math.round(tg.z);
+  if (NAV.t <= 0 || key !== NAV.tgtKey) { NAV.t = 0.6; NAV.tgtKey = key; NAV.path = findPath(P.x, P.z, tg.x, tg.z); NAV.color = tg.color; }
+  const path = NAV.path; if (!path) return;
+  path[0] = [P.x, P.z];
+  // 路面箭頭：沿路線每 9 公尺一個，靠右車道
+  const mat = tg.color === '#c060ff' ? ARROW_MAT_P : ARROW_MAT_Y;
+  let k = 0, base = 0, next = 6;
+  const showArrows = dTarget > 12;
+  for (let s = 1; s < path.length && k < NAV.arrows.length && showArrows; s++) {
+    const [ax, az] = path[s - 1], [bx, bz] = path[s]; const L = Math.hypot(bx - ax, bz - az); if (L < 0.01) continue;
+    const dx = (bx - ax) / L, dz = (bz - az) / L; const off = (s > 1 && s < path.length - 1) ? 3.2 : 0;
+    while (next < base + L && k < NAV.arrows.length) {
+      const t = next - base; const a = NAV.arrows[k++]; a.visible = true; a.material = mat;
+      a.position.set(ax + dx * t + (-dz) * off, 0.28, az + dz * t + dx * off); a.rotation.y = Math.atan2(-dx, -dz);
+      a.scale.setScalar(P.mode === 'vehicle' ? 1.3 : 0.8); next += 9;
+    }
+    base += L;
+  }
+  for (; k < NAV.arrows.length; k++) NAV.arrows[k].visible = false;
+  // 轉彎提示
+  let acc = 0, instr = '';
+  for (let s = 1; s < path.length - 1; s++) {
+    const [ax, az] = path[s - 1], [bx, bz] = path[s], [cx, cz] = path[s + 1];
+    acc += Math.hypot(bx - ax, bz - az);
+    const d1x = bx - ax, d1z = bz - az, d2x = cx - bx, d2z = cz - bz;
+    const l1 = Math.hypot(d1x, d1z), l2 = Math.hypot(d2x, d2z); if (l1 < 1 || l2 < 1) continue;
+    const cr = (d1x * d2z - d1z * d2x) / (l1 * l2); const dot = (d1x * d2x + d1z * d2z) / (l1 * l2);
+    if (Math.abs(cr) > 0.5 && s > 1 && s < path.length - 2) {
+      const road = roadNameAt(bx + d2x / l2 * 20, bz + d2z / l2 * 20);
+      instr = `<span class="arr">${cr > 0 ? '↱' : '↰'}</span> ${Math.max(10, Math.round(acc / 10) * 10)} 公尺後${cr > 0 ? '右轉' : '左轉'}<br><small>${road}</small>`; break;
+    }
+    if (dot < -0.5) { instr = '<span class="arr">↶</span> 請迴轉'; break; }
+  }
+  if (!instr) instr = `<span class="arr">⬆</span> 直走 ${Math.round(dTarget)} 公尺<br><small>${tg.name}</small>`;
+  if (instr !== NAV.instr) { box.innerHTML = instr; NAV.instr = instr; }
+  box.style.borderColor = tg.color; box.classList.remove('hidden');
+}
+function drawRoute(g, ox, oz, lw) {
+  const path = NAV.path; if (!path || path.length < 2) return;
+  g.strokeStyle = NAV.color; g.lineWidth = lw; g.lineJoin = 'round'; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(path[0][0] - ox, path[0][1] - oz); for (let s = 1; s < path.length; s++) g.lineTo(path[s][0] - ox, path[s][1] - oz); g.stroke();
+}
+
+/* ================= 車輛損壞、冒煙、爆炸 ================= */
+const PUFFS = [];
+{
+  const g = new THREE.IcosahedronGeometry(0.5, 0);
+  for (let k = 0; k < 80; k++) { const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x888888, transparent: true, opacity: 0, depthWrite: false })); m.visible = false; scene.add(m); PUFFS.push({ m, life: 0, max: 1, vy: 1, grow: 1 }); }
+}
+let puffIdx = 0;
+function puff(x, y, z, kind) {
+  const p = PUFFS[puffIdx]; puffIdx = (puffIdx + 1) % PUFFS.length;
+  const fire = kind === 'fire';
+  p.m.material.color.setHex(fire ? pick([0xff8a20, 0xffc030, 0xff5010]) : kind === 'black' ? 0x222222 : 0x9a9a9a);
+  p.max = p.life = fire ? rand(0.4, 0.7) : rand(1.4, 2.4); p.vy = fire ? rand(1.5, 2.5) : rand(1.2, 2); p.grow = fire ? 0.6 : rand(1.2, 1.8);
+  p.base = fire ? 0.9 : kind === 'black' ? 0.75 : 0.65; p.m.position.set(x + rand(-0.3, 0.3), y, z + rand(-0.3, 0.3)); p.m.scale.setScalar(fire ? rand(0.6, 1) : rand(0.5, 0.8)); p.m.visible = true;
+}
+function updatePuffs(dt) {
+  for (const p of PUFFS) {
+    if (p.life <= 0) { if (p.m.visible) p.m.visible = false; continue; }
+    p.life -= dt; p.m.position.y += p.vy * dt; p.m.position.x += dt * 0.6; p.m.scale.multiplyScalar(1 + p.grow * dt);
+    p.m.material.opacity = Math.max(0, p.life / p.max) * p.base;
+  }
+}
+// 爆炸
+const BOOM_LIGHT = new THREE.PointLight(0xff8a30, 0, 60, 2); scene.add(BOOM_LIGHT);
+const BOOMS = [];
+const CHAR_MAT = new THREE.MeshLambertMaterial({ color: 0x2a2522 });
+AU.boom = function (d) {
+  if (!this.ctx) return; const v = d == null ? 1 : clamp(1 - d / 200, 0.1, 1);
+  this.noiseBurst(1.6, v, 120, 0.4); this.noiseBurst(0.6, v * 0.7, 600, 0.5); this.tone(70, 1.2, v * 0.7, 'sine', 30);
+};
+function explode(x, z, srcVeh) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffa030, transparent: true, opacity: 1 }));
+  m.position.set(x, 1.2, z); scene.add(m); BOOMS.push({ m, t: 0 });
+  BOOM_LIGHT.position.set(x, 3, z); BOOM_LIGHT.intensity = 6;
+  for (let k = 0; k < 14; k++) puff(x + rand(-1.5, 1.5), rand(0.5, 2.5), z + rand(-1.5, 1.5), k < 8 ? 'fire' : 'black');
+  const dp = dist(P.x, P.z, x, z); AU.boom(dp); P.shake = Math.max(P.shake || 0, clamp(1.2 - dp / 40, 0, 1.2));
+  if (P.veh === srcVeh) hurtPlayer(120, x, z); else if (dp < 9) hurtPlayer(Math.round(85 * (1 - dp / 9)), x, z);
+  for (const pd of PEDS) if (pd.alive && dist(pd.x, pd.z, x, z) < 8) pd.knock(25);
+  scareNear(x, z, 60);
+  for (const h of MHUMANS) if (h.alive && h.state !== 'down' && dist(h.x, h.z, x, z) < 6) { h.state = h.role === 'robber' ? 'stun' : 'down'; h.pose = h.state === 'stun' ? 'stun' : 'down'; h.timer = 8; }
+  for (const o of PVEHS) if (o !== srcVeh && !o.wreck) { const d = dist(o.x, o.z, x, z); if (d < 8) damageVeh(o, 60 * (1 - d / 8), x, z); }
+  for (const n of TRAFFIC) if (n.state !== 'gone') { const d = dist(n.px, n.pz, x, z); if (d < 8) { n.hp -= 80 * (1 - d / 8); if (n.hp <= 0 && !n.flag && n.state === 'drive') n.state = 'broken'; } }
+}
+function updateBooms(dt) {
+  for (let k = BOOMS.length - 1; k >= 0; k--) {
+    const b = BOOMS[k]; b.t += dt; b.m.scale.setScalar(1 + b.t * 14); b.m.material.opacity = Math.max(0, 1 - b.t / 0.6);
+    if (b.t > 0.6) { scene.remove(b.m); b.m.geometry.dispose(); BOOMS.splice(k, 1); }
+  }
+  BOOM_LIGHT.intensity = Math.max(0, BOOM_LIGHT.intensity - dt * 9);
+}
+// 凹陷
+function dent(v, wx, wz, amt) {
+  const body = v.parts.body; if (!body || amt < 2) return;
+  const lp = v.mesh.worldToLocal(new THREE.Vector3(wx, 0.7, wz));
+  const pos = body.geometry.attributes.position; const r = 1.3; const k = Math.min(0.22, amt * 0.008);
+  const cy = body.position.y; let ix = -lp.x, iz = -lp.z; const il = Math.hypot(ix, iz) || 1; ix /= il; iz /= il;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i) + cy, z = pos.getZ(i);
+    const d = Math.hypot(x - lp.x, z - lp.z, (y - 0.7) * 0.6); if (d > r) continue;
+    const f = k * (1 - d / r);
+    pos.setX(i, x + ix * f); pos.setZ(i, z + iz * f); pos.setY(i, pos.getY(i) - f * 0.3);
+  }
+  pos.needsUpdate = true; body.geometry.computeVertexNormals();
+}
+function damageVeh(v, amt, wx, wz) {
+  if (v.wreck || amt <= 0) return;
+  v.hp = Math.max(0, v.hp - amt);
+  if (wx != null) dent(v, wx, wz, amt);
+  if (v.hp <= 0 && v.burning == null) { v.burning = 5; if (P.veh === v) { radio('🔥 車子著火了！5 秒內快下車（F）！', 'warn'); showBubble('🔥 快下車！'); } }
+  else if (P.veh === v && v.hp < 30 && !v.warned) { v.warned = true; radio('⚠️ 引擎冒黑煙，車子快不行了！', 'warn'); }
+}
+function wreckVeh(v) {
+  v.wreck = true; v.burning = null; v.speed = 0; v.siren = false; v.wreckT = 0;
+  v.mesh.traverse(o => { if (!o.isMesh) return; if (o.material && o.material.transparent) o.visible = false; else o.material = CHAR_MAT; });
+  if (P.veh === v) { // 被炸出車外
+    const lx = -Math.cos(v.yaw), lz = Math.sin(v.yaw); P.mode = 'foot'; P.veh = null; P.x = v.x + lx * 2.5; P.z = v.z + lz * 2.5; $('speedo').classList.add('hidden'); RADIO.off();
+  }
+  if (v.police && S.onDuty) punish('rep', v.spec.name + '損毀（公物損壞）');
+  if (v.civ) punish('dem', '徵用的民眾車輛被撞毀，需國家賠償');
+}
+function restoreVeh(v) {
+  scene.remove(v.mesh);
+  const { g, parts } = makeVehicle(v.spec.kind, v.color, v.police, { sport: v.key === 'sport', suv: v.key === 'suv', clearGlass: true, L: v.key === 'sport' ? 4.3 : 4.5 });
+  v.mesh = g; v.parts = parts; scene.add(g); v.hp = 100; v.wreck = false; v.burning = null; v.warned = false; v.reset();
+}
+function updateVehDamage(dt) {
+  for (let k = PVEHS.length - 1; k >= 0; k--) {
+    const v = PVEHS[k]; const near = dist(v.x, v.z, P.x, P.z) < 150;
+    const fx = -Math.sin(v.yaw), fz = -Math.cos(v.yaw); const hx = v.x + fx * (v.spec.kind === 'car' ? 1.6 : 0.4), hz = v.z + fz * (v.spec.kind === 'car' ? 1.6 : 0.4);
+    if (v.burning != null) {
+      v.burning -= dt; if (near && Math.random() < dt * 25) puff(hx, 1.1, hz, 'fire'); if (near && Math.random() < dt * 10) puff(hx, 1.5, hz, 'black');
+      if (v.burning <= 0) { explode(v.x, v.z, v); wreckVeh(v); }
+    } else if (v.wreck) {
+      v.wreckT += dt; if (near && v.wreckT < 30 && Math.random() < dt * 6) puff(v.x, 1.2, v.z, 'black');
+      if (v.police && v.wreckT > 12 && dist(P.x, P.z, v.x, v.z) > 50) { restoreVeh(v); if (S.onDuty) radio('📻 分局已經幫你準備好新的' + v.spec.name + '，停在分局前面。', 'radio'); }
+      else if (v.civ && v.wreckT > 25 && dist(P.x, P.z, v.x, v.z) > 80) { scene.remove(v.mesh); PVEHS.splice(k, 1); }
+    } else if (near && v.hp < 60) {
+      if (Math.random() < dt * (v.hp < 30 ? 9 : 4)) puff(hx, 1.1, hz, v.hp < 30 ? 'black' : 'smoke');
+    }
+    // 徵用的車：離開太遠就還給車主
+    if (v.civ && !v.wreck && P.veh !== v && dist(P.x, P.z, v.x, v.z) > 160) { scene.remove(v.mesh); PVEHS.splice(k, 1); }
+  }
+  for (const n of TRAFFIC) if (n.hp < 50 && n.state !== 'gone' && Math.random() < dt * 4 && dist(n.px, n.pz, P.x, P.z) < 100) puff(n.px - Math.sin(n.yaw) * 1.6, 1.1, n.pz - Math.cos(n.yaw) * 1.6, n.hp < 20 ? 'black' : 'smoke');
+  updatePuffs(dt); updateBooms(dt);
+}
+
+/* ================= 車上電台（原創自動作曲） ================= */
+const STATIONS = [
+  { name: '📻 關閉' },
+  { name: '🎵 台中流行 FM 99.9', bpm: 108, root: 60, prog: [[0, 4, 7], [7, 11, 14], [9, 12, 16], [5, 9, 12]], scale: [0, 2, 4, 7, 9], lead: 'square', pad: 'triangle', cut: 2600, drums: { k: [0, 8, 11], s: [4, 12], h: 2 }, mel: 0.55 },
+  { name: '☕ 麥麥 Lo-Fi 電台', bpm: 78, root: 57, prog: [[0, 4, 7, 11], [9, 12, 16, 19], [2, 5, 9, 12], [7, 11, 14, 17]], scale: [0, 2, 4, 7, 9, 11], lead: 'sine', pad: 'sine', cut: 1200, drums: { k: [0, 10], s: [4, 12], h: 2, swing: true }, mel: 0.3 },
+  { name: '🎤 台語金曲台', bpm: 92, root: 57, prog: [[0, 3, 7], [5, 8, 12], [7, 11, 14], [0, 3, 7]], scale: [0, 3, 5, 7, 10], lead: 'sawtooth', pad: 'triangle', cut: 1800, drums: { k: [0, 6, 8], s: [4, 12], h: 4 }, mel: 0.6, vib: true },
+  { name: '📰 大墩新聞台', news: true },
+];
+const RADIO = {
+  idx: 0, gain: null, timer: null, step: 0, next: 0, motif: [], newsT: 0,
+  init() {
+    if (!AU.ctx || this.gain) return;
+    this.gain = AU.ctx.createGain(); this.gain.gain.value = 0; this.gain.connect(AU.master);
+    this.filter = AU.ctx.createBiquadFilter(); this.filter.type = 'lowpass'; this.filter.frequency.value = 2400; this.filter.connect(this.gain);
+  },
+  cycle() {
+    if (P.mode !== 'vehicle') { radio('上車才能聽電台。', 'info'); return; }
+    AU.init(); this.init(); if (!this.gain) return;
+    this.idx = (this.idx + 1) % STATIONS.length; this.start();
+    showBubble(STATIONS[this.idx].name); $('tRadio') && ($('tRadio').style.background = this.idx ? 'rgba(160,60,255,.6)' : '');
+  },
+  start() {
+    clearInterval(this.timer); this.timer = null;
+    const st = STATIONS[this.idx];
+    if (!st.bpm && !st.news) { this.gain && this.gain.gain.setTargetAtTime(0, AU.ctx.currentTime, 0.1); return; }
+    this.gain.gain.setTargetAtTime(0.32, AU.ctx.currentTime, 0.2);
+    if (st.news) { this.newsT = 0.5; this.timer = setInterval(() => this.newsTick(), 500); return; }
+    this.filter.frequency.value = st.cut; this.step = 0; this.next = AU.ctx.currentTime + 0.1; this.makeMotif(st);
+    this.timer = setInterval(() => this.sched(), 25);
+  },
+  off() { if (this.idx) { this.idx = 0; this.start(); } },
+  makeMotif(st) { this.motif = []; for (let k = 0; k < 16; k++) this.motif.push(Math.random() < st.mel ? pick(st.scale) + (Math.random() < 0.3 ? 12 : 0) : null); },
+  note(f, t, dur, type, vol, vib) {
+    const c = AU.ctx, o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.setValueAtTime(f, t);
+    if (vib) { const l = c.createOscillator(), lg = c.createGain(); l.frequency.value = 5.5; lg.gain.value = f * 0.012; l.connect(lg); lg.connect(o.frequency); l.start(t); l.stop(t + dur + 0.1); }
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(this.filter); o.start(t); o.stop(t + dur + 0.05);
+  },
+  drum(kind, t) {
+    const c = AU.ctx;
+    if (kind === 'k') { const o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.15); g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.2); o.connect(g); g.connect(this.gain); o.start(t); o.stop(t + 0.25); return; }
+    const s = c.createBufferSource(); s.buffer = AU.noise; const f = c.createBiquadFilter(); f.type = kind === 'h' ? 'highpass' : 'bandpass'; f.frequency.value = kind === 'h' ? 7000 : 1800;
+    const g = c.createGain(); const d = kind === 'h' ? 0.04 : 0.15; g.gain.setValueAtTime(kind === 'h' ? 0.12 : 0.3, t); g.gain.exponentialRampToValueAtTime(0.001, t + d);
+    s.connect(f); f.connect(g); g.connect(this.gain); s.start(t); s.stop(t + d + 0.02);
+  },
+  sched() {
+    const st = STATIONS[this.idx]; if (!st || !st.bpm) return;
+    const c = AU.ctx, sp = 60 / st.bpm / 4;
+    while (this.next < c.currentTime + 0.15) {
+      const t = this.next, s16 = this.step % 16, bar = Math.floor(this.step / 16), ch = st.prog[bar % st.prog.length];
+      const mf = n => 440 * Math.pow(2, (n - 69) / 12);
+      if (s16 === 0) ch.forEach(n => this.note(mf(st.root + n), t, sp * 15, st.pad, 0.035));
+      if (s16 % 4 === 0 || (s16 % 4 === 2 && Math.random() < 0.3)) this.note(mf(st.root - 24 + ch[0] + (s16 === 8 ? 7 : 0)), t, sp * 2.5, 'triangle', 0.12);
+      const m = this.motif[s16]; if (m != null && (bar % 4 !== 3 || s16 < 8)) this.note(mf(st.root + 12 + m), t, sp * (Math.random() < 0.5 ? 2 : 3), st.lead, st.lead === 'sine' ? 0.06 : 0.035, st.vib);
+      const D = st.drums; if (D.k.includes(s16)) this.drum('k', t); if (D.s.includes(s16)) this.drum('s', t); if (s16 % D.h === 0) this.drum('h', t + (D.swing && s16 % 4 === 2 ? sp * 0.3 : 0));
+      this.step++; if (this.step % 128 === 0) this.makeMotif(st);
+      this.next += sp;
+    }
+    // 警笛開著時把音樂關小聲
+    this.gain.gain.setTargetAtTime(P.veh && P.veh.siren ? 0.1 : 0.32, c.currentTime, 0.2);
+  },
+  newsTick() {
+    this.newsT -= 0.5; if (this.newsT > 0) return; this.newsT = rand(16, 22);
+    [880, 1100, 1320].forEach((f, k) => this.note(f, AU.ctx.currentTime + k * 0.15, 0.3, 'sine', 0.08));
+    const h = Math.floor(S.time / 60);
+    const lines = [
+      `大墩新聞台，現在時間${h}點${Math.floor(S.time % 60)}分。`,
+      `本台快訊，大墩分局員警至今已經逮捕${S.stats.arrests}名嫌犯，處理${S.stats.robbery}件搶案，治安維護有成。`,
+      `路況報導，${pick(HNAMES)}和${pick(VNAMES)}一帶車多，請用路人多加小心。`,
+      `交通部提醒，酒後不開車，呼氣酒精濃度超過每公升零點一五毫克就會被開罰。`,
+      `一中街夜市${S.time >= 17 * 60 ? '現在正在營業，人潮眾多' : '傍晚五點開始營業'}，歡迎民眾前往品嚐台中小吃。`,
+      `氣象報導，台中今天${pick(['晴朗', '多雲', '晴時多雲'])}，氣溫${randi(19, 29)}度。`,
+      `大墩車業週年慶，二手小轎車只要十八萬，歡迎參觀。`,
+      `警方呼籲，看到可疑人士請撥打一一零報案。`,
+    ];
+    speak(pick(lines));
+  },
+};
 
 /* ================= 介面 ================= */
 const GAME = { running: false, tscale: 1, mapOpen: false };
@@ -2352,8 +2691,12 @@ function showHelp() {
   <h3>🚔 勤務</h3><p><b>交通攔查</b>：找到目標車，坐警車開警笛（H）跟在後面，駕駛會靠邊停。下車走到駕駛座窗邊按 E，先查證件、查通緝、看有沒有酒味要酒測，再決定開什麼罰單或逮捕。<br>
   <b>搶案</b>：到現場先找掩護、喊話（Q）要嫌犯放下武器。投降的走過去按 E 上手銬。嫌犯開槍才還擊，沒警告就開槍、或對投降的人開槍會被懲處。電擊槍（2）可以不傷人制伏。<br>
   <b>巡邏</b>：到紅色巡邏箱下車按 E 簽巡邏表。<b>酒測臨檢</b>：到臨檢點設站，盤查 5 輛車。</p>
+  <h3>🧭 導航、電台、車輛</h3><p><b>導航</b>：有勤務時會自動導航，跟著小地圖的黃色路線和路面箭頭走，右上角會提示前面要左轉還是右轉。按 M 打開大地圖，點一下任何地方就能設定紫色的自訂目的地，再點一次取消。<br>
+  <b>電台</b>：開車時按 N（手機按 📻）換台：流行、Lo-Fi、台語金曲、新聞台。<br>
+  <b>撞壞</b>：車子撞多了會凹、冒白煙再冒黑煙，車況 0% 會起火，5 秒內不下車就會爆炸！警車撞壞會被申誡，分局會準備新的警車；自己的車睡覺時會送修（每台 $3,000）。<br>
+  <b>徵用民眾車輛</b>：執勤中走到停下來的民眾車旁按 F，可以緊急徵用。有搶案或追車時才合理，沒事亂徵用會被投訴；徵用的車撞壞要記過。</p>
   <h3>⭐ 考績</h3><p>任務做得好加考績、領獎金，累積考績升官：警員 → 巡佐 → 巡官 → 派出所所長 → 分局長。遲到、早退、曠職、亂開槍、撞人會被申誡或記過，三次申誡＝一次記過，三次記過＝一次大過，三支大過免職。</p>
-  <h3>🎮 按鍵</h3><p>WASD 移動・滑鼠看・左鍵開槍・右鍵瞄準・Shift 跑・E 互動・F 上下車・Q 喊話・H 警笛・R 換彈・1 手槍・2 電擊槍・M 地圖・Esc 暫停<br>開車：W 油門・S 煞車倒車・A D 轉彎・空白鍵 手煞車</p>`,
+  <h3>🎮 按鍵</h3><p>WASD 移動・滑鼠看・左鍵開槍・右鍵瞄準・Shift 跑・E 互動・F 上下車（執勤中可在民眾車旁按 F 緊急徵用）・Q 喊話・H 警笛・N 電台・R 換彈・1 手槍・2 電擊槍・M 地圖（點地圖設定導航）・Esc 暫停<br>開車：W 油門・S 煞車倒車・A D 轉彎・空白鍵 手煞車</p>`,
     [['返回', 'g', () => { MODAL.close(); openPause(); }]]);
 }
 /* ---------- 小地圖 ---------- */
@@ -2387,14 +2730,15 @@ function drawMini() {
   g.font = '22px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
   const drawIcon = (x, z, ic) => { g.save(); g.translate(x - P.x, z - P.z); g.rotate(-P.yaw); g.fillText(ic, 0, 0); g.restore(); };
   for (const [s, ic] of ICONS()) if (s) drawIcon(s.x != null ? s.x : s.cx, s.z != null ? s.z : (s.z1 + 2), ic);
-  const tg = MIS.cur && MIS.cur.target && MIS.cur.target();
+  drawRoute(g, P.x, P.z, 7);
+  const tg = navTarget();
   if (PURSUIT.car) { g.fillStyle = '#ff3030'; g.beginPath(); g.arc(PURSUIT.car.px - P.x, PURSUIT.car.pz - P.z, 9, 0, 7); g.fill(); }
   g.restore();
   if (tg) { // 目標（超出範圍就畫在邊緣）
     let dx = tg.x - P.x, dz = tg.z - P.z; const cs = Math.cos(P.yaw), sn = Math.sin(P.yaw);
     let mx = (dx * cs - dz * sn) * sc, my = (dx * sn + dz * cs) * sc; const R = W / 2 - 10; const L = Math.hypot(mx, my);
     if (L > R) { mx *= R / L; my *= R / L; }
-    g.fillStyle = '#ffd84a'; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath(); g.arc(W / 2 + mx, W / 2 + my, 7, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = tg.color; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath(); g.arc(W / 2 + mx, W / 2 + my, 7, 0, 7); g.fill(); g.stroke();
   }
   // 玩家箭頭
   g.fillStyle = S.onDuty ? '#5cb8ff' : '#fff'; g.strokeStyle = '#000'; g.lineWidth = 1.5;
@@ -2404,21 +2748,34 @@ function drawMini() {
 }
 function toggleMap() {
   GAME.mapOpen = !GAME.mapOpen; $('bigmap').classList.toggle('hidden', !GAME.mapOpen);
-  if (!GAME.mapOpen) return;
-  releasePointer();
+  if (GAME.mapOpen) { releasePointer(); drawBigMap(); }
+  else if (!IS_TOUCH && GAME.running && !MODAL.open) { try { canvas.requestPointerLock(); } catch (e) { } }
+}
+function drawBigMap() {
   const c = $('bigc'), g = c.getContext('2d'); const s = 900 / 1000;
+  g.clearRect(0, 0, 900, 900);
   g.save(); g.scale(s, s); g.drawImage(MAPIMG, 0, 0);
+  g.save(); g.translate(500, 500); drawRoute(g, 0, 0, 6); g.restore();
   g.font = '26px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
   for (const [st, ic, nm] of ICONS()) if (st) { const x = (st.x != null ? st.x : st.cx) + 500, z = (st.z != null ? st.z : st.z1 + 2) + 500; g.fillText(ic, x, z); g.font = 'bold 13px ' + FONT; g.fillStyle = '#fff'; g.strokeStyle = '#000'; g.lineWidth = 3; g.strokeText(nm, x, z + 20); g.fillText(nm, x, z + 20); g.font = '26px sans-serif'; }
   const tg = MIS.cur && MIS.cur.target && MIS.cur.target();
   if (tg) { g.fillStyle = '#ffd84a'; g.strokeStyle = '#000'; g.lineWidth = 3; g.beginPath(); g.arc(tg.x + 500, tg.z + 500, 12, 0, 7); g.fill(); g.stroke(); }
+  if (NAV.way) { g.fillStyle = '#c060ff'; g.strokeStyle = '#fff'; g.lineWidth = 3; g.beginPath(); g.arc(NAV.way.x + 500, NAV.way.z + 500, 13, 0, 7); g.fill(); g.stroke(); g.fillStyle = '#fff'; g.font = 'bold 16px sans-serif'; g.fillText('📍', NAV.way.x + 500, NAV.way.z + 500 - 22); }
   g.translate(P.x + 500, P.z + 500); g.rotate(-P.yaw); g.fillStyle = '#5cb8ff'; g.strokeStyle = '#000'; g.lineWidth = 2;
   g.beginPath(); g.moveTo(0, -16); g.lineTo(11, 12); g.lineTo(0, 6); g.lineTo(-11, 12); g.closePath(); g.fill(); g.stroke();
   g.restore();
-  g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(10, 10, 300, 34); g.fillStyle = '#fff'; g.font = 'bold 16px ' + FONT; g.textAlign = 'left'; g.fillText('🗺 台中市（按 M 或點一下關閉）', 20, 33);
+  g.fillStyle = 'rgba(0,0,0,.65)'; g.fillRect(10, 10, 520, 34); g.fillStyle = '#fff'; g.font = 'bold 16px ' + FONT; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+  g.fillText('🗺 點地圖設定導航目的地（再點一次取消）・M 或 ✕ 關閉', 20, 33);
 }
-$('bigmap').addEventListener('click', toggleMap);
-$('bigmap').addEventListener('touchstart', e => { e.preventDefault(); toggleMap(); }, { passive: false });
+function mapPick(cx, cy) {
+  const r = $('bigc').getBoundingClientRect(); const x = (cx - r.left) / r.width * 1000 - 500, z = (cy - r.top) / r.height * 1000 - 500;
+  if (x < -480 || x > 480 || z < -480 || z > 480) return;
+  setWaypoint(x, z); AU.click(); NAV.t = 0; updateNav(0); drawBigMap();
+}
+$('bigc').addEventListener('click', e => { e.stopPropagation(); mapPick(e.clientX, e.clientY); });
+$('bigc').addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); const t = e.changedTouches[0]; mapPick(t.clientX, t.clientY); }, { passive: false });
+$('mapClose').addEventListener('click', e => { e.stopPropagation(); toggleMap(); });
+$('mapClose').addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); toggleMap(); }, { passive: false });
 
 /* ================= 主程式 ================= */
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: !IS_TOUCH, powerPreference: 'high-performance' });
@@ -2493,8 +2850,10 @@ function loop(now) {
     updateTraffic(dt);
     updatePeds(dt);
     MIS.update(dt);
-    for (const h of MHUMANS) if (h.role !== 'robber' && h.role !== 'clerk') { posePerson(h.P, h.pose || 'idle', dt); h.P.g.position.set(h.x, 0.2, h.z); }
-    updateFX(dt);
+    for (let k = MHUMANS.length - 1; k >= 0; k--) { const h = MHUMANS[k]; if (h.role === 'robber' || h.role === 'clerk') continue;
+      if (h.walk) { h.x += h.walk.vx * dt; h.z += h.walk.vz * dt; h.P.g.rotation.y = Math.atan2(h.walk.vx, h.walk.vz); h.walk.t -= dt; if (h.walk.t <= 0) { removeHuman(h); continue; } }
+      posePerson(h.P, h.pose || 'idle', dt, 1.6); h.P.g.position.set(h.x, 0.2, h.z); }
+    updateFX(dt); updateVehDamage(dt); updateNav(dt);
   } else AU.update(false, 0, false);
   frame++;
   updateSky();
@@ -2505,7 +2864,7 @@ function loop(now) {
 }
 
 // 測試用：快速模擬（不畫圖）
-function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); } }
+function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); } }
 
 /* ---------- 開始 ---------- */
 function startGame(fresh) {
@@ -2531,7 +2890,7 @@ const STARTGUIDE = { on: false };
 const _origTarget = MIS.update.bind(MIS);
 MIS.update = function (dt) {
   _origTarget(dt);
-  if (!this.cur && !S.onDuty && isWorkday(S.day) && !S.workedToday && S.time > 6 * 60 && S.time < 12 * 60) {
+  if (guideActive()) {
     const st = SITES.station; MARK.visible = true; MARK.position.set(st.x, 0, st.z); MARK.scale.setScalar(dist(P.x, P.z, st.x, st.z) < 25 ? 0.5 : 1);
     const el = $('mission'); el.classList.remove('hidden'); el.innerHTML = `<b>🕗 準備上班</b><div class="obj">到大墩分局門口按 E 打卡（08:30 前）</div><div class="dist">📍 ${Math.round(dist(P.x, P.z, st.x, st.z))} 公尺</div>`;
   } else if (!this.cur) { MARK.visible = false; }
