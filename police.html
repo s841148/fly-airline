@@ -1446,7 +1446,18 @@ function makeVehicle(kind, color, police, opts) {
     const front = new THREE.Mesh(extrudeProfile('lowF_' + type, clipU(T.lower, fu, 99), W, 0.06).clone(), paint); g.add(front); parts.body = front;
     g.add(new THREE.Mesh(extrudeProfile('lowR_' + type, clipU(T.lower, -99, ru), W, 0.06), paint));
     const mid = clipU(T.lower, ru - 0.02, fu + 0.02);
-    for (const sx of [-1, 1]) { const dm = new THREE.Mesh(extrudeProfile('lowD_' + type, mid, 0.14, 0.03), paint); dm.position.x = sx * (W / 2 - 0.07); g.add(dm); }
+    // 駕駛座車門（左前）可以開關：門軸在前緣
+    const [ga0, ga1, gc1] = T.green; const bu = (ga1[0] + gc1[0]) / 2 + 0.1;
+    const rearSide = clipU(T.lower, ru - 0.02, bu), frontDoor = clipU(T.lower, bu, fu + 0.02);
+    const rs = new THREE.Mesh(extrudeProfile('lowD_' + type, mid, 0.14, 0.03), paint); rs.position.x = W / 2 - 0.07; g.add(rs);
+    const ls = new THREE.Mesh(extrudeProfile('lowDR_' + type, rearSide, 0.14, 0.03), paint); ls.position.x = -(W / 2 - 0.07); g.add(ls);
+    const hinge = new THREE.Group(); hinge.position.set(-(W / 2 - 0.02), 0, -fu); g.add(hinge);
+    const door = new THREE.Mesh(extrudeProfile('lowDF_' + type, frontDoor, 0.12, 0.03), paint); door.position.set(0.05, 0, fu); hinge.add(door);
+    hinge.add(boxAt(0.03, ga0[1] - 0.5, Math.abs(fu - bu) - 0.1, vm(0x3a3734), 0.12, (ga0[1] + 0.5) / 2, fu - (fu + bu) / 2));
+    const dw = quadGeo([-0.03, ga0[1] + 0.02, fu - ga0[0] + 0.05], [-0.03, ga0[1] + 0.02, fu - bu], [-0.03, ga1[1] - 0.06, fu - bu], [-0.03, ga1[1] - 0.06, fu - ga1[0] + 0.12]);
+    hinge.add(new THREE.Mesh(dw, GLASS_CLEAR));
+    hinge.add(boxAt(0.02, 0.03, 0.14, CHROME_MAT, -0.08, ga0[1] - 0.12, fu - bu - 0.25));
+    parts.door = hinge;
     g.add(boxAt(W - 0.2, 0.06, Math.abs(fu - ru), paint, 0, 0.36, -(fu + ru) / 2)); // 車底
   } else { const body = new THREE.Mesh(extrudeProfile('low_' + type, T.lower, W, 0.06), paint); g.add(body); parts.body = body; }
   // 車窗區
@@ -1530,8 +1541,8 @@ function makeVehicle(kind, color, police, opts) {
     const lining = new THREE.Mesh(new THREE.PlaneGeometry(Wg - 0.05, Math.abs(a1[0] - c1[0])), vm(0xb8b0a0, { side: THREE.DoubleSide })); lining.rotation.x = Math.PI / 2; lining.position.set(0, a1[1] - 0.01, -(a1[0] + c1[0]) / 2); g.add(lining);
     // 車內後照鏡：掛在擋風玻璃上緣
     const mz = -(a1[0] - 0.04), my = a1[1] - 0.09;
-    const mir = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.055), MIRROR.mat); mir.position.set(0.02, my, mz + 0.012); mir.rotation.y = 0.2; g.add(mir);
-    g.add(boxAt(0.22, 0.07, 0.02, vm(0x111111), 0.02, my, mz)); g.add(boxAt(0.02, 0.07, 0.02, vm(0x111111), 0.02, my + 0.06, mz));
+    const mir = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.045), MIRROR.mat); mir.position.set(0.02, my, mz + 0.012); mir.rotation.y = 0.2; g.add(mir);
+    g.add(boxAt(0.17, 0.058, 0.02, vm(0x111111), 0.02, my, mz)); g.add(boxAt(0.02, 0.07, 0.02, vm(0x111111), 0.02, my + 0.06, mz));
   }
   if (opts.driver) {
     const d = new THREE.Group(); d.add(boxAt(0.42, 0.5, 0.26, pm(pick(SHIRTS)), 0, a0[1] + 0.05, 0)); d.add(boxAt(0.2, 0.24, 0.22, pm(pick(SKINS)), 0, a0[1] + 0.45, 0)); d.add(boxAt(0.21, 0.08, 0.23, pm(0x1a1a1a), 0, a0[1] + 0.6, 0.01));
@@ -1890,15 +1901,15 @@ function toggleSiren() {
 /* ---------- 上下車 ---------- */
 function nearestPVeh(r) { let best = null, bd = r; for (const v of PVEHS) { const d = dist(v.x, v.z, P.x, P.z); if (d < bd) { bd = d; best = v; } } return best; }
 function toggleVehicle() {
-  if (!GAME.running || MODAL.open) return;
+  if (!GAME.running || MODAL.open || P.anim) return;
   if (P.mode === 'vehicle') {
     const v = P.veh; if (Math.abs(v.speed) > 4) { radio('車速太快，先停車再下車。', 'info'); return; }
     v.speed = 0;
     const sx = -Math.cos(v.yaw), sz = Math.sin(v.yaw); // 左側
     const cand = [[v.x + sx * 2, v.z + sz * 2], [v.x - sx * 2, v.z - sz * 2], [v.x + Math.sin(v.yaw) * 3.2, v.z + Math.cos(v.yaw) * 3.2]];
     let ok = cand[0]; for (const c of cand) { const p = { x: c[0], z: c[1] }; if (!collideCircle(p, 0.4)) { ok = c; break; } }
-    P.x = ok[0]; P.z = ok[1]; P.mode = 'foot'; P.yaw = v.yaw; P.veh = null; P.lookYaw = 0;
-    $('speedo').classList.add('hidden'); RADIO.off();
+    v.siren = v.siren && S.onDuty; RADIO.off();
+    P.anim = { type: 'exit', t: 0, dur: v.parts.door ? 1.15 : 0.5, v, to: { x: ok[0], z: ok[1] } }; AU.door(false); if (window.__fastAnim) animStep(99);
     return;
   }
   const v = nearestPVeh(3.6);
@@ -1906,9 +1917,29 @@ function toggleVehicle() {
   if (v.wreck) { radio('這台車已經燒毀了。', 'info'); return; }
   if (!canDrive(v)) return;
   if (v.police && !S.onDuty) { radio('下班時間不能開警車，請騎自己的車。', 'info'); return; }
-  P.mode = 'vehicle'; P.veh = v; P.lookYaw = 0; P.pitch = -0.05;
-  $('speedo').classList.remove('hidden');
+  startEnter(v);
 }
+/* ---------- 上下車動畫（開門 → 坐進去 → 關門） ---------- */
+function seatPos(v) { const s = v.parts.seat, c = Math.cos(v.yaw), sn = Math.sin(v.yaw); return new THREE.Vector3(v.x + s.x * c + s.z * sn, v.parts.eyeY, v.z - s.x * sn + s.z * c); }
+function startEnter(v) { P.anim = { type: 'enter', t: 0, dur: v.parts.door ? 1.15 : 0.5, v, from: camera.position.clone(), fromYaw: P.yaw, fromPitch: P.pitch }; AU.door(false); if (window.__fastAnim) animStep(99); }
+const ease = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+function animStep(dt) {
+  const a = P.anim, v = a.v; a.t += dt; const k = clamp(a.t / a.dur, 0, 1); const door = v.parts.door;
+  if (door) { const d = k < 0.3 ? ease(k / 0.3) : k < 0.72 ? 1 : 1 - ease((k - 0.72) / 0.25); door.rotation.y = -1.15 * d; if (!a.shut && k > 0.9) { a.shut = true; AU.door(true); } }
+  const m = door ? ease((k - 0.25) / 0.47) : ease(k);
+  const seat = seatPos(v); const stand = a.type === 'exit' ? new THREE.Vector3(a.to.x, (blockAtXZ(a.to.x, a.to.z) ? 0.18 : 0) + 1.62, a.to.z) : a.from;
+  const from = a.type === 'enter' ? stand : seat, to = a.type === 'enter' ? seat : stand;
+  camera.position.lerpVectors(from, to, m);
+  const y0 = a.type === 'enter' ? a.fromYaw : v.yaw, y1 = v.yaw;
+  camera.rotation.set(lerp(a.type === 'enter' ? a.fromPitch : -0.05, -0.05, m), y0 + angDiff(y0, y1) * m, 0);
+  VIEW.visible = false; v.speed = 0;
+  if (k >= 1) {
+    P.anim = null; if (door) door.rotation.y = 0;
+    if (a.type === 'enter') { P.mode = 'vehicle'; P.veh = v; P.lookYaw = 0; P.pitch = -0.05; $('speedo').classList.remove('hidden'); }
+    else { P.x = a.to.x; P.z = a.to.z; P.mode = 'foot'; P.yaw = v.yaw; P.pitch = 0; P.veh = null; P.lookYaw = 0; $('speedo').classList.add('hidden'); }
+  }
+}
+AU.door = function (shut) { if (shut) { this.noiseBurst(0.18, 0.5, 180, 0.9); this.tone(90, 0.12, 0.3, 'sine'); } else { this.tone(700, 0.04, 0.12, 'square'); setTimeout(() => this.tone(500, 0.05, 0.1, 'square'), 60); } };
 
 // 徵用民眾車輛
 function commandeer(n) {
@@ -1925,7 +1956,7 @@ function commandeer(n) {
   const k = TRAFFIC.indexOf(n); if (k >= 0) TRAFFIC.splice(k, 1); scene.remove(n.mesh);
   const lx = -Math.cos(n.yaw), lz = Math.sin(n.yaw);
   const h = spawnHuman({ data: { role: 'civ' } }, n.px + lx * 1.8, n.pz + lz * 1.8, n.yaw + Math.PI / 2); h.walk = { vx: lx * 1.6, vz: lz * 1.6, t: 12 }; h.pose = 'walk';
-  P.mode = 'vehicle'; P.veh = v; P.lookYaw = 0; P.pitch = -0.05; $('speedo').classList.remove('hidden');
+  startEnter(v);
   if (!urgent) punish('rep', '沒有緊急情況卻徵用民眾車輛（民眾投訴）');
   else radio('已徵用民眾車輛。用完記得歸還，撞壞要國家賠償。', 'info');
 }
@@ -1938,7 +1969,8 @@ function updatePlayer(dt) {
   if (reloadT > 0) { reloadT -= dt; if (reloadT <= 0) { const need = 15 - S.ammo; const take = Math.min(need, S.reserve); S.ammo += take; S.reserve -= take; updateHUD(true); } }
   recoil = Math.max(0, recoil - dt * 6);
   const tired = S.energy < 15;
-  if (P.mode === 'foot') {
+  if (P.anim) { animStep(dt); }
+  else if (P.mode === 'foot') {
     P.yaw -= lookX; P.pitch = clamp(P.pitch - lookY, -1.45, 1.45);
     let fx = 0, fz = 0;
     if (KEYS.KeyW || KEYS.ArrowUp) fz += 1; if (KEYS.KeyS || KEYS.ArrowDown) fz -= 1; if (KEYS.KeyA || KEYS.ArrowLeft) fx -= 1; if (KEYS.KeyD || KEYS.ArrowRight) fx += 1;
@@ -2536,7 +2568,8 @@ function offDutyNow() {
 }
 function clockOut() {
   const st = SITES.station;
-  if (P.mode === 'vehicle') { if (Math.abs(P.veh.speed) > 3) { radio('先把車停好再打卡。', 'info'); return; } P.veh.speed = 0; P.veh.siren = false; toggleVehicle(); }
+  if (P.anim) return;
+  if (P.mode === 'vehicle') { if (Math.abs(P.veh.speed) > 3) { radio('先把車停好再打卡。', 'info'); return; } P.veh.speed = 0; P.veh.siren = false; toggleVehicle(); setTimeout(() => { if (!P.anim && P.mode === 'foot') clockOut(); }, 1400); return; }
   const doOut = (extraPen) => {
     if (MIS.cur) { if (S.time >= 16 * 60 + 30) { addLog('下班交接勤務：' + MIS.cur.title); MIS.end(true, '勤務指揮中心：收到，' + MIS.cur.title + '交接給夜班同仁，辛苦了。'); } else MIS.cancel(); }
     const p = payToday(); S.money += p.pay; S.stats.days++;
@@ -2564,7 +2597,7 @@ function clockOut() {
 /* ---------- 送醫 ---------- */
 function toHospital(msg, hp, en) {
   if (MIS.cur) MIS.end(false, '勤務指揮中心：同仁受傷送醫，任務改派其他同仁。');
-  if (P.mode === 'vehicle') { P.veh.speed = 0; P.veh = null; P.mode = 'foot'; $('speedo').classList.add('hidden'); }
+  P.anim = null; if (P.mode === 'vehicle') { P.veh.speed = 0; P.veh = null; P.mode = 'foot'; $('speedo').classList.add('hidden'); }
   fadeTo(msg, () => {
     const h = SITES.hospital; P.x = h.x; P.z = h.z + 2; P.yaw = Math.PI; P.pitch = 0;
     S.hp = hp; S.energy = Math.max(S.energy, en || 0); S.time += 120;
@@ -2643,6 +2676,17 @@ function dealerMenu() {
 function initStaticInteracts() {
   const st = SITES.station, home = SITES.home;
   STATIC_INTERACT.push({ x: st.x, z: st.z, r: 4, veh: true, label: () => S.onDuty ? '打卡下班' : '打卡上班（領槍、換制服）', act: () => S.onDuty ? clockOut() : clockIn() });
+  signBoard('🚓 車輛調度', { bg: '#0b3d91', fg: '#fff', w: 256, h: 64 }, 1.6, 0.4, st.x - 7, 2.2, st.z + 1.4, 0, 0.6);
+  STATIC_INTERACT.push({
+    x: st.x - 7, z: st.z + 0.5, r: 2.6, label: () => { const bad = [POLICE_CAR, POLICE_SCOOT].some(pv => pv.wreck || pv.hp < 100 || dist(pv.x, pv.z, pv.home.x, pv.home.z) > 60); return bad ? '車輛調度：申請新警車' : '車輛調度（警車狀況良好）'; },
+    act: () => {
+      if (!S.onDuty) { radio('要先打卡上班才能申請警車。', 'info'); return; }
+      const bad = [POLICE_CAR, POLICE_SCOOT].filter(pv => P.veh !== pv && (pv.wreck || pv.hp < 100 || dist(pv.x, pv.z, pv.home.x, pv.home.z) > 60));
+      if (!bad.length) { radio('勤務指揮中心：你的警車狀況良好，不用換喔。', 'info'); return; }
+      MODAL.show(`<h2>🚓 車輛調度</h2><p>${bad.map(pv => pv.spec.name + '：' + (pv.wreck ? '已燒毀' : pv.hp < 100 ? '車況 ' + Math.round(pv.hp) + '%，需要送修' : '停在外面')).join('<br>')}</p><p>申請一台新的，舊車由同仁拖回保養廠。</p>`,
+        [['📝 送出申請', 'g', () => { MODAL.close(); for (const pv of bad) restoreVeh(pv); AU.radio(); radio('📻 車輛調度：「已核准！新的' + bad.map(pv => pv.spec.name).join('、') + '停在分局前面了。」', 'radio'); addLog('申請新警車'); }], ['算了', 'gray', () => MODAL.close()]]);
+    }
+  });
   STATIC_INTERACT.push({
     x: home.door.x, z: home.door.z, r: 2.6, label: () => '回家', act: () => {
       MODAL.show(`<h2>🏠 我家（大墩華廈）</h2><p>現在 ${fmtTime(S.time)}　❤️ ${Math.round(S.hp)}　⚡ ${Math.round(S.energy)}</p>`,
@@ -3396,6 +3440,7 @@ function damageVeh(v, amt, wx, wz) {
 function wreckVeh(v) {
   v.wreck = true; v.burning = null; v.speed = 0; v.siren = false; v.wreckT = 0;
   v.mesh.traverse(o => { if (!o.isMesh) return; if (o.material && o.material.transparent) o.visible = false; else o.material = CHAR_MAT; });
+  if (P.anim && P.anim.v === v) P.anim = null;
   if (P.veh === v) { // 被炸出車外
     const lx = -Math.cos(v.yaw), lz = Math.sin(v.yaw); P.mode = 'foot'; P.veh = null; P.x = v.x + lx * 2.5; P.z = v.z + lz * 2.5; $('speedo').classList.add('hidden'); RADIO.off();
   }
