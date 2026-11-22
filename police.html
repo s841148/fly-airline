@@ -24,6 +24,9 @@ canvas#c{display:block;width:100vw;height:100vh}
 .on{background:#1f7bff}.off{background:#666}
 #tr{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 #money{font-size:18px;font-weight:800;color:#ffd84a}
+#wanted{position:absolute;right:100%;top:0;margin-right:10px;white-space:nowrap;font-size:30px;font-weight:900;color:#ffd84a;text-shadow:0 0 6px #000,0 2px 0 #7a5a00;letter-spacing:2px;text-align:right;line-height:1}
+#wanted small{display:block;font-size:12px;letter-spacing:0;color:#fff;font-weight:700}
+body.touch #wanted{font-size:22px}
 #navbox{width:170px;font-size:14px;font-weight:700;border-width:2px;line-height:1.3;text-align:left}#navbox .arr{font-size:24px;vertical-align:middle;color:#fff}#navbox small{color:#c9d6f2;font-weight:600}
 #mini{width:170px;height:170px;border-radius:12px;border:2px solid rgba(120,170,255,.5);background:#1b2433}
 #mission{position:absolute;left:50%;top:10px;transform:translateX(-50%);text-align:center;max-width:46vw;font-size:14px}
@@ -126,7 +129,7 @@ body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;w
     <div><span class="duty off" id="duty">下班</span> <span id="rank">警員</span></div>
     <div style="font-size:12px;color:#a9c1ef">考績 <b id="merit">0</b></div>
   </div>
-  <div id="tr"><div class="panel" id="money">$ 0</div><canvas id="mini" width="170" height="170"></canvas><div id="navbox" class="panel hidden"></div></div>
+  <div id="tr"><div class="panel" id="money">$ 0</div><div id="wanted" class="hidden"></div><canvas id="mini" width="170" height="170"></canvas><div id="navbox" class="panel hidden"></div></div>
   <div id="mission" class="panel hidden"></div>
   <div id="pursuit" class="panel hidden"><div id="pursuitTxt">逼停嫌犯車輛</div><div class="bar"><i id="pursuitBar" style="width:0%"></i></div></div>
   <div id="radio"></div>
@@ -155,7 +158,9 @@ body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;w
   <button class="tb" id="tRun" style="left:calc(3vw + 155px);bottom:calc(5vh + 96px)">🏃<small>跑/煞車</small></button>
   <button class="tb" id="tMap" style="right:calc(10px + 180px);top:10px;width:46px;height:46px;font-size:18px">🗺</button>
   <button class="tb" id="tAim" style="right:25vw;bottom:44vh">🎯<small>瞄準</small></button>
+  <button class="tb" id="tWarn" style="left:calc(3vw + 230px);bottom:calc(5vh + 172px);background:rgba(200,140,20,.55)">💥<small>鳴槍</small></button>
   <button class="tb" id="tBackup" style="left:calc(3vw + 155px);bottom:calc(5vh + 172px);background:rgba(190,40,40,.55)">🆘<small>請求支援</small></button>
+  <button class="tb" id="tPunch" style="right:35vw;bottom:44vh">👊<small>揍人</small></button>
   <button class="tb" id="tRadio" style="right:25vw;bottom:26vh">📻<small>電台</small></button>
   <button class="tb" id="tMenu" style="right:calc(10px + 180px);top:66px;width:46px;height:46px;font-size:18px">☰</button>
 </div>
@@ -180,7 +185,7 @@ body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;w
     <div id="loading">載入中…</div>
     <div class="help">
       <b>🖥 電腦操作</b>：點畫面鎖定滑鼠 · WASD 移動 · 滑鼠看 · 左鍵開槍 · 右鍵瞄準 · Shift 跑步<br>
-      E 互動 · F 上下車 · Q 喊話「警察！不要動！」 · H 警笛 · R 換彈匣 · 1 手槍 / 2 電擊槍 · M 地圖（點地圖設導航）· N 車上電台 · B 請求支援 · Esc 選單<br>
+      E 互動 · F 上下車 · Q 喊話「警察！不要動！」 · H 警笛 · R 換彈匣 · 1 手槍 / 2 電擊槍 / 3 警棍 / 4 步槍（特勤隊）· V 揍人 · M 地圖（點地圖設導航）· N 車上電台 · B 請求支援（再按一次叫特勤隊）· G 對空鳴槍 · Esc 選單<br>
       開車：W 油門 · S 煞車/倒車 · A D 轉彎 · 空白鍵 手煞車<br>
       <b>📱 手機</b>：橫拿手機，左邊搖桿移動 / 開車，右邊滑動看四周，按鈕操作。<br>
       <b>👮 一天的流程</b>：早上 8:00 前到「大墩分局」打卡上班（領槍、開警車）→ 聽無線電派案 → 17:00 後回分局打卡下班 → 下班可以騎車亂逛、吃夜市、買車，回家睡覺到隔天。週日放假。
@@ -233,11 +238,13 @@ const VEH_SPECS = {
   sport: { name: '跑車', kind: 'car', max: 68, acc: 15, price: 3600000, color: 0xe2231a },
   civcar: { name: '徵用的民眾汽車', kind: 'car', max: 38, acc: 8, price: 0, color: 0x999999 },
   civscoot: { name: '徵用的民眾機車', kind: 'scooter', max: 24, acc: 8, price: 0, color: 0x999999 },
+  stolencar: { name: '搶來的汽車', kind: 'car', max: 38, acc: 8, price: 0, color: 0x999999 },
+  stolenscoot: { name: '搶來的機車', kind: 'scooter', max: 24, acc: 8, price: 0, color: 0x999999 },
 };
 function newState() {
   return {
     v: 1, day: 1, time: 7 * 60, money: 20000, merit: 0, rank: 0, onDuty: false, clockIn: 0, workedToday: false,
-    hp: 100, energy: 100, weapon: 0, ammo: 15, reserve: 45, taser: 4,
+    hp: 100, energy: 100, weapon: 0, ammo: 15, reserve: 45, taser: 4, rifle: 30, rifleRes: 90, unit: '', dismissed: false,
     pen: { rep: 0, dem: 0, major: 0 }, award: { com: 0, mer: 0 },
     stats: { tickets: 0, arrests: 0, robbery: 0, patrol: 0, check: 0, days: 0 },
     owned: ['scooter'], log: [], diff: 1, absentChecked: 0,
@@ -1065,11 +1072,12 @@ function addS(par, m, sx, sy, sz) { m.scale.set(sx, sy, sz); par.add(m); return 
 function mk(geo, mat, x, y, z) { const m = new THREE.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); return m; }
 function makePerson(o) {
   o = o || {};
+  if (o.swat) { o.shirt = 0x23272d; o.pants = 0x23272d; o.fem = false; }
   const fem = o.fem != null ? o.fem : (!o.police && !o.robber && Math.random() < 0.45);
   const skinC = o.skin || pick(SKINS);
   const skin = pm(skinC), shirt = pm(o.shirt != null ? o.shirt : pick(SHIRTS)), pants = pm(o.pants != null ? o.pants : pick(PANTS));
   const shoe = pm(pick([0x151515, 0x2a2a2a, 0xeeeeee, 0x5a3a22]));
-  const longSleeve = o.police || o.robber || Math.random() < 0.4, skirt = fem && !o.apron && Math.random() < 0.35;
+  const longSleeve = o.police || o.robber || o.swat || Math.random() < 0.4, skirt = fem && !o.apron && Math.random() < 0.35;
   const g = new THREE.Group(); const body = new THREE.Group(); g.add(body);
   const H = o.robber ? 1.02 : rand(0.93, 1.06) * (fem ? 0.95 : 1), Wd = rand(0.9, 1.15);
   body.scale.set(Wd, H, Wd);
@@ -1092,6 +1100,12 @@ function makePerson(o) {
   const torso = mk(lathe(fem ? 'torsoF' : 'torsoM', fem ? [[0, 0], [0.15, 0], [0.14, 0.16], [0.17, 0.32], [0.17, 0.42], [0.12, 0.52], [0, 0.53]] : [[0, 0], [0.155, 0], [0.155, 0.18], [0.19, 0.36], [0.2, 0.44], [0.13, 0.54], [0, 0.55]], 12), shirt, 0, 1.0, 0);
   torso.scale.set(1, 1, 0.62); body.add(torso);
   if (o.police) { addS(body, mk(cyl('belt', 0.165, 0.165, 0.06, 10), pm(0x111111), 0, 1.04, 0), 1, 1, 0.68); body.add(bx(0.07, 0.07, 0.02, pm(0xffd84a), -0.09, 1.38, 0.12)); }
+  if (o.swat) { // 防彈背心、戰術腰帶、臂章
+    addS(body, mk(lathe('vest', [[0, 0], [0.2, 0], [0.21, 0.2], [0.2, 0.38], [0.14, 0.45], [0, 0.46]], 10), pm(0x15181c), 0, 1.06, 0), 1, 1, 0.75);
+    addS(body, mk(cyl('belt', 0.17, 0.17, 0.07, 10), pm(0x0d0f12), 0, 1.04, 0), 1, 1, 0.7);
+    const lab = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.08), new THREE.MeshBasicMaterial({ map: signTex('特勤 SWAT', { bg: '#15181c', fg: '#e8e8e8', w: 256, h: 80 }) })); lab.position.set(0, 1.36, 0.165); body.add(lab);
+    const lab2 = lab.clone(); lab2.position.set(0, 1.3, -0.165); lab2.rotation.y = Math.PI; body.add(lab2);
+  }
   if (o.apron) { const ap = bx(0.3, 0.5, 0.02, pm(o.apron), 0, 1.12, 0.12); body.add(ap); }
   body.add(mk(cyl('neck', 0.052, 0.058, 0.18), skin, 0, 1.73, 0));
   // 手臂：上臂（肩）→ 前臂（手肘）→ 手
@@ -1108,6 +1122,7 @@ function makePerson(o) {
   };
   const [armL, elbowL] = mkArm(-1), [armR, elbowR] = mkArm(1);
   const gun = new THREE.Group(); gun.add(bx(0.04, 0.08, 0.2, pm(0x151515), 0, 0, 0.06)); gun.add(bx(0.035, 0.1, 0.05, pm(0x151515), 0, -0.06, -0.01)); gun.position.set(0, -0.3, 0.02); gun.visible = false; elbowR.add(gun);
+  if (o.swat) { gun.add(bx(0.045, 0.07, 0.62, pm(0x111111), 0, 0.01, 0.2)); gun.add(bx(0.03, 0.12, 0.05, pm(0x111111), 0, -0.08, 0.12)); gun.add(bx(0.04, 0.06, 0.18, pm(0x111111), 0, 0.0, -0.16)); }
   // 頭：臉貼圖 + 髮型
   const head = new THREE.Group(); head.position.set(0, 1.81, 0); body.add(head);
   const hm = mk(sph('head', 0.115, 16, 12), faceMat(skinC, fem, o.robber)); hm.scale.set(0.92, 1.12, 1); head.add(hm);
@@ -1115,6 +1130,7 @@ function makePerson(o) {
   if (!o.robber) for (const s of [-1, 1]) addS(head, mk(sph('ear', 0.025, 6, 4), skin, s * 0.105, 0, 0), 0.5, 1, 0.8);
   const hairC = pm(o.hair || (o.elder ? pick(HAIRS.slice(4)) : pick(HAIRS.slice(0, 4))));
   if (o.robber) { head.add(mk(sph('cap', 0.125, 12, 8, 0, Math.PI / 2), pm(0x1a1a1a), 0, 0.02, 0)); head.add(bx(0.2, 0.02, 0.1, pm(0x1a1a1a), 0, 0.04, 0.13)); }
+  else if (o.swat) { head.add(mk(sph('shelm', 0.145, 12, 8, 0, Math.PI * 0.6), pm(0x1b1f24), 0, 0.02, 0)); head.add(bx(0.2, 0.05, 0.03, pm(0x0a0a0a), 0, 0.03, 0.12)); head.add(bx(0.17, 0.08, 0.04, pm(0x15181c), 0, -0.07, 0.1)); }
   else if (o.police) { head.add(mk(cyl('pcap', 0.13, 0.12, 0.08, 12), pm(0x13203a), 0, 0.12, 0)); head.add(bx(0.2, 0.02, 0.1, pm(0x0a0f1a), 0, 0.05, 0.12)); head.add(bx(0.04, 0.04, 0.01, pm(0xffd84a), 0, 0.1, 0.13)); }
   else if (o.helmet) { head.add(mk(sph('helm', 0.15, 12, 8, 0, Math.PI * 0.62), pm(o.helmet), 0, 0.01, 0)); }
   else {
@@ -1195,7 +1211,7 @@ class NPCVeh {
   constructor(kind, type, cop) {
     this.kind = kind; this.cop = !!cop;
     if (!type) type = kind === 'car' ? pick(['sedan', 'sedan', 'sedan', 'hatch', 'hatch', 'suv', 'suv', 'pickup', 'taxi', 'taxi']) : pick(['scooter', 'scooter', 'scooter', 'delivery', 'topbox', 'escooter']);
-    this.type = type; this.big = type === 'bus' || type === 'garbage' || type === 'fire'; this.em = type === 'ambulance' || type === 'fire' || type === 'cga';
+    this.type = type; this.big = type === 'bus' || type === 'garbage' || type === 'fire'; this.em = type === 'ambulance' || type === 'fire' || type === 'cga' || type === 'swat';
     this.color = type === 'taxi' ? 0xf7c600 : type === 'bus' ? 0x2f9a5a : kind === 'car' ? pick(CAR_COLORS) : pick([0xf2f2f2, 0x111111, 0xd94040, 0x2a4fa8, 0x9a9ea6, 0x26c2a4, 0xf2c94c, 0xf08aa8]);
     if (cop) this.color = 0xf4f6f8;
     const { g, parts } = makeVehicle(kind, this.color, !!cop, { driver: true, type, delivery: type === 'delivery', topbox: type === 'topbox' });
@@ -1435,7 +1451,7 @@ function makeVehicle(kind, color, police, opts) {
   if (type === 'bus') return makeBus(g, parts, color, opts);
   if (type === 'garbage') return makeGarbage(g, parts, opts);
   if (type === 'pickup') return makePickup(g, parts, color, opts);
-  if (type === 'ambulance' || type === 'fire') return makeEmergency(g, parts, type, opts);
+  if (type === 'ambulance' || type === 'fire' || type === 'swat') return makeEmergency(g, parts, type, opts);
   if (type === 'cga') { color = 0xf4f6f8; }
   const T = CAR_TYPES[type] || CAR_TYPES.sedan; const W = T.W, L = T.L;
   const paint = vm(color);
@@ -1670,16 +1686,16 @@ function cgaDecal() {
 }
 // 救護車、消防車
 function makeEmergency(g, parts, type, opts) {
-  const amb = type === 'ambulance'; const W = amb ? 2.0 : 2.4, L = amb ? 5.4 : 8.2;
-  const body = vm(amb ? 0xf6f6f2 : 0xc81414);
+  const swat = type === 'swat'; const amb = type === 'ambulance' || swat; const W = amb ? 2.0 : 2.4, L = amb ? 5.4 : 8.2;
+  const body = vm(swat ? 0x1d2126 : amb ? 0xf6f6f2 : 0xc81414);
   const prof = amb ? [[-2.7, 0.42], [2.7, 0.42], [2.75, 0.8], [2.6, 1.05], [1.95, 1.2], [1.45, 1.95], [1.1, 2.55], [-2.7, 2.6]] : [[-4.1, 0.5], [4.1, 0.5], [4.15, 1.0], [4.05, 2.7], [2.6, 2.85], [2.5, 2.4], [-4.1, 2.45]];
   const m = new THREE.Mesh(extrudeProfile(type, prof, W, 0.08), body); g.add(m); parts.body = m;
   if (amb) {
     g.add(slab(1.92, 1.25, 1.47, 1.92, W - 0.25, 0.05, GLASS_DARK)); g.children[g.children.length - 1].position.z -= 0.05;
-    for (const sx of [-1, 1]) { g.add(boxAt(0.02, 0.45, 0.8, GLASS_DARK, sx * (W / 2 + 0.01), 1.55, -1.25)); g.add(boxAt(0.02, 0.28, L - 1.0, vm(0xd01818), sx * (W / 2 + 0.012), 1.05, 0.35)); g.add(boxAt(0.02, 0.1, L - 1.0, vm(0xf2c200), sx * (W / 2 + 0.013), 0.86, 0.35)); }
-    const lbl = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.5), texMat(signTex('救護車  119', { bg: '#f6f6f2', fg: '#d01818', w: 512, h: 96 }), 0.2));
+    for (const sx of [-1, 1]) { g.add(boxAt(0.02, 0.45, 0.8, GLASS_DARK, sx * (W / 2 + 0.01), 1.55, -1.25)); if (!swat) { g.add(boxAt(0.02, 0.28, L - 1.0, vm(0xd01818), sx * (W / 2 + 0.012), 1.05, 0.35)); g.add(boxAt(0.02, 0.1, L - 1.0, vm(0xf2c200), sx * (W / 2 + 0.013), 0.86, 0.35)); } else g.add(boxAt(0.02, 0.12, L - 1.0, vm(0x2a5bd7), sx * (W / 2 + 0.012), 0.95, 0.35)); }
+    const lbl = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.5), texMat(signTex(swat ? '維安特勤隊  SWAT' : '救護車  119', { bg: swat ? '#1d2126' : '#f6f6f2', fg: swat ? '#f2f2f2' : '#d01818', w: 512, h: 96 }), 0.2));
     for (const sx of [-1, 1]) { const q = lbl.clone(); q.position.set(sx * (W / 2 + 0.014), 1.75, 0.6); q.rotation.y = sx * Math.PI / 2; g.add(q); }
-    const cross = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.7), texMat(signTex('✚', { bg: '#f6f6f2', fg: '#d01818', w: 128, h: 128 }), 0.2)); cross.position.set(0, 1.9, 2.71); g.add(cross);
+    const cross = new THREE.Mesh(new THREE.PlaneGeometry(swat ? 1.4 : 0.7, swat ? 0.45 : 0.7), texMat(signTex(swat ? '警察 POLICE' : '✚', { bg: swat ? '#1d2126' : '#f6f6f2', fg: swat ? '#ffffff' : '#d01818', w: swat ? 256 : 128, h: swat ? 80 : 128 }), 0.2)); cross.position.set(0, 1.9, 2.71); g.add(cross);
   } else {
     g.add(boxAt(W - 0.3, 0.9, 0.03, GLASS_DARK, 0, 2.15, -4.12));
     for (const sx of [-1, 1]) { g.add(boxAt(0.02, 0.6, 1.2, GLASS_DARK, sx * (W / 2 + 0.01), 2.2, -3.3)); for (let k = -2; k <= 2; k++) g.add(boxAt(0.03, 1.2, 1.1, vm(0x8a0c0c), sx * (W / 2 + 0.01), 1.3, k * 1.2 + 0.6)); }
@@ -1691,14 +1707,14 @@ function makeEmergency(g, parts, type, opts) {
     const lbl = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.5), texMat(signTex('台中市政府消防局  119', { bg: '#c81414', fg: '#fff', w: 512, h: 80 }), 0.2));
     for (const sx of [-1, 1]) { const q = lbl.clone(); q.position.set(sx * (W / 2 + 0.04), 0.75, 0.6); q.rotation.y = sx * Math.PI / 2; g.add(q); }
   }
-  const red = new THREE.MeshLambertMaterial({ color: 0x660000, emissive: 0xff0000, emissiveIntensity: 0 }), blue = new THREE.MeshLambertMaterial({ color: 0x666666, emissive: amb ? 0xffffff : 0xff2000, emissiveIntensity: 0 });
+  const red = new THREE.MeshLambertMaterial({ color: 0x660000, emissive: 0xff0000, emissiveIntensity: 0 }), blue = new THREE.MeshLambertMaterial({ color: 0x666666, emissive: swat ? 0x2050ff : amb ? 0xffffff : 0xff2000, emissiveIntensity: 0 });
   const ty = amb ? 2.62 : 2.9, tz = amb ? -1.9 : -3.2;
   const r = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.14, 0.26), red); r.position.set(-0.35, ty, tz); const b = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.14, 0.26), blue); b.position.set(0.35, ty, tz); g.add(r, b); parts.red = red; parts.blue = blue;
   for (const sx of [-1, 1]) { g.add(boxAt(0.32, 0.16, 0.06, HEAD_MAT, sx * (W / 2 - 0.3), amb ? 0.85 : 1.05, -L / 2 - 0.04)); g.add(boxAt(0.25, 0.25, 0.06, TAIL_MAT, sx * (W / 2 - 0.25), 1.0, L / 2 + 0.04)); }
   const R = amb ? 0.36 : 0.5;
   for (const sx of [-1, 1]) for (const wz of (amb ? [-1.75, 1.7] : [-2.8, 1.8, 3.0])) carWheel(g, sx * (W / 2 - 0.15), wz, R, 0.28);
-  if (opts.driver) { const d = new THREE.Group(); d.add(boxAt(0.45, 0.5, 0.28, pm(amb ? 0xf28a00 : 0x2a2a2a), 0, amb ? 1.35 : 1.8, 0)); d.add(boxAt(0.22, 0.25, 0.22, pm(pick(SKINS)), 0, amb ? 1.75 : 2.2, 0)); d.position.set(-0.5, 0, amb ? -1.5 : -3.3); g.add(d); parts.driver = { g: d }; }
-  parts.eyeY = amb ? 1.9 : 2.4; parts.seat = { x: -0.5, z: amb ? -1.5 : -3.3 }; parts.len = L; parts.name = amb ? '救護車' : '消防車';
+  if (opts.driver) { const d = new THREE.Group(); d.add(boxAt(0.45, 0.5, 0.28, pm(swat ? 0x23272d : amb ? 0xf28a00 : 0x2a2a2a), 0, amb ? 1.35 : 1.8, 0)); d.add(boxAt(0.22, 0.25, 0.22, pm(pick(SKINS)), 0, amb ? 1.75 : 2.2, 0)); d.position.set(-0.5, 0, amb ? -1.5 : -3.3); g.add(d); parts.driver = { g: d }; }
+  parts.eyeY = amb ? 1.9 : 2.4; parts.seat = { x: -0.5, z: amb ? -1.5 : -3.3 }; parts.len = L; parts.name = swat ? '特勤車' : amb ? '救護車' : '消防車';
   return { g, parts };
 }
 // 海巡艇
@@ -1725,7 +1741,7 @@ const PVEHS = [];
 class PVeh {
   constructor(key, x, z, yaw, color, type) {
     this.key = key; this.spec = VEH_SPECS[key]; this.police = key === 'police' || key === 'pscooter'; this.color = color != null ? color : this.spec.color;
-    this.hp = 100; this.wreck = false; this.burning = null; this.civ = key === 'civcar' || key === 'civscoot';
+    this.hp = 100; this.wreck = false; this.burning = null; this.civ = key === 'civcar' || key === 'civscoot' || key === 'stolencar' || key === 'stolenscoot';
     this.type = type || { sport: 'sport', suv: 'suv' }[key] || 'sedan';
     const { g, parts } = makeVehicle(this.spec.kind, this.color, this.police, { type: this.type, clearGlass: true, topbox: key === 'scooter' });
     this.mesh = g; this.parts = parts; scene.add(g);
@@ -1766,13 +1782,17 @@ addEventListener('keydown', e => {
     case 'KeyE': doInteract(); break;
     case 'KeyF': toggleVehicle(); break;
     case 'KeyQ': shout(); break;
+    case 'KeyV': punch(); break;
     case 'KeyH': toggleSiren(); break;
     case 'KeyR': reload(); break;
     case 'Digit1': setWeapon(0); break;
     case 'Digit2': setWeapon(1); break;
+    case 'Digit3': setWeapon(2); break;
+    case 'Digit4': setWeapon(3); break;
     case 'KeyM': toggleMap(); break;
     case 'KeyN': RADIO.cycle(); break;
     case 'KeyB': requestBackup(); break;
+    case 'KeyG': warningShot(); break;
     case 'Escape': case 'Tab': e.preventDefault(); openPause(); break;
   }
 });
@@ -1805,9 +1825,9 @@ function initTouch() {
     if (hold) { el.addEventListener('touchend', e => { e.preventDefault(); hold(); }); el.addEventListener('touchcancel', () => hold()); }
   };
   tap('tFire', () => { INP.fireHeld = true; fire(); }, () => { INP.fireHeld = false; });
-  tap('tAct', doInteract); tap('tCar', toggleVehicle); tap('tShout', shout); tap('tSiren', toggleSiren); tap('tRel', reload);
-  tap('tWeap', () => setWeapon(S.weapon === 0 ? 1 : 0)); tap('tRun', () => { INP.run = true; }, () => { INP.run = false; });
-  tap('tMap', toggleMap); tap('tMenu', openPause); tap('tRadio', () => RADIO.cycle()); tap('tBackup', requestBackup); tap('tAim', () => { INP.aim = !INP.aim; $('tAim').style.background = INP.aim ? 'rgba(255,216,74,.7)' : ''; });
+  tap('tAct', doInteract); tap('tCar', toggleVehicle); tap('tShout', shout); tap('tPunch', punch); tap('tSiren', toggleSiren); tap('tRel', reload);
+  tap('tWeap', () => { const L = S.unit === 'swat' ? [3, 0, 1, 2] : [0, 1, 2]; setWeapon(L[(L.indexOf(S.weapon) + 1) % L.length]); }); tap('tRun', () => { INP.run = true; }, () => { INP.run = false; });
+  tap('tMap', toggleMap); tap('tMenu', openPause); tap('tRadio', () => RADIO.cycle()); tap('tBackup', requestBackup); tap('tWarn', warningShot); tap('tAim', () => { INP.aim = !INP.aim; $('tAim').style.background = INP.aim ? 'rgba(255,216,74,.7)' : ''; });
 }
 
 /* ---------- 第一人稱手與槍 ---------- */
@@ -1826,9 +1846,59 @@ const taserModel = new THREE.Group();
 }
 const flashMesh = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffd27a }));
 flashMesh.position.set(0, 0.03, -0.26); flashMesh.visible = false; gunModel.add(flashMesh);
-VIEW.add(gunModel, taserModel); VIEW.position.set(0.22, -0.2, -0.38); VIEW.visible = false; VIEW.scale.setScalar(0.75);
-let recoil = 0, fireCD = 0, reloadT = 0, shoutCD = 0;
-function setWeapon(w) { if (!S.onDuty) { radio('下班時間沒有配槍（槍枝已繳回械彈室）。', 'info'); return; } S.weapon = w; AU.click(); updateHUD(true); }
+const batonModel = new THREE.Group();
+{
+  const blk = pm(0x141414), skin = pm(0xe0b088), sleeve = pm(0x2a3d6a);
+  batonModel.add(bx(0.035, 0.035, 0.52, blk, 0, 0.06, -0.24)); batonModel.add(bx(0.03, 0.03, 0.12, pm(0x2a2a2a), 0.06, 0.02, -0.02));
+  batonModel.add(bx(0.09, 0.09, 0.12, skin, 0, -0.0, 0.04)); batonModel.add(bx(0.11, 0.11, 0.3, sleeve, 0.02, -0.03, 0.24));
+}
+const rifleModel = new THREE.Group();
+{
+  const blk = pm(0x1a1b1d), skin = pm(0xe0b088), sleeve = pm(0x23272d);
+  rifleModel.add(bx(0.06, 0.08, 0.5, blk, 0, 0.03, -0.2)); rifleModel.add(bx(0.03, 0.03, 0.3, blk, 0, 0.04, -0.6)); rifleModel.add(bx(0.05, 0.15, 0.06, blk, 0, -0.08, -0.22));
+  rifleModel.add(bx(0.04, 0.06, 0.14, pm(0x333333), 0, 0.1, -0.2)); rifleModel.add(bx(0.055, 0.1, 0.22, blk, 0, 0.0, 0.14));
+  rifleModel.add(bx(0.09, 0.09, 0.12, skin, 0, -0.05, 0.0)); rifleModel.add(bx(0.11, 0.11, 0.3, sleeve, 0.03, -0.07, 0.2));
+  rifleModel.add(bx(0.08, 0.08, 0.1, skin, -0.02, -0.03, -0.42));
+}
+const rflash = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffd27a })); rflash.position.set(0, 0.04, -0.78); rflash.visible = false; rifleModel.add(rflash); rifleModel.scale.setScalar(0.62); rifleModel.position.set(0.08, -0.05, 0.1);
+VIEW.add(gunModel, taserModel, batonModel, rifleModel); VIEW.position.set(0.22, -0.2, -0.38); VIEW.visible = false; VIEW.scale.setScalar(0.75);
+let recoil = 0, fireCD = 0, reloadT = 0, shoutCD = 0, punchT = 0, punchCD = 0, punchSide = 1;
+const fistModel = new THREE.Group();
+{
+  const skin = pm(0xe0b088);
+  const arm = new THREE.Group(); fistModel.add(arm);
+  arm.add(bx(0.1, 0.1, 0.12, skin, 0, 0, 0)); arm.add(bx(0.105, 0.03, 0.035, pm(0xc99a74), 0, 0.035, -0.06));
+  arm.add(bx(0.115, 0.115, 0.34, pm(0x2a3d6a), 0, -0.01, 0.22));
+  fistModel.userData.arm = arm;
+}
+fistModel.visible = false; fistModel.scale.setScalar(0.7); camera.add(fistModel);
+function punch() {
+  if (!GAME.running || MODAL.open || P.mode !== 'foot' || P.anim || punchCD > 0) return;
+  const baton = S.onDuty && S.weapon === 2;
+  punchCD = baton ? 0.7 : 0.55; punchT = 0.32; punchSide = baton ? 1 : -punchSide; AU.swoosh(); P.swingT = baton ? 0.35 : 0;
+  setTimeout(() => {
+    const o = camera.getWorldPosition(new THREE.Vector3()); const d = camera.getWorldDirection(new THREE.Vector3());
+    let best = null, bd = baton ? 2.4 : 1.9;
+    const test = (h, y0) => {
+      const dx = h.x - o.x, dz = h.z - o.z, dd = Math.hypot(dx, dz); if (dd > bd || dd < 0.05) return;
+      const hd = Math.hypot(d.x, d.z) || 1; const cos = (dx * d.x + dz * d.z) / (dd * hd); if (cos < 0.72) return;
+      if (!losClear(o.x, o.z, h.x, h.z)) return;
+      best = h; bd = dd;
+    };
+    for (const h of MHUMANS) if (h.alive && !['down', 'stun', 'cuffed'].includes(h.pose)) test(h);
+    for (const pd of PEDS) if (pd.alive && pd.P.g.visible && pd.state !== 'down') test(pd);
+    if (!best) return;
+    AU.punchHit(); P.shake = Math.max(P.shake || 0, 0.15);
+    spawnFX(new THREE.Vector3(best.x, 1.5, best.z), 0xffffff, 0.06, 0.2);
+    $('cross').classList.add('hit'); setTimeout(() => $('cross').classList.remove('hit'), 150);
+    MIS.onShot({ h: best, point: new THREE.Vector3(best.x, 1.5, best.z), head: false, dmg: baton ? 34 : 20, baton }, 'punch');
+    scareNear(best.x, best.z, 12);
+  }, 120);
+}
+AU.swoosh = function () { if (!AU.ctx) return; const c = AU.ctx, t = c.currentTime; const n = c.createBufferSource(); const b = c.createBuffer(1, c.sampleRate * 0.15, c.sampleRate); const a = b.getChannelData(0); for (let i = 0; i < a.length; i++) a[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / a.length); n.buffer = b; const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.setValueAtTime(600, t); f.frequency.linearRampToValueAtTime(2200, t + 0.15); const g = c.createGain(); g.gain.value = 0.25; n.connect(f); f.connect(g); g.connect(AU.master); n.start(t); };
+AU.punchHit = function () { if (!AU.ctx) return; const c = AU.ctx, t = c.currentTime; const o = c.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12); const g = c.createGain(); g.gain.setValueAtTime(0.7, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.16); o.connect(g); g.connect(AU.master); o.start(t); o.stop(t + 0.18);
+  const n = c.createBufferSource(); const b = c.createBuffer(1, c.sampleRate * 0.05, c.sampleRate); const a = b.getChannelData(0); for (let i = 0; i < a.length; i++) a[i] = (Math.random() * 2 - 1) * (1 - i / a.length); n.buffer = b; const g2 = c.createGain(); g2.gain.value = 0.35; n.connect(g2); g2.connect(AU.master); n.start(t); };
+function setWeapon(w) { if (!S.onDuty) { radio('下班時間沒有配槍（槍枝已繳回械彈室），只能用拳頭（V）。', 'info'); return; } if (w === 3 && S.unit !== 'swat') { radio('步槍只配發給維安特勤隊員。', 'info'); return; } S.weapon = w; AU.click(); updateHUD(true); }
 
 /* ---------- 射擊判定 ---------- */
 function humanSpheres(h) {
@@ -1862,8 +1932,20 @@ function lineFX(a, b, color, life) { const g = new THREE.BufferGeometry().setFro
 function updateFX(dt) { for (let k = FX.length - 1; k >= 0; k--) { const f = FX[k]; f.life -= dt; f.m.material.opacity = Math.max(0, f.life / f.max); if (f.life <= 0) { scene.remove(f.m); f.m.geometry.dispose(); FX.splice(k, 1); } } }
 function fire() {
   if (!GAME.running || MODAL.open) return;
-  if (!S.onDuty || P.mode !== 'foot') return;
+  if (P.mode !== 'foot') return;
+  if (!S.onDuty) { punch(); return; }
   if (fireCD > 0 || reloadT > 0) return;
+  if (S.weapon === 2) { punch(); return; }
+  if ((S.weapon === 0 || S.weapon === 3) && P.pitch > 0.75) { warningShot(); return; } // 槍口朝天＝鳴槍
+  if (S.weapon === 3) {
+    if (S.rifle <= 0) { AU.click(); if (performance.now() - (P.emptyT || 0) > 3000) { P.emptyT = performance.now(); radio('步槍彈匣空了！按 R 換彈匣。', 'warn'); } fireCD = 0.4; return; }
+    S.rifle--; fireCD = 0.11; recoil = 0.7; AU.shot(); rflash.visible = true; setTimeout(() => rflash.visible = false, 40);
+    const r = castShot(250); r.dmg = 55;
+    scareNear(P.x, P.z, 80);
+    if (r.h) { spawnFX(r.point, 0xaa0000, 0.08, 0.4); $('cross').classList.add('hit'); setTimeout(() => $('cross').classList.remove('hit'), 150); }
+    else spawnFX(r.point, 0xbbbbbb, 0.07, 0.5);
+    MIS.onShot(r, 'gun'); updateHUD(true); return;
+  }
   if (S.weapon === 0) {
     if (S.ammo <= 0) { AU.click(); radio('彈匣空了！按 R 換彈匣。', 'warn'); return; }
     S.ammo--; fireCD = 0.24; recoil = 1; AU.shot(); flashMesh.visible = true; setTimeout(() => flashMesh.visible = false, 50);
@@ -1882,6 +1964,7 @@ function fire() {
   updateHUD(true);
 }
 function reload() {
+  if (S.onDuty && S.weapon === 3 && reloadT <= 0) { if (S.rifle >= 30) return; if (S.rifleRes <= 0) { radio('沒有備用步槍彈匣了。', 'warn'); return; } reloadT = 1.8; AU.click(); return; }
   if (!S.onDuty || S.weapon !== 0 || reloadT > 0) return;
   if (S.ammo >= 15) return; if (S.reserve <= 0) { radio('沒有備用彈匣了。', 'warn'); return; }
   reloadT = 1.4; AU.click();
@@ -1943,7 +2026,7 @@ AU.door = function (shut) { if (shut) { this.noiseBurst(0.18, 0.5, 180, 0.9); th
 
 // 徵用民眾車輛
 function commandeer(n) {
-  if (!S.onDuty) { radio('這是民眾的車！下班時間你只是一般人，不能搶車。', 'warn'); return; }
+  if (!S.onDuty) { carjack(n); return; }
   if (n.flag) { radio('這台車是盤查中的車輛，不能徵用。', 'info'); return; }
   if (n.state === 'broken') { radio('這台車已經壞了，開不動。', 'info'); return; }
   if (n.speed > 2.5) { radio('車子還在開，等它停下來（例如紅燈時）再徵用。', 'info'); return; }
@@ -1966,7 +2049,8 @@ function updatePlayer(dt) {
   const sens = IS_TOUCH ? 0.0032 : 0.0022;
   const lookX = INP.mx * sens, lookY = INP.my * sens; INP.mx = INP.my = 0;
   fireCD -= dt; shoutCD -= dt; P.hurtT += dt; if (P.shake > 0) P.shake = Math.max(0, P.shake - dt * 1.5);
-  if (reloadT > 0) { reloadT -= dt; if (reloadT <= 0) { const need = 15 - S.ammo; const take = Math.min(need, S.reserve); S.ammo += take; S.reserve -= take; updateHUD(true); } }
+  if (reloadT > 0) { reloadT -= dt; if (reloadT <= 0) { if (S.weapon === 3) { const take = Math.min(30 - S.rifle, S.rifleRes); S.rifle += take; S.rifleRes -= take; } else { const need = 15 - S.ammo; const take = Math.min(need, S.reserve); S.ammo += take; S.reserve -= take; } updateHUD(true); } }
+  if (INP.fireHeld && S.onDuty && S.weapon === 3 && fireCD <= 0 && P.mode === 'foot' && !P.anim && !MODAL.open) fire();
   recoil = Math.max(0, recoil - dt * 6);
   const tired = S.energy < 15;
   if (P.anim) { animStep(dt); }
@@ -2001,7 +2085,13 @@ function updatePlayer(dt) {
     // 瞄準
     P.aim = lerp(P.aim, (INP.aim && S.onDuty) ? 1 : 0, Math.min(1, dt * 10));
     camera.fov = 72 - P.aim * 24; camera.updateProjectionMatrix();
-    VIEW.visible = S.onDuty; gunModel.visible = S.weapon === 0; taserModel.visible = S.weapon === 1;
+    punchCD = Math.max(0, punchCD - dt);
+    if (punchT > 0) { punchT -= dt; const k = 1 - Math.max(0, punchT) / 0.32; const ext = Math.sin(Math.min(1, k) * Math.PI);
+      fistModel.visible = true; fistModel.position.set(0.18 * punchSide * (1 - ext * 0.6), -0.22 + ext * 0.08, -0.32 - ext * 0.32); fistModel.rotation.set(0, -punchSide * ext * 0.25, 0);
+    } else fistModel.visible = false;
+    const bat = S.weapon === 2;
+    VIEW.visible = S.onDuty && (bat || !(punchT > 0 && punchSide > 0)); gunModel.visible = S.weapon === 0; taserModel.visible = S.weapon === 1; batonModel.visible = bat; rifleModel.visible = S.weapon === 3;
+    if (bat) { fistModel.visible = false; P.swingT = Math.max(0, (P.swingT || 0) - dt); const k = P.swingT > 0 ? Math.sin((1 - P.swingT / 0.35) * Math.PI) : 0; batonModel.rotation.set(0.75 - k * 1.7, k * 0.4, -0.25 - k * 0.3); }
     VIEW.position.set(0.22 - P.aim * 0.22, -0.2 + P.aim * 0.06 + (reloadT > 0 ? -0.15 : 0) + Math.sin(P.bob * 2) * 0.004, -0.38 + recoil * 0.05);
     VIEW.rotation.x = recoil * 0.25 + (reloadT > 0 ? -0.6 : 0);
   } else {
@@ -2132,6 +2222,7 @@ const MIS = {
   start(m) {
     this.cur = m; m.t = 0; radio('📻 ' + m.radio, 'radio'); AU.radio();
     if (m.speak) speak(m.speak);
+    maybeSWAT(m);
   },
   end(ok, msg) {
     const m = this.cur; if (!m) return;
@@ -2170,9 +2261,11 @@ const MIS = {
   onShot(r, type) {
     const h = r.h;
     if (this.cur && this.cur.onShot && this.cur.onShot(r, type)) return;
+    if (type === 'punch') { if (h) punchInnocent(h, r.dmg, r.baton); return; }
     if (h) {
       if (h.kind === 'ped' || h.role === 'civ' || h.role === 'clerk' || h.role === 'driver') {
-        if (type === 'gun') { if (h.kind === 'ped') h.knock(40); else { h.alive = false; h.pose = 'down'; h.state = 'down'; } punish('major', '開槍誤擊無辜民眾'); }
+        if (h.dead) return;
+        if (type === 'gun') { const res = npcDamage(h, r.head ? 200 : (r.dmg || 40), 'gun'); if (res === 'dead') { punish('major', '開槍誤擊無辜民眾致死'); dutyKill(h, false, 'innocent'); } else punish('major', '開槍誤擊無辜民眾'); }
         else { if (h.kind === 'ped') h.knock(8); else { h.state = 'stun'; h.pose = 'stun'; h.timer = 6; } punish('dem', '對無辜民眾使用電擊槍'); }
         return;
       }
@@ -2187,6 +2280,7 @@ const MIS = {
     else if (n.hp <= 0 && !n.flag && n.state === 'drive') n.state = 'broken';
   },
   civHitByCar() { punish('dem', '駕車撞傷路人'); if (!S.onDuty) { S.money -= 8000; radio('賠償對方醫藥費 $8,000。', 'warn'); } },
+  punchPun: -1e9,
   offDutyAbuse(reason) { if (this.abuseDay === S.day) return; this.abuseDay = S.day; punish('dem', reason); },
 };
 function updateMissionUI() {
@@ -2199,6 +2293,7 @@ function updateMissionUI() {
 function newCall() {
   const r = Math.random(); const hour = S.time / 60;
   const bankOpen = hour >= 9 && hour < 15.5;
+  if (S.unit === 'swat') { const k = pick(['robbery', 'robbery', 'drug', 'fugitive']); if (k === 'robbery') misRobbery(bankOpen && Math.random() < 0.6 ? 'bank' : 'store'); else if (k === 'drug') misDrug(); else misFugitive(); return; }
   if (S.stats.days === 0 && !S._firstCall) { S._firstCall = true; misPatrol(); return; }
   const W = [['traffic', 18], ['robbery', 12], ['patrol', 10], ['check', 6], ['accident', 12], ['fugitive', 11], ['dispute', 11], ['missing', 9], ['drug', 9], ['fire', 8]];
   let tot = W.reduce((a, b) => a + b[1], 0) * r, k = 'traffic'; for (const [n, w] of W) { tot -= w; if (tot <= 0) { k = n; break; } }
@@ -2210,7 +2305,7 @@ function newCall() {
 /* ---------- 追車 ---------- */
 const PURSUIT = {
   car: null, prog: 0, lost: 0, onCaught: null, onLost: null,
-  start(car, onCaught, onLost) { this.car = car; this.prog = 0; this.lost = 0; this.onCaught = onCaught; this.onLost = onLost; car.state = 'flee'; car.ghost = 999; $('pursuit').classList.remove('hidden'); radio('🚨 嫌犯加速逃逸！開警笛追上去，靠近或撞擊車輛把它逼停！', 'warn'); },
+  start(car, onCaught, onLost, serious) { this.serious = serious !== false; this.car = car; this.prog = 0; this.lost = 0; this.onCaught = onCaught; this.onLost = onLost; car.state = 'flee'; car.ghost = 999; $('pursuit').classList.remove('hidden'); radio('🚨 嫌犯加速逃逸！開警笛追上去，靠近或撞擊車輛把它逼停！', 'warn'); },
   stop() { this.car = null; $('pursuit').classList.add('hidden'); },
   update(dt) {
     const c = this.car; if (!c) return;
@@ -2327,7 +2422,7 @@ function misTraffic(car, reason, witnessed) {
       if (st === 'find') {
         if (P.mode === 'vehicle' && P.veh.police && P.veh.siren && d < 35) {
           const fleeP = drv.wanted || drv.stolen ? 0.5 : 0.1;
-          if (Math.random() < fleeP) { st = 'pursuit'; fled = true; PURSUIT.start(car, () => { st = 'stopped'; spawnDriverOut(true); radio('嫌犯車輛已被逼停！下車控制駕駛。', 'info'); }, () => { car.flag = false; car.state = 'drive'; MIS.end(false, '勤務指揮中心：目標車輛跟丟了，已通報監視器追查。'); }); }
+          if (Math.random() < fleeP) { st = 'pursuit'; fled = true; PURSUIT.start(car, () => { st = 'stopped'; spawnDriverOut(true); radio('嫌犯車輛已被逼停！下車控制駕駛。', 'info'); }, () => { car.flag = false; car.state = 'drive'; MIS.end(false, '勤務指揮中心：目標車輛跟丟了，已通報監視器追查。'); }, !!(drv.wanted || drv.stolen || drv.alc >= 0.25)); }
           else { st = 'pulling'; car.state = 'pull'; radio('駕駛看到警示燈，靠邊停車中。', 'info'); }
         } else if (d < 40) { hintT += dt; if (hintT > 6 && P.mode === 'vehicle' && P.veh.police && !P.veh.siren) { radio('提示：按 H（手機按 🚨）開警笛示意駕駛停車。', 'info'); hintT = -20; } }
         if (d > 340 || m.t > 240) { car.flag = false; car.maxSp = 12; MIS.end(false, '勤務指揮中心：目標已離開轄區，取消攔查。'); }
@@ -2407,7 +2502,7 @@ function misRobbery(kind) {
         let pts = 15 + cuffed * 22 + dead * 8 + (civOK ? 15 : 0), money = 2500 + cuffed * 2500 + dead * 800;
         if (gaState === 'lost') pts -= 15;
         S.stats.robbery++; S.stats.arrests += cuffed;
-        const lines = `逮捕 ${cuffed} 名${dead ? '、擊傷 ' + dead + ' 名（送醫）' : ''}${civOK ? '，人質（店員）平安' : ''}`;
+        const lines = `逮捕 ${cuffed} 名${dead ? '、擊斃 ' + dead + ' 名' : ''}${civOK ? '，人質（店員）平安' : ''}`;
         setTimeout(() => { MIS.end(true, '勤務指揮中心：辛苦了！搶案處理完畢，' + lines + '。支援警力會把嫌犯帶回。'); award(pts, money, (kind === 'bank' ? '銀行' : '超商') + '搶案：' + lines, cuffed >= 2 && dead === 0 ? 'mer' : cuffed >= 1 ? 'com' : null); }, 1200);
       }
     },
@@ -2431,11 +2526,14 @@ function misRobbery(kind) {
       if (st === 'go' && dist(P.x, P.z, site.door.x, site.door.z) > 60) return false;
       for (const h of all()) if (h.state === 'hold') { h.state = 'alert'; h.timer = 0.8; }
       const h = r.h; if (!h || h.role !== 'robber') { if (h && (h.role === 'clerk')) return false; return !h; }
+      if (h.dead) return true;
+      if (type === 'punch') { if (h.state === 'cuffed' || h.state === 'stun' || h.state === 'surrender') punish('rep', '對已投降的嫌犯動手'); else { h.state = 'stun'; h.pose = 'stun'; h.timer = r.baton ? 6 : 3.5; h.P.gun.visible = false; npcHurt(h); radio((r.baton ? '警棍打倒搶匪' : '一拳打倒搶匪') + '！快上手銬（E）。', 'info'); } return true; }
       if (type === 'taser') { if (['hold', 'alert', 'fight', 'surrender'].includes(h.state)) { h.state = 'stun'; h.pose = 'stun'; h.timer = 7; h.P.gun.visible = false; radio('電擊命中！趁嫌犯倒地快上手銬（E）。', 'info'); } return true; }
-      if (h.state === 'surrender' || h.state === 'cuffed' || h.state === 'stun') { punish('major', '對已投降、失去抵抗能力的嫌犯開槍'); }
+      const legal = !(h.state === 'surrender' || h.state === 'cuffed' || h.state === 'stun');
+      if (!legal) { punish('major', '對已投降、失去抵抗能力的嫌犯開槍'); }
       else if (!h.threat && !warned && !earlyShotPun) { earlyShotPun = true; punish('rep', '未先喊話警告就開槍'); }
-      h.hp -= r.head ? 100 : 40; h.threat = true;
-      if (h.hp <= 0) { h.state = 'down'; h.pose = 'down'; h.alive = true; h.P.gun.visible = false; h.hp = 0; h.downT = 0; radio('嫌犯中彈倒地，已呼叫救護車。', 'info'); }
+      h.hp -= r.head ? 100 : (r.dmg || 40); h.threat = true;
+      if (h.hp <= 0) { killNPC(h); h.alive = true; radio('搶匪中彈身亡。', 'warn'); dutyKill(h, legal, legal ? '持槍搶匪' : 'surrender'); }
       else if (!h.rolled && h.hp < 50) { h.rolled = true; if (Math.random() < 0.55) surrender(h, '別開槍！我投降！'); }
       else if (h.state === 'hold' || h.state === 'alert') h.state = 'fight';
       return true;
@@ -2545,13 +2643,15 @@ function misCheckpoint() {
 /* ---------- 打卡上下班 ---------- */
 function clockIn() {
   if (S.onDuty) return;
+  if (W.stars) { arrestPlayer('你一進分局就被同事認出來，當場逮捕'); return; }
+  if (S.dismissed) { radio('你已經被免職了，不能打卡。到分局「人事室」可以重新報考警察。', 'warn'); return; }
   const late = isWorkday(S.day) && !S.workedToday && S.time > 8 * 60 + 30;
   if (TLAW.chase) endCop();
   S.onDuty = true; S.clockIn = S.time; S.workedToday = true;
-  S.ammo = 15; S.reserve = 45; S.taser = 4; S.weapon = 0;
+  S.ammo = 15; S.reserve = 45; S.taser = 4; S.weapon = S.unit === 'swat' ? 3 : 0; S.rifle = 30; S.rifleRes = 90;
   for (const pv of [POLICE_CAR, POLICE_SCOOT]) { if (pv.wreck || pv.hp < 100) restoreVeh(pv); else pv.reset(); }
   MIS.timer = 8;
-  toast('rank', '👮 打卡上班　' + fmtTime(S.time), '已換上制服、到械彈室領槍（手槍 1 把、彈匣 4 個、電擊槍）');
+  toast('rank', '👮 打卡上班　' + fmtTime(S.time), S.unit === 'swat' ? '維安特勤隊：已領 T91 步槍（4）、手槍（1）、電擊槍（2）、警棍（3）、防彈背心' : '已換上制服、到械彈室領槍：手槍（1）、電擊槍（2）、警棍（3）');
   radio('📻 勤務指揮中心：' + RANKS[S.rank].name + '早安！今天也請注意安全。巡邏警車停在分局前面。', 'radio'); AU.radio();
   if (late) punish('rep', '上班遲到（超過 08:30 才打卡）');
   if (!isWorkday(S.day)) radio('今天是休假日，算自願加班。', 'info');
@@ -2560,7 +2660,7 @@ function clockIn() {
 function payToday() {
   let mins = S.time - S.clockIn; if (mins < 0) mins += 1440;
   const reg = Math.min(mins, Math.max(0, 17 * 60 - S.clockIn)), ot = Math.max(0, mins - reg);
-  const hourly = RANKS[S.rank].pay / 8;
+  const hourly = RANKS[S.rank].pay / 8 * (S.unit === 'swat' ? 1.25 : 1);
   return { pay: Math.round(Math.max(0, reg) / 60 * hourly + ot / 60 * hourly * 1.34), mins, ot };
 }
 function offDutyNow() {
@@ -2602,6 +2702,7 @@ function toHospital(msg, hp, en) {
     const h = SITES.hospital; P.x = h.x; P.z = h.z + 2; P.yaw = Math.PI; P.pitch = 0;
     S.hp = hp; S.energy = Math.max(S.energy, en || 0); S.time += 120;
     if (!S.onDuty) { S.money -= 1500; radio('醫藥費 $1,500。', 'warn'); } else radio('因公受傷，醫藥費由公費負擔。', 'info');
+    if (W.stars) setTimeout(() => arrestPlayer('警察在醫院病床邊把你逮捕'), 1800);
   });
 }
 function playerDown() { toHospital('🚑 你受了重傷，被送到大墩醫院…', 60, 0); }
@@ -2610,6 +2711,7 @@ function collapse() { toHospital('😵 體力透支暈倒了，被送到大墩�
 /* ---------- 睡覺 ---------- */
 function goSleep() {
   if (S.onDuty) { radio('還在上班中！先回分局打卡下班。', 'info'); return; }
+  if (W.stars) { MODAL.close(); radio('警察正在找你，現在回家睡覺會被堵在家裡！先甩掉警察。', 'warn'); return; }
   MODAL.close();
   fadeTo('😴 睡覺中…', () => {
     const target = 7 * 60;
@@ -2677,6 +2779,8 @@ function initStaticInteracts() {
   const st = SITES.station, home = SITES.home;
   STATIC_INTERACT.push({ x: st.x, z: st.z, r: 4, veh: true, label: () => S.onDuty ? '打卡下班' : '打卡上班（領槍、換制服）', act: () => S.onDuty ? clockOut() : clockIn() });
   signBoard('🚓 車輛調度', { bg: '#0b3d91', fg: '#fff', w: 256, h: 64 }, 1.6, 0.4, st.x - 7, 2.2, st.z + 1.4, 0, 0.6);
+  signBoard('🛡️ 人事室', { bg: '#1d2126', fg: '#fff', w: 256, h: 64 }, 1.6, 0.4, st.x + 7, 2.2, st.z + 1.4, 0, 0.6);
+  STATIC_INTERACT.push({ x: st.x + 7, z: st.z + 0.5, r: 2.6, label: () => S.dismissed ? '人事室：重新報考警察' : S.unit === 'swat' ? '人事室：維安特勤隊（調回分局）' : '人事室：申請調任維安特勤隊', act: swatTransferMenu });
   STATIC_INTERACT.push({
     x: st.x - 7, z: st.z + 0.5, r: 2.6, label: () => { const bad = [POLICE_CAR, POLICE_SCOOT].some(pv => pv.wreck || pv.hp < 100 || dist(pv.x, pv.z, pv.home.x, pv.home.z) > 60); return bad ? '車輛調度：申請新警車' : '車輛調度（警車狀況良好）'; },
     act: () => {
@@ -2703,6 +2807,33 @@ function initStaticInteracts() {
     }
   });
 }
+
+/* ---------- 揍人 ---------- */
+function npcHurt(h) { say(h, pick(['啊！', '唉唷！', '好痛！', '哎呀！']), { fem: h.fem || (h.P && h.P.fem), h: 0.9 }); }
+function punchInnocent(h, dmg, baton) {
+  if (h.role === 'cop') return punchCop(h, dmg || 20);
+  const isPed = h.kind === 'ped';
+  const fem = isPed ? h.fem : h.P && h.P.fem, elder = isPed ? h.elder : false;
+  const wasKO = (h.koT > 0) || (isPed ? h.state === 'down' : h.state === 'stun');
+  const res = npcDamage(h, dmg || 20, 'melee');
+  if (res === 'hurt') {
+    const fightBack = !fem && !elder && !baton && Math.random() < 0.35;
+    if (fightBack) {
+      say(h, pick(['你神經病喔！', '欸！你打我？！', '幹嘛啦！你瘋了喔！', '打人喔！我要報警！']), { fem, elder, h: 0.9 });
+      setTimeout(() => { if (!h.dead && dist(h.x, h.z, P.x, P.z) < 2.2) { AU.punchHit(); hurtPlayer(randi(5, 10), h.x, h.z); radio('對方還手揍了你一拳！', 'warn'); } }, 450);
+      if (isPed) setTimeout(() => { if (!h.dead && h.state !== 'down') h.scare(P.x, P.z); }, 900);
+    } else if (isPed) { npcHurt(h); h.scare(P.x, P.z); }
+    else if (!['down', 'cuffed'].includes(h.state)) { h.state = 'stun'; h.pose = 'stun'; h.timer = 2; h.koT = 2; npcHurt(h); }
+  } else if (res === 'ko') { say(h, pick(['呃…', '唔…']), { fem, elder, h: 0.9 }); }
+  scareNear(h.x, h.z, 14);
+  if (S.onDuty) {
+    if (res === 'dead') { punish('major', '執勤中毆打民眾致死'); dutyKill(h, false, 'beat'); return; }
+    const now = performance.now(); if (now - MIS.punchPun < 15000) return; MIS.punchPun = now;
+    punish('dem', '執勤中毆打無辜民眾（民眾提告傷害）'); return;
+  }
+  addCrime(res === 'dead' ? 'assaultDeath' : (res === 'ko' || wasKO) ? 'assaultKO' : 'assault', 0, h);
+}
+function fineStr(n) { return '$' + n.toLocaleString(); }
 
 /* ================= 拿槍指人 ================= */
 const AIM = { h: null, civT: 0, cool: 0, cDay: 0, cCount: 0, tick: 0 };
@@ -2818,13 +2949,20 @@ function suspAI(h, dt) {
 function suspectShot(r, type, list) {
   const h = r.h; if (!h || !list.includes(h)) return false;
   if (h.role !== 'suspect') return false;
+  if (h.dead) return true;
   if (type === 'taser') { if (!['cuffed', 'down'].includes(h.state)) { h.state = 'stun'; h.timer = 7; h.P.gun.visible = false; h.reacted = true; radio('電擊命中！快過去上手銬（E）。', 'info'); } return true; }
+  if (type === 'punch') {
+    if (['cuffed', 'down'].includes(h.state)) { punish('dem', '毆打已上銬、無法抵抗的人'); return true; }
+    if (['surrender', 'stun', 'kneel'].includes(h.state)) { punish('rep', '對已投降的嫌犯動手'); return true; }
+    h.state = 'stun'; h.timer = r.baton ? 6 : 3.5; h.P.gun.visible = false; h.reacted = true; npcHurt(h); radio((r.baton ? '警棍制伏' : '一拳打倒') + '！快上手銬（E）。', 'info'); return true;
+  }
   const threat = h.state === 'fight' && h.armed;
-  if (['surrender', 'cuffed', 'stun'].includes(h.state)) punish('major', '對已投降、失去抵抗能力的人開槍');
+  const surr = ['surrender', 'cuffed', 'stun'].includes(h.state);
+  if (surr) punish('major', '對已投降、失去抵抗能力的人開槍');
   else if (h.state === 'flee' && !h.armed) punish('major', '對逃跑但沒有持械的嫌犯開槍');
   else if (!threat) punish('dem', '對沒有威脅的人開槍');
-  h.hp -= r.head ? 100 : 40; h.reacted = true;
-  if (h.hp <= 0) { h.state = 'down'; h.P.gun.visible = false; radio('嫌犯中彈倒地，已呼叫救護車。', 'info'); }
+  h.hp -= r.head ? 100 : (r.dmg || 40); h.reacted = true;
+  if (h.hp <= 0) { killNPC(h); radio('嫌犯中彈身亡。', 'warn'); dutyKill(h, threat, threat ? '持槍反抗的嫌犯' : surr ? 'surrender' : 'nothreat'); }
   else if (h.armed && h.state !== 'fight') { h.state = 'fight'; h.P.gun.visible = true; h.shootT = 1; h.moveT = 0; h.tx = h.x; h.tz = h.z; }
   return true;
 }
@@ -3205,7 +3343,7 @@ function misDrug() {
       const need = (h.drug === 'meth' || h.wanted) ? 'arrest' : h.drug === 'ket' ? 'ticket' : 'release';
       let act = h.resolved; if (h.state === 'cuffed') act = 'arrest'; if (h.state === 'down') act = 'down';
       if (act === 'escaped') { L.push([false, nm + ' 逃走了']); pts -= 6; continue; }
-      if (act === 'down') { L.push([true, nm + ' 持槍反抗被制伏，送醫']); pts += 4; continue; }
+      if (act === 'down') { L.push([true, nm + (h.dead ? ' 持槍反抗被擊斃' : ' 持槍反抗被制伏，送醫')]); pts += 4; continue; }
       if (need === 'arrest') {
         if (act === 'arrest') { L.push([true, nm + '：' + (h.drug === 'meth' ? '持有第二級毒品，依毒品危害防制條例第 11 條以現行犯逮捕' : '') + (h.wanted ? '（通緝犯）' : '')]); pts += 14; S.stats.arrests++; }
         else { L.push([false, nm + ' 應該要逮捕（' + (h.drug === 'meth' ? '持有二級毒品' : '通緝犯') + '）' + (h.checked.search || h.checked.id ? '' : '，你沒有查證或搜身')]); bad = ['dem', '臨檢疏失，放走毒品／通緝嫌犯']; }
@@ -3949,6 +4087,14 @@ function updateResponders(dt) {
       R.pathT -= dt; if (R.pathT <= 0) { R.pathT = 0.8; R.path = findPath(c.x, c.z, tx, tz); }
       const p = (R.path || []).find(q => dist(q[0], q[1], c.x, c.z) > 7); let gx = tx, gz = tz; if (p && d > 25) { gx = p[0]; gz = p[1]; }
       freeDrive(c, gx, gz, R.state === 'leave' ? 16 : (d > 30 ? 28 : clamp(d - R.arrive + 2, 0, 12)), dt);
+      // 卡住（撞牆、卡在車陣）：遠離玩家就直接挪到下一個路點，否則倒車轉向
+      if (R.state !== 'onscene' && d > R.arrive + 3 && Math.abs(c.speed) < 1.2) R.stuckT = (R.stuckT || 0) + dt; else R.stuckT = 0;
+      if (R.stuckT > 3) {
+        R.stuckT = 0; const q = (R.path || []).find(q => dist(q[0], q[1], c.x, c.z) > 10);
+        if (q && dist(c.x, c.z, P.x, P.z) > 45) { c.yaw = Math.atan2(-(q[0] - c.x), -(q[1] - c.z)); c.x = q[0]; c.z = q[1]; }
+        else { c.x += Math.sin(c.yaw) * 2.5; c.z += Math.cos(c.yaw) * 2.5; c.yaw += 0.9; }
+        c.speed = 0; c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.yaw;
+      }
       if (R.state === 'respond' && d < R.arrive) { R.state = 'onscene'; c.speed = 0; if (R.onArrive) R.onArrive(R); }
       if (R.state === 'leave' && (dist(c.x, c.z, P.x, P.z) > 200 || R.t > 90)) { removeResponder(R); continue; }
       if (PURSUIT.car && R.type === 'police' && dist(c.x, c.z, PURSUIT.car.px, PURSUIT.car.pz) < 14) PURSUIT.prog += dt * 0.12;
@@ -3976,9 +4122,9 @@ function updateEmergencyTraffic(dt) {
   }
 }
 /* ---------- 員警 AI ---------- */
-function spawnOfficer(x, z, data) {
-  const o = spawnHuman({ police: true, shirt: 0x9cc3e6, pants: 0x1b2a4a, fem: Math.random() < 0.25, data: Object.assign({ role: 'cop', ai: true }, data || {}) }, x, z, 0);
-  o.hp = 100; o.shootT = rand(0.5, 1.5); o.state = 'idle'; OFFICERS.push(o); return o;
+function spawnOfficer(x, z, data, swat) {
+  const o = spawnHuman(swat ? { swat: true, data: Object.assign({ role: 'cop', ai: true }, data || {}) } : { police: true, shirt: 0x9cc3e6, pants: 0x1b2a4a, fem: Math.random() < 0.25, data: Object.assign({ role: 'cop', ai: true }, data || {}) }, x, z, 0);
+  o.hp = swat ? 160 : 100; o.swat = !!swat; o.shootT = rand(0.5, 1.5); o.state = 'idle'; OFFICERS.push(o); return o;
 }
 // 走向目標（目標在店裡時先走到門口）
 function officerGo(o, tx, tz, sp, dt) {
@@ -3992,7 +4138,9 @@ function updateOfficers(dt) {
   for (let k = OFFICERS.length - 1; k >= 0; k--) {
     const o = OFFICERS[k]; let pose = 'idle', sp = 0;
     if (o.state === 'down') { posePerson(o.P, 'down', dt); o.P.g.position.set(o.x, 0.2, o.z); continue; }
-    if (o.kind2 === 'backup') {
+    if (o.state === 'stun' && o.kind2 !== 'hunt') { o.timer -= dt; posePerson(o.P, 'stun', dt); o.P.g.position.set(o.x, 0.2, o.z); if (o.timer <= 0) o.state = 'idle'; continue; }
+    if (o.kind2 === 'hunt') { [pose, sp] = huntAI(o, dt); if (o.gone) continue; }
+    else if (o.kind2 === 'backup') {
       if (MIS.cur !== o.mis) { // 任務結束：回車上離開
         const c = o.R.car; const d = dist(o.x, o.z, c.x, c.z);
         if (d > 2) { moveHuman(o, c.x - o.x, c.z - o.z, 2.5, dt); pose = 'walk'; sp = 2.5; } else { removeOfficer(o); if (!OFFICERS.some(q => q.R === o.R)) responderLeave(o.R, 500); continue; }
@@ -4007,11 +4155,11 @@ function updateOfficers(dt) {
         else {
           o.yaw = Math.atan2(tg.x - o.x, tg.z - o.z);
           const armed = tg.state === 'fight' || tg.state === 'alert' || tg.state === 'hold';
-          if (bd > 14) { officerGo(o, tg.x, tg.z, 2.8, dt); pose = 'walk'; sp = 2.8; } else pose = armed ? 'aim' : 'idle';
+          if (bd > (o.swat ? 7 : 14)) { officerGo(o, tg.x, tg.z, o.swat ? 3.4 : 2.8, dt); pose = o.swat && armed ? 'aim' : 'walk'; sp = o.swat ? 3.4 : 2.8; } else pose = armed ? 'aim' : 'idle';
           if (tg.state === 'fight' && bd < 40 && losClear(o.x, 1.5, o.z, tg.x, 1.3, tg.z)) {
             o.shootT -= dt;
-            if (o.shootT <= 0) { o.shootT = rand(1.2, 2.2); AU.shot(dist(o.x, o.z, P.x, P.z)); spawnFX(new THREE.Vector3(o.x + Math.sin(o.yaw) * 0.6, 1.45, o.z + Math.cos(o.yaw) * 0.6), 0xffd27a, 0.1, 0.08);
-              if (Math.random() < 0.3) { tg.hp -= 40; if (tg.hp <= 0) { tg.state = 'down'; tg.pose = 'down'; if (tg.P.gun) tg.P.gun.visible = false; radio('支援同仁擊中嫌犯，嫌犯倒地。', 'info'); } else if (Math.random() < 0.4) surrender(tg, '別開槍！我投降！'); } }
+            if (o.shootT <= 0) { o.shootT = o.swat ? rand(0.5, 0.9) : rand(1.2, 2.2); AU.shot(dist(o.x, o.z, P.x, P.z)); spawnFX(new THREE.Vector3(o.x + Math.sin(o.yaw) * 0.6, 1.45, o.z + Math.cos(o.yaw) * 0.6), 0xffd27a, 0.1, 0.08);
+              if (Math.random() < (o.swat ? 0.45 : 0.3)) { tg.hp -= o.swat ? 55 : 40; if (tg.hp <= 0) { killNPC(tg); radio(o.swat ? '特勤隊員擊斃持槍嫌犯。' : '支援同仁開槍擊斃持槍嫌犯。', 'info'); } else if (Math.random() < (o.swat ? 0.6 : 0.4)) surrender(tg, '別開槍！我投降！'); } }
           }
         }
       }
@@ -4029,7 +4177,15 @@ function shootAtOfficer(h, D) {
   if (!offs.length || Math.random() > 0.45) return false;
   const o = pick(offs); if (!losClear(h.x, 1.6, h.z, o.x, 1.5, o.z)) return false;
   h.yaw = Math.atan2(o.x - h.x, o.z - h.z);
-  if (Math.random() < 0.18 * D.acc) { o.state = 'down'; radio('⚠️ 同仁中彈倒地！已呼叫救護車！', 'warn'); spawnResponder('ambulance', o.x, o.z, { onArrive: (R) => setTimeout(() => { removeOfficer(o); responderLeave(R); radio('🚑 受傷的同仁已送醫。', 'info'); }, 3000) }); }
+  if (Math.random() < 0.18 * D.acc) {
+    o.hits = (o.hits || 0) + 1;
+    if (o.hits < (o.swat ? 3 : 2)) { radio(o.swat ? '特勤隊員中彈，防彈背心擋住了！' : '⚠️ 同仁中彈受傷，還撐得住！', 'warn'); return true; }
+    o.state = 'down'; o.pose = 'down';
+    const killed = Math.random() < 0.45;
+    if (killed) { o.dead = true; radio('⚠️ 同仁連中數槍，不幸殉職…', 'warn'); addLog('🕯️ 同仁於' + nearCross(o.x, o.z) + '執勤中殉職'); }
+    else radio('⚠️ 同仁中彈倒地！已呼叫救護車！', 'warn');
+    spawnResponder('ambulance', o.x, o.z, { onArrive: (R) => setTimeout(() => { removeOfficer(o); responderLeave(R); radio(killed ? '🚑 救護人員把殉職的同仁送走了。' : '🚑 受傷的同仁已送醫。', 'info'); }, 3000) });
+  }
   return true;
 }
 /* ---------- 請求支援 ---------- */
@@ -4037,7 +4193,15 @@ function requestBackup() {
   if (!GAME.running || MODAL.open) return;
   if (!S.onDuty) { radio('下班時間不能呼叫支援。', 'info'); return; }
   const m = MIS.cur; if (!m) { radio('目前沒有勤務，不需要支援。', 'info'); return; }
-  if (m.backup) { radio('支援警力已經在路上了。', 'info'); return; }
+  if (m.backup) {
+    // 第二次按：重大案件呼叫維安特勤隊
+    if (['robbery', 'drug', 'fugitive'].includes(m.type) && !m.swatSent && S.unit !== 'swat') {
+      m.swatSent = true; const tg = (m.target && m.target()) || { x: P.x, z: P.z };
+      radio('📻 你：「現場火力不足，請求維安特勤隊支援！」', 'radio'); speak('請求特勤隊支援');
+      setTimeout(() => { if (MIS.cur !== m) return; radio('📻 勤務指揮中心：「收到，維安特勤隊出動！」', 'radio'); AU.radio(); requestSWAT(tg.x, tg.z, 'mission', m); }, 2000);
+    } else radio(m.swatSent ? '支援警力和特勤隊都已經在路上了。' : '支援警力已經在路上了。', 'info');
+    return;
+  }
   m.backup = true; const tg = (m.target && m.target()) || { x: P.x, z: P.z };
   radio('📻 你：「大墩 23 呼叫，' + nearCross(tg.x, tg.z) + '請求支援！」', 'radio'); speak('請求支援');
   setTimeout(() => { if (MIS.cur === m) { radio('📻 勤務指揮中心：「收到，就近派兩組警力前往支援！」', 'radio'); AU.radio(); } }, 1500);
@@ -4161,6 +4325,394 @@ function updateCoast(dt) {
 }
 function updateServices(dt) { updateResponders(dt); updateEmergencyTraffic(dt); updateOfficers(dt); updateColleagues(dt); updateCoast(dt); }
 
+/* ================= 傷亡、通緝（GTA 星等）、法院判決、維安特勤隊 ================= */
+
+/* ---------- 法條（中華民國刑法、警察人員人事條例、警械使用條例） ---------- */
+// sent：量刑（初犯、依法定最低或實務常見刑度）；conv：可否易科罰金（刑法§41：最重本刑 5 年以下、宣告 6 月以下）
+const CRIMES = {
+  assault: { n: '傷害罪', law: '刑法第 277 條第 1 項', stat: '5 年以下有期徒刑、拘役或 50 萬元以下罰金', sent: { jailDays: 50 }, conv: true, stars: 1 },
+  assaultKO: { n: '傷害罪（打到昏迷）', law: '刑法第 277 條第 1 項', stat: '5 年以下有期徒刑、拘役或 50 萬元以下罰金', sent: { months: 4 }, conv: true, stars: 2 },
+  assaultDeath: { n: '傷害致死罪', law: '刑法第 277 條第 2 項', stat: '無期徒刑或 7 年以上有期徒刑', sent: { years: 7 }, conv: false, stars: 3 },
+  robbery: { n: '強盜罪（搶車）', law: '刑法第 328 條第 1 項', stat: '5 年以上有期徒刑', sent: { years: 5 }, conv: false, stars: 2, robbery: true },
+  obstruct: { n: '妨害公務執行罪（襲警）', law: '刑法第 135 條第 1 項', stat: '3 年以下有期徒刑、拘役或 30 萬元以下罰金', sent: { months: 3 }, conv: true, stars: 3 },
+  murder: { n: '殺人罪', law: '刑法第 271 條第 1 項', stat: '死刑、無期徒刑或 10 年以上有期徒刑', sent: { years: 10 }, conv: false, stars: 4 },
+  negligentDeath: { n: '過失致死罪', law: '刑法第 276 條', stat: '5 年以下有期徒刑、拘役或 50 萬元以下罰金', sent: { months: 6 }, conv: true, stars: 3 },
+};
+const COURTQ = []; // 等待顯示的判決／審查
+function sentenceText(c) { const s = c.sent; return s.years ? '有期徒刑 ' + s.years + ' 年' : s.months ? '有期徒刑 ' + s.months + ' 個月' : '拘役 ' + s.jailDays + ' 日'; }
+function sentenceDays(c) { const s = c.sent; return s.years ? s.years * 365 : s.months ? s.months * 30 : s.jailDays; }
+// 判決：codes = 罪名清單，ctx = 'arrest'（下班犯罪被捕）/ 'duty'（執勤違法用槍移送）
+function courtJudge(codes, ctx, intro) {
+  const list = codes.map(k => CRIMES[k]).filter(Boolean); if (!list.length) return;
+  const prison = list.some(c => !c.conv);
+  let rows = list.map(c => `<li><b>${c.n}</b>（${c.law}）<br><small>法定刑：${c.stat}</small><br>➜ 判處 <b>${sentenceText(c)}</b>${c.conv ? '，得易科罰金' : ''}</li>`).join('');
+  let html = `<h2>⚖️ 臺灣臺中地方法院 刑事判決</h2><p>${intro || ''}</p><ul style="padding-left:18px;max-height:38vh;overflow:auto">${rows}</ul>`;
+  let after;
+  if (!prison) {
+    const days = list.reduce((a, c) => a + sentenceDays(c), 0), fine = days * 1000;
+    html += `<p>${list.length > 1 ? '數罪併罰，' : ''}合計 ${days} 日，依刑法第 41 條以新臺幣 1,000 元折算 1 日易科罰金：<b>${fmtMoney(fine)}</b>。</p>`;
+    if (S.money < fine) html += `<p><small>存款不足，不足的部分先欠著（存款變成負的）。</small></p>`;
+    html += `<p><small>易科罰金不在《警察人員人事條例》第 31 條第 1 項第 4 款免職範圍，但機關仍會依規定懲處。</small></p>`;
+    after = () => { S.money -= fine; addLog('⚖️ 判決：' + list.map(c => c.n).join('、') + '，易科罰金 ' + fine); if (ctx === 'arrest') punish('dem', '下班時間犯' + list.map(c => c.n).join('、') + '（判決有罪）'); updateHUD(true); };
+  } else {
+    let yrs = 0; for (const c of list) yrs += c.sent.years || (sentenceDays(c) / 365); yrs = Math.min(30, Math.round(yrs * 10) / 10);
+    const gameDays = Math.max(3, Math.round(yrs * 2));
+    const rob = list.some(c => c.robbery);
+    html += `<p>${list.length > 1 ? '數罪併罰（刑法第 51 條，最多 30 年），' : ''}應執行有期徒刑 <b>${yrs} 年</b>，入監服刑，不得易科罰金。</p>
+      <p>🚫 依《警察人員人事條例》第 31 條第 1 項${rob ? '第 3 款（犯強盜罪經有罪判決確定）' : '第 4 款（經處有期徒刑以上之刑確定，未准易科罰金）'}，<b>予以免職</b>。</p>
+      <p><small>遊戲中刑期壓縮成 ${gameDays} 天（1 年 ≈ 2 天）。出獄後可以重新報考警察，存款和自己的車會保留。</small></p>`;
+    after = () => serveTime(gameDays, yrs, list);
+  }
+  COURTQ.push({ html, after, btn: prison ? '入監服刑' : '繳納罰金' });
+}
+function serveTime(gameDays, yrs, list) {
+  if (MIS.cur) MIS.end(false); if (S.onDuty) offDutyNow();
+  if (P.mode === 'vehicle') { P.veh.speed = 0; P.veh = null; P.mode = 'foot'; $('speedo').classList.add('hidden'); }
+  fadeTo('🔒 入監服刑中…（' + yrs + ' 年）', () => {
+    S.day += gameDays; S.time = 9 * 60; S.workedToday = false; S.absentChecked = S.day; S.hp = 100; S.energy = 100;
+    S.rank = 0; S.merit = 0; S.pen = { rep: 0, dem: 0, major: 0 }; S.award = { com: 0, mer: 0 }; S.unit = '';
+    S.dismissed = true;
+    addLog('🔒 ' + list.map(c => c.n).join('、') + '，判刑 ' + yrs + ' 年，免職');
+    respawnOwned(); POLICE_CAR.reset(); POLICE_SCOOT.reset();
+    const h = SITES.home; P.x = h.x; P.z = h.z + 1.5; P.yaw = Math.PI; P.pitch = 0; P.mode = 'foot';
+    saveGame(); updateHUD(true);
+    setTimeout(() => MODAL.show(`<h2>🚪 出獄了</h2><p>第 ${S.day} 天，你回到家。</p><p>已經被免職，不能再到分局打卡。要重新當警察，到分局按 E「重新報考警察」。</p>`, [['知道了', 'g', () => MODAL.close()]]), 1200);
+  });
+}
+function updateCourt() {
+  if (MODAL.open || P.anim || !COURTQ.length) return;
+  const q = COURTQ.shift();
+  MODAL.show(q.html, [[q.btn || '確定', 'r', () => { MODAL.close(); q.after && q.after(); }]]);
+}
+
+/* ---------- 人的傷亡 ---------- */
+const BODIES = []; // { h, x, z, t, blood }
+const BLOOD_MAT = new THREE.MeshBasicMaterial({ color: 0x5c0505, transparent: true, opacity: 0.8, depthWrite: false });
+const BLOOD_GEO = new THREE.CircleGeometry(0.7, 14);
+function bloodPool(x, z) { const m = new THREE.Mesh(BLOOD_GEO, BLOOD_MAT); m.rotation.x = -Math.PI / 2; m.scale.setScalar(rand(0.7, 1.1)); m.position.set(x, (blockAtXZ(x, z) ? 0.19 : 0.015), z); scene.add(m); return m; }
+function isPedObj(h) { return h.kind === 'ped'; }
+// 受傷判定：dmg 傷害值；src 'gun' / 'melee'；回傳 'hurt' / 'ko' / 'dead'
+function npcDamage(h, dmg, src) {
+  if (h.dead) return 'dead';
+  h.hp = (h.hp == null ? 100 : h.hp) - dmg;
+  const ped = isPedObj(h);
+  const lethal = src === 'gun' ? h.hp <= 0 : h.hp <= -60; // 拳打到昏迷後繼續打才會死
+  if (lethal) { killNPC(h); return 'dead'; }
+  if (src === 'melee' && h.hp <= 0) { // 被打昏
+    if (ped) { h.state = 'down'; h.alive = false; h.timer = 1e9; h.koT = 14; }
+    else { h.state = 'stun'; h.pose = 'stun'; h.timer = 14; h.koT = 14; }
+    return 'ko';
+  }
+  if (src === 'gun') { // 中槍沒死：倒地哀嚎，救護車會來
+    if (ped) { h.state = 'down'; h.alive = false; h.timer = 1e9; h.wounded = true; say(h, pick(['啊——！我中槍了！', '救命…', '好痛…']), { fem: h.fem, elder: h.elder, h: 0.9 }); callAmbulance(h.x, h.z); }
+    return 'hurt';
+  }
+  return 'hurt';
+}
+function killNPC(h) {
+  h.dead = true; h.hp = Math.min(h.hp, 0);
+  if (isPedObj(h)) { h.state = 'down'; h.alive = false; h.timer = 1e9; h.koT = 0; }
+  else { h.state = 'down'; h.pose = 'down'; if (h.P.gun) h.P.gun.visible = false; h.walk = null; }
+  BODIES.push({ h, x: h.x, z: h.z, t: 0, blood: bloodPool(h.x, h.z) });
+  scareNear(h.x, h.z, 40);
+  callAmbulance(h.x, h.z);
+}
+let ambT = 0;
+function callAmbulance(x, z) {
+  if (performance.now() - ambT < 15000) return; ambT = performance.now();
+  setTimeout(() => {
+    spawnResponder('ambulance', x, z, { arrive: 9, onArrive: (R) => setTimeout(() => {
+      for (let k = BODIES.length - 1; k >= 0; k--) { const b = BODIES[k]; if (dist(b.x, b.z, R.car.x, R.car.z) < 30) removeBody(k); }
+      for (const pd of PEDS) if (pd.wounded && dist(pd.x, pd.z, R.car.x, R.car.z) < 30) { pd.wounded = false; pd.recycle(); }
+      responderLeave(R); radio('🚑 救護車已把傷者送醫。', 'info');
+    }, 4000) });
+  }, 5000);
+}
+function removeBody(k) {
+  const b = BODIES[k]; scene.remove(b.blood); BODIES.splice(k, 1);
+  const h = b.h;
+  if (isPedObj(h)) { h.dead = false; h.recycle(); }
+  else if (!(h.ai || h.role === 'robber' || h.role === 'clerk')) removeHuman(h);
+}
+function updateBodies(dt) {
+  for (let k = BODIES.length - 1; k >= 0; k--) {
+    const b = BODIES[k]; b.t += dt;
+    if (isPedObj(b.h)) { b.h.x = b.x; b.h.z = b.z; }
+    if (!MHUMANS.includes(b.h) && !isPedObj(b.h)) { scene.remove(b.blood); BODIES.splice(k, 1); continue; }
+    if (dist(b.x, b.z, P.x, P.z) > 150 || b.t > 240) removeBody(k);
+  }
+  // 被打昏的人會醒來逃跑
+  for (const pd of PEDS) if (pd.koT > 0 && !pd.dead) { pd.koT -= dt; if (pd.koT <= 0) { pd.alive = true; pd.hp = 40; pd.state = 'flee'; pd.timer = 10; say(pd, pick(['你給我記住！', '我要報警！', '救命啊！']), { fem: pd.fem, elder: pd.elder }); } }
+  for (const h of MHUMANS) if (h.koT > 0 && !h.dead) { h.koT -= dt; if (h.koT <= 0 && h.state === 'stun') { h.hp = 40; if (h.role === 'civ' && !h.ai) { h.state = 'idle'; const a = Math.atan2(h.x - P.x, h.z - P.z); h.walk = { vx: Math.sin(a) * 5, vz: Math.cos(a) * 5, t: 14 }; h.pose = 'run'; } } }
+  // 一般民眾（非任務 AI）倒地／昏迷的姿勢
+  for (const h of MHUMANS) if (!h.ai && h.role === 'civ' && (h.dead || h.koT > 0) && h.state !== 'idle') h.pose = h.dead ? 'down' : 'stun';
+}
+// 執勤中開槍打死人：依《警械使用條例》審查
+function dutyKill(h, legal, how) {
+  const where = nearCross(h.x, h.z);
+  if (legal) {
+    COURTQ.push({ html: `<h2>🔍 警械使用審查</h2><p>${where}：你開槍造成 1 人死亡（${how}）。</p><p>經審查，對方持槍危害他人生命安全，符合《警械使用條例》第 4 條第 1 項之用槍時機，屬<b>依法使用槍械</b>，不負刑事責任。</p><p><small>所屬機關依規定提供涉訟輔導（律師、法律諮詢）。</small></p>`, btn: '了解' });
+    addLog('🔍 警械使用審查：合法用槍（' + how + '）');
+  } else {
+    const code = how === 'surrender' ? 'murder' : 'negligentDeath';
+    const why = how === 'surrender' ? '對已投降、失去抵抗能力的人開槍致死' : how === 'innocent' ? '開槍誤擊無辜民眾致死' : how === 'beat' ? '執勤中毆打民眾致死' : '在不符合用槍時機的情況下開槍致死';
+    COURTQ.push({ html: `<h2>🔍 警械使用審查</h2><p>${where}：${why}。</p><p>經審查<b>不符合</b>《警械使用條例》第 4 條規定的用槍時機，移送臺灣臺中地方檢察署偵辦。</p>`, btn: '移送法辦' });
+    courtJudge([how === 'beat' ? 'assaultDeath' : code], 'duty', '被告於執行職務時' + why + '，判決如下：');
+  }
+}
+
+/* ---------- 通緝星等（下班犯罪） ---------- */
+const W = { stars: 0, charges: [], lost: 0, lx: 0, lz: 0, cars: [], swat: null, arrestT: 0, seen: false, flash: 0 };
+// 同一個被害人只算最重的一條罪；星等 = 最重罪名的星數（被害人 3 人以上再 +1）
+function addCrime(code, extra, victim) {
+  const c = CRIMES[code]; if (!c) return;
+  if (S.onDuty) return;
+  const prev = victim ? W.charges.find(q => q.v === victim) : null;
+  if (prev) { if (CRIMES[prev.code].stars + (prev.extra || 0) >= c.stars + (extra || 0) && prev.code !== 'assault') { W.lost = 0; W.lx = P.x; W.lz = P.z; return; } prev.code = code; prev.extra = extra || 0; }
+  else W.charges.push({ code, v: victim || {}, extra: extra || 0 });
+  const before = W.stars;
+  const top = Math.max(...W.charges.map(q => CRIMES[q.code].stars + q.extra));
+  W.stars = Math.min(5, Math.max(W.stars, top + (W.charges.length >= 3 ? 1 : 0)));
+  W.lost = 0; W.lx = P.x; W.lz = P.z; W.seen = true;
+  if (!before) { radio('📞 有民眾打 110 報案：' + nearCross(P.x, P.z) + '發生' + c.n.replace(/（.*）/, '') + '！警方出動了！', 'warn'); AU.bad(); }
+  else if (W.stars > before) radio('⭐ 通緝等級提高到 ' + W.stars + ' 顆星！', 'warn');
+  if (W.stars >= 4 && !W.swat) setTimeout(() => { if (W.stars >= 4 && !W.swat) { W.swat = requestSWAT(W.lx, W.lz, 'hunt'); radio('📻 「重大治安事件，維安特勤隊出動！」', 'radio'); } }, 6000);
+  dispatchHunters(); updateWantedHUD();
+}
+function dispatchHunters() {
+  const want = Math.min(3, W.stars);
+  W.cars = W.cars.filter(R => RESP.includes(R));
+  for (let k = W.cars.length; k < want; k++) {
+    const R = spawnResponder('police', W.lx, W.lz, { arrive: 12, getTarget: () => ({ x: W.lx, z: W.lz }), onArrive: (R) => { R.arrivedT = 0; } });
+    R.hunt = true; R.deployed = []; W.cars.push(R);
+  }
+}
+function huntUnits() { return OFFICERS.filter(o => o.kind2 === 'hunt' && o.state !== 'down'); }
+function clearWanted(msg) {
+  if (msg) { radio(msg, 'info'); AU.good(); }
+  W.stars = 0; W.charges = []; W.arrestT = 0;
+  for (const R of W.cars) { for (const o of R.deployed || []) o.leave = R; R.hunt = false; responderLeave(R, 4000); }
+  if (W.swat) { for (const o of W.swat.deployed || []) o.leave = W.swat; responderLeave(W.swat, 4000); }
+  W.cars = []; W.swat = null; updateWantedHUD();
+}
+function arrestPlayer(why) {
+  if (!W.stars && !W.charges.length) return;
+  const codes = W.charges.map(q => q.code); clearWanted();
+  if (MIS.cur) MIS.end(false);
+  P.anim = null; if (P.mode === 'vehicle') { P.veh.speed = 0; P.veh = null; P.mode = 'foot'; $('speedo').classList.add('hidden'); }
+  AU.cuff();
+  fadeTo('🚔 ' + (why || '你被警方逮捕了') + '…移送臺中地檢署', () => {
+    const st = SITES.station; P.x = st.x; P.z = st.z + 6; P.yaw = 0; S.time += 180;
+    courtJudge(codes, 'arrest', '被告於下班時間在臺中市西屯區犯下列各罪，經檢察官起訴，判決如下：');
+  });
+}
+function dedupe(a) { return [...new Set(a)]; }
+function canSeePlayer(x, z, r) { return dist(x, z, P.x, P.z) < r && losClear(x, 1.5, z, P.x, 1.4, P.z); }
+function updateWanted(dt) {
+  if (!W.stars) return;
+  W.flash += dt;
+  // 有沒有被看到
+  let seen = false;
+  for (const R of W.cars.concat(W.swat ? [W.swat] : [])) if (RESP.includes(R) && canSeePlayer(R.car.x, R.car.z, 55)) seen = true;
+  for (const o of huntUnits()) if (canSeePlayer(o.x, o.z, 45)) seen = true;
+  // 還待在案發／最後被看到的地方附近，警察會找過來，不算躲起來
+  if (seen) { W.lost = 0; W.lx = P.x; W.lz = P.z; } else if (dist(P.x, P.z, W.lx, W.lz) < 35) W.lost = Math.max(0, W.lost - dt * 0.5); else W.lost += dt;
+  W.seen = seen;
+  const need = 14 + W.stars * 7;
+  if (W.lost > need) { clearWanted('😮‍💨 你甩掉警察了，通緝解除。'); return; }
+  // 警車：到場後放人下車追；你開車時繼續追車
+  for (const R of W.cars.concat(W.swat ? [W.swat] : [])) {
+    if (!RESP.includes(R)) continue;
+    const d = dist(R.car.x, R.car.z, P.x, P.z);
+    if (P.mode === 'foot') {
+      if (R.state === 'onscene' && !R.deployed.length && d < 45) deployHunters(R);
+      else if (R.state === 'respond') R.arrive = 12;
+    } else {
+      if (R.deployed.length) { // 上車繼續追
+        let all = true; for (const o of R.deployed) { if (o.state === 'down') continue; const dc = dist(o.x, o.z, R.car.x, R.car.z); if (dc > 2.2) { all = false; o.back = true; } else { removeOfficer(o); o.gone = true; } }
+        R.deployed = R.deployed.filter(o => !o.gone && o.state !== 'down');
+        if (all) { R.deployed = []; }
+      }
+      if (!R.deployed.length) { R.arrive = 5; if (R.state === 'onscene' && d > 9) R.state = 'respond'; }
+    }
+  }
+  // 開車被包圍：停下來太久就被逮捕
+  if (P.mode === 'vehicle') {
+    const close = W.cars.some(R => RESP.includes(R) && dist(R.car.x, R.car.z, P.veh.x, P.veh.z) < 9);
+    if (close && Math.abs(P.veh.speed) < 1.5) { W.arrestT += dt; if (W.arrestT > 2.5) { arrestPlayer('警車把你的車包圍了，你被拉下車上銬'); return; } }
+    else W.arrestT = Math.max(0, W.arrestT - dt);
+  }
+  updateWantedHUD();
+}
+function deployHunters(R) {
+  const c = R.car, lx = -Math.cos(c.yaw), lz = Math.sin(c.yaw);
+  const n = R.type === 'swat' ? 4 : 2;
+  for (let k = 0; k < n; k++) {
+    const s = k % 2 ? -1 : 1; const o = spawnOfficer(c.x + lx * 1.6 * s + Math.sin(c.yaw) * (k > 1 ? 2 : 0), c.z + lz * 1.6 * s, { role: 'cop' }, R.type === 'swat');
+    o.kind2 = 'hunt'; o.R = R; o.closeT = 0; R.deployed.push(o);
+  }
+  say(R.deployed[0], R.type === 'swat' ? '維安特勤隊！趴下！' : pick(['警察！不要跑！', '站住！你被逮捕了！']), {});
+}
+// 追捕員警 AI（在 updateOfficers 裡呼叫）；回傳 [pose, speed]
+function huntAI(o, dt) {
+  if (o.state === 'stun') { o.timer -= dt; if (o.timer <= 0) o.state = 'idle'; return ['stun', 0]; }
+  if (o.leave || o.back) { const c = (o.leave || o.R).car; const d = dist(o.x, o.z, c.x, c.z); if (d > 1.8) { officerGo(o, c.x, c.z, 3, dt); return ['walk', 3]; } if (o.leave) { removeOfficer(o); o.gone = true; } return ['idle', 0]; }
+  const d = dist(o.x, o.z, P.x, P.z);
+  const D = DIFF[S.diff];
+  const sees = canSeePlayer(o.x, o.z, 45);
+  const tx = sees ? P.x : W.lx, tz = sees ? P.z : W.lz;
+  let pose = 'idle', sp = 0;
+  // 3 星以上（殺人、襲警）可以開槍；特勤隊 4 星以上
+  const shooter = W.stars >= 4 || W.charges.some(q => q.code === 'obstruct' || q.code === 'murder');
+  if (shooter && sees && d < 30 && d > 3) {
+    o.yaw = Math.atan2(P.x - o.x, P.z - o.z); pose = 'aim';
+    if (d > 9) { officerGo(o, P.x, P.z, 2.6, dt); pose = 'aim'; sp = 2.6; }
+    o.shootT -= dt;
+    if (o.shootT <= 0) {
+      o.shootT = o.swat ? rand(1.0, 1.6) : rand(1.6, 2.6);
+      AU.shot(d); spawnFX(new THREE.Vector3(o.x + Math.sin(o.yaw) * 0.6, 1.45, o.z + Math.cos(o.yaw) * 0.6), 0xffd27a, 0.1, 0.08);
+      const hitP = (o.swat ? 0.2 : 0.13) * D.acc * (P.mode === 'vehicle' ? 0.6 : 1) * (P.run ? 0.7 : 1);
+      if (Math.random() < hitP) hurtPlayer(Math.round(D.dmg * (o.swat ? 0.9 : 0.7)), o.x, o.z);
+    }
+  } else if (P.mode === 'foot' || !sees) {
+    if (dist(o.x, o.z, tx, tz) > 1.0) { officerGo(o, tx, tz, sees ? 6.3 : 3.5, dt); pose = sees ? 'run' : 'walk'; sp = sees ? 6.3 : 3.5; }
+  }
+  if (sees && Math.random() < dt * 0.15) say(o, pick(['警察！不要動！', '站住！', '趴下！雙手放頭上！', '別跑了！']), { fem: o.P.fem });
+  // 抓到了
+  if (P.mode === 'foot' && d < 1.4) { o.closeT += dt; if (o.closeT > 0.7) { arrestPlayer('警察把你撲倒上銬'); } } else o.closeT = 0;
+  return [pose, sp];
+}
+// 揍警察
+function punchCop(h, dmg) {
+  const res = npcDamage(h, dmg, 'melee');
+  if (res === 'dead') { radio('⚠️ 員警被打死了！', 'warn'); }
+  else { h.state = 'stun'; h.timer = res === 'ko' ? 12 : 2.5; npcHurt(h); }
+  if (S.onDuty) { punish(res === 'dead' ? 'major' : 'dem', '毆打同事'); if (res === 'dead') dutyKill(h, false, 'beat'); return; }
+  addCrime(res === 'dead' ? 'murder' : 'obstruct', res === 'dead' ? 1 : 0, h);
+}
+function updateWantedHUD() {
+  const el = $('wanted'); if (!el) return;
+  if (!W.stars) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  let s = ''; for (let k = 1; k <= 5; k++) s += k <= W.stars ? '★' : '☆';
+  el.innerHTML = s + '<small>' + (W.seen ? '被警察發現' : '躲起來… ' + Math.max(0, Math.ceil(14 + W.stars * 7 - W.lost)) + 's') + '</small>';
+  el.style.opacity = W.seen ? 1 : (Math.floor(W.flash * 3) % 2 ? 0.45 : 1);
+}
+
+/* ---------- 下班搶車 ---------- */
+function carjack(n) {
+  if (n.big || n.em || n.cop || n.flag) { radio('這台車搶不了。', 'info'); return; }
+  if (n.state === 'broken') { radio('這台車已經壞了，開不動。', 'info'); return; }
+  if (n.speed > 4) { radio('車子開太快了，等它停下來（例如紅燈）。', 'info'); return; }
+  if (!canDrive(null)) return;
+  const key = n.kind === 'car' ? 'stolencar' : 'stolenscoot';
+  const v = new PVeh(key, n.px, n.pz, n.yaw, n.color, n.kind === 'car' ? n.type : 'scooter'); v.stolen = true; PVEHS.push(v);
+  const k = TRAFFIC.indexOf(n); if (k >= 0) TRAFFIC.splice(k, 1); scene.remove(n.mesh);
+  const lx = -Math.cos(n.yaw), lz = Math.sin(n.yaw);
+  const h = spawnHuman({ data: { role: 'civ' } }, n.px + lx * 2.2, n.pz + lz * 2.2, n.yaw + Math.PI / 2);
+  h.state = 'stun'; h.pose = 'stun'; h.koT = 1.6; h.hp = 100; AU.punchHit();
+  say(h, pick(['搶車啊！救命啊！', '我的車！小偷！', '你幹什麼！報警！']), { fem: h.P.fem });
+  scareNear(n.px, n.pz, 25);
+  startEnter(v);
+  addCrime('robbery', 0, h);
+}
+
+/* ---------- 維安特勤隊 ---------- */
+function requestSWAT(tx, tz, mode, mis) {
+  const R = spawnResponder('swat', tx, tz, {
+    arrive: 16, getTarget: mode === 'hunt' ? () => ({ x: W.lx, z: W.lz }) : null,
+    onArrive: (R) => {
+      if (mode === 'hunt') return;
+      if (MIS.cur !== mis) { responderLeave(R); return; }
+      radio('📻 維安特勤隊到場，準備攻堅！', 'info');
+      const c = R.car; const lx = -Math.cos(c.yaw), lz = Math.sin(c.yaw);
+      for (let k = 0; k < 4; k++) { const s = k % 2 ? -1 : 1; const o = spawnOfficer(c.x + lx * 1.6 * s - Math.sin(c.yaw) * (k > 1 ? 1.8 : 0), c.z + lz * 1.6 * s - Math.cos(c.yaw) * (k > 1 ? 1.8 : 0), { role: 'cop' }, true); o.kind2 = 'backup'; o.mis = mis; o.R = R; }
+      say(OFFICERS[OFFICERS.length - 1], '特勤隊進攻！', {});
+    }
+  });
+  R.hunt = mode === 'hunt'; R.deployed = []; return R;
+}
+// 重大案件自動派特勤隊（銀行搶案、或你自己就是特勤隊員）
+function maybeSWAT(m) {
+  if (!m || m.swatSent) return;
+  const big = m.type === 'robbery' && /銀行/.test(m.title);
+  if (!big && S.unit !== 'swat') return;
+  if (S.unit === 'swat' && !['robbery', 'drug', 'fugitive'].includes(m.type)) return;
+  m.swatSent = true;
+  const spot = (m.target && m.target()) || { x: P.x, z: P.z };
+  setTimeout(() => {
+    if (MIS.cur !== m) return;
+    radio(S.unit === 'swat' ? '📻 特勤分隊長：「其他隊員搭特勤車跟上，現場會合！」' : '📻 勤務指揮中心：「列為重大刑案，維安特勤隊已出動！」', 'radio'); AU.radio();
+    requestSWAT(spot.x, spot.z, 'mission', m);
+  }, S.unit === 'swat' ? 3000 : 9000);
+}
+function swatTransferMenu() {
+  if (S.dismissed) return rejoinMenu();
+  if (S.unit === 'swat') {
+    MODAL.show(`<h2>🛡️ 維安特勤隊</h2><p>你目前是特勤隊員：只接重大案件（持槍搶案、毒品攻堅、通緝要犯），配發 T91 步槍，日薪加給 25%。</p>`,
+      [['調回分局（一般勤務）', '', () => { S.unit = ''; MODAL.close(); addLog('調回大墩分局一般勤務'); toast('rank', '👮 調回分局', '恢復一般巡邏勤務'); updateHUD(true); }], ['繼續待在特勤隊', 'g', () => MODAL.close()]]);
+    return;
+  }
+  const ok = S.rank >= 1 && S.pen.major === 0;
+  MODAL.show(`<h2>🛡️ 申請調任維安特勤隊</h2>
+    <p>條件：職等 <b>巡佐以上</b>、沒有大過紀錄。</p>
+    <p>你目前：${RANKS[S.rank].name}、大過 ${S.pen.major} 支　${ok ? '✅ 符合資格' : '❌ 還不符合'}</p>
+    <ul style="padding-left:18px"><li>只接重大案件：持槍搶案、毒品攻堅、通緝要犯</li><li>每次出勤有 3 名特勤隊員搭特勤車到場支援</li><li>配發 T91 步槍（4 號武器，按住連發）、防彈頭盔背心</li><li>日薪特勤加給 25%</li></ul>`,
+    ok ? [['📝 送出申請', 'g', () => { S.unit = 'swat'; MODAL.close(); AU.good(); toast('rank', '🛡️ 調任維安特勤隊！', '明天起只接重大案件，配發 T91 步槍'); addLog('🛡️ 調任維安特勤隊'); updateHUD(true); }], ['再想想', 'gray', () => MODAL.close()]] : [['好', 'gray', () => MODAL.close()]]);
+}
+function rejoinMenu() {
+  MODAL.show(`<h2>📝 重新報考警察</h2><p>你之前因刑事判決被免職。已服刑完畢，可以重新參加警察特考，從警員重新開始。</p>`,
+    [['報考（$3,000 報名費與訓練）', 'g', () => { if (S.money < 3000) { radio('錢不夠喔。', 'warn'); return; } S.money -= 3000; S.dismissed = false; MODAL.close(); addLog('重新考上警察'); toast('rank', '👮 重新考上警察！', '從警員開始，好好幹'); updateHUD(true); }], ['算了', 'gray', () => MODAL.close()]]);
+}
+
+function updateCrime(dt) { updateBodies(dt); updateWanted(dt); updateCourt(); }
+
+/* ---------- 對空鳴槍（警械使用條例） ---------- */
+// 合法：依法應逮捕之人拒捕、脫逃（第 4 條第 1 項第 3 款）、持槍歹徒危害他人（第 4、5 款）
+// 不合法：單純交通違規逃逸（警政署 72.9.7 警署刑司字第 32220 號函：不得任意開槍）、沒有任何用槍原因
+function warningShot() {
+  if (!GAME.running || MODAL.open || P.anim) return;
+  if (!S.onDuty) { radio('下班時間沒有配槍。', 'info'); return; }
+  if (P.mode === 'vehicle' && !P.veh.police) { radio('開民眾的車不能鳴槍。', 'info'); return; }
+  const rifle = S.weapon === 3 && P.mode === 'foot';
+  if (rifle ? S.rifle <= 0 : S.ammo <= 0) { AU.click(); radio('彈匣空了！按 R 換彈匣。', 'warn'); return; }
+  if (rifle) S.rifle--; else S.ammo--;
+  if (P.mode === 'foot') { setWeapon(rifle ? 3 : 0); P.pitch = Math.max(P.pitch, 0.9); fireCD = 0.6; recoil = 1; }
+  AU.shot(); setTimeout(() => AU.shot(40), 90);
+  const o = camera.getWorldPosition(new THREE.Vector3());
+  spawnFX(new THREE.Vector3(o.x, o.y + 0.6, o.z), 0xffd27a, 0.12, 0.12);
+  lineFX(new THREE.Vector3(o.x, o.y + 0.4, o.z), new THREE.Vector3(o.x + rand(-1, 1), o.y + 40, o.z + rand(-1, 1)), 0xfff2b0, 0.25);
+  scareNear(P.x, P.z, 90);
+  showBubble('🔫 對空鳴槍：「警察！不要跑！」'); speak('警察！不要跑！');
+  // 找逃跑的嫌犯、逃逸車輛
+  const fleers = MHUMANS.filter(h => !h.dead && h.ai && h.state === 'flee' && dist(h.x, h.z, P.x, P.z) < 50);
+  const fighters = MHUMANS.filter(h => !h.dead && (h.state === 'fight' || (h.role === 'robber' && h.state !== 'surrender' && h.state !== 'cuffed' && h.state !== 'down')) && dist(h.x, h.z, P.x, P.z) < 60);
+  const car = PURSUIT.car && dist(PURSUIT.car.px, PURSUIT.car.pz, P.x, P.z) < 45 ? PURSUIT.car : null;
+  let legal = fleers.length > 0 || fighters.length > 0 || (car && PURSUIT.serious);
+  let effect = false;
+  for (const h of fleers) {
+    const d = dist(h.x, h.z, P.x, P.z);
+    if (Math.random() < (d < 20 ? 0.65 : 0.45)) { surrender(h, pick(['好好好！我不跑了！別開槍！', '不要開槍！我投降！'])); effect = true; }
+    else { say(h, pick(['我才不要被抓！', '（拼命跑）']), {}); h.fleeBoost = 3; }
+  }
+  if (car) {
+    const p = PURSUIT.serious ? 0.35 : 0.6;
+    if (Math.random() < p) { PURSUIT.prog = 5; radio('駕駛被槍聲嚇到，靠邊停車了！', 'info'); effect = true; }
+    else radio('嫌犯車輛沒有停，還在逃！', 'warn');
+  }
+  if (!fleers.length && !car && fighters.length) { for (const h of fighters) if (h.state !== 'fight' && Math.random() < 0.3) { surrender(h); effect = true; } }
+  if (legal) {
+    radio('📻 你：「大墩 23 報告，' + nearCross(P.x, P.z) + '對空鳴槍示警一發。」（依《警械使用條例》第 9 條報告長官）', 'radio');
+    if (!effect && !fleers.length && !car) radio('對方沒有反應。', 'info');
+  } else if (car) {
+    punish('rep', '追緝單純交通違規逃逸車輛時鳴槍（警政署函釋：單純交通違規不得任意開槍）');
+  } else {
+    punish('rep', '無故對空鳴槍，不符合《警械使用條例》第 4 條的用槍時機');
+    if (typeof AIM !== 'undefined' && AIM.complain) AIM.complain('民眾投訴：警察在' + nearCross(P.x, P.z) + '無故開槍，嚇到路人');
+  }
+  updateHUD(true);
+}
+
 /* ================= 介面 ================= */
 const GAME = { running: false, tscale: 1, mapOpen: false };
 function radio(msg, type) {
@@ -4189,11 +4741,11 @@ function updateHUD(force) {
   $('clock').textContent = fmtTime(S.time) + (isNight() ? ' 🌙' : ' ☀️');
   $('dateline').textContent = '第 ' + S.day + ' 天（週' + WEEK[weekday(S.day)] + '）' + (isWorkday(S.day) ? '' : ' 休假');
   const du = $('duty'); du.textContent = S.onDuty ? '執勤中' : '下班'; du.className = 'duty ' + (S.onDuty ? 'on' : 'off');
-  $('rank').textContent = RANKS[S.rank].name;
+  $('rank').textContent = S.dismissed ? '已免職' : (S.unit === 'swat' ? '特勤 ' : '') + RANKS[S.rank].name;
   const nx = RANKS[S.rank + 1]; $('merit').textContent = S.merit + (nx ? ' / ' + nx.need + '（升' + nx.name + '）' : '（最高職等）');
   $('money').textContent = fmtMoney(S.money);
   $('hpbar').style.width = clamp(S.hp, 0, 100) + '%'; $('enbar').style.width = clamp(S.energy, 0, 100) + '%';
-  $('weap').textContent = !S.onDuty ? '🙋 便服（下班中）' : P.mode === 'vehicle' ? (P.veh.police ? '🚓 ' + P.veh.spec.name : '🚗 ' + P.veh.spec.name) : S.weapon === 0 ? `🔫 手槍 ${S.ammo} / ${S.reserve}${reloadT > 0 ? ' 換彈中…' : ''}` : `⚡ 電擊槍 ${S.taser} 發`;
+  $('weap').textContent = !S.onDuty ? (IS_TOUCH ? '👊 便服・空手' : '👊 便服・空手（V 揍人）') : P.mode === 'vehicle' ? (P.veh.police ? '🚓 ' + P.veh.spec.name : '🚗 ' + P.veh.spec.name) : S.weapon === 0 ? `🔫 手槍 ${S.ammo} / ${S.reserve}${reloadT > 0 ? ' 換彈中…' : ''}` : S.weapon === 1 ? `⚡ 電擊槍 ${S.taser} 發` : S.weapon === 2 ? '🏏 警棍（點擊揮擊）' : `🎯 T91 步槍 ${S.rifle} / ${S.rifleRes}${reloadT > 0 ? ' 換彈中…' : ''}`;
   $('tired').style.opacity = S.energy < 15 ? 0.7 : S.energy < 30 ? 0.3 : 0;
   $('cross').style.display = S.onDuty && P.mode === 'foot' ? 'block' : 'none';
 }
@@ -4266,7 +4818,8 @@ function showHelp() {
   <h3>🎯 拿槍指人</h3><p>按住右鍵（手機按 🎯）瞄準。被指的路人會害怕舉手、尖叫逃跑；沒有危險卻拿槍指著民眾，民眾會打 110 投訴（申誡、記過）。嫌犯被槍指著再喊話比較容易投降，但有些壞人會拔槍反擊或逃跑。</p>
   <h3>📋 更多勤務</h3><p><b>車禍處理</b>：放交通錐、先救傷者、雙方都要酒測、問目擊者，再判斷誰的責任。<b>通緝犯追捕</b>：在黃色範圍找衣服顏色對的人，他跑了就追上去撲倒。<b>糾紛調解</b>：問清楚雙方和現場再決定勸導、開罰或逮捕。<b>尋人</b>：找到走失的長者或小孩，帶回家屬身邊。<b>毒品臨檢</b>：有可疑跡象才能搜身，二級毒品要逮捕、少量三級毒品是罰鍰加講習。</p>
   <p>16:45 以後不再派新案子；打卡下班時，手上還沒做完的任務會交接給同仁，不扣考績。</p>
-  <h3>🆘 請求支援</h3><p>勤務中按 B（手機按 🆘）請求支援，同仁會開警車鳴笛趕來：幫你上銬、追逃跑的嫌犯、跟持槍嫌犯對峙還擊、一起逼停逃逸車。路上也會看到同事在路邊攔查、兩人一組徒步巡邏。</p>
+  <h3>🆘 請求支援</h3><p>勤務中按 B（手機按 🆘）請求支援，同仁會開警車鳴笛趕來：幫你上銬、追逃跑的嫌犯、跟持槍嫌犯對峙還擊、一起逼停逃逸車。路上也會看到同事在路邊攔查、兩人一組徒步巡邏。搶案、毒品、通緝犯這類重大案件，支援出發後<b>再按一次 B</b>，可以呼叫維安特勤隊。</p>
+  <h3>💥 對空鳴槍</h3><p>按 G（手機按 💥），或把槍口往天上抬再開槍。嫌犯徒步逃跑時，鳴槍有機會讓他停下來投降；追車時，駕駛也可能被嚇到靠邊停。依《警械使用條例》，只有對拒捕、脫逃的人或持槍歹徒才可以鳴槍。單純交通違規的車逃跑時鳴槍、或沒事亂開槍，都會被申誡。</p>
   <h3>🚑 救護、消防、海巡</h3><p>路上有救護車、消防車、海巡車，有時會鳴笛趕路、闖紅燈。車禍時救護車會真的開來載傷者；新勤務「火災現場交通管制」要擺交通錐、疏散圍觀民眾，等消防員把火撲滅。地圖最西邊是海岸，有海巡隊和巡邏艇。</p>
   <h3>🚦 下班開車要守法</h3><p>下班時騎自己的車，超速（超過速限 10 公里以上）或闖紅燈會被罰，全部照《道路交通管理處罰條例》：路上有<b>測速照相</b>（前方 150 公尺有「測速取締」牌子）和<b>路口闖紅燈照相</b>，被拍到罰單會寄到家（逕行舉發不記點）；被<b>交通警察</b>看到會鳴笛攔你，停下來會當場開單並記點，逃跑依第 60 條罰 1 萬元起、吊扣駕照 6 個月。超速 40 公里以上依第 43 條吊扣車牌 6 個月。一年內違規點數滿 12 點吊扣駕照 2 個月。身為警察，被開罰單還會申誡。上班開警車執勤不受影響。速限：台灣大道、文心路 60，其他路 50。</p>
   <h3>💬 跟路人聊天</h3><p>走到路人旁邊按 E 可以聊天：打招呼、問路（可以直接幫你設導航）、問有沒有看到可疑的人（追通緝犯、找走失者時會給線索），上班時還能做交通安全宣導。路人會互相聊天、跟警察打招呼、被撞到會唸你。</p>
@@ -4275,7 +4828,10 @@ function showHelp() {
   <b>撞壞</b>：車子撞多了會凹、冒白煙再冒黑煙，車況 0% 會起火，5 秒內不下車就會爆炸！警車撞壞會被申誡，分局會準備新的警車；自己的車睡覺時會送修（每台 $3,000）。<br>
   <b>徵用民眾車輛</b>：執勤中走到停下來的民眾車旁按 F，可以緊急徵用。有搶案或追車時才合理，沒事亂徵用會被投訴；徵用的車撞壞要記過。</p>
   <h3>⭐ 考績</h3><p>任務做得好加考績、領獎金，累積考績升官：警員 → 巡佐 → 巡官 → 派出所所長 → 分局長。遲到、早退、曠職、亂開槍、撞人會被申誡或記過，三次申誡＝一次記過，三次記過＝一次大過，三支大過免職。</p>
-  <h3>🎮 按鍵</h3><p>WASD 移動・滑鼠看・左鍵開槍・右鍵瞄準・Shift 跑・E 互動・F 上下車（執勤中可在民眾車旁按 F 緊急徵用）・Q 喊話・H 警笛・N 電台・R 換彈・1 手槍・2 電擊槍・M 地圖（點地圖設定導航）・Esc 暫停<br>開車：W 油門・S 煞車倒車・A D 轉彎・空白鍵 手煞車</p>`,
+  <h3>🚨 下班犯罪與通緝</h3><p>下班時間你只是一般民眾：揍人（V）、搶車（在停下來的車旁按 F）都會被民眾報警，右上角出現通緝星星 ★。星越多警察越多，4 星以上維安特勤隊會出動並開槍。躲開警察視線一段時間（星星閃爍倒數）就能甩掉通緝。被抓到會依中華民國刑法判刑：傷害罪可易科罰金；搶車（強盜罪）、打死人（傷害致死、殺人罪）要入監服刑並<b>免職</b>，出獄後可到分局人事室重新報考。</p>
+  <h3>💀 傷亡</h3><p>人中槍會受傷倒地，連開幾槍（或爆頭）會死亡；拳頭打到昏迷後繼續打也會打死人。執勤中開槍打死人會進行《警械使用條例》審查：對方持槍危害生命屬合法用槍；對投降的人、無辜民眾開槍致死會移送法辦。</p>
+  <h3>🛡️ 維安特勤隊</h3><p>升到巡佐、沒有大過，就能到分局「人事室」申請調任。特勤隊只接重大案件（持槍搶案、毒品攻堅、通緝要犯），每次有 3 名隊員搭特勤車支援，配發 T91 步槍（4，按住連發），日薪加給 25%。一般員警遇到銀行搶案時，特勤隊也會出動支援。</p>
+  <h3>🎮 按鍵</h3><p>WASD 移動・滑鼠看・左鍵開槍・右鍵瞄準・Shift 跑・E 互動・F 上下車（執勤中可在民眾車旁按 F 緊急徵用）・Q 喊話・V 揍人（上下班都能用；揍嫌犯可打倒制伏，揍無辜民眾會被提告懲處，對方也可能還手）・H 警笛・N 電台・R 換彈・1 手槍・2 電擊槍・3 警棍・4 步槍（特勤隊）・M 地圖（點地圖設定導航）・Esc 暫停<br>開車：W 油門・S 煞車倒車・A D 轉彎・空白鍵 手煞車</p>`,
     [['返回', 'g', () => { MODAL.close(); openPause(); }]]);
 }
 /* ---------- 小地圖 ---------- */
@@ -4433,7 +4989,7 @@ function loop(now) {
     for (let k = MHUMANS.length - 1; k >= 0; k--) { const h = MHUMANS[k]; if (h.role === 'robber' || h.role === 'clerk' || h.ai) continue;
       if (h.walk) { h.x += h.walk.vx * dt; h.z += h.walk.vz * dt; h.P.g.rotation.y = Math.atan2(h.walk.vx, h.walk.vz); h.walk.t -= dt; if (h.walk.t <= 0) { removeHuman(h); continue; } }
       posePerson(h.P, h.pose || 'idle', dt, 1.6); h.P.g.position.set(h.x, 0.2, h.z); }
-    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateGarbageMusic(); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt);
+    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateGarbageMusic(); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt);
   } else AU.update(false, 0, false);
   frame++;
   updateSky();
@@ -4445,7 +5001,7 @@ function loop(now) {
 }
 
 // 測試用：快速模擬（不畫圖）
-function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); } }
+function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); } }
 
 /* ---------- 開始 ---------- */
 function startGame(fresh) {
