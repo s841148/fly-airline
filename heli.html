@@ -96,7 +96,7 @@ button{font-family:inherit;cursor:pointer}
 #tDn{right:31vw;bottom:5vh;width:70px;height:70px}
 #tFire{right:4vw;bottom:5vh;width:104px;height:104px;font-size:18px;background:rgba(170,40,30,.5)!important}
 #tWeap{right:calc(4vw + 112px);bottom:calc(5vh + 60px);width:64px;height:64px;font-size:13px}
-#tWing{right:calc(4vw + 112px);bottom:calc(5vh + 62px);width:60px;height:60px;font-size:12px;line-height:1.2}
+#tWing{right:calc(4vw + 22px);bottom:calc(5vh + 118px);width:60px;height:60px;font-size:12px;line-height:1.2}
 #tFlare{right:calc(4vw + 112px);bottom:calc(5vh - 8px);width:60px;height:60px;font-size:13px}
 #tGun{right:calc(4vw + 18px);bottom:calc(5vh + 114px);width:66px;height:66px;font-size:13px}
 #tTop{pointer-events:auto;position:absolute;right:10px;top:84px;display:flex;flex-direction:column;gap:6px}
@@ -182,6 +182,7 @@ body.touch .toast{font-size:13px}
   <div class="sub">AH-64E 阿帕契攻擊直升機・台灣空中防衛戰</div>
   <button class="btn gold" id="bMissions">🎯 任務模式</button>
   <button class="btn" id="bEndless">♾️ 無盡防衛戰</button>
+  <button class="btn" id="bFree">🕊️ 自由模式</button>
   <button class="btn" id="bJoin">🔗 加入朋友的房間</button>
   <div class="row"><button class="btn gray" id="bHelp">🎮 操作說明</button><button class="btn gray" id="bSet">⚙️ 設定</button></div>
   <div class="copy">© 2026 麥麥的遊戲工廠 版權所有・<a href="#" id="bTerms">使用條款</a><br>地圖為桃園一帶的示意地形，非真實比例</div>
@@ -193,6 +194,16 @@ body.touch .toast{font-size:13px}
  <button class="btn gray" id="mBack">← 返回</button>
 </div></div>
 
+<div class="scr hidden" id="freeSet"><div class="box" style="width:min(520px,94vw)">
+ <h2>🕊️ 自由模式</h2>
+ <p class="tip" style="margin:0 0 6px">想去哪就去哪，沒有任務限制。彈藥和機體跟任務一樣有限，回基地停機坪降落就能補給。</p>
+ <div class="set"><span>起飛位置</span><select id="fStart"></select></div>
+ <div class="set"><span>時間</span><select id="fTime"><option value="day">白天</option><option value="dusk">黃昏</option><option value="night">夜晚</option></select></div>
+ <div class="set"><span>天氣</span><select id="fWea"><option value="clear">晴天</option><option value="cloudy">多雲</option><option value="fog">起霧</option><option value="rain">下雨（有雷聲）</option></select></div>
+ <div class="set"><span>敵軍數量</span><select id="fCnt"><option value="0">沒有（純飛行）</option><option value="1">少</option><option value="2">中</option><option value="3">多</option></select></div>
+ <div class="set"><span>敵軍強度</span><select id="fLvl"><option value="0">輕鬆（只有卡車、裝甲車、戰車）</option><option value="1">普通（加防空砲車、敵機）</option><option value="2">困難（加防空飛彈、更多敵機）</option></select></div>
+ <button class="btn gold" id="fGo">🚁 出發</button><button class="btn gray" id="fBack">← 返回</button>
+</div></div>
 <div class="scr hidden" id="brief"><div class="box" style="width:min(620px,94vw)">
  <h2 id="bTitle"></h2><div id="bPlace" class="tip"></div>
  <p id="bText"></p>
@@ -244,6 +255,7 @@ body.touch .toast{font-size:13px}
  <tr><td>R／點雷達</td><td>雷達範圍切換：3 公里／11 公里（看遠方的敵人）</td></tr>
  <tr><td>Z / X / G</td><td>指揮僚機：Z 跟著我、X 集中攻擊準星對準的敵人、G 自由攻擊（手機點「僚機」鈕切換）</td></tr>
 <tr><td>僚機彈藥</td><td>僚機的機砲、火箭和地獄火也會用完，用完會自己飛回基地停機坪補給約 10 秒再回來</td></tr>
+<tr><td>連擊</td><td>7 秒內連續擊毀敵人會有連擊加分，越連越多</td></tr>
 <tr><td>F</td><td>投熱焰彈：聽到「飛彈來襲」時按，可以騙走敵人的飛彈</td></tr>
  <tr><td>V</td><td>切換視角（追蹤／駕駛艙／遠景）</td></tr>
  <tr><td>M</td><td>大地圖</td></tr>
@@ -256,6 +268,7 @@ body.touch .toast{font-size:13px}
 
 <div class="scr hidden" id="settings"><div class="box" style="width:min(460px,94vw)">
  <h2>⚙️ 設定</h2>
+ <div class="set"><span>配樂</span><select id="sMusic"><option value="1">開</option><option value="0">關</option></select></div>
  <div class="set"><span>音效</span><select id="sSfx"><option value="1">開</option><option value="0">關</option></select></div>
  <div class="set"><span>無線電語音</span><select id="sVoice"><option value="1">開</option><option value="0">關</option></select></div>
  <div class="set"><span>畫質</span><select id="sQ"><option value="0">流暢（手機，無陰影）</option><option value="1">標準（陰影＋反光）</option><option value="2">精緻（高畫質陰影）</option></select></div>
@@ -289,7 +302,7 @@ const T=THREE;
 const IS_TOUCH=matchMedia('(pointer:coarse)').matches||('ontouchstart' in window&&navigator.maxTouchPoints>0);
 function loadJ(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
 function saveJ(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
-const SET=Object.assign({sfx:1,voice:1,q:IS_TOUCH?0:1,assist:1,diff:1},loadJ('mmheli-set')||{});
+const SET=Object.assign({sfx:1,voice:1,music:1,q:IS_TOUCH?0:1,assist:1,diff:1},loadJ('mmheli-set')||{});
 const PROG=Object.assign({stars:{},best:{},endless:0,name:'麥麥1號'},loadJ('mmheli-prog')||{});
 const saveProg=()=>saveJ('mmheli-prog',PROG), saveSet=()=>saveJ('mmheli-set',SET);
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
@@ -382,18 +395,45 @@ const hemi=new T.HemisphereLight(0xcfe6ff,0x5d6b4a,USE_PBR?.5:.62); scene.add(he
 const sun=new T.DirectionalLight(0xfff0d6,USE_PBR?.95:.72); sun.position.copy(SUNDIR).multiplyScalar(900); scene.add(sun); scene.add(sun.target);
 if(USE_SH){ sun.castShadow=true; const R=SET.q>=2?420:320, sh=sun.shadow; sh.mapSize.set(SET.q>=2?2048:1024,SET.q>=2?2048:1024); const c=sh.camera; c.left=-R; c.right=R; c.top=R; c.bottom=-R; c.near=50; c.far=2000; sh.bias=-.0004; sh.normalBias=.5; }
 function updSun(f){ const gx=Math.round(f.x/2)*2, gz=Math.round(f.z/2)*2, gy=Math.max(Hq(gx,gz),0); sun.target.position.set(gx,gy,gz); sun.position.set(gx+SUNDIR.x*900,gy+SUNDIR.y*900,gz+SUNDIR.z*900); sun.target.updateMatrixWorld(); }
-// 天空：漸層＋太陽光暈
-const skyDome=new T.Mesh(new T.SphereGeometry(20000,24,12),new T.ShaderMaterial({side:T.BackSide,depthWrite:false,fog:false,uniforms:{sd:{value:SUNDIR.clone()}},
+// 天空：漸層＋太陽光暈（可換時間、天氣）
+const SKYU={sd:{value:SUNDIR.clone()},hor:{value:new T.Color(.714,.827,.902)},top:{value:new T.Color(.2,.42,.76)},sc:{value:new T.Color(1,.85,.6)},si:{value:1},star:{value:0}};
+const skyDome=new T.Mesh(new T.SphereGeometry(20000,24,12),new T.ShaderMaterial({side:T.BackSide,depthWrite:false,fog:false,uniforms:SKYU,
  vertexShader:'varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
- fragmentShader:'varying vec3 vP; uniform vec3 sd; void main(){ vec3 n=normalize(vP); float h=clamp(n.y,0.,1.); vec3 hor=vec3(.714,.827,.902); vec3 top=vec3(.2,.42,.76); vec3 c=mix(hor,top,pow(h,.5)); float s=max(dot(n,normalize(sd)),0.); c+=vec3(1.,.85,.6)*(pow(s,700.)*2.2+pow(s,28.)*.32+pow(s,4.)*.09); if(n.y<0.) c=hor*.95; gl_FragColor=vec4(c,1.); }'}));
+ fragmentShader:'varying vec3 vP; uniform vec3 sd,hor,top,sc; uniform float si,star; float h3(vec3 p){ return fract(sin(dot(p,vec3(12.9898,78.233,37.719)))*43758.5453); } void main(){ vec3 n=normalize(vP); float h=clamp(n.y,0.,1.); vec3 c=mix(hor,top,pow(h,.5)); float s=max(dot(n,normalize(sd)),0.); c+=sc*(pow(s,700.)*2.2+pow(s,28.)*.32+pow(s,4.)*.09)*si; if(star>0.){ vec3 q=floor(n*220.); float r=h3(q); c+=vec3(1.)*step(.9965,r)*star*smoothstep(.02,.25,n.y)*(.5+.5*h3(q+3.)); } if(n.y<0.) c=hor*.95; gl_FragColor=vec4(c,1.); }'}));
 skyDome.renderOrder=-10; skyDome.frustumCulled=false; scene.add(skyDome);
+const ENVS={
+ day:{sd:[-.55,.62,.42],hor:[.714,.827,.902],top:[.2,.42,.76],sc:[1,.85,.6],si:1,sun:0xfff0d6,sunI:.95,hemiS:0xcfe6ff,hemiG:0x5d6b4a,hemiI:.5,star:0,fog:0xb6d3e6,env:['#3f78c8','#8cbbe6','#dbe9f3','#8d9a7a','#4a5638'],pk:1},
+ dusk:{sd:[-.88,.17,.3],hor:[1,.6,.36],top:[.18,.26,.5],sc:[1,.6,.3],si:1.3,sun:0xff9a55,sunI:.8,hemiS:0xffb98a,hemiG:0x3e3a46,hemiI:.42,star:.15,fog:0xd8a078,env:['#2c3f75','#9a7a8a','#ffb070','#6b5a4a','#2f2a26'],pk:.75},
+ night:{sd:[.3,.6,-.4],hor:[.06,.09,.17],top:[.01,.02,.07],sc:[.6,.7,1],si:.55,sun:0x9bb3ff,sunI:.34,hemiS:0x3a4c80,hemiG:0x151a26,hemiI:.36,star:1,fog:0x0b1326,env:['#050a1a','#0d1a38','#1a2a50','#10141c','#080a10'],pk:.32}};
+const WEAS={clear:{k:1,fn:1500,ff:0,g:0,rain:0},cloudy:{k:.5,fn:900,ff:8500,g:.35,rain:0},fog:{k:.3,fn:60,ff:2600,g:.6,rain:0},rain:{k:.3,fn:250,ff:5200,g:.5,rain:1}};
+const CURENV={t:'day',w:'clear'}; let HEMI_BASE=.5, FLASH=0;
+// 夜間探照燈（機鼻）
+const NL=new T.SpotLight(0xfff2d8,0,800,.4,.55,1.1); scene.add(NL); scene.add(NL.target);
+// 雨
+const RN=1400, RAIN_Y=new Float32Array(RN), RAIN_P=new Float32Array(RN*6);
+for(let i=0;i<RN;i++){ const x=(Math.random()-.5)*150,z=(Math.random()-.5)*150; RAIN_Y[i]=Math.random()*90-30; RAIN_P[i*6]=x; RAIN_P[i*6+2]=z; RAIN_P[i*6+3]=x+.3; RAIN_P[i*6+5]=z+.1; }
+const RAINGEO=new T.BufferGeometry(); RAINGEO.setAttribute('position',new T.BufferAttribute(RAIN_P,3));
+const RAIN=new T.LineSegments(RAINGEO,new T.LineBasicMaterial({color:0xaec4d8,transparent:true,opacity:.35,fog:false,depthWrite:false})); RAIN.visible=false; RAIN.frustumCulled=false; RAIN.renderOrder=8; scene.add(RAIN);
+function updRain(dt){ if(!RAIN.visible) return; RAIN.position.copy(camera.position); for(let i=0;i<RN;i++){ let y=RAIN_Y[i]-62*dt; if(y<-30) y+=90; RAIN_Y[i]=y; RAIN_P[i*6+1]=y; RAIN_P[i*6+4]=y+2.2; } RAINGEO.attributes.position.needsUpdate=true; }
+let thT=12;
+function envTick(dt){ if(FLASH>0){ FLASH-=dt; hemi.intensity=HEMI_BASE+Math.max(0,FLASH)*6; if(FLASH<=0) hemi.intensity=HEMI_BASE; }
+ if(CURENV.w==='rain'&&mode==='game'){ thT-=dt; if(thT<=0){ thT=14+Math.random()*30; FLASH=.22; setTimeout(()=>{ if(AU.ctx&&CURENV.w==='rain'){ nz(.08,6000,1500,'highpass',.4); nz(2.8,380,40,'lowpass',.8,0,.8); tone(48,1.6,.4,'sine',24); } },300+Math.random()*1800); } } }
+function envName(){ return ({day:'白天',dusk:'黃昏',night:'夜晚'})[CURENV.t]+'・'+({clear:'晴',cloudy:'多雲',fog:'起霧',rain:'下雨'})[CURENV.w]; }
+function applyEnv(t,w){ const E=ENVS[t]||ENVS.day, W=WEAS[w]||WEAS.clear; CURENV.t=ENVS[t]?t:'day'; CURENV.w=WEAS[w]?w:'clear';
+ SUNDIR.set(E.sd[0],E.sd[1],E.sd[2]).normalize(); SKYU.sd.value.copy(SUNDIR);
+ const gray=new T.Color(.55,.58,.62).multiplyScalar(CURENV.t==='night'?.12:CURENV.t==='dusk'?.55:1);
+ SKYU.hor.value.setRGB(E.hor[0],E.hor[1],E.hor[2]).lerp(gray,W.g); SKYU.top.value.setRGB(E.top[0],E.top[1],E.top[2]).lerp(gray,W.g*.9); SKYU.sc.value.setRGB(E.sc[0],E.sc[1],E.sc[2]); SKYU.si.value=E.si*(1-W.g*.85); SKYU.star.value=E.star*(1-W.g);
+ const fc=new T.Color(E.fog).lerp(gray,W.g*.8); scene.fog.color.copy(fc); scene.background=fc.clone(); scene.fog.near=W.fn; scene.fog.far=W.ff||(SET.q?12500:8000);
+ sun.color.set(E.sun); sun.intensity=(USE_PBR?E.sunI:E.sunI*.76)*W.k; hemi.color.set(E.hemiS); hemi.groundColor.set(E.hemiG); HEMI_BASE=hemi.intensity=(USE_PBR?E.hemiI:E.hemiI*1.24)*(1+W.g*.35);
+ NL.intensity=CURENV.t==='night'?2.4:CURENV.t==='dusk'?.5:0; RAIN.visible=!!W.rain; PARTK=E.pk; FLASH=0; thT=8;
+ buildEnv(); if(typeof envAudio==='function') envAudio(); }
 // 環境反射（讓機身、玻璃有金屬光澤）
-function buildEnv(){ if(!USE_PBR) return; try{
+function buildEnv(){ if(!USE_PBR) return; try{ const E=ENVS[CURENV.t], W=WEAS[CURENV.w], st=E.env;
  const cv=document.createElement('canvas'); cv.width=4; cv.height=256; const x=cv.getContext('2d'); const g=x.createLinearGradient(0,0,0,256);
- g.addColorStop(0,'#3f78c8'); g.addColorStop(.3,'#8cbbe6'); g.addColorStop(.49,'#dbe9f3'); g.addColorStop(.52,'#8d9a7a'); g.addColorStop(1,'#4a5638'); x.fillStyle=g; x.fillRect(0,0,4,256);
+ g.addColorStop(0,st[0]); g.addColorStop(.3,st[1]); g.addColorStop(.49,st[2]); g.addColorStop(.52,st[3]); g.addColorStop(1,st[4]); x.fillStyle=g; x.fillRect(0,0,4,256);
  const es=new T.Scene(); es.add(new T.Mesh(new T.SphereGeometry(50,32,16),new T.MeshBasicMaterial({map:new T.CanvasTexture(cv),side:T.BackSide})));
- const sm=new T.Mesh(new T.SphereGeometry(5,12,8),new T.MeshBasicMaterial({color:new T.Color(14,11,7)})); sm.position.copy(SUNDIR).multiplyScalar(45); es.add(sm);
- const pm=new T.PMREMGenerator(renderer); scene.environment=pm.fromScene(es,0.02).texture; pm.dispose();
+ const k=(E.sunI/.95)*W.k; const sm=new T.Mesh(new T.SphereGeometry(5,12,8),new T.MeshBasicMaterial({color:new T.Color(14*k,11*k,7*k)})); sm.position.copy(SUNDIR).multiplyScalar(45); es.add(sm);
+ const pm=new T.PMREMGenerator(renderer); if(scene.environment) scene.environment.dispose(); scene.environment=pm.fromScene(es,0.02).texture; pm.dispose();
  }catch(e){ console.warn('env fail',e); } }
 addEventListener('resize',()=>{ renderer.setSize(innerWidth,innerHeight); camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); });
 
@@ -726,9 +766,9 @@ const FIRE_T=radTex([[0,'rgba(255,255,220,1)'],[.25,'rgba(255,200,80,.95)'],[.6,
 const SMOKE_T=radTex([[0,'rgba(200,200,200,.8)'],[.5,'rgba(150,150,150,.45)'],[1,'rgba(120,120,120,0)']]);
 const DSMOKE_T=radTex([[0,'rgba(60,55,50,.85)'],[.5,'rgba(50,45,40,.5)'],[1,'rgba(40,40,40,0)']]);
 const WATER_T=radTex([[0,'rgba(240,250,255,.95)'],[.6,'rgba(200,225,240,.5)'],[1,'rgba(200,225,240,0)']]);
-const PARTS=[]; const PPOOL=[];
+const PARTS=[]; const PPOOL=[]; let PARTK=1;
 function part(tex,pos,o){ let s=PPOOL.pop(); if(!s){ s=new T.Sprite(new T.SpriteMaterial({transparent:true,depthWrite:false})); }
- s.material.map=tex; s.material.blending=o.add?T.AdditiveBlending:T.NormalBlending; s.material.opacity=o.op??1; s.material.needsUpdate=true;
+ s.material.map=tex; s.material.color.setScalar(o.add?1:PARTK); s.material.blending=o.add?T.AdditiveBlending:T.NormalBlending; s.material.opacity=o.op??1; s.material.needsUpdate=true;
  s.position.copy(pos); s.scale.setScalar(o.s||2); s.visible=true; scene.add(s);
  PARTS.push({s,vel:o.v?o.v.clone():V3(),life:0,max:o.life||1,s0:o.s||2,s1:o.s1||(o.s||2)*2,op:o.op??1,g:o.g||0}); }
 function updParts(dt){ for(let i=PARTS.length-1;i>=0;i--){ const p=PARTS[i]; p.life+=dt; const t=p.life/p.max; if(t>=1){ scene.remove(p.s); PPOOL.push(p.s); PARTS.splice(i,1); continue; }
@@ -748,45 +788,121 @@ function emitter(obj,life,fire){ EMIT.push({obj,life,fire,t:0}); }
 function updEmit(dt){ for(let i=EMIT.length-1;i>=0;i--){ const e=EMIT[i]; e.life-=dt; e.t-=dt; if(e.life<=0){ EMIT.splice(i,1); continue; }
  if(e.t<=0){ e.t=.18; const p=e.obj.getWorldPosition?e.obj.getWorldPosition(V3()):e.obj; p.y+=2; if(camera.position.distanceToSquared(p)<3500*3500){ puff(p,DSMOKE_T,3,3.5,V3(1.5,5,0)); if(e.fire) part(FIRE_T,p,{add:1,s:2.5,s1:1,life:.35}); } } } }
 
-/* ---------------- 音效 ---------------- */
-const AU={ctx:null};
+/* ---------------- 音效（混音器＋殘響＋立體聲＋距離延遲）---------------- */
+const AU={ctx:null}; const AV={pan:0,dl:0,dull:1};
 function audioInit(){
  if(AU.ctx){ if(AU.ctx.state==='suspended') AU.ctx.resume(); return; }
  try{ const c=new (window.AudioContext||window.webkitAudioContext)(); AU.ctx=c;
-  AU.master=c.createGain(); AU.master.gain.value=SET.sfx?.7:0; AU.master.connect(c.destination);
+  const comp=c.createDynamicsCompressor(); comp.threshold.value=-16; comp.knee.value=18; comp.ratio.value=5; comp.attack.value=.004; comp.release.value=.22; comp.connect(c.destination);
+  AU.master=c.createGain(); AU.master.gain.value=SET.sfx?.8:0; AU.master.connect(comp);
+  AU.mus=c.createGain(); AU.mus.gain.value=SET.music?.5:0; AU.mus.connect(comp);
   const nb=c.createBuffer(1,c.sampleRate*2,c.sampleRate), d=nb.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; AU.noise=nb;
-  // 旋翼
-  const src=c.createBufferSource(); src.buffer=nb; src.loop=true; const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=260;
-  const rg=c.createGain(); rg.gain.value=0; const am=c.createGain(); am.gain.value=.5; const lfo=c.createOscillator(); lfo.frequency.value=19; const lg=c.createGain(); lg.gain.value=.45;
-  lfo.connect(lg); lg.connect(am.gain); src.connect(lp); lp.connect(am); am.connect(rg); rg.connect(AU.master); src.start(); lfo.start();
-  const wh=c.createOscillator(); wh.type='sawtooth'; wh.frequency.value=1700; const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1700; bp.Q.value=8; const wg=c.createGain(); wg.gain.value=0;
-  wh.connect(bp); bp.connect(wg); wg.connect(AU.master); wh.start();
-  AU.rotor=rg; AU.lfo=lfo; AU.whine=wg; AU.whO=wh;
+  // 殘響（山谷回音）：用程式做出衰減的雜訊脈衝
+  const L=(c.sampleRate*2.6)|0, ir=c.createBuffer(2,L,c.sampleRate);
+  for(let ch=0;ch<2;ch++){ const b=ir.getChannelData(ch); let lp=0; for(let i=0;i<L;i++){ const t=i/L; lp+=((Math.random()*2-1)-lp)*(.5-.42*t); b[i]=lp*Math.pow(1-t,2.6)*(i<400?i/400:1); } }
+  const cv=c.createConvolver(); cv.buffer=ir; AU.rev=c.createGain(); AU.rev.gain.value=1; AU.rev.connect(cv); const rv=c.createGain(); rv.gain.value=.55; cv.connect(rv); rv.connect(AU.master);
+  AU.mrev=c.createGain(); AU.mrev.gain.value=1; const cvm=c.createConvolver(); cvm.buffer=ir; AU.mrev.connect(cvm); const mrv=c.createGain(); mrv.gain.value=.5; cvm.connect(mrv); mrv.connect(AU.mus);
+  // 旋翼：槳葉拍擊（低頻雜訊＋調幅）＋低音轟鳴＋渦輪嘯聲＋風切
+  const src=c.createBufferSource(); src.buffer=nb; src.loop=true; const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=230; lp.Q.value=.7;
+  const rg=c.createGain(); rg.gain.value=0; const am=c.createGain(); am.gain.value=.42; const lfo=c.createOscillator(); lfo.type='sawtooth'; lfo.frequency.value=19; const lg=c.createGain(); lg.gain.value=.5;
+  const lfl=c.createBiquadFilter(); lfl.type='lowpass'; lfl.frequency.value=70; lfo.connect(lfl); lfl.connect(lg); lg.connect(am.gain); src.connect(lp); lp.connect(am); am.connect(rg); rg.connect(AU.master); src.start(); lfo.start();
+  const th=c.createOscillator(); th.type='sine'; th.frequency.value=38; const tg=c.createGain(); tg.gain.value=.0; const ta=c.createGain(); ta.gain.value=.5; lg.connect(ta.gain); th.connect(ta); ta.connect(tg); tg.connect(AU.master); th.start();
+  const wg=c.createGain(); wg.gain.value=0; const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2300; bp.Q.value=6; bp.connect(wg); wg.connect(AU.master);
+  const whs=[2280,2313,4590].map(f=>{ const o=c.createOscillator(); o.type='sawtooth'; o.frequency.value=f; o.connect(bp); o.start(); return o; });
+  const ws=c.createBufferSource(); ws.buffer=nb; ws.loop=true; const wf=c.createBiquadFilter(); wf.type='bandpass'; wf.frequency.value=700; wf.Q.value=.4; const wd=c.createGain(); wd.gain.value=0; ws.connect(wf); wf.connect(wd); wd.connect(AU.master); ws.start(0,.7);
+  AU.rotor=rg; AU.lfo=lfo; AU.thump=tg; AU.whine=wg; AU.whs=whs; AU.wind=wd; AU.windF=wf;
+  const rs=c.createBufferSource(); rs.buffer=nb; rs.loop=true; const rh=c.createBiquadFilter(); rh.type='highpass'; rh.frequency.value=1400; const rl=c.createBiquadFilter(); rl.type='lowpass'; rl.frequency.value=7500; const rgn=c.createGain(); rgn.gain.value=0; rs.connect(rh); rh.connect(rl); rl.connect(rgn); rgn.connect(AU.master); rs.start(0,1.1); AU.rainG=rgn;
+  envAudio(); musStart();
  }catch(e){ AU.ctx=null; }
 }
-function setVol(){ if(AU.master) AU.master.gain.value=SET.sfx?.7:0; }
-function nz(dur,f0,f1,type,vol,q){ const c=AU.ctx; if(!c) return; const t=c.currentTime; const s=c.createBufferSource(); s.buffer=AU.noise; const f=c.createBiquadFilter(); f.type=type||'lowpass'; f.frequency.setValueAtTime(f0,t); f.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t+dur); if(q) f.Q.value=q;
- const g=c.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+dur); s.connect(f); f.connect(g); g.connect(AU.master); s.start(t,Math.random()); s.stop(t+dur+.05); }
-function tone(f,dur,vol,type,f1){ const c=AU.ctx; if(!c) return; const t=c.currentTime; const o=c.createOscillator(); o.type=type||'sine'; o.frequency.setValueAtTime(f,t); if(f1) o.frequency.exponentialRampToValueAtTime(f1,t+dur); const g=c.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+dur); o.connect(g); g.connect(AU.master); o.start(t); o.stop(t+dur+.02); }
-function sfx(k,v){ if(!AU.ctx||!SET.sfx) return; v=v??1;
+function envAudio(){ if(AU.rainG) AU.rainG.gain.value=WEAS[CURENV.w].rain?.5:0; }
+const COMBO={n:0,t:0};
+function setVol(){ if(AU.master){ AU.master.gain.value=SET.sfx?.8:0; AU.mus.gain.value=SET.music?.5:0; } }
+function auOut(g,rev){ const c=AU.ctx; let n=g; if(AV.pan&&c.createStereoPanner){ const p=c.createStereoPanner(); p.pan.value=AV.pan; g.connect(p); n=p; } n.connect(AU.master); if(rev){ const s=c.createGain(); s.gain.value=rev; n.connect(s); s.connect(AU.rev); } }
+function nz(dur,f0,f1,type,vol,q,rev,at){ const c=AU.ctx; if(!c) return; const t=c.currentTime+AV.dl+(at||0); const s=c.createBufferSource(); s.buffer=AU.noise; const f=c.createBiquadFilter(); f.type=type||'lowpass'; const k=type==='highpass'?1:AV.dull; f.frequency.setValueAtTime(Math.max(40,f0*k),t); f.frequency.exponentialRampToValueAtTime(Math.max(30,f1*k),t+dur); if(q) f.Q.value=q;
+ const g=c.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(vol,t+.004); g.gain.exponentialRampToValueAtTime(.001,t+dur); s.connect(f); f.connect(g); auOut(g,rev); s.start(t,Math.random()); s.stop(t+dur+.05); }
+function tone(f,dur,vol,type,f1,rev,at){ const c=AU.ctx; if(!c) return; const t=c.currentTime+AV.dl+(at||0); const o=c.createOscillator(); o.type=type||'sine'; o.frequency.setValueAtTime(f,t); if(f1) o.frequency.exponentialRampToValueAtTime(f1,t+dur); const g=c.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(vol,t+.005); g.gain.exponentialRampToValueAtTime(.001,t+dur); o.connect(g); auOut(g,rev); o.start(t); o.stop(t+dur+.02); }
+function sfx(k,v){ if(!AU.ctx||!SET.sfx) return; v=v??1; const R=Math.random;
  switch(k){
-  case 'gun': nz(.09,2400,600,'lowpass',.35*v); tone(90,.08,.25*v,'square',50); break;
-  case 'rkt': nz(.6,3000,400,'bandpass',.5*v,1.2); break;
-  case 'hf': nz(1.1,1800,300,'bandpass',.55*v,1); tone(300,.5,.08*v,'sawtooth',120); break;
-  case 'boom': nz(1.4,900*Math.min(1.5,v+.3),60,'lowpass',Math.min(1,.9*v)); tone(60,.6,.4*v,'sine',30); break;
-  case 'hit': nz(.05,4000,1500,'highpass',.25*v); break;
-  case 'lock': tone(1250,.07,.12*v,'square'); break;
-  case 'locked': tone(1500,.25,.1*v,'square'); break;
-  case 'warn': tone(950,.12,.16*v,'square'); setTimeout(()=>tone(1350,.12,.16*v,'square'),140); break;
-  case 'flare': nz(.25,5000,1200,'highpass',.3*v); break;
-  case 'ping': tone(880,.15,.15*v,'triangle',1320); break;
-  case 'good': tone(660,.12,.15*v,'triangle'); setTimeout(()=>tone(990,.2,.15*v,'triangle'),110); break;
-  case 'bad': tone(300,.25,.15*v,'sawtooth',180); break;
-  case 'ring': tone(1046,.12,.15*v,'triangle'); setTimeout(()=>tone(1568,.18,.15*v,'triangle'),90); break;
-  case 'clank': nz(.12,1800,400,'bandpass',.4*v,3); break;
-  case 'eGun': nz(.06,1500,500,'lowpass',.25*v); break;
+  case 'gun': nz(.025,6000,3000,'highpass',.3*v); nz(.13,1500+R()*300,260,'bandpass',.5*v,.9,.25); tone(125,.11,.38*v,'sine',42); tone(70,.06,.18*v,'square',40); break;
+  case 'rkt': nz(.06,2500,900,'lowpass',.5*v,0,.2); nz(.95,700,3200,'bandpass',.42*v,1.1,.35); nz(.7,260,90,'lowpass',.3*v); break;
+  case 'hf': nz(.08,3000,800,'lowpass',.6*v,0,.3); nz(1.6,500,2600,'bandpass',.48*v,.9,.45); nz(1.2,220,70,'lowpass',.38*v); tone(210,.9,.07*v,'sawtooth',90); break;
+  case 'boom': { const s=Math.min(1.6,v+.25); nz(.05,5000,900,'lowpass',Math.min(1,.8*v)); nz(1.7*s,1100*s,45,'lowpass',Math.min(1,.95*v),0,.55); tone(72,.9*s,.55*Math.min(1,v),'sine',26,.2); tone(46,1.3*s,.3*Math.min(1,v),'triangle',22);
+   for(let i=0;i<4;i++) nz(.06+R()*.08,3500,1200,'bandpass',.14*v,2,.3,.12+R()*.7);            // 碎片劈啪聲
+   nz(1.2,420,60,'lowpass',.22*v,0,.6,.42); break; }                                               // 山谷回音
+  case 'hit': nz(.04,5200,2400,'bandpass',.3*v,4); tone(1700+R()*600,.07,.1*v,'triangle',700); break;
+  case 'lock': tone(1250,.06,.1*v,'square'); break;
+  case 'locked': tone(1480,.09,.1*v,'square'); tone(1480,.22,.1*v,'square',0,0,.11); break;
+  case 'warn': tone(980,.11,.15*v,'square'); tone(1380,.11,.15*v,'square',0,0,.13); break;
+  case 'flare': nz(.03,4000,1500,'bandpass',.4*v,1); nz(.45,6500,1800,'highpass',.26*v,0,.2); break;
+  case 'ping': tone(880,.18,.14*v,'sine',1320,.3); break;
+  case 'good': tone(659,.14,.14*v,'triangle',0,.3); tone(988,.14,.14*v,'triangle',0,.3,.1); tone(1319,.3,.12*v,'triangle',0,.4,.2); break;
+  case 'bad': tone(311,.28,.16*v,'sawtooth',155,.2); tone(233,.4,.1*v,'triangle',116,.2,.12); break;
+  case 'ring': tone(1047,.14,.13*v,'sine',0,.4); tone(1568,.3,.13*v,'sine',0,.5,.09); break;
+  case 'clank': nz(.05,2600,900,'bandpass',.4*v,5); tone(420,.09,.12*v,'square',210); break;
+  case 'eGun': nz(.02,4500,2000,'highpass',.15*v); nz(.1,1100,300,'bandpass',.32*v,1,.3); tone(95,.07,.14*v,'sine',45); break;
+  case 'fGun': nz(.09,1300,320,'bandpass',.3*v,1,.3); tone(110,.07,.14*v,'sine',45); break;
+  case 'combo': { const n=Math.min(6,v|0); for(let i=0;i<Math.min(3,n);i++) tone(523*Math.pow(1.122,n+i*2),.16,.13,'triangle',0,.4,i*.07); break; }
+  case 'alarm': tone(620,.16,.12*v,'square'); tone(620,.16,.12*v,'square',0,0,.24); break;
  } }
-function sfxAt(k,pos,v){ const d=camera.position.distanceTo(pos); const a=clamp(1-d/3500,0,1); if(a>.02) sfx(k,(v||1)*a*a); }
+// 有位置的聲音：越遠越小聲、越悶，聲音晚一點到（音速），左右聲道分開
+function sfxAt(k,pos,v){ const d=camera.position.distanceTo(pos), far=k==='boom'?6500:3800; const a=clamp(1-d/far,0,1); if(a<=.02) return;
+ const r=V3(1,0,0).applyQuaternion(camera.quaternion), to=pos.clone().sub(camera.position); AV.pan=d>8?clamp(to.dot(r)/d,-1,1)*.85:0; AV.dl=Math.min(d/343,2.6); AV.dull=clamp(1.15-d/2600,.22,1);
+ sfx(k,(v||1)*a*a); AV.pan=0; AV.dl=0; AV.dull=1; }
+
+/* ---------------- 配樂（程式即時演奏，依戰況變化）---------------- */
+const MUS={st:'title',want:'title',step:0,next:0,mute:0,hot:0};
+const M2F=m=>440*Math.pow(2,(m-69)/12);
+const CH=[[38,[62,65,69]],[34,[58,62,65]],[41,[60,65,69]],[36,[60,64,67]]];   // Dm、Bb、F、C
+const MOT=[[0,62,6],[6,65,2],[8,69,8],[16,70,6],[22,69,2],[24,65,8],[32,72,6],[38,69,2],[40,65,4],[44,69,4],[48,67,8],[56,64,4],[60,60,4]];
+function mNote(m,t,dur,vol,type,cut,rev,atk){ const c=AU.ctx; const o=c.createOscillator(); o.type=type||'sawtooth'; o.frequency.value=M2F(m); const o2=c.createOscillator(); o2.type=o.type; o2.frequency.value=M2F(m)*1.006;
+ const f=c.createBiquadFilter(); f.type='lowpass'; f.Q.value=.8; f.frequency.setValueAtTime(cut*.5,t); f.frequency.linearRampToValueAtTime(cut,t+(atk||.02)+.03); f.frequency.exponentialRampToValueAtTime(Math.max(120,cut*.45),t+dur);
+ const g=c.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(vol,t+(atk||.02)); g.gain.setValueAtTime(vol*.8,t+dur*.7); g.gain.exponentialRampToValueAtTime(.001,t+dur+.08);
+ o.connect(f); o2.connect(f); f.connect(g); g.connect(AU.mus); if(rev){ const s=c.createGain(); s.gain.value=rev; g.connect(s); s.connect(AU.mrev); } o.start(t); o2.start(t); o.stop(t+dur+.12); o2.stop(t+dur+.12); }
+function mDrum(k,t,vol){ const c=AU.ctx; const g=c.createGain(); g.connect(AU.mus);
+ if(k==='k'){ const o=c.createOscillator(); o.frequency.setValueAtTime(130,t); o.frequency.exponentialRampToValueAtTime(38,t+.16); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+.24); o.connect(g); o.start(t); o.stop(t+.26); return; }
+ const s=c.createBufferSource(); s.buffer=AU.noise; const f=c.createBiquadFilter(); const d=k==='s'?.16:k==='t'?.3:.035;
+ if(k==='s'){ f.type='bandpass'; f.frequency.value=1900; f.Q.value=.7; const o=c.createOscillator(); o.frequency.setValueAtTime(210,t); o.frequency.exponentialRampToValueAtTime(140,t+.08); const og=c.createGain(); og.gain.setValueAtTime(vol*.5,t); og.gain.exponentialRampToValueAtTime(.001,t+.1); o.connect(og); og.connect(AU.mus); o.start(t); o.stop(t+.12); const sr=c.createGain(); sr.gain.value=.25; g.connect(sr); sr.connect(AU.mrev); }
+ else if(k==='t'){ f.type='lowpass'; f.frequency.setValueAtTime(600,t); f.frequency.exponentialRampToValueAtTime(90,t+.3); const sr=c.createGain(); sr.gain.value=.5; g.connect(sr); sr.connect(AU.mrev); }
+ else { f.type='highpass'; f.frequency.value=7500; }
+ g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+d); s.connect(f); f.connect(g); s.start(t,Math.random()); s.stop(t+d+.03); }
+function musStep(i,t,sd){ const st=MUS.st, bar=(i>>4)&3, s=i&15, loop=(i>>6), ch=CH[bar], root=ch[0], tri=ch[1], b=sd*4;
+ if(st==='title'){
+  if(s===0){ tri.forEach(m=>mNote(m-12,t,b*4,.05,'sawtooth',700,.6,.5)); mNote(root,t,b*4,.11,'triangle',300,.2,.2); }
+  if(s%2===0){ const a=[0,1,2,1,0,2,1,2][s>>1]; mNote(tri[a]+(s>=8?12:0),t,sd*2.2,.045,'triangle',1500,.7); }
+  if(loop%2===1) MOT.forEach(n=>{ if(n[0]===(i&63)) mNote(n[1],t,n[2]*sd*.95,.07,'sawtooth',900,.7,.06); });
+ } else if(st==='cruise'){
+  if(s===0){ tri.forEach(m=>mNote(m-12,t,b*4,.045,'sawtooth',600,.6,.6)); }
+  if(s===0||s===8||s===11) mNote(root,t,sd*3,.13,'triangle',260,.1);
+  if(s%4===2) mDrum('h',t,.035); if(s===4||s===12) mDrum('s',t,.03);
+  if(loop%4===3&&bar>=2) MOT.forEach(n=>{ if(n[0]===(i&63)) mNote(n[1],t,n[2]*sd*.95,.045,'triangle',1100,.7,.05); });
+ } else {
+  const hot=MUS.hot>.5;
+  if(s===0) tri.forEach(m=>mNote(m-12,t,b*4,.04,'sawtooth',800,.5,.3));
+  if(s%2===0) mNote(root+((s>>1)%4===3?12:(s===6||s===14)?7:0),t,sd*1.6,.15,'sawtooth',hot?520:380,.05,.008);
+  if(s%4===0||(hot&&s===10)) mDrum('k',t,.42); if(s===4||s===12) mDrum('s',t,.22); mDrum('h',t,s%2?.03:.06);
+  if(bar===3&&s>=12) mDrum('s',t,.1+.04*(s-12)); if(bar===3&&s===8) mDrum('t',t,.3);
+  if([0,3,6,8,11,14].includes(s)) tri.forEach(m=>mNote(m,t,sd*.9,hot?.05:.035,'sawtooth',hot?2200:1500,.3,.006));
+  if(hot||loop%2===1) MOT.forEach(n=>{ if(n[0]===(i&63)){ mNote(n[1],t,n[2]*sd*.92,.085,'sawtooth',1500,.6,.04); mNote(n[1]-12,t,n[2]*sd*.92,.06,'square',700,.4,.04); } });
+ } }
+function musTick(){ const c=AU.ctx; if(!c||c.state!=='running') return; if(!SET.music){ MUS.next=0; return; }
+ const now=c.currentTime; if(MUS.next<now) MUS.next=now+.06;
+ while(MUS.next<now+.3){ if((MUS.step&15)===0&&MUS.want!==MUS.st){ MUS.st=MUS.want; MUS.step=0; }
+  const bpm=MUS.st==='title'?76:MUS.st==='cruise'?96:(MUS.hot>.5?138:128), sd=60/bpm/4;
+  if(now>=MUS.mute) musStep(MUS.step,MUS.next,sd); MUS.next+=sd; MUS.step++; } }
+function musStart(){ if(MUS.iv) return; MUS.iv=setInterval(musTick,90); }
+// 依遊戲狀況決定音樂：選單＝主題曲、巡航＝輕、交戰＝緊張、被飛彈鎖定或受傷＝更激烈
+let musHold=0;
+function musState(dt){ COMBO.t-=dt; if(COMBO.t<=0) COMBO.n=0;
+ if(mode!=='game'||!MS||MS.over){ MUS.want='title'; MUS.hot*=.98; return; }
+ let near=false; for(const u of UNITS.values()){ if(u.alive&&u.side==='e'&&u.pos.distanceToSquared(ME.pos)<3200*3200){ near=true; break; } }
+ if(near||MWARN>0) musHold=9; else musHold-=dt; MUS.want=musHold>0?'combat':'cruise';
+ const hot=(MWARN>0||ME.hp<35||COMBO.n>=3)?1:0; MUS.hot+=(hot-MUS.hot)*clamp(dt*.6,0,1); }
+function musSting(win){ const c=AU.ctx; if(!c||!SET.music) return; const t=c.currentTime+.1; MUS.mute=t+5.5; MUS.want='title';
+ if(win){ [[62,0,.22],[65,.22,.22],[69,.44,.22],[74,.66,.7],[72,1.4,.25],[74,1.7,1.6]].forEach(n=>{ mNote(n[0],t+n[1],n[2],.12,'sawtooth',1900,.6,.02); mNote(n[0]-12,t+n[1],n[2],.08,'square',800,.4,.02); });
+  [50,57,62,66].forEach(m=>mNote(m,t+1.7,2.2,.06,'sawtooth',1200,.7,.1)); mDrum('t',t+.66,.4); mDrum('t',t+1.7,.5); mDrum('k',t+1.7,.5); }
+ else { [[62,0,.5],[60,.5,.5],[58,1,.5],[57,1.5,2]].forEach(n=>{ mNote(n[0]-12,t+n[1],n[2],.12,'sawtooth',700,.7,.05); mNote(n[0]-24,t+n[1],n[2],.1,'triangle',300,.3,.05); }); mDrum('t',t,.5); mDrum('t',t+1.5,.5); } }
+addEventListener('pointerdown',()=>audioInit(),{once:true}); addEventListener('keydown',()=>audioInit(),{once:true});
 // 無線電語音
 let VOICES=null;
 function say(who,txt,noVoice){ $('radioWho').textContent=who?'【'+who+'】':''; $('radioTxt').textContent=txt; const r=$('radio'); r.classList.remove('hidden'); r.style.opacity=1; clearTimeout(say.t); say.t=setTimeout(()=>{ r.style.opacity=0; setTimeout(()=>r.classList.add('hidden'),400); },Math.max(3500,txt.length*230));
@@ -847,7 +963,7 @@ function killUnit(u,by,k,silent){
  if(u.air){ u.vel.set(Math.random()*10-5,-5,Math.random()*10-5); u.falling=true; }
  if(!silent&&isHostOrSolo()){
   if(u.side==='f'&&u.type!=='ftank'&&u.type!=='cm32') say('指揮所','友軍「'+u.def.name+'」被擊毀了！',true);
-  if(u.side!=='f'){ const pl=playerById(by); if(pl){ pl.score+=u.def.score||100; pl.kills++; if(pl===ME) { toast('擊毀 '+u.def.name+' +'+(u.def.score||100),'good'); hitMarkerKill(); } else sendTo(by,{t:'killed',n:u.def.name,s:u.def.score||100}); } }
+  if(u.side!=='f'){ const pl=playerById(by); if(pl){ pl.score+=u.def.score||100; pl.kills++; if(pl===ME) { COMBO.n++; COMBO.t=7; const bonus=COMBO.n>=2?Math.min(10,COMBO.n-1)*25:0; pl.score+=bonus; toast('擊毀 '+u.def.name+' +'+((u.def.score||100)+bonus)+(COMBO.n>=2?'　🔥連擊 x'+COMBO.n:''),'good'); hitMarkerKill(); if(COMBO.n>=2) sfx('combo',COMBO.n); } else sendTo(by,{t:'killed',n:u.def.name,s:u.def.score||100}); } }
   else if(by){ const pl=playerById(by); if(pl){ pl.score-=300; if(pl===ME) toast('⚠️ 打到友軍了！ -300','bad'); else sendTo(by,{t:'ff'}); } }
   if(MS&&MS.def.onKill) MS.def.onKill(MS,u,by);
   if(isHostNet()) NET.bcast({t:'kill',id:u.id});
@@ -1315,6 +1431,7 @@ function aiUH60(u,dt){
 const CAM={mode:0,pos:V3(),look:V3(),init:false,shake:0};
 function updCam(dt){
  updSun(ME.pos); skyDome.position.copy(camera.position);
+ if(NL.intensity>0&&!ME.dead){ const fw=V3(-Math.sin(ME.yaw),0,-Math.cos(ME.yaw)); NL.position.set(ME.pos.x+fw.x*5,ME.pos.y-1,ME.pos.z+fw.z*5); NL.target.position.set(ME.pos.x+fw.x*140,ME.pos.y-50-ME.pitch*80,ME.pos.z+fw.z*140); NL.target.updateMatrixWorld(); }
  const p=ME.pos; const fwd=V3(-Math.sin(ME.yaw),0,-Math.cos(ME.yaw));
  let want, look;
  if(CAM.mode===1){ want=ME.model.localToWorld(V3(0,.55,-4.6)); look=want.clone().add(noseDir().multiplyScalar(100)); look.y-=8;
@@ -1541,7 +1658,29 @@ const ENDLESS={ id:'endless', name:'無盡防衛戰', place:'桃園沿海', star
   M.marks=[[PL.zhongli.x,PL.zhongli.z,'守住中壢']];
   M.obj=[['第 '+M.wave+' 波・剩 '+enemiesLeft()+' 個敵人',false],['衝進市區 '+(M.leaks||0)+'/10',false],[M.next<=15&&M.wave>0?'下一波 '+Math.ceil(M.next)+' 秒':'',false]];
   if((M.leaks||0)>=M.maxLeak) return 'over'; } };
-function findMission(id){ return id==='endless'?ENDLESS:MISSIONS.find(m=>m.id===id); }
+/* ---------------- 自由模式 ---------------- */
+const FREEC=Object.assign({start:'base',time:'day',weather:'clear',cnt:0,lvl:1},loadJ('mmheli-free')||{});
+const FSTARTS={
+ base:{n:'龍潭基地停機坪（地面起飛）',x:BASE_PADS[1][0],z:BASE_PADS[1][1],yaw:Math.PI/2,ground:true},
+ zhongli:{n:'中壢市區上空',x:PL.zhongli.x,z:PL.zhongli.z,yaw:0,alt:230},
+ dayuan:{n:'大園上空',x:PL.dayuan.x,z:PL.dayuan.z,yaw:Math.PI/2,alt:200},
+ guanyin:{n:'觀音海岸',x:coastX(900)+500,z:900,yaw:Math.PI/2,alt:120},
+ yangmei:{n:'楊梅上空',x:PL.yangmei.x,z:PL.yangmei.z,yaw:Math.PI,alt:220},
+ range:{n:'射擊訓練場上空',x:PL.range.x,z:PL.range.z,yaw:0,alt:200},
+ sea:{n:'台灣海峽上空',x:Math.max(-3200,coastX(900)-1700),z:900,yaw:-Math.PI/2,alt:160}};
+function freeSpot(minD,maxD){ for(let k=0;k<50;k++){ const x=(Math.random()*2-1)*(AREA-300), z=(Math.random()*2-1)*(AREA-300); const d=Math.hypot(x-ME.pos.x,z-ME.pos.z);
+  if(d<minD||d>maxD||x<coastX(z)+120||Hq(x,z)<6||bldTop(x,z)>-1e8||Math.hypot(x-PL.base.x,z-PL.base.z)<600) continue; return [x,z]; } return null; }
+function freeCluster(M){ const p=freeSpot(M.lvl>=2?3000:1800,4600); if(!p) return; const pool=[['truck','apc','apc','tank'],['tank','apc','truck','aa','apc'],['tank','tank','aa','sam','apc','aa']][M.lvl]; const n=3+(M.lvl>=2?1:0)+(Math.random()<.4?1:0);
+ for(let i=0;i<n;i++){ const t=pool[(Math.random()*pool.length)|0]; const u=spawnUnit(t,'e',p[0]+(Math.random()-.5)*70,p[1]+(Math.random()-.5)*70,{yaw:Math.random()*6.28}); u.parked=true; } }
+const FREE={ id:'free', name:'自由模式', place:'桃園', free:true, start:START_BASE, brief:'', objs:[], tip:'',
+ prep(){ const s=FSTARTS[FREEC.start]||FSTARTS.base; this.start={x:s.x,z:s.z,yaw:s.yaw,alt:s.alt||120}; this.ground=!!s.ground; },
+ init(M){ M.ecnt=[0,6,14,26][FREEC.cnt|0]; M.lvl=FREEC.lvl|0; M.fs=2; M.hs=60; if(M.ecnt>0) wings(M,2); },
+ tick(M,dt){ M.fs-=dt; if(M.ecnt>0&&M.fs<=0){ M.fs=6; if(enemiesLeft()<M.ecnt) freeCluster(M); }
+  if(M.ecnt>0&&M.lvl>=1){ M.hs-=dt; if(M.hs<=0){ M.hs=M.lvl>=2?70:130; if(enemiesLeft(u=>u.type==='heli')<M.lvl){ spawnUnit('heli','e',-3100,(Math.random()-.5)*3000,{alt:220,goal:[ME.pos.x,ME.pos.z]}); say('指揮所','雷達發現敵軍直升機！'); } } }
+  M.marks=[[PL.base.x,PL.base.z,'基地']];
+  M.obj=[[M.ecnt?'擊毀敵軍：'+ME.kills+'（敵人會陸續出現）':'自由飛行',false],['按 Esc 可暫停、回標題',false],[envName(),false]]; } };
+function findMission(id){ return id==='endless'?ENDLESS:id==='free'?FREE:MISSIONS.find(m=>m.id===id); }
+function setEnv(t,w){ if(CURENV.t===t&&CURENV.w===w) return; applyEnv(t,w); }
 
 /* ---------------- 任務流程 ---------------- */
 let mode='load', paused=false;
@@ -1553,15 +1692,15 @@ function syncRings(rings,ri){ if(!rings){ if(RINGS.length) clearRings(); return;
  if(RINGS.length!==rings.length){ clearRings(); rings.forEach(r=>{ const m=new T.Mesh(new T.TorusGeometry(18,1.4,8,32),BMAT(0xffd75e,{transparent:true,opacity:.85})); m.position.set(r[0],groundY(r[0],r[1])+r[2],r[1]); scene.add(m); RINGS.push(m); }); }
  RINGS.forEach((m,i)=>{ m.visible=i>=ri; m.material=i===ri?(m._a||(m._a=BMAT(0xffd75e,{transparent:true,opacity:.9}))):(m._b||(m._b=BMAT(0x9fd3ff,{transparent:true,opacity:.35}))); m.lookAt(i<rings.length-1?V3(rings[i+1][0],m.position.y,rings[i+1][1]):camera.position); m.rotation.z+=.01; }); }
 function startMission(id){ WING.mode="free"; WING.tgt=0; { const b=$("tWing"); if(b) b.innerHTML="僚機<br>自由"; }
- const def=findMission(id); clearWorld();
+ const def=findMission(id); if(def.free) def.prep(); clearWorld(); setEnv(def.free?FREEC.time:'day',def.free?FREEC.weather:'clear'); COMBO.n=0; COMBO.t=0; centerMsg(null);
  MS={def,id,t:0,over:false,obj:[],marks:[],leaks:0,landed:0};
  ME.score=0; ME.kills=0; ME.deaths=0; for(const p of REM.values()){ p.score=0; p.kills=0; p.deaths=0; }
  resetMe(def.start,!def.ground); CAM.init=false;
- def.init(MS); def.tick(MS,0);
+ def.init(MS); def.tick(MS,0); { const b=$('tWing'); if(b) b.style.display=[...UNITS.values()].some(u=>u.type==='fheli')?'':'none'; }
  enterGame();
  if(isHostNet()){ NET.bcast({t:'mstart',id}); }
 }
-function enterGame(){ ['title','missions','brief','pause','result','joinDlg','help','settings'].forEach(i=>$(i).classList.add('hidden'));
+function enterGame(){ ['title','missions','brief','pause','result','joinDlg','help','settings','freeSet'].forEach(i=>$(i).classList.add('hidden'));
  mode='game'; paused=false; $('hud').classList.remove('hidden'); if(IS_TOUCH) setupTouchOnce(); audioInit(); renderObj(); }
 let touchSet=false; function setupTouchOnce(){ if(!touchSet){ touchSet=true; setupTouch(); } $('touch').classList.remove('hidden'); }
 function renderObj(){ if(!MS) return; $('objTitle').textContent=MS.def.name; const h=(MS.obj||[]).filter(o=>o[0]).map(o=>`<div class="o ${o[1]?'done':''}">${o[1]?'✅':'▫️'} ${o[0]}</div>`).join(''); if(h!==renderObj.h){ renderObj.h=h; $('objList').innerHTML=h; if(IS_TOUCH) document.body.style.setProperty('--objH',$('objBox').offsetHeight+'px'); } }
@@ -1578,6 +1717,7 @@ function endMission(r){ MS.over=true; const win=r==='win', over=r==='over'; cons
  const res={win,over,why,stars,id:MS.def.id,t:Math.round(MS.t),wave:MS.wave||0,pl:allPlayers().map(p=>[p.name,p.score,p.kills,p.deaths])};
  if(isHostNet()) NET.bcast({t:'end',r:res});
  setTimeout(()=>showResult(res),win?2200:1500);
+ musSting(win);
  if(win){ say('指揮所','任務完成！幹得好，阿帕契！'); sfx('good'); } else if(!over) { say('指揮所','任務失敗…'+why); sfx('bad'); }
 }
 function showResult(res){
@@ -1600,14 +1740,14 @@ $('rNext').onclick=()=>{ const idx=MISSIONS.findIndex(x=>x.id===MS.def.id); show
 $('rRetry').onclick=()=>startMission(MS.def.id);
 $('rMenu').onclick=()=>showMissions();
 $('rTitleB').onclick=()=>{ if(isClient()){ netLeave(); location.reload(); } else showTitle(); };
-function showTitle(){ clearWorld(); MS=null; mode='title'; ['missions','brief','pause','result','joinDlg','help','settings'].forEach(i=>$(i).classList.add('hidden')); $('hud').classList.add('hidden'); $('touch').classList.add('hidden'); $('title').classList.remove('hidden'); ME.model.visible=true; resetMe({x:BASE_PADS[1][0],z:BASE_PADS[1][1],yaw:Math.PI/2},false); ME.rotor=1; }
-function backToBase(){ if(MS){ clearWorld(); MS=null; } ME.model.visible=true; resetMe({x:BASE_PADS[1][0],z:BASE_PADS[1][1],yaw:Math.PI/2},false); ME.rotor=1; $('hud').classList.add('hidden'); $('touch').classList.add('hidden'); }
-function showMissions(){ backToBase(); ['title','brief','result'].forEach(i=>$(i).classList.add('hidden')); const L=$('mList'); L.innerHTML='';
+function showTitle(){ clearWorld(); setEnv('day','clear'); MS=null; mode='title'; ['missions','brief','pause','result','joinDlg','help','settings','freeSet'].forEach(i=>$(i).classList.add('hidden')); $('hud').classList.add('hidden'); $('touch').classList.add('hidden'); $('title').classList.remove('hidden'); ME.model.visible=true; resetMe({x:BASE_PADS[1][0],z:BASE_PADS[1][1],yaw:Math.PI/2},false); ME.rotor=1; }
+function backToBase(){ if(MS){ clearWorld(); MS=null; } setEnv(CURENV.t,CURENV.w); ME.model.visible=true; resetMe({x:BASE_PADS[1][0],z:BASE_PADS[1][1],yaw:Math.PI/2},false); ME.rotor=1; $('hud').classList.add('hidden'); $('touch').classList.add('hidden'); }
+function showMissions(){ backToBase(); setEnv('day','clear'); ['title','brief','result'].forEach(i=>$(i).classList.add('hidden')); const L=$('mList'); L.innerHTML='';
  MISSIONS.forEach((m,i)=>{ const unlocked=i===0||PROG.stars[MISSIONS[i-1].id]||PROG.unlockAll; const st=PROG.stars[m.id]||0; const d=document.createElement('div'); d.className='mcard'+(unlocked?'':' lock');
   d.innerHTML=`<b>${unlocked?'':'🔒 '}${m.name}</b><div style="color:#9fd3ff">📍 ${m.place}</div><div class="st">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div>`; d.onclick=()=>{ if(unlocked) showBrief(m.id); else toast('先完成上一個任務才能玩這關喔'); }; L.appendChild(d); });
  $('missions').classList.remove('hidden'); mode='menu'; }
 let briefId=null;
-function showBrief(id){ backToBase(); const m=findMission(id); briefId=id; ['title','missions','result'].forEach(i=>$(i).classList.add('hidden'));
+function showBrief(id){ backToBase(); setEnv('day','clear'); const m=findMission(id); briefId=id; ['title','missions','result'].forEach(i=>$(i).classList.add('hidden'));
  $('bTitle').textContent=m.name; $('bPlace').textContent='📍 '+m.place+(m.endless&&PROG.endless?'　最佳紀錄：第 '+PROG.endless+' 波':''); $('bText').textContent=m.brief; $('bObj').innerHTML=m.objs.map(o=>'<li>'+o+'</li>').join(''); $('bTip').textContent='💡 '+m.tip;
  $('brief').classList.remove('hidden'); mode='menu'; }
 $('bGo').onclick=()=>{ audioInit(); startMission(briefId); };
@@ -1617,7 +1757,7 @@ $('bEndless').onclick=()=>{ audioInit(); showBrief('endless'); };
 $('mBack').onclick=()=>{ $('missions').classList.add('hidden'); showTitle(); };
 function openPause(){ if(mode!=='game') return; paused=!isClient()&&!NET.on; $('pause').classList.remove('hidden'); refreshPause(); MOUSE.l=MOUSE.r=false; }
 function refreshPause(){ $('pRoom').innerHTML=NET.on?(isClient()?'🌐 你在朋友的房間 <b>'+NET.code+'</b> 裡':'🌐 房間代碼：<b style="font-size:30px;letter-spacing:5px;color:#ffd75e">'+NET.code+'</b><br><span class="tip">朋友在標題畫面按「加入朋友的房間」輸入這個代碼</span>'):'';
- $('pHost').classList.toggle('hidden',NET.on); $('pRestart').classList.toggle('hidden',isClient()); $('pQuit').textContent=isClient()?'🚪 離開房間':'🏠 回到標題'; }
+ $('pHost').classList.toggle('hidden',NET.on||!!(MS&&MS.def.free)); $('pRestart').classList.toggle('hidden',isClient()); $('pQuit').textContent=isClient()?'🚪 離開房間':'🏠 回到標題'; }
 $('pResume').onclick=()=>{ $('pause').classList.add('hidden'); paused=false; };
 $('pRestart').onclick=()=>{ $('pause').classList.add('hidden'); startMission(MS.def.id); };
 $('pQuit').onclick=()=>askConfirm(isClient()?'離開房間？':'回到標題？',isClient()?'會回到標題畫面，朋友會繼續玩。':'這次任務的進度不會保留。'+(NET.on?'房間也會關閉。':''),()=>{ if(NET.on){ netLeave(); location.reload(); return; } showTitle(); });
@@ -1629,9 +1769,17 @@ function showMsg(t,b,ok){ const old=$('msgCancel'); if(old) old.remove(); $('msg
 let helpFrom=null;
 $('bHelp').onclick=$('pHelp').onclick=()=>{ $('help').classList.remove('hidden'); };
 $('hClose').onclick=()=>$('help').classList.add('hidden');
-$('bSet').onclick=$('pSet').onclick=()=>{ $('sSfx').value=SET.sfx; $('sVoice').value=SET.voice; $('sQ').value=SET.q; $('sAssist').value=SET.assist; $('sDiff').value=SET.diff; $('settings').classList.remove('hidden'); };
-$('sClose').onclick=()=>{ const q=+$('sQ').value; SET.sfx=+$('sSfx').value; SET.voice=+$('sVoice').value; SET.assist=+$('sAssist').value; SET.diff=+$('sDiff').value; const reload=q!==SET.q; SET.q=q; saveSet(); setVol(); $('settings').classList.add('hidden'); if(reload&&mode!=='game') location.reload(); else if(reload) toast('畫質會在下次進入遊戲時套用'); };
+$('bSet').onclick=$('pSet').onclick=()=>{ $('sSfx').value=SET.sfx; $('sMusic').value=SET.music; $('sVoice').value=SET.voice; $('sQ').value=SET.q; $('sAssist').value=SET.assist; $('sDiff').value=SET.diff; $('settings').classList.remove('hidden'); };
+$('sClose').onclick=()=>{ const q=+$('sQ').value; SET.sfx=+$('sSfx').value; SET.music=+$('sMusic').value; SET.voice=+$('sVoice').value; SET.assist=+$('sAssist').value; SET.diff=+$('sDiff').value; const reload=q!==SET.q; SET.q=q; saveSet(); setVol(); $('settings').classList.add('hidden'); if(reload&&mode!=='game') location.reload(); else if(reload) toast('畫質會在下次進入遊戲時套用'); };
 $('bTerms').onclick=e=>{ e.preventDefault(); $('terms').classList.remove('hidden'); }; $('tClose').onclick=()=>$('terms').classList.add('hidden');
+
+// 自由模式設定面板
+function showFree(){ backToBase(); setEnv(FREEC.time,FREEC.weather); ['title','missions','brief','result'].forEach(i=>$(i).classList.add('hidden')); const sel=$('fStart'); if(!sel.options.length) for(const k in FSTARTS) sel.add(new Option(FSTARTS[k].n,k));
+ sel.value=FREEC.start; $('fTime').value=FREEC.time; $('fWea').value=FREEC.weather; $('fCnt').value=FREEC.cnt; $('fLvl').value=FREEC.lvl; $('freeSet').classList.remove('hidden'); mode='menu'; }
+$('bFree').onclick=()=>{ audioInit(); showFree(); };
+$('fTime').onchange=$('fWea').onchange=()=>setEnv($('fTime').value,$('fWea').value);
+$('fGo').onclick=()=>{ FREEC.start=$('fStart').value; FREEC.time=$('fTime').value; FREEC.weather=$('fWea').value; FREEC.cnt=+$('fCnt').value; FREEC.lvl=+$('fLvl').value; saveJ('mmheli-free',FREEC); $('freeSet').classList.add('hidden'); audioInit(); startMission('free'); };
+$('fBack').onclick=()=>{ $('freeSet').classList.add('hidden'); showTitle(); };
 
 /* ---------------- 連線（房間代碼） ---------------- */
 const NET={on:false,host:false,code:'',myId:'H',conns:new Map(),hc:null,peer:null,bc:null,n:0,ver:1,tS:0,tP:0};
@@ -1795,11 +1943,11 @@ function loop(){
   titleA+=dt*.08; poseModel(ME.model,ME.pos,ME.yaw,0,0,1,dt);
   const hp=ME.pos.clone(); if(mode==='title'){ hp.y+=40+Math.sin(titleA*3)*1.5; ME.model.position.copy(hp); ME.model.rotation.z=Math.sin(titleA*2)*.05; }
   camera.position.set(hp.x+Math.cos(titleA)*30,hp.y+6+Math.sin(titleA*.7)*3,hp.z+Math.sin(titleA)*30); camera.lookAt(hp.x,hp.y+1.5,hp.z); if(mode==='title'&&innerWidth>700) camera.rotateY(.3);
-  updParts(dt); rotorAudio(.25); renderer.render(scene,camera); return; }
+  updParts(dt); rotorAudio(.25); musState(dt); envTick(dt); updRain(dt); renderer.render(scene,camera); return; }
  const run=!paused&&MS;
  if(run) stepGame(dt); else if(NET.on){ netTick(dt); }
  updCam(dt); if(mode==='game') updHud(dt);
- rotorAudio(mode==='game'?1:.3);
+ rotorAudio(mode==='game'?1:.3); musState(dt); envTick(dt); updRain(dt);
  renderer.render(scene,camera);
 }
 let warnBeep=0;
@@ -1813,7 +1961,7 @@ function stepGame(dt){
 // 主機切到背景時，遊戲照樣進行（朋友那邊不會卡住）
 setInterval(()=>{ if(!(document.hidden&&NET.on&&NET.host&&MS)) return; const t=performance.now(); let dt=Math.min(1.5,(t-last)/1000); last=t; while(dt>0){ const s=Math.min(.05,dt); stepGame(s); dt-=s; } },100);
 window.__sim=(sec,f)=>{ const n=Math.round(sec*30); for(let i=0;i<n;i++){ if(f) f(i/30); if(!paused&&MS) stepGame(1/30); updCam(1/30); } };
-function rotorAudio(k){ if(!AU.ctx) return; const r=ME.dead?0:ME.rotor; AU.rotor.gain.value=r*.5*k; AU.whine.gain.value=r*.012*k; AU.lfo.frequency.value=6+13*r; }
+function rotorAudio(k){ if(!AU.ctx) return; const r=ME.dead?0:ME.rotor, sp=ME.vel?ME.vel.length():0; AU.rotor.gain.value=r*.5*k; AU.thump.gain.value=r*.32*k; AU.whine.gain.value=r*.011*k; AU.lfo.frequency.value=6+13*r; const f=1500+r*780; AU.whs[0].frequency.value=f; AU.whs[1].frequency.value=f*1.0145; AU.whs[2].frequency.value=f*2.01; AU.wind.gain.value=clamp(sp/70,0,1)*.1*k*(WEAS[CURENV.w].rain?1.6:1); AU.windF.frequency.value=350+sp*14; }
 
 /* ---------------- 啟動 ---------------- */
 function loadStep(p,t){ $('loadBar').style.width=p+'%'; $('loadTxt').textContent=t; return new Promise(r=>setTimeout(r,30)); }
