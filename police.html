@@ -1062,9 +1062,12 @@ function makePerson(o) {
   // 腿：大腿（髖關節）→ 小腿（膝關節）→ 鞋
   const mkLeg = (sx) => {
     const hip = new THREE.Group(); hip.position.set(sx * 0.1, 0.93, 0);
-    hip.add(mk(cyl('thigh', 0.085, 0.064, 0.46), skirt ? skin : pants));
+    hip.add(mk(sph('hipj', 0.086, 10, 8), skirt ? skin : pants));
+    hip.add(mk(cyl('thigh', 0.085, 0.064, 0.47), skirt ? skin : pants));
     const knee = new THREE.Group(); knee.position.y = -0.46; hip.add(knee);
-    knee.add(mk(cyl('shin', 0.062, 0.045, 0.43), skirt ? skin : pants));
+    knee.add(mk(sph('kneej', 0.065, 10, 8), skirt ? skin : pants));
+    knee.add(mk(cyl('shin', 0.064, 0.045, 0.44), skirt ? skin : pants));
+    knee.add(mk(sph('ankle', 0.046, 8, 6), skirt ? skin : pants, 0, -0.43, 0));
     const sh = mk(PGEO.shoe || (PGEO.shoe = new THREE.BoxGeometry(0.1, 0.07, 0.25)), shoe, 0, -0.45, 0.04); knee.add(sh);
     body.add(hip); return [hip, knee];
   };
@@ -1076,14 +1079,16 @@ function makePerson(o) {
   torso.scale.set(1, 1, 0.62); body.add(torso);
   if (o.police) { addS(body, mk(cyl('belt', 0.165, 0.165, 0.06, 10), pm(0x111111), 0, 1.04, 0), 1, 1, 0.68); body.add(bx(0.07, 0.07, 0.02, pm(0xffd84a), -0.09, 1.38, 0.12)); }
   if (o.apron) { const ap = bx(0.3, 0.5, 0.02, pm(o.apron), 0, 1.12, 0.12); body.add(ap); }
-  body.add(mk(cyl('neck', 0.05, 0.055, 0.12), skin, 0, 1.64, 0));
+  body.add(mk(cyl('neck', 0.052, 0.058, 0.18), skin, 0, 1.73, 0));
   // 手臂：上臂（肩）→ 前臂（手肘）→ 手
   const mkArm = (sx) => {
-    const sho = new THREE.Group(); sho.position.set(sx * 0.215, 1.5, 0); sho.rotation.z = sx * 0.08;
-    sho.add(mk(sph('shoulder', 0.058, 8, 6), shirt));
-    sho.add(mk(cyl('uarm', 0.058, 0.047, 0.29), shirt));
+    const sho = new THREE.Group(); sho.position.set(sx * (fem ? 0.185 : 0.2), 1.5, 0); sho.rotation.z = sx * 0.08;
+    sho.add(mk(sph('shoulder', 0.068, 10, 8), shirt));
+    if (longSleeve) sho.add(mk(cyl('uarm', 0.06, 0.048, 0.3), shirt));
+    else { sho.add(mk(cyl('sleeve', 0.065, 0.058, 0.15), shirt)); sho.add(mk(cyl('uarmS', 0.05, 0.047, 0.3), skin)); }
     const elb = new THREE.Group(); elb.position.y = -0.29; sho.add(elb);
-    elb.add(mk(cyl('farm', 0.046, 0.036, 0.26), longSleeve ? shirt : skin));
+    elb.add(mk(sph('elbj', 0.049, 8, 6), longSleeve ? shirt : skin));
+    elb.add(mk(cyl('farm', 0.048, 0.036, 0.27), longSleeve ? shirt : skin));
     addS(elb, mk(sph('hand', 0.045, 8, 6), skin, 0, -0.29, 0), 0.9, 1.2, 0.7);
     body.add(sho); return [sho, elb];
   };
