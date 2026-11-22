@@ -1019,57 +1019,131 @@ const SKINS = [0xf1c9a5, 0xe0b088, 0xc99a6e, 0xf5d5b8, 0xd8a884];
 const SHIRTS = [0xffffff, 0x2a4fa8, 0xd94040, 0x3a8a4a, 0xf2c94c, 0x222222, 0x8a5ac8, 0xe07a30, 0x6ab0e0, 0xcccccc, 0xf08aa8];
 const PANTS = [0x1f2a44, 0x333333, 0x5a4a3a, 0x6a7a8a, 0x2a2a2a, 0xc8b89a];
 function bx(w, h, d, mat, x, y, z) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x || 0, y || 0, z || 0); return m; }
+/* ---------- 人物模型（有關節、臉、髮型） ---------- */
+const PGEO = {};
+function lathe(key, pts, seg) { return PGEO[key] || (PGEO[key] = new THREE.LatheGeometry(pts.map(p => new THREE.Vector2(p[0], p[1])), seg || 10)); }
+function cyl(key, r1, r2, h, seg) { if (!PGEO[key]) { const g = new THREE.CylinderGeometry(r1, r2, h, seg || 8); g.translate(0, -h / 2, 0); PGEO[key] = g; } return PGEO[key]; }
+function sph(key, r, ws, hs, ts, tl) { return PGEO[key] || (PGEO[key] = new THREE.SphereGeometry(r, ws || 12, hs || 10, 0, Math.PI * 2, ts || 0, tl || Math.PI)); }
+const FACE_TEX = {};
+function faceMat(skin, fem, robber) {
+  const key = skin + '_' + fem + '_' + robber;
+  if (FACE_TEX[key]) return FACE_TEX[key];
+  const c = new THREE.Color(skin); const sc = '#' + c.getHexString(); const dk = '#' + c.clone().multiplyScalar(0.72).getHexString();
+  const tex = canvasTex(256, 128, (g, w, h) => {
+    g.fillStyle = robber ? '#151515' : sc; g.fillRect(0, 0, w, h);
+    const cx = w * 0.25; // 臉的正面在 u=0.25
+    if (robber) { g.fillStyle = sc; g.fillRect(cx - 26, 50, 52, 14); g.fillStyle = '#222'; g.fillRect(cx - 18, 53, 9, 8); g.fillRect(cx + 9, 53, 9, 8); return; }
+    // 眉毛
+    g.fillStyle = '#2a1c14'; g.fillRect(cx - 21, 47, 14, fem ? 2 : 4); g.fillRect(cx + 7, 47, 14, fem ? 2 : 4);
+    // 眼睛
+    for (const s of [-1, 1]) { g.fillStyle = '#fff'; g.beginPath(); g.ellipse(cx + s * 13, 57, 6, 3.6, 0, 0, 7); g.fill(); g.fillStyle = '#2a1a10'; g.beginPath(); g.arc(cx + s * 13, 57, 2.8, 0, 7); g.fill(); if (fem) { g.strokeStyle = '#111'; g.lineWidth = 1.5; g.beginPath(); g.ellipse(cx + s * 13, 56.5, 6.5, 4, 0, Math.PI, 0); g.stroke(); } }
+    // 鼻子、嘴巴、腮紅
+    g.fillStyle = dk; g.fillRect(cx - 2, 60, 4, 12); g.fillRect(cx - 5, 70, 10, 3);
+    g.fillStyle = fem ? '#c0505a' : '#8a4a40'; g.beginPath(); g.ellipse(cx, 82, fem ? 8 : 9, fem ? 3 : 2.2, 0, 0, 7); g.fill();
+    if (fem) { g.fillStyle = 'rgba(230,110,110,.25)'; g.beginPath(); g.arc(cx - 20, 72, 6, 0, 7); g.arc(cx + 20, 72, 6, 0, 7); g.fill(); }
+    // 耳朵陰影
+    g.fillStyle = dk; g.fillRect(cx + 62, 52, 6, 16); g.fillRect(cx - 68, 52, 6, 16);
+  });
+  return (FACE_TEX[key] = new THREE.MeshLambertMaterial({ map: tex }));
+}
+const HAIRS = [0x111111, 0x1e140e, 0x2e1f15, 0x3b2a1c, 0x6b6b6b, 0xbbbbbb];
+function addS(par, m, sx, sy, sz) { m.scale.set(sx, sy, sz); par.add(m); return m; }
+function mk(geo, mat, x, y, z) { const m = new THREE.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); return m; }
 function makePerson(o) {
   o = o || {};
-  const skin = pm(o.skin || pick(SKINS)), shirt = pm(o.shirt != null ? o.shirt : pick(SHIRTS)), pants = pm(o.pants != null ? o.pants : pick(PANTS));
+  const fem = o.fem != null ? o.fem : (!o.police && !o.robber && Math.random() < 0.45);
+  const skinC = o.skin || pick(SKINS);
+  const skin = pm(skinC), shirt = pm(o.shirt != null ? o.shirt : pick(SHIRTS)), pants = pm(o.pants != null ? o.pants : pick(PANTS));
+  const shoe = pm(pick([0x151515, 0x2a2a2a, 0xeeeeee, 0x5a3a22]));
+  const longSleeve = o.police || o.robber || Math.random() < 0.4, skirt = fem && !o.apron && Math.random() < 0.35;
   const g = new THREE.Group(); const body = new THREE.Group(); g.add(body);
-  const legL = new THREE.Group(), legR = new THREE.Group(); legL.position.set(-0.11, 0.92, 0); legR.position.set(0.11, 0.92, 0);
-  legL.add(bx(0.17, 0.88, 0.2, pants, 0, -0.44, 0)); legR.add(bx(0.17, 0.88, 0.2, pants, 0, -0.44, 0));
-  legL.add(bx(0.18, 0.1, 0.3, pm(0x1a1a1a), 0, -0.88, 0.05)); legR.add(bx(0.18, 0.1, 0.3, pm(0x1a1a1a), 0, -0.88, 0.05));
-  body.add(legL, legR);
-  const torso = bx(0.46, 0.62, 0.26, shirt, 0, 1.24, 0); body.add(torso);
-  if (o.police) { body.add(bx(0.48, 0.1, 0.28, pm(0x111111), 0, 0.96, 0)); body.add(bx(0.1, 0.08, 0.02, pm(0xffd84a), -0.12, 1.42, 0.14)); body.add(bx(0.4, 0.34, 0.06, pm(0x1a2a1a), 0, 1.25, 0.15)); }
-  if (o.vest) body.add(bx(0.48, 0.4, 0.3, pm(0xd8ff30, 0.2), 0, 1.24, 0));
-  const armL = new THREE.Group(), armR = new THREE.Group(); armL.position.set(-0.31, 1.52, 0); armR.position.set(0.31, 1.52, 0);
-  armL.add(bx(0.13, 0.62, 0.15, shirt, 0, -0.3, 0)); armR.add(bx(0.13, 0.62, 0.15, shirt, 0, -0.3, 0));
-  armL.add(bx(0.12, 0.12, 0.12, skin, 0, -0.66, 0)); armR.add(bx(0.12, 0.12, 0.12, skin, 0, -0.66, 0));
-  body.add(armL, armR);
-  const gun = bx(0.07, 0.12, 0.28, pm(0x151515), 0, -0.7, 0.1); gun.visible = false; armR.add(gun);
-  const head = new THREE.Group(); head.position.set(0, 1.76, 0); body.add(head);
-  if (o.robber) {
-    head.add(bx(0.32, 0.32, 0.32, pm(0x1a1a1a), 0, 0, 0)); head.add(bx(0.26, 0.1, 0.04, pm(0x444a55), 0, 0.02, 0.165));
-  } else {
-    head.add(bx(0.26, 0.28, 0.26, skin, 0, 0, 0));
-    head.add(bx(0.27, 0.08, 0.27, pm(o.hair || pick([0x111111, 0x2a1a10, 0x3a2a1a, 0x777777])), 0, 0.14, -0.01));
-    head.add(bx(0.04, 0.04, 0.02, pm(0x111111), -0.06, 0.03, 0.135)); head.add(bx(0.04, 0.04, 0.02, pm(0x111111), 0.06, 0.03, 0.135));
-    if (o.police) { head.add(bx(0.3, 0.1, 0.32, pm(0x13203a), 0, 0.18, 0.01)); head.add(bx(0.3, 0.03, 0.12, pm(0x0a0f1a), 0, 0.13, 0.2)); head.add(bx(0.06, 0.06, 0.02, pm(0xffd84a), 0, 0.2, 0.17)); }
-    if (o.helmet) head.add(bx(0.32, 0.22, 0.32, pm(o.helmet), 0, 0.1, 0));
-    if (o.apron) body.add(bx(0.47, 0.5, 0.27, pm(o.apron), 0, 1.2, 0.01));
+  const H = o.robber ? 1.02 : rand(0.93, 1.06) * (fem ? 0.95 : 1), Wd = rand(0.9, 1.15);
+  body.scale.set(Wd, H, Wd);
+  // 腿：大腿（髖關節）→ 小腿（膝關節）→ 鞋
+  const mkLeg = (sx) => {
+    const hip = new THREE.Group(); hip.position.set(sx * 0.1, 0.93, 0);
+    hip.add(mk(cyl('thigh', 0.085, 0.064, 0.46), skirt ? skin : pants));
+    const knee = new THREE.Group(); knee.position.y = -0.46; hip.add(knee);
+    knee.add(mk(cyl('shin', 0.062, 0.045, 0.43), skirt ? skin : pants));
+    const sh = mk(PGEO.shoe || (PGEO.shoe = new THREE.BoxGeometry(0.1, 0.07, 0.25)), shoe, 0, -0.45, 0.04); knee.add(sh);
+    body.add(hip); return [hip, knee];
+  };
+  const [legL, kneeL] = mkLeg(-1), [legR, kneeR] = mkLeg(1);
+  // 骨盆、軀幹（腰細胸寬）
+  addS(body, mk(lathe('pelvis', [[0, -0.02], [0.15, 0], [0.17, 0.08], [0.16, 0.16], [0, 0.17]]), pants, 0, 0.86, 0), 1, 1, 0.68);
+  if (skirt) { const sk = mk(lathe('skirt', [[0, 0.3], [0.17, 0.3], [0.25, 0], [0, 0]], 12), pants, 0, 0.6, 0); sk.scale.set(1, 1, 0.8); body.add(sk); }
+  const torso = mk(lathe(fem ? 'torsoF' : 'torsoM', fem ? [[0, 0], [0.15, 0], [0.14, 0.16], [0.17, 0.32], [0.17, 0.42], [0.12, 0.52], [0, 0.53]] : [[0, 0], [0.155, 0], [0.155, 0.18], [0.19, 0.36], [0.2, 0.44], [0.13, 0.54], [0, 0.55]], 12), shirt, 0, 1.0, 0);
+  torso.scale.set(1, 1, 0.62); body.add(torso);
+  if (o.police) { addS(body, mk(cyl('belt', 0.165, 0.165, 0.06, 10), pm(0x111111), 0, 1.04, 0), 1, 1, 0.68); body.add(bx(0.07, 0.07, 0.02, pm(0xffd84a), -0.09, 1.38, 0.12)); }
+  if (o.apron) { const ap = bx(0.3, 0.5, 0.02, pm(o.apron), 0, 1.12, 0.12); body.add(ap); }
+  body.add(mk(cyl('neck', 0.05, 0.055, 0.12), skin, 0, 1.64, 0));
+  // 手臂：上臂（肩）→ 前臂（手肘）→ 手
+  const mkArm = (sx) => {
+    const sho = new THREE.Group(); sho.position.set(sx * 0.215, 1.5, 0); sho.rotation.z = sx * 0.08;
+    sho.add(mk(sph('shoulder', 0.058, 8, 6), shirt));
+    sho.add(mk(cyl('uarm', 0.058, 0.047, 0.29), shirt));
+    const elb = new THREE.Group(); elb.position.y = -0.29; sho.add(elb);
+    elb.add(mk(cyl('farm', 0.046, 0.036, 0.26), longSleeve ? shirt : skin));
+    addS(elb, mk(sph('hand', 0.045, 8, 6), skin, 0, -0.29, 0), 0.9, 1.2, 0.7);
+    body.add(sho); return [sho, elb];
+  };
+  const [armL, elbowL] = mkArm(-1), [armR, elbowR] = mkArm(1);
+  const gun = new THREE.Group(); gun.add(bx(0.04, 0.08, 0.2, pm(0x151515), 0, 0, 0.06)); gun.add(bx(0.035, 0.1, 0.05, pm(0x151515), 0, -0.06, -0.01)); gun.position.set(0, -0.3, 0.02); gun.visible = false; elbowR.add(gun);
+  // 頭：臉貼圖 + 髮型
+  const head = new THREE.Group(); head.position.set(0, 1.81, 0); body.add(head);
+  const hm = mk(sph('head', 0.115, 16, 12), faceMat(skinC, fem, o.robber)); hm.scale.set(0.92, 1.12, 1); head.add(hm);
+  head.add(mk(sph('nose', 0.018, 6, 4), skin, 0, -0.01, 0.115));
+  if (!o.robber) for (const s of [-1, 1]) addS(head, mk(sph('ear', 0.025, 6, 4), skin, s * 0.105, 0, 0), 0.5, 1, 0.8);
+  const hairC = pm(o.hair || (Math.random() < 0.15 ? pick(HAIRS.slice(4)) : pick(HAIRS.slice(0, 4))));
+  if (o.robber) { head.add(mk(sph('cap', 0.125, 12, 8, 0, Math.PI / 2), pm(0x1a1a1a), 0, 0.02, 0)); head.add(bx(0.2, 0.02, 0.1, pm(0x1a1a1a), 0, 0.04, 0.13)); }
+  else if (o.police) { head.add(mk(cyl('pcap', 0.13, 0.12, 0.08, 12), pm(0x13203a), 0, 0.12, 0)); head.add(bx(0.2, 0.02, 0.1, pm(0x0a0f1a), 0, 0.05, 0.12)); head.add(bx(0.04, 0.04, 0.01, pm(0xffd84a), 0, 0.1, 0.13)); }
+  else if (o.helmet) { head.add(mk(sph('helm', 0.15, 12, 8, 0, Math.PI * 0.62), pm(o.helmet), 0, 0.01, 0)); }
+  else {
+    const style = fem ? pick(['long', 'long', 'bob', 'pony']) : pick(['short', 'short', 'crew', 'bald']);
+    if (style !== 'bald') { const cap = mk(sph(style === 'crew' ? 'hairCapS' : 'hairCap', 0.126, 14, 8, 0, Math.PI * (style === 'crew' ? 0.42 : 0.5)), hairC, 0, 0.012, -0.01); cap.scale.set(0.95, 1.13, 1.05); cap.rotation.x = -0.5; head.add(cap); }
+    else { const cap = mk(sph('hairBald', 0.12, 12, 8, Math.PI * 0.35, Math.PI * 0.25), hairC, 0, 0, -0.01); head.add(cap); }
+    if (style === 'long') { const b = bx(0.22, 0.32, 0.06, hairC, 0, -0.12, -0.08); head.add(b); }
+    if (style === 'bob') { const b = bx(0.24, 0.16, 0.18, hairC, 0, -0.04, -0.04); head.add(b); }
+    if (style === 'pony') { addS(head, mk(sph('pony', 0.05, 8, 6), hairC, 0, 0.02, -0.14), 1, 2.2, 1); }
   }
-  return { g, body, legL, legR, armL, armR, head, gun, phase: Math.random() * 6 };
+  return { g, body, legL, legR, kneeL, kneeR, armL, armR, elbowL, elbowR, head, gun, phase: Math.random() * 6 };
 }
 function posePerson(P, pose, dt, speed) {
-  const b = P.body; b.position.y = 0; b.rotation.set(0, 0, 0);
-  P.legL.rotation.set(0, 0, 0); P.legR.rotation.set(0, 0, 0); P.armL.rotation.set(0, 0, 0); P.armR.rotation.set(0, 0, 0);
+  const b = P.body; b.position.set(0, 0, 0); b.rotation.set(0, 0, 0);
+  for (const j of [P.legL, P.legR, P.kneeL, P.kneeR, P.elbowL, P.elbowR]) j.rotation.set(0, 0, 0);
+  P.armL.rotation.set(0, 0, -0.08); P.armR.rotation.set(0, 0, 0.08); P.head.rotation.set(0, 0, 0);
   if (pose === 'walk' || pose === 'run') {
-    P.phase += dt * (speed || 1.4) * 4.2; const s = Math.sin(P.phase) * (pose === 'run' ? 0.9 : 0.55);
-    P.legL.rotation.x = s; P.legR.rotation.x = -s; P.armL.rotation.x = -s * 0.8; P.armR.rotation.x = s * 0.8;
-    if (pose === 'run') b.rotation.x = 0.15;
+    const run = pose === 'run'; P.phase += dt * (speed || 1.4) * (run ? 3.2 : 4.2);
+    const s = Math.sin(P.phase), c = Math.cos(P.phase), A = run ? 0.85 : 0.5;
+    P.legL.rotation.x = s * A; P.legR.rotation.x = -s * A;
+    P.kneeL.rotation.x = Math.max(0, -c) * (run ? 1.3 : 0.7) + 0.05; P.kneeR.rotation.x = Math.max(0, c) * (run ? 1.3 : 0.7) + 0.05;
+    P.armL.rotation.x = -s * A * 0.8; P.armR.rotation.x = s * A * 0.8;
+    P.elbowL.rotation.x = run ? -1.3 : -0.25 - Math.max(0, s) * 0.3; P.elbowR.rotation.x = run ? -1.3 : -0.25 - Math.max(0, -s) * 0.3;
+    b.position.y = Math.abs(c) * (run ? 0.06 : 0.025); if (run) b.rotation.x = 0.18;
   } else if (pose === 'aim') {
-    P.armR.rotation.x = -Math.PI / 2; P.armL.rotation.x = -1.35; P.armL.rotation.z = -0.5;
-  } else if (pose === 'hands') {
-    P.armL.rotation.x = Math.PI * 0.92; P.armR.rotation.x = Math.PI * 0.92; P.armL.rotation.z = 0.15; P.armR.rotation.z = -0.15;
-  } else if (pose === 'kneel') {
-    b.position.y = -0.42; P.legL.rotation.x = -1.5; P.legR.rotation.x = -1.5;
-    P.armL.rotation.x = Math.PI * 0.92; P.armR.rotation.x = Math.PI * 0.92;
-  } else if (pose === 'cuffed') {
-    b.position.y = -0.42; P.legL.rotation.x = -1.5; P.legR.rotation.x = -1.5; P.armL.rotation.x = 0.5; P.armR.rotation.x = 0.5; P.armL.rotation.z = 0.35; P.armR.rotation.z = -0.35;
-  } else if (pose === 'down') {
-    b.rotation.x = -Math.PI / 2; b.position.y = 0.15; b.position.z = 0;
-  } else if (pose === 'stun') {
-    b.rotation.x = -Math.PI / 2; b.position.y = 0.15; P.phase += dt * 30; P.armL.rotation.z = Math.sin(P.phase) * 0.3; P.legR.rotation.x = Math.sin(P.phase * 1.3) * 0.2;
+    P.armR.rotation.x = -Math.PI / 2; P.armL.rotation.x = -1.45; P.armL.rotation.z = -0.55; P.elbowL.rotation.x = -0.15;
+    P.legL.rotation.x = -0.15; P.legR.rotation.x = 0.2; P.kneeR.rotation.x = 0.2;
+  } else if (pose === 'hands' || pose === 'kneel' || pose === 'cuffed') {
+    if (pose === 'hands') { P.armL.rotation.x = Math.PI * 0.9; P.armR.rotation.x = Math.PI * 0.9; P.armL.rotation.z = -0.35; P.armR.rotation.z = 0.35; P.elbowL.rotation.x = -0.5; P.elbowR.rotation.x = -0.5; }
+    else {
+      // 跪姿：大腿垂直、小腿往後平放
+      b.position.y = -0.43 * b.scale.y; P.kneeL.rotation.x = 1.57; P.kneeR.rotation.x = 1.57;
+      if (pose === 'kneel') { P.armL.rotation.x = Math.PI * 0.9; P.armR.rotation.x = Math.PI * 0.9; P.armL.rotation.z = -0.3; P.armR.rotation.z = 0.3; P.elbowL.rotation.x = -0.6; P.elbowR.rotation.x = -0.6; P.head.rotation.x = 0.25; }
+      else { P.armL.rotation.x = 0.45; P.armR.rotation.x = 0.45; P.armL.rotation.z = 0.25; P.armR.rotation.z = -0.25; P.elbowL.rotation.x = 1.0; P.elbowR.rotation.x = 1.0; P.head.rotation.x = 0.35; b.rotation.x = 0.15; }
+    }
+  } else if (pose === 'down' || pose === 'stun') {
+    b.rotation.x = -Math.PI / 2; b.position.set(0, 0.12, -0.9);
+    P.armL.rotation.z = -0.6; P.armR.rotation.z = 0.5; P.legL.rotation.z = -0.1; P.legR.rotation.z = 0.15; P.kneeR.rotation.x = 0.4;
+    if (pose === 'stun') { P.phase += dt * 30; P.armL.rotation.z = -0.6 + Math.sin(P.phase) * 0.25; P.kneeL.rotation.x = 0.3 + Math.sin(P.phase * 1.3) * 0.2; P.head.rotation.y = Math.sin(P.phase * 0.7) * 0.3; }
   } else if (pose === 'talk') {
-    P.phase += dt * 3; P.armR.rotation.x = -0.6 + Math.sin(P.phase) * 0.3;
+    P.phase += dt * 3; P.armR.rotation.x = -0.5 + Math.sin(P.phase) * 0.25; P.elbowR.rotation.x = -0.9 + Math.sin(P.phase * 1.7) * 0.3; P.armL.rotation.x = -0.15; P.elbowL.rotation.x = -0.5;
+    P.head.rotation.x = Math.sin(P.phase * 0.8) * 0.08; P.head.rotation.y = Math.sin(P.phase * 0.5) * 0.15;
+  } else if (pose === 'sit') {
+    P.legL.rotation.x = -1.45; P.legR.rotation.x = -1.45; P.kneeL.rotation.x = 1.45; P.kneeR.rotation.x = 1.45;
+    P.armL.rotation.x = -1.0; P.armR.rotation.x = -1.0; P.elbowL.rotation.x = -0.4; P.elbowR.rotation.x = -0.4;
+  } else {
+    // 待機：輕微呼吸、手自然下垂
+    P.phase += dt * 1.5; b.position.y = Math.sin(P.phase) * 0.004; P.elbowL.rotation.x = -0.12; P.elbowR.rotation.x = -0.12;
   }
 }
 
@@ -1149,7 +1223,7 @@ function makeVehicle(kind, color, police, opts) {
     }
     if (opts.driver) {
       const d = makePerson({ helmet: pick([0xffffff, 0xd94040, 0x2a4fa8, 0xf2c94c, 0x222222]) });
-      d.g.position.set(0, 0.05, 0.25); d.g.rotation.y = Math.PI; d.legL.rotation.x = -1.2; d.legR.rotation.x = -1.2; d.armL.rotation.x = -1.1; d.armR.rotation.x = -1.1; d.body.position.y = -0.18;
+      d.g.position.set(0, -0.12, 0.3); d.g.rotation.y = Math.PI; posePerson(d, 'sit', 0); d.armL.rotation.x = -1.25; d.armR.rotation.x = -1.25;
       g.add(d.g); parts.driver = d;
     }
     parts.eyeY = 1.62; parts.seat = { x: 0, z: 0.25 };
