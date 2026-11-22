@@ -1262,6 +1262,14 @@ class NPCVeh {
     } else if (this.state === 'pull') {
       this.offT = g.w / 2 - 1.1; v = Math.max(0, this.speed - 5 * dt); if (v < 0.2 && Math.abs(this.off - this.offT) < 0.2) { this.state = 'stopped'; this.speed = 0; return; }
     } else {
+      // 鳴笛的救護車、消防車、警車：自己走中間；其他車靠右讓道
+      if (this.em && this.sirenOn) this.offT = g.w * 0.12;
+      if (this.yieldT > 0) {
+        this.yieldT -= dt;
+        if (this.yieldSide) this.offT = this.kind === 'car' ? g.w / 2 - (this.big ? 1.6 : 1.15) : g.w / 2 - 0.55;
+        v = Math.min(v, this.yieldStop ? 0 : 3.5);
+        if (this.yieldT <= 0) this.offT = this.kind === 'car' ? g.w * 0.25 : g.w / 2 - 1.3;
+      }
       // 公車靠站
       if (this.type === 'bus') { if (this.busT > 0) { this.busT -= dt; v = 0; } else if (g.w >= 22 && !this.busDone && this.s > g.L * 0.5 - 8 && this.s < g.L * 0.5) { v = Math.min(v, Math.max(0, (g.L * 0.5 - this.s) * 0.8)); if (this.s > g.L * 0.5 - 1.5) { this.busT = 5; this.busDone = true; } } }
       // 紅綠燈
@@ -1346,10 +1354,18 @@ class Ped {
     if (this.state === 'flee') { sp = 5; pose = 'run'; this.timer -= dt; if (this.timer <= 0) this.state = 'walk'; }
     if (this.state === 'idle') { sp = 0; pose = 'idle'; this.timer -= dt; if (this.timer <= 0) this.state = 'walk'; }
     if (this.state === 'cower') { sp = 0; pose = 'kneel'; this.timer -= dt; if (this.timer <= 0) { this.state = 'flee'; this.timer = rand(6, 10); this.dir = Math.random() < .5 ? 1 : -1; } }
+    // 閃避鳴笛的車：往旁邊跳開，等車過去再走回來
+    const dodging = this.dodgeT > 0; if (dodging) this.dodgeT -= dt;
+    const tx = dodging ? this.dtx : 0, tz = dodging ? this.dtz : 0;
+    this.dox = this.dox || 0; this.doz = this.doz || 0;
+    const ddx = tx - this.dox, ddz = tz - this.doz, dl = Math.hypot(ddx, ddz);
+    if (dl > 0.05) { const st = Math.min(dl, (dodging ? 5 : 1.5) * dt); this.dox += ddx / dl * st; this.doz += ddz / dl * st; }
+    if (dodging || dl > 0.05) { sp = 0; pose = dl > 0.2 ? (dodging ? 'run' : 'walk') : 'idle'; }
     const ox = this.x, oz = this.z;
-    this.t += sp * dt * this.dir; this.calc();
+    this.t += sp * dt * this.dir; this.calc(); this.x += this.dox; this.z += this.doz;
     const dx = this.x - ox, dz = this.z - oz;
-    if (sp > 0 && (dx || dz)) p.g.rotation.y = Math.atan2(dx, dz);
+    if (dodging && dl <= 0.2 && this.lookAt) p.g.rotation.y = Math.atan2(this.lookAt.x - this.x, this.lookAt.z - this.z);
+    else if ((sp > 0 || dl > 0.2) && (dx || dz)) p.g.rotation.y = Math.atan2(dx, dz);
     p.g.position.set(this.x, 0.18, this.z);
     posePerson(p, pose, dt, sp);
     if (this.state === 'walk' && Math.random() < dt * 0.02) { this.state = 'idle'; this.timer = rand(2, 6); }
@@ -4140,6 +4156,7 @@ function updateOfficers(dt) {
     if (o.state === 'down') { posePerson(o.P, 'down', dt); o.P.g.position.set(o.x, 0.2, o.z); continue; }
     if (o.state === 'stun' && o.kind2 !== 'hunt') { o.timer -= dt; posePerson(o.P, 'stun', dt); o.P.g.position.set(o.x, 0.2, o.z); if (o.timer <= 0) o.state = 'idle'; continue; }
     if (o.kind2 === 'hunt') { [pose, sp] = huntAI(o, dt); if (o.gone) continue; }
+    else if (o.kind2 === 'backup' && o.swat && MIS.cur === o.mis) { [pose, sp] = swatSquadAI(o, dt); }
     else if (o.kind2 === 'backup') {
       if (MIS.cur !== o.mis) { // 任務結束：回車上離開
         const c = o.R.car; const d = dist(o.x, o.z, c.x, c.z);
@@ -4156,11 +4173,7 @@ function updateOfficers(dt) {
           o.yaw = Math.atan2(tg.x - o.x, tg.z - o.z);
           const armed = tg.state === 'fight' || tg.state === 'alert' || tg.state === 'hold';
           if (bd > (o.swat ? 7 : 14)) { officerGo(o, tg.x, tg.z, o.swat ? 3.4 : 2.8, dt); pose = o.swat && armed ? 'aim' : 'walk'; sp = o.swat ? 3.4 : 2.8; } else pose = armed ? 'aim' : 'idle';
-          if (tg.state === 'fight' && bd < 40 && losClear(o.x, 1.5, o.z, tg.x, 1.3, tg.z)) {
-            o.shootT -= dt;
-            if (o.shootT <= 0) { o.shootT = o.swat ? rand(0.5, 0.9) : rand(1.2, 2.2); AU.shot(dist(o.x, o.z, P.x, P.z)); spawnFX(new THREE.Vector3(o.x + Math.sin(o.yaw) * 0.6, 1.45, o.z + Math.cos(o.yaw) * 0.6), 0xffd27a, 0.1, 0.08);
-              if (Math.random() < (o.swat ? 0.45 : 0.3)) { tg.hp -= o.swat ? 55 : 40; if (tg.hp <= 0) { killNPC(tg); radio(o.swat ? '特勤隊員擊斃持槍嫌犯。' : '支援同仁開槍擊斃持槍嫌犯。', 'info'); } else if (Math.random() < (o.swat ? 0.6 : 0.4)) surrender(tg, '別開槍！我投降！'); } }
-          }
+          officerShoot(o, tg, bd, dt);
         }
       }
     } else if (o.kind2 === 'patrol') {
@@ -4170,6 +4183,80 @@ function updateOfficers(dt) {
     o.P.gun.visible = pose === 'aim';
     posePerson(o.P, pose, dt, sp); o.P.g.rotation.y = o.yaw || 0; o.P.g.position.set(o.x, 0.2, o.z);
   }
+}
+function officerShoot(o, tg, bd, dt) {
+  if (!(tg.state === 'fight' && bd < 40 && losClear(o.x, 1.5, o.z, tg.x, 1.3, tg.z))) return;
+  o.shootT -= dt;
+  if (o.shootT > 0) return;
+  o.shootT = o.swat ? rand(0.5, 0.9) : rand(1.2, 2.2); AU.shot(dist(o.x, o.z, P.x, P.z)); spawnFX(new THREE.Vector3(o.x + Math.sin(o.yaw) * 0.6, 1.45, o.z + Math.cos(o.yaw) * 0.6), 0xffd27a, 0.1, 0.08);
+  if (Math.random() < (o.swat ? 0.45 : 0.3)) { tg.hp -= o.swat ? 55 : 40; if (tg.hp <= 0) { killNPC(tg); radio(o.swat ? '特勤隊員擊斃持槍嫌犯。' : '支援同仁開槍擊斃持槍嫌犯。', 'info'); } else if (Math.random() < (o.swat ? 0.6 : 0.4)) surrender(tg, '別開槍！我投降！'); }
+}
+/* ---------- 維安特勤隊：小隊行動 ---------- */
+// 同一台特勤車下來的隊員是一個小隊：移動時排成縱隊跟著帶頭的（你是特勤隊員時由你帶頭），
+// 遇到持槍歹徒在帶頭者兩側展開成扇形一起射擊，有人投降時一人上銬、其他人持槍掩護。
+function squadOf(o) { return OFFICERS.filter(q => q.swat && q.kind2 === o.kind2 && q.R === o.R && q.state !== 'down'); }
+function playerLeadsSquad(o) { return S.unit === 'swat' && S.onDuty && P.mode === 'foot' && !P.anim && dist(P.x, P.z, o.x, o.z) < 80; }
+function squadSay(o, lines) { const n = performance.now(); if (n - (o.R.sayT || 0) < 5000) return; o.R.sayT = n; say(o, pick(lines), {}); }
+function swatSquadAI(o, dt) {
+  const team = squadOf(o), idx = team.indexOf(o), pl = playerLeadsSquad(o);
+  const lead = pl ? null : team[0];
+  const LX = pl ? P.x : lead.x, LZ = pl ? P.z : lead.z;
+  const sus = missionSuspects().filter(h => !['cuffed', 'down'].includes(h.state) && !h.dead);
+  let tg = null, bd = 1e9; for (const h of sus) { const d = dist(LX, LZ, h.x, h.z); if (d < bd) { bd = d; tg = h; } }
+  const myD = tg ? dist(o.x, o.z, tg.x, tg.z) : 0;
+  const armed = tg && ['fight', 'hold', 'alert'].includes(tg.state);
+  const face = (x, z) => { o.yaw = Math.atan2(x - o.x, z - o.z); };
+  const goTo = (x, z, sp) => { officerGo(o, x, z, sp, dt); };
+  // 1. 投降／被制伏：離最近的隊員上銬，其他人掩護
+  if (tg && (tg.state === 'surrender' || tg.state === 'stun')) {
+    let cuffer = null, cd = 1e9; for (const q of team) { if (!pl && q === lead && team.length > 1) continue; const d = dist(q.x, q.z, tg.x, tg.z); if (d < cd) { cd = d; cuffer = q; } }
+    if (o === cuffer) {
+      if (myD > 1.1) { goTo(tg.x, tg.z, 3.4); return ['walk', 3.4]; }
+      tg.state = 'cuffed'; tg.pose = 'cuffed'; if (tg.P.gun) tg.P.gun.visible = false; AU.cuff(); say(o, pick(['嫌犯已上銬！', '控制住了！']), {}); return ['idle', 0];
+    }
+    face(tg.x, tg.z);
+    if (myD > 7) { goTo(tg.x, tg.z, 2.6); return ['aim', 2.6]; }
+    if (idx === 0) squadSay(o, ['掩護！', '不要動！雙手放頭上！']);
+    return ['aim', 0];
+  }
+  // 2. 逃跑：兩個人追，其他人跟隊
+  if (tg && tg.state === 'flee' && idx < 2) { goTo(tg.x, tg.z, 6.2); if (myD < 1.4) { tg.state = 'stun'; tg.timer = 4; say(o, '壓制！', {}); } return ['run', 6.2]; }
+  // 3. 交火／對峙：在帶頭者兩側展開
+  if (tg && armed && bd < (pl ? 32 : 16)) {
+    const L = Math.max(0.1, bd), ux = (tg.x - LX) / L, uz = (tg.z - LZ) / L, px = -uz, pz = ux;
+    if (!pl && idx === 0) {
+      face(tg.x, tg.z); squadSay(o, ['特勤隊！放下武器！', '警察！趴下！', '展開！']);
+      // 對峙太久：喊話施壓，再不投降就攻堅
+      if (tg.state === 'hold' || tg.state === 'alert') {
+        o.R.holdT = (o.R.holdT || 0) + dt;
+        if (o.R.holdT > 14) { o.R.holdT = 0; say(o, '特勤隊，攻堅！', {}); radio('📻 特勤隊：「談判破裂，準備攻堅！」', 'radio');
+          if (Math.random() < 0.5) surrender(tg, '好！好！我投降！別開槍！'); else { tg.state = 'fight'; tg.reacted = true; } }
+      }
+      if (bd > 11) { goTo(tg.x, tg.z, 1.8); officerShoot(o, tg, myD, dt); return ['aim', 1.8]; }
+      officerShoot(o, tg, myD, dt); return ['aim', 0];
+    }
+    const si = pl ? idx : idx - 1, side = si % 2 ? 1 : -1, rk = Math.floor(si / 2) + 1;
+    const sx = LX + px * side * 2.2 * rk - ux * 0.7 * rk, sz = LZ + pz * side * 2.2 * rk - uz * 0.7 * rk;
+    const d = dist(o.x, o.z, sx, sz); let sp = 0;
+    if (d > 0.5) { sp = Math.min(4.5, d * 2.5); goTo(sx, sz, sp); }
+    face(tg.x, tg.z); officerShoot(o, tg, myD, dt);
+    return ['aim', sp];
+  }
+  // 4. 縱隊移動
+  if (!pl && idx === 0) {
+    const dest = tg || { x: P.x, z: P.z }, stop = tg ? 9 : 6;
+    const lag = team.slice(1).some(q => dist(q.x, q.z, o.x, o.z) > 1.6 * team.length + 3);
+    const sp = lag ? 1.0 : 3.2;
+    if (dist(o.x, o.z, dest.x, dest.z) > stop) { goTo(dest.x, dest.z, sp); if (tg) squadSay(o, ['特勤隊，跟上！', '保持隊形，前進！', '注意兩側！']); return [tg ? 'aim' : 'walk', sp]; }
+    face(dest.x, dest.z); return [tg ? 'aim' : 'idle', 0];
+  }
+  const fx = pl ? -Math.sin(P.yaw) : Math.sin(lead.yaw), fz = pl ? -Math.cos(P.yaw) : Math.cos(lead.yaw);
+  const k = pl ? idx + 1 : idx, lat = k % 2 ? 0.35 : -0.35;
+  const sx = LX - fx * (1.5 * k + 0.3) + fz * lat, sz = LZ - fz * (1.5 * k + 0.3) - fx * lat;
+  const d = dist(o.x, o.z, sx, sz);
+  if (pl && !P.moving && d < 3.5 && dist(o.x, o.z, P.x, P.z) > 1.2) { return [tg ? 'aim' : 'idle', 0]; } // 你停下來轉頭時，隊員原地警戒
+  if (d > 0.4) { const sp = Math.min(6.5, d * 2.2); goTo(sx, sz, sp); return [d > 3 ? 'run' : (tg ? 'aim' : 'walk'), sp]; }
+  o.yaw = Math.atan2(fx, fz); return [tg ? 'aim' : 'idle', 0];
 }
 // 壞人開槍時，有時候打向支援員警
 function shootAtOfficer(h, D) {
@@ -4323,7 +4410,46 @@ function updateCoast(dt) {
   const t = performance.now() / 1000 * 0.02; const z = Math.sin(t) * 420; const dz = Math.cos(t);
   PATROL_BOAT.position.set(-560 + Math.sin(t * 3) * 10, 0.1 + Math.sin(performance.now() / 700) * 0.12, z); PATROL_BOAT.rotation.y = dz > 0 ? Math.PI : 0;
 }
-function updateServices(dt) { updateResponders(dt); updateEmergencyTraffic(dt); updateOfficers(dt); updateColleagues(dt); updateCoast(dt); }
+function updateServices(dt) { updateSirenYield(dt); updateResponders(dt); updateEmergencyTraffic(dt); updateOfficers(dt); updateColleagues(dt); updateCoast(dt); }
+
+/* ---------- 鳴笛讓道：車輛靠邊、行人閃開 ---------- */
+function sirenSources() {
+  const L = [];
+  if (P.mode === 'vehicle' && P.veh && P.veh.siren && Math.abs(P.veh.speed) > 2) L.push({ x: P.veh.x, z: P.veh.z, fx: -Math.sin(P.veh.yaw), fz: -Math.cos(P.veh.yaw), me: true, ref: P.veh });
+  for (const R of RESP) if (R.siren && R.state === 'respond' && Math.abs(R.car.speed) > 2) L.push({ x: R.car.x, z: R.car.z, fx: -Math.sin(R.car.yaw), fz: -Math.cos(R.car.yaw), ref: R.car });
+  for (const v of TRAFFIC) if (v.em && v.sirenOn && v.state === 'drive' && v.speed > 2) L.push({ x: v.x, z: v.z, fx: -Math.sin(v.yaw), fz: -Math.cos(v.yaw), ref: v });
+  return L;
+}
+let yieldTick = 0;
+function updateSirenYield(dt) {
+  yieldTick -= dt; if (yieldTick > 0) return; yieldTick = 0.15;
+  const L = sirenSources(); if (!L.length) return;
+  for (const s of L) {
+    for (const n of TRAFFIC) {
+      if (n === s.ref || n.state !== 'drive' || (n.em && n.sirenOn)) continue;
+      const rx = n.x - s.x, rz = n.z - s.z; if (Math.abs(rx) > 50 || Math.abs(rz) > 50) continue;
+      const along = rx * s.fx + rz * s.fz; if (along < -6 || along > 45) continue;
+      const lat = Math.abs(rx * -s.fz + rz * s.fx); if (lat > 10) continue;
+      const dot = -Math.sin(n.yaw) * s.fx + -Math.cos(n.yaw) * s.fz;
+      if (Math.abs(dot) > 0.5) { n.yieldSide = true; n.yieldStop = dot > 0 && along < 20; } // 同向靠右停、對向靠右慢行
+      else { n.yieldSide = false; n.yieldStop = along < 30; } // 橫向來車：停在路口等
+      if (!(n.yieldT > 0) && s.me && Math.random() < 0.08) say(n, pick(['警車來了，讓一下。', '快讓開！']), {});
+      n.yieldT = 1.6;
+    }
+    for (const pd of PEDS) {
+      if (!pd.alive || pd.state === 'down') continue;
+      const rx = pd.x - s.x, rz = pd.z - s.z; if (Math.abs(rx) > 30 || Math.abs(rz) > 30) continue;
+      const along = rx * s.fx + rz * s.fz; if (along < -2 || along > 22) continue;
+      const cr = rx * -s.fz + rz * s.fx; if (Math.abs(cr) > 3.8) continue;
+      if (!(pd.dodgeT > 0)) {
+        const sg = cr >= 0 ? 1 : -1, push = 3.2 - Math.abs(cr) * 0.4;
+        pd.dtx = (pd.dox || 0) + -s.fz * sg * push; pd.dtz = (pd.doz || 0) + s.fx * sg * push;
+        if (Math.random() < 0.25) say(pd, pick(['哇！警車！', '小心！', '讓開讓開！', '嚇死我了…']), { fem: pd.fem, elder: pd.elder });
+      }
+      pd.dodgeT = 1.4; pd.lookAt = s.ref;
+    }
+  }
+}
 
 /* ================= 傷亡、通緝（GTA 星等）、法院判決、維安特勤隊 ================= */
 
@@ -4560,6 +4686,16 @@ function huntAI(o, dt) {
   const d = dist(o.x, o.z, P.x, P.z);
   const D = DIFF[S.diff];
   const sees = canSeePlayer(o.x, o.z, 45);
+  // 特勤隊圍捕：離你還遠時排成縱隊跟著帶頭的隊員
+  if (o.swat && d > 16) {
+    const team = squadOf(o), idx = team.indexOf(o);
+    if (idx > 0) {
+      const lead = team[0], fx = Math.sin(lead.yaw), fz = Math.cos(lead.yaw), lat = idx % 2 ? 0.35 : -0.35;
+      const sx = lead.x - fx * 1.3 * idx + fz * lat, sz = lead.z - fz * 1.3 * idx - fx * lat, dd = dist(o.x, o.z, sx, sz);
+      if (dd > 0.4) { const sp = Math.min(6.5, dd * 2.2); officerGo(o, sx, sz, sp, dt); return [dd > 3 ? 'run' : 'aim', sp]; }
+      o.yaw = lead.yaw; return ['aim', 0];
+    }
+  }
   const tx = sees ? P.x : W.lx, tz = sees ? P.z : W.lz;
   let pose = 'idle', sp = 0;
   // 3 星以上（殺人、襲警）可以開槍；特勤隊 4 星以上
@@ -4819,6 +4955,8 @@ function showHelp() {
   <h3>📋 更多勤務</h3><p><b>車禍處理</b>：放交通錐、先救傷者、雙方都要酒測、問目擊者，再判斷誰的責任。<b>通緝犯追捕</b>：在黃色範圍找衣服顏色對的人，他跑了就追上去撲倒。<b>糾紛調解</b>：問清楚雙方和現場再決定勸導、開罰或逮捕。<b>尋人</b>：找到走失的長者或小孩，帶回家屬身邊。<b>毒品臨檢</b>：有可疑跡象才能搜身，二級毒品要逮捕、少量三級毒品是罰鍰加講習。</p>
   <p>16:45 以後不再派新案子；打卡下班時，手上還沒做完的任務會交接給同仁，不扣考績。</p>
   <h3>🆘 請求支援</h3><p>勤務中按 B（手機按 🆘）請求支援，同仁會開警車鳴笛趕來：幫你上銬、追逃跑的嫌犯、跟持槍嫌犯對峙還擊、一起逼停逃逸車。路上也會看到同事在路邊攔查、兩人一組徒步巡邏。搶案、毒品、通緝犯這類重大案件，支援出發後<b>再按一次 B</b>，可以呼叫維安特勤隊。</p>
+  <h3>🚨 鳴笛讓道</h3><p>開警車按 H 鳴笛，前面同方向的車會靠右停下，對向車靠邊慢行，路口橫向來車會停下來等你過；路人看到警車衝過來會往旁邊跳開。救護車、消防車鳴笛時，路上的車也會讓道。</p>
+  <h3>🛡️ 特勤隊小隊行動</h3><p>特勤隊員是一整隊一起行動：移動時排成縱隊跟著帶頭的人，遇到持槍歹徒就在帶頭者兩側展開、一起射擊，有人投降時一個人上銬、其他人持槍掩護；對峙太久，分隊長會下令攻堅。你調任特勤隊後由你帶頭，隊員會排在你後面跟著走，你停下來轉頭時他們會原地警戒。</p>
   <h3>💥 對空鳴槍</h3><p>按 G（手機按 💥），或把槍口往天上抬再開槍。嫌犯徒步逃跑時，鳴槍有機會讓他停下來投降；追車時，駕駛也可能被嚇到靠邊停。依《警械使用條例》，只有對拒捕、脫逃的人或持槍歹徒才可以鳴槍。單純交通違規的車逃跑時鳴槍、或沒事亂開槍，都會被申誡。</p>
   <h3>🚑 救護、消防、海巡</h3><p>路上有救護車、消防車、海巡車，有時會鳴笛趕路、闖紅燈。車禍時救護車會真的開來載傷者；新勤務「火災現場交通管制」要擺交通錐、疏散圍觀民眾，等消防員把火撲滅。地圖最西邊是海岸，有海巡隊和巡邏艇。</p>
   <h3>🚦 下班開車要守法</h3><p>下班時騎自己的車，超速（超過速限 10 公里以上）或闖紅燈會被罰，全部照《道路交通管理處罰條例》：路上有<b>測速照相</b>（前方 150 公尺有「測速取締」牌子）和<b>路口闖紅燈照相</b>，被拍到罰單會寄到家（逕行舉發不記點）；被<b>交通警察</b>看到會鳴笛攔你，停下來會當場開單並記點，逃跑依第 60 條罰 1 萬元起、吊扣駕照 6 個月。超速 40 公里以上依第 43 條吊扣車牌 6 個月。一年內違規點數滿 12 點吊扣駕照 2 個月。身為警察，被開罰單還會申誡。上班開警車執勤不受影響。速限：台灣大道、文心路 60，其他路 50。</p>
