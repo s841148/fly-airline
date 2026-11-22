@@ -161,7 +161,7 @@ body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;w
 
 <div id="bigmap" class="hidden"><canvas id="bigc" width="900" height="900"></canvas><button id="mapClose" class="btn r" style="position:absolute;right:14px;top:14px;font-size:20px">✕ 關閉</button></div>
 <div id="modal" class="modal hidden"><div class="box" id="mbox"></div></div>
-<div id="fade"></div>
+<div id="fade"></div><div id="flash" style="position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:39;transition:opacity .15s"></div>
 <div id="rot">📱 請把手機橫過來玩<br><small style="font-size:14px;color:#9fb3d9">（橫拿手機效果最好）</small></div>
 
 <div id="intro">
@@ -805,6 +805,19 @@ function streetFurniture() {
   // 行道樹：台灣大道、文心路
   for (let x = -395; x < 400; x += 16) { if (XR.some(v => Math.abs(v - x) < 12)) continue; addTree(x, -14 - 1.6, 0.9); addTree(x, 14 + 1.6, 0.9); }
   for (let z = -395; z < 400; z += 16) { if (ZR.some(v => Math.abs(v - z) < 16)) continue; addTree(160 - 11 - 1.6, z, 0.9); addTree(160 + 11 + 1.6, z, 0.9); }
+  // 公車站（台灣大道、文心路）
+  const busSign = new THREE.MeshLambertMaterial({ map: signTex('🚌 公車站', { bg: '#0b6a3a', fg: '#fff', w: 256, h: 64 }), emissive: 0xffffff, emissiveMap: null });
+  const stop = (x, z, alongX, side) => {
+    const L = 5, D = 1.4; const w = alongX ? L : D, d = alongX ? D : L;
+    addGeo('pole', MAT.pole, boxGeo(0.08, 2.5, 0.08, x - (alongX ? 2.3 : 0), 0.18, z - (alongX ? 0 : 2.3)));
+    addGeo('pole', MAT.pole, boxGeo(0.08, 2.5, 0.08, x + (alongX ? 2.3 : 0), 0.18, z + (alongX ? 0 : 2.3)));
+    addGeo('glass', MAT.glass, boxGeo(alongX ? L : 0.05, 1.8, alongX ? 0.05 : L, x + (alongX ? 0 : side * 0.65), 0.5, z + (alongX ? side * 0.65 : 0)));
+    addGeo('roof', MAT.roof, boxGeo(w + 0.2, 0.1, d + 0.2, x, 2.65, z));
+    addGeo('counter', MAT.counter, boxGeo(alongX ? 3 : 0.4, 0.45, alongX ? 0.4 : 3, x + (alongX ? 0 : side * 0.35), 0.18, z + (alongX ? side * 0.35 : 0)));
+    const s = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.3), busSign); s.position.set(x, 2.85, z); s.rotation.y = alongX ? 0 : Math.PI / 2; scene.add(s);
+  };
+  for (let k = 0; k < XR.length - 1; k++) { const mx = (XR[k] + XR[k + 1]) / 2; stop(mx, -14 - 1.8, true, -1); stop(mx, 14 + 1.8, true, 1); }
+  for (let k = 0; k < ZR.length - 1; k++) { const mz = (ZR[k] + ZR[k + 1]) / 2; stop(160 - 11 - 1.8, mz, false, -1); stop(160 + 11 + 1.8, mz, false, 1); }
   // 紅綠燈
   for (let i = 0; i < XR.length; i++) for (let j = 0; j < ZR.length; j++) {
     const x = XR[i], z = ZR[j], wx = vW(i) / 2 + 0.8, wz = hW(j) / 2 + 0.8;
@@ -1099,7 +1112,7 @@ function makePerson(o) {
   const hm = mk(sph('head', 0.115, 16, 12), faceMat(skinC, fem, o.robber)); hm.scale.set(0.92, 1.12, 1); head.add(hm);
   head.add(mk(sph('nose', 0.018, 6, 4), skin, 0, -0.01, 0.115));
   if (!o.robber) for (const s of [-1, 1]) addS(head, mk(sph('ear', 0.025, 6, 4), skin, s * 0.105, 0, 0), 0.5, 1, 0.8);
-  const hairC = pm(o.hair || (Math.random() < 0.15 ? pick(HAIRS.slice(4)) : pick(HAIRS.slice(0, 4))));
+  const hairC = pm(o.hair || (o.elder ? pick(HAIRS.slice(4)) : pick(HAIRS.slice(0, 4))));
   if (o.robber) { head.add(mk(sph('cap', 0.125, 12, 8, 0, Math.PI / 2), pm(0x1a1a1a), 0, 0.02, 0)); head.add(bx(0.2, 0.02, 0.1, pm(0x1a1a1a), 0, 0.04, 0.13)); }
   else if (o.police) { head.add(mk(cyl('pcap', 0.13, 0.12, 0.08, 12), pm(0x13203a), 0, 0.12, 0)); head.add(bx(0.2, 0.02, 0.1, pm(0x0a0f1a), 0, 0.05, 0.12)); head.add(bx(0.04, 0.04, 0.01, pm(0xffd84a), 0, 0.1, 0.13)); }
   else if (o.helmet) { head.add(mk(sph('helm', 0.15, 12, 8, 0, Math.PI * 0.62), pm(o.helmet), 0, 0.01, 0)); }
@@ -1111,7 +1124,7 @@ function makePerson(o) {
     if (style === 'bob') { const b = bx(0.24, 0.16, 0.18, hairC, 0, -0.04, -0.04); head.add(b); }
     if (style === 'pony') { addS(head, mk(sph('pony', 0.05, 8, 6), hairC, 0, 0.02, -0.14), 1, 2.2, 1); }
   }
-  return { g, body, legL, legR, kneeL, kneeR, armL, armR, elbowL, elbowR, head, gun, phase: Math.random() * 6 };
+  return { g, body, legL, legR, kneeL, kneeR, armL, armR, elbowL, elbowR, head, gun, fem, elder: !!o.elder, phase: Math.random() * 6 };
 }
 function posePerson(P, pose, dt, speed) {
   const b = P.body; b.position.set(0, 0, 0); b.rotation.set(0, 0, 0);
@@ -1153,89 +1166,6 @@ function posePerson(P, pose, dt, speed) {
 }
 
 /* ---------- 車輛模型 ---------- */
-const VMAT = {};
-function vm(c) { return VMAT[c] || (VMAT[c] = new THREE.MeshLambertMaterial({ color: c })); }
-const GLASS_DARK = new THREE.MeshLambertMaterial({ color: 0x1a2530, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
-const HEAD_MAT = nightMat(new THREE.MeshLambertMaterial({ color: 0xeeeeee, emissive: 0xfff4d0, emissiveIntensity: 0 }), 1.4);
-const TAIL_MAT = nightMat(new THREE.MeshLambertMaterial({ color: 0x881010, emissive: 0xff2010, emissiveIntensity: 0 }), 1.0);
-let POLICE_SIDE;
-function policeSideMat() {
-  if (!POLICE_SIDE) POLICE_SIDE = new THREE.MeshLambertMaterial({
-    map: canvasTex(512, 128, (g, w, h) => {
-      g.fillStyle = '#f4f6f8'; g.fillRect(0, 0, w, h); g.fillStyle = '#0b3d91'; g.fillRect(0, 46, w, 40); g.fillStyle = '#ffd84a'; g.fillRect(0, 86, w, 8);
-      g.fillStyle = '#fff'; g.font = '900 34px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('警察 POLICE  110', w / 2, 67);
-    })
-  });
-  return POLICE_SIDE;
-}
-function wheel(r, wdt) { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, wdt, 12), vm(0x151515)); m.rotation.z = Math.PI / 2; return m; }
-function makeVehicle(kind, color, police, opts) {
-  opts = opts || {};
-  const g = new THREE.Group(); const parts = {};
-  if (kind === 'car') {
-    const L = opts.L || 4.4, W = 1.8, sport = opts.sport, suv = opts.suv;
-    const bodyH = suv ? 0.95 : sport ? 0.55 : 0.72, base = 0.32;
-    const paint = vm(color);
-    if (police) {
-      const side = policeSideMat();
-      const mats = [side, side, paint, paint, paint, paint];
-      const m = new THREE.Mesh(new THREE.BoxGeometry(W, bodyH, L, 4, 2, 8), mats); m.position.y = base + bodyH / 2; g.add(m); parts.body = m;
-    } else { const m = new THREE.Mesh(new THREE.BoxGeometry(W, bodyH, L, 4, 2, 8), paint); m.position.y = base + bodyH / 2; g.add(m); parts.body = m; }
-    const top = base + bodyH; const cabH = suv ? 0.85 : sport ? 0.5 : 0.68, cabL = suv ? 2.9 : sport ? 1.8 : 2.3, cz = suv ? 0.35 : 0.15;
-    // 車頂與柱子
-    g.add(bx(W - 0.14, 0.07, cabL - 0.2, paint, 0, top + cabH, cz));
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(bx(0.08, cabH, 0.1, paint, sx * (W / 2 - 0.1), top + cabH / 2, cz + sz * (cabL / 2 - 0.15)));
-    // 玻璃
-    const gm = opts.clearGlass ? MAT.glass : GLASS_DARK;
-    g.add(bx(W - 0.24, cabH - 0.05, 0.04, gm, 0, top + cabH / 2, cz - cabL / 2 + 0.1));
-    g.add(bx(W - 0.24, cabH - 0.05, 0.04, gm, 0, top + cabH / 2, cz + cabL / 2 - 0.1));
-    for (const sx of [-1, 1]) g.add(bx(0.03, cabH - 0.08, cabL - 0.4, gm, sx * (W / 2 - 0.09), top + cabH / 2, cz));
-    // 儀表板、方向盤（左駕）
-    if (!opts.driver) {
-      g.add(bx(W - 0.2, 0.16, 0.4, vm(0x1c1c1c), 0, top - 0.02, cz - cabL / 2 + 0.3));
-      const sw = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.022, 6, 16), vm(0x111111)); sw.position.set(-0.4, top + 0.02, cz - cabL / 2 + 0.62); sw.rotation.x = -0.5; g.add(sw); parts.wheel = sw;
-      for (const sx of [-0.4, 0.4]) { g.add(bx(0.5, 0.5, 0.15, vm(0x2a2a2a), sx, top + 0.1, cz + 0.55)); }
-    }
-    // 車燈
-    for (const sx of [-0.62, 0.62]) { g.add(bx(0.4, 0.14, 0.05, HEAD_MAT, sx, base + bodyH * 0.6, -L / 2 - 0.01)); g.add(bx(0.4, 0.14, 0.05, TAIL_MAT, sx, base + bodyH * 0.65, L / 2 + 0.01)); }
-    g.add(bx(0.5, 0.14, 0.03, vm(0xf4f4f0), 0, base + 0.25, L / 2 + 0.02)); // 車牌
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const wh = wheel(0.33, 0.24); wh.position.set(sx * (W / 2 - 0.05), 0.33, sz * (L / 2 - 0.8)); g.add(wh); }
-    if (police) {
-      const red = new THREE.MeshLambertMaterial({ color: 0x660000, emissive: 0xff0000, emissiveIntensity: 0 });
-      const blue = new THREE.MeshLambertMaterial({ color: 0x000066, emissive: 0x0040ff, emissiveIntensity: 0 });
-      g.add(bx(1.2, 0.12, 0.3, vm(0x222222), 0, top + cabH + 0.1, cz));
-      const r = bx(0.55, 0.14, 0.28, red, -0.32, top + cabH + 0.2, cz), b = bx(0.55, 0.14, 0.28, blue, 0.32, top + cabH + 0.2, cz);
-      g.add(r, b); parts.red = red; parts.blue = blue;
-    }
-    if (opts.driver) { const d = new THREE.Group(); d.add(bx(0.44, 0.5, 0.26, pm(pick(SHIRTS)), 0, top + 0.12, 0)); d.add(bx(0.24, 0.26, 0.24, pm(pick(SKINS)), 0, top + 0.52, 0)); d.add(bx(0.25, 0.08, 0.25, pm(0x1a1a1a), 0, top + 0.66, 0)); d.position.set(-0.4, 0, cz + 0.25); g.add(d); parts.driver = { g: d }; }
-    parts.eyeY = top + 0.52; parts.seat = { x: -0.4, z: cz + 0.15 };
-  } else {
-    // 機車
-    const paint = vm(color);
-    g.add(bx(0.36, 0.42, 1.25, paint, 0, 0.5, 0.05));
-    g.add(bx(0.32, 0.12, 0.62, vm(0x1a1a1a), 0, 0.78, 0.22)); // 座墊
-    g.add(bx(0.3, 0.75, 0.14, paint, 0, 0.72, -0.55));
-    const hb = bx(0.62, 0.05, 0.05, vm(0x222222), 0, 1.12, -0.62); g.add(hb); parts.wheel = hb;
-    g.add(bx(0.22, 0.12, 0.08, vm(0x1a1a1a), 0, 1.12, -0.6)); // 儀表
-    g.add(bx(0.18, 0.12, 0.05, HEAD_MAT, 0, 1.0, -0.65)); g.add(bx(0.2, 0.08, 0.04, TAIL_MAT, 0, 0.72, 0.68));
-    const w1 = wheel(0.26, 0.12), w2 = wheel(0.26, 0.12); w1.position.set(0, 0.26, -0.62); w2.position.set(0, 0.26, 0.6); g.add(w1, w2);
-    if (police) {
-      g.add(bx(0.4, 0.3, 0.3, vm(0xf4f6f8), 0, 0.95, 0.55));
-      const red = new THREE.MeshLambertMaterial({ color: 0x660000, emissive: 0xff0000, emissiveIntensity: 0 });
-      const blue = new THREE.MeshLambertMaterial({ color: 0x000066, emissive: 0x0040ff, emissiveIntensity: 0 });
-      const r = bx(0.12, 0.1, 0.1, red, -0.12, 1.15, 0.6), b = bx(0.12, 0.1, 0.1, blue, 0.12, 1.15, 0.6); g.add(r, b); parts.red = red; parts.blue = blue;
-      g.add(bx(0.37, 0.12, 0.6, vm(0x0b3d91), 0, 0.55, 0.05));
-    }
-    if (opts.driver) {
-      const d = makePerson({ helmet: pick([0xffffff, 0xd94040, 0x2a4fa8, 0xf2c94c, 0x222222]) });
-      d.g.position.set(0, -0.12, 0.3); d.g.rotation.y = Math.PI; posePerson(d, 'sit', 0); d.armL.rotation.x = -1.25; d.armR.rotation.x = -1.25;
-      g.add(d.g); parts.driver = d;
-    }
-    parts.eyeY = 1.62; parts.seat = { x: 0, z: 0.25 };
-  }
-  return { g, parts };
-}
-
 // 把同材質的零件合併，減少繪製次數（給路上的車用）
 function compactGroup(g) {
   const by = new Map(); const rm = [];
@@ -1261,19 +1191,32 @@ function segInfo(i, j, ni, nj) {
 }
 function neighbors(i, j) { const o = []; if (i > 0) o.push([i - 1, j]); if (i < XR.length - 1) o.push([i + 1, j]); if (j > 0) o.push([i, j - 1]); if (j < ZR.length - 1) o.push([i, j + 1]); return o; }
 class NPCVeh {
-  constructor(kind) {
-    this.kind = kind; this.color = kind === 'car' ? pick(CAR_COLORS) : pick([0xf2f2f2, 0x111111, 0xd94040, 0x2a4fa8, 0x9a9ea6, 0x26c2a4, 0xf2c94c]);
-    this.model = pick(kind === 'car' ? ['轎車', '轎車', '休旅車', '小貨車'] : ['機車', '機車', '電動機車']);
-    const { g, parts } = makeVehicle(kind, this.color, false, { driver: true, suv: this.model === '休旅車', L: this.model === '小貨車' ? 4.8 : 4.4 });
+  constructor(kind, type, cop) {
+    this.kind = kind; this.cop = !!cop;
+    if (!type) type = kind === 'car' ? pick(['sedan', 'sedan', 'sedan', 'hatch', 'hatch', 'suv', 'suv', 'pickup', 'taxi', 'taxi']) : pick(['scooter', 'scooter', 'scooter', 'delivery', 'topbox', 'escooter']);
+    this.type = type; this.big = type === 'bus' || type === 'garbage';
+    this.color = type === 'taxi' ? 0xf7c600 : type === 'bus' ? 0x2f9a5a : kind === 'car' ? pick(CAR_COLORS) : pick([0xf2f2f2, 0x111111, 0xd94040, 0x2a4fa8, 0x9a9ea6, 0x26c2a4, 0xf2c94c, 0xf08aa8]);
+    if (cop) this.color = 0xf4f6f8;
+    const { g, parts } = makeVehicle(kind, this.color, !!cop, { driver: true, type, delivery: type === 'delivery', topbox: type === 'topbox' });
+    this.model = type === 'escooter' ? '電動機車' : parts.name;
     compactGroup(g);
-    this.mesh = g; this.parts = parts; scene.add(g);
-    this.plate = randPlate(kind); this.state = 'drive'; this.speed = 0; this.stuck = 0; this.ghost = 0; this.hp = 100;
-    this.radius = kind === 'car' ? 1.9 : 0.9; this.hp = 100;
+    this.mesh = g; this.parts = parts; scene.add(g); this.len = parts.len || (kind === 'car' ? 4.5 : 1.9);
+    this.plate = randPlate(kind); this.state = 'drive'; this.speed = 0; this.stuck = 0; this.ghost = 0; this.hp = this.big ? 300 : 100;
+    this.radius = kind === 'car' ? 1.9 : 0.9; this.busT = 0;
+  }
+  // 碰撞用圓圈（沿車身排列）
+  circ() {
+    const fx = -Math.sin(this.yaw), fz = -Math.cos(this.yaw); const out = [];
+    if (this.kind !== 'car') return [[this.px, this.pz, 0.55]];
+    const r = this.big ? 1.25 : 1.0; const half = this.len / 2 - r;
+    for (let o = -half; o <= half + 0.01; o += Math.max(0.5, r * 1.6)) out.push([this.px + fx * o, this.pz + fz * o, r]);
+    if (Math.abs(out[out.length - 1][0] - (this.px + fx * half)) > 0.1) out.push([this.px + fx * half, this.pz + fz * half, r]);
+    return out;
   }
   place(i, j, ni, nj, s) {
     this.i = i; this.j = j; this.ni = ni; this.nj = nj; this.seg = segInfo(i, j, ni, nj); this.s = s;
-    this.maxSp = this.kind === 'car' ? rand(10, 14) : rand(9, 12.5);
-    this.off = this.kind === 'car' ? this.seg.w * 0.25 : this.seg.w / 2 - 1.3; this.offT = this.off;
+    this.maxSp = this.type === 'garbage' ? 5 : this.big ? rand(9, 11) : this.kind === 'car' ? rand(10, 14) : rand(9, 12.5);
+    this.off = this.kind === 'car' ? this.seg.w * (this.big ? 0.22 : 0.25) : this.seg.w / 2 - 1.3; this.offT = this.off;
     this.calcPos(); this.mesh.position.set(this.x, 0, this.z); this.yaw = Math.atan2(-this.seg.dx, -this.seg.dz); this.mesh.rotation.y = this.yaw;
     this.state = 'drive'; this.speed = this.maxSp * 0.7; this.runRed = false; this.mesh.visible = true; this.hp = 100;
   }
@@ -1290,17 +1233,20 @@ class NPCVeh {
     if (!ch) ch = [this.i, this.j];
     this.i = this.ni; this.j = this.nj; this.ni = ch[0]; this.nj = ch[1]; this.seg = segInfo(this.i, this.j, this.ni, this.nj); this.s = 0;
     this.offT = this.kind === 'car' ? this.seg.w * 0.25 : this.seg.w / 2 - 1.3; this.off = this.offT;
-    this.runRed = !flee && Math.random() < 0.03;
+    this.runRed = !flee && !this.big && !this.cop && Math.random() < 0.03; this.busDone = false;
   }
   update(dt) {
     if (this.state === 'gone') return;
     if (this.state === 'stopped' || this.state === 'parked' || this.state === 'broken') { this.speed = 0; return; }
+    if (this.state === 'chase' || this.state === 'copstop') return;
     const g = this.seg; let v = this.maxSp;
     if (this.state === 'flee') {
       v = 26; const toEnd = g.L - this.s; v = Math.min(v, 11 + toEnd * 0.9);
     } else if (this.state === 'pull') {
       this.offT = g.w / 2 - 1.1; v = Math.max(0, this.speed - 5 * dt); if (v < 0.2 && Math.abs(this.off - this.offT) < 0.2) { this.state = 'stopped'; this.speed = 0; return; }
     } else {
+      // 公車靠站
+      if (this.type === 'bus') { if (this.busT > 0) { this.busT -= dt; v = 0; } else if (g.w >= 22 && !this.busDone && this.s > g.L * 0.5 - 8 && this.s < g.L * 0.5) { v = Math.min(v, Math.max(0, (g.L * 0.5 - this.s) * 0.8)); if (this.s > g.L * 0.5 - 1.5) { this.busT = 5; this.busDone = true; } } }
       // 紅綠燈
       const sStop = g.L - (g.crossW / 2 + 5);
       const st = lightState(g.ax);
@@ -1311,14 +1257,15 @@ class NPCVeh {
       // 前方障礙
       if (this.ghost <= 0) {
         const fx = -Math.sin(this.yaw), fz = -Math.cos(this.yaw);
-        const chk = (ox, oz, r) => {
-          const rx = ox - this.x, rz = oz - this.z; const along = rx * fx + rz * fz; if (along < 0 || along > 14) return;
-          const lat = Math.abs(rx * -fz + rz * fx); if (lat > r + (this.kind === 'car' ? 1.1 : 0.5)) return;
-          v = Math.min(v, Math.max(0, (along - 3 - r) * 1.3));
+        const myH = this.len / 2;
+        const chk = (ox, oz, hl, hw) => {
+          const rx = ox - this.x, rz = oz - this.z; const along = rx * fx + rz * fz; if (along < 0 || along > 14 + hl + myH) return;
+          const lat = Math.abs(rx * -fz + rz * fx); if (lat > hw + (this.kind === 'car' ? (this.big ? 1.3 : 1.0) : 0.45)) return;
+          v = Math.min(v, Math.max(0, (along - myH - hl - 1.5) * 1.3));
         };
-        for (const o of TRAFFIC) if (o !== this && o.state !== 'gone' && Math.abs(o.x - this.x) < 15 && Math.abs(o.z - this.z) < 15) chk(o.x, o.z, o.kind === 'car' ? 1.0 : 0.5);
-        if (P.mode === 'foot') chk(P.x, P.z, 0.4); else if (P.veh) chk(P.veh.x, P.veh.z, P.veh.spec.kind === 'car' ? 1 : 0.5);
-        for (const h of MHUMANS) if (h.alive !== false) chk(h.x, h.z, 0.4);
+        for (const o of TRAFFIC) if (o !== this && o.state !== 'gone' && Math.abs(o.x - this.x) < 22 && Math.abs(o.z - this.z) < 22) chk(o.x, o.z, o.len / 2, o.kind === 'car' ? (o.big ? 1.25 : 0.9) : 0.4);
+        if (P.mode === 'foot') chk(P.x, P.z, 0.3, 0.3); else if (P.veh) chk(P.veh.x, P.veh.z, P.veh.spec.kind === 'car' ? 2.2 : 0.9, P.veh.spec.kind === 'car' ? 0.9 : 0.4);
+        for (const h of MHUMANS) if (h.alive !== false) chk(h.x, h.z, 0.3, 0.3);
       }
     }
     if (this.speed < 0.3 && this.state === 'drive' && lightState(g.ax) === 'G') { this.stuck += dt; if (this.stuck > 7) { this.ghost = 2.5; this.stuck = 0; if (Math.random() < 0.5 && dist(this.x, this.z, P.x, P.z) < 30) AU.honk(); } } else if (this.speed > 1) this.stuck = 0;
@@ -1350,18 +1297,20 @@ function randomSegNear(cx, cz, dmin, dmax) {
 function initTraffic() {
   const nc = IS_TOUCH ? 22 : 34, ns = IS_TOUCH ? 10 : 16;
   for (let k = 0; k < nc + ns; k++) { const v = new NPCVeh(k < nc ? 'car' : 'scooter'); const r = randomSegNear(P.x, P.z, 20, 190) || [5, 5, 6, 5, 20]; v.place(...r); TRAFFIC.push(v); }
+  for (let k = 0; k < (IS_TOUCH ? 1 : 2); k++) { const v = new NPCVeh('car', 'sedan', true); const r = randomSegNear(P.x, P.z, 60, 190) || [5, 5, 6, 5, 20]; v.place(...r); TRAFFIC.push(v); }
+  for (const t of ['bus', 'bus', 'garbage']) { const v = new NPCVeh('car', t); const r = randomSegNear(P.x, P.z, 40, 190) || [5, 5, 6, 5, 20]; v.place(...r); TRAFFIC.push(v); }
 }
 function updateTraffic(dt) {
   for (const v of TRAFFIC) {
     v.update(dt);
-    if ((v.state === 'drive' || v.state === 'broken') && !v.flag && dist(v.x, v.z, P.x, P.z) > 210) { const r = randomSegNear(P.x, P.z, 90, 190); if (r) v.place(...r); }
+    if ((v.state === 'drive' || v.state === 'broken') && !v.flag && dist(v.x, v.z, P.x, P.z) > (v.cop ? 260 : 210)) { const r = randomSegNear(P.x, P.z, 90, 190); if (r) v.place(...r); }
   }
 }
 
 /* ---------- 行人 ---------- */
 const PEDS = [];
 class Ped {
-  constructor() { this.P = makePerson({}); scene.add(this.P.g); this.state = 'walk'; this.hp = 100; this.kind = 'ped'; }
+  constructor() { this.elder = Math.random() < 0.22; this.P = makePerson({ elder: this.elder }); this.fem = this.P.fem; scene.add(this.P.g); this.state = 'walk'; this.hp = 100; this.kind = 'ped'; }
   placeIn(b, market) {
     this.b = b; this.market = market;
     if (market) { const L = SITES.market.lot; this.rect = { x0: L.x0 + 3, x1: L.x1 - 3, z0: SITES.market.z - 2.2, z1: SITES.market.z + 2.2 }; if (Math.random() < .5) this.rect = { x0: SITES.market.x - 2.2, x1: SITES.market.x + 2.2, z0: L.z0 + 3, z1: L.z1 - 3 }; }
@@ -1389,8 +1338,8 @@ class Ped {
     if (this.state === 'walk' && Math.random() < dt * 0.02) { this.state = 'idle'; this.timer = rand(2, 6); }
   }
   scare(x, z) { if (this.state === 'down') return; this.state = 'flee'; this.timer = rand(6, 10); const r = this.rect; const cx = (r.x0 + r.x1) / 2, cz = (r.z0 + r.z1) / 2; this.dir = Math.random() < .5 ? 1 : -1; }
-  cower() { if (this.state === 'down') return; if (this.state !== 'cower') { this.state = 'cower'; if (Math.random() < 0.3) showBubble(pick(['路人：「不要開槍！」', '路人：「啊——！」', '路人：「我什麼都沒做！」'])); } this.timer = 2.5; }
-  knock(t) { this.state = 'down'; this.timer = t || 20; this.alive = false; }
+  cower() { if (this.state === 'down') return; if (this.state !== 'cower') { this.state = 'cower'; if (Math.random() < 0.5) say(this, pick(['不要開槍！', '啊——！', '我什麼都沒做！', '救命啊！']), { fem: this.fem, elder: this.elder }); } this.timer = 2.5; }
+  knock(t) { this.state = 'down'; this.timer = t || 20; this.alive = false; say(this, pick(LINES.hurt), { fem: this.fem, elder: this.elder, h: 0.9 }); }
   recycle() {
     const night = isNight();
     const marketOK = night && dist(P.x, P.z, SITES.market.x, SITES.market.z) < 160;
@@ -1422,6 +1371,257 @@ function spawnHuman(opts, x, z, yaw) {
 }
 function removeHuman(h) { scene.remove(h.P.g); const k = MHUMANS.indexOf(h); if (k >= 0) MHUMANS.splice(k, 1); }
 
+/* ================= 汽機車模型 ================= */
+const VMAT = {};
+function vm(c, opt) { const k = c + (opt ? JSON.stringify(opt) : ''); return VMAT[k] || (VMAT[k] = new THREE.MeshLambertMaterial(Object.assign({ color: c }, opt || {}))); }
+const GLASS_DARK = new THREE.MeshLambertMaterial({ color: 0x18222c, emissive: 0x0a1018, emissiveIntensity: 0.3 });
+const GLASS_CLEAR = new THREE.MeshLambertMaterial({ color: 0x9fc4dc, transparent: true, opacity: 0.22, side: THREE.DoubleSide, depthWrite: false });
+const HEAD_MAT = nightMat(new THREE.MeshLambertMaterial({ color: 0xf4f4f0, emissive: 0xfff4d0, emissiveIntensity: 0 }), 1.4);
+const TAIL_MAT = nightMat(new THREE.MeshLambertMaterial({ color: 0xa01010, emissive: 0xff2010, emissiveIntensity: 0 }), 1.0);
+const AMBER_MAT = new THREE.MeshLambertMaterial({ color: 0xff9a20, emissive: 0x803000, emissiveIntensity: 0.4 });
+const TIRE_MAT = new THREE.MeshLambertMaterial({ color: 0x141414 });
+const RIM_MAT = new THREE.MeshLambertMaterial({ color: 0xb8bcc2 });
+const TRIM_MAT = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
+const CHROME_MAT = new THREE.MeshLambertMaterial({ color: 0xd8dce0, emissive: 0x333333, emissiveIntensity: 0.3 });
+let PLATE_MATS = [];
+function plateMat() {
+  if (!PLATE_MATS.length) for (let k = 0; k < 8; k++) { const t = randPlate('car'); PLATE_MATS.push(new THREE.MeshLambertMaterial({ map: canvasTex(128, 48, (g) => { g.fillStyle = '#f4f4f0'; g.fillRect(0, 0, 128, 48); g.strokeStyle = '#222'; g.lineWidth = 3; g.strokeRect(2, 2, 124, 44); g.fillStyle = '#111'; g.font = 'bold 28px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, 64, 26); }) })); }
+  return pick(PLATE_MATS);
+}
+const VGEO = {};
+// 側面輪廓（u=往前、v=高度）擠出成車身
+function extrudeProfile(key, pts, width, bevel) {
+  if (VGEO[key]) return VGEO[key];
+  const s = new THREE.Shape(); s.moveTo(pts[0][0], pts[0][1]); for (let k = 1; k < pts.length; k++) s.lineTo(pts[k][0], pts[k][1]); s.closePath();
+  const b = bevel == null ? 0.05 : bevel;
+  const g = new THREE.ExtrudeGeometry(s, { depth: width - 2 * b, bevelEnabled: b > 0, bevelThickness: b, bevelSize: b * 0.8, bevelSegments: 2, curveSegments: 4 });
+  g.rotateY(Math.PI / 2); g.translate(-(width - 2 * b) / 2, 0, 0); g.computeVertexNormals();
+  return (VGEO[key] = g);
+}
+function boxAt(w, h, d, mat, x, y, z, rx) { const m = new THREE.Mesh(VGEO['b' + w + h + d] || (VGEO['b' + w + h + d] = new THREE.BoxGeometry(w, h, d)), mat); m.position.set(x, y, z); if (rx) m.rotation.x = rx; return m; }
+// 兩點之間的板子（給柱子、擋風玻璃）
+function slab(u0, v0, u1, v1, w, t, mat, x) {
+  const L = Math.hypot(u1 - u0, v1 - v0); const m = new THREE.Mesh(new THREE.BoxGeometry(w, t, L), mat);
+  m.position.set(x || 0, (v0 + v1) / 2, -(u0 + u1) / 2); m.rotation.x = Math.atan2(v1 - v0, -(u1 - u0)) * -1; return m;
+}
+function carWheel(g, x, z, r, w) {
+  const t = new THREE.Mesh(VGEO['tire' + r] || (VGEO['tire' + r] = new THREE.CylinderGeometry(r, r, w, 16).rotateZ(Math.PI / 2)), TIRE_MAT); t.position.set(x, r, z); g.add(t);
+  const rim = new THREE.Mesh(VGEO['rim' + r] || (VGEO['rim' + r] = new THREE.CylinderGeometry(r * 0.62, r * 0.62, w + 0.02, 10).rotateZ(Math.PI / 2)), RIM_MAT); rim.position.set(x, r, z); g.add(rim);
+  const hub = new THREE.Mesh(VGEO['hub' + r] || (VGEO['hub' + r] = new THREE.CylinderGeometry(r * 0.18, r * 0.18, w + 0.04, 8).rotateZ(Math.PI / 2)), TRIM_MAT); hub.position.set(x, r, z); g.add(hub);
+}
+// 車型資料：lower=腰線以下車身、green=車窗區、roof=車頂、glassY=腰線
+const CAR_TYPES = {
+  sedan: { L: 4.5, W: 1.78, lower: [[-2.25, 0.3], [2.25, 0.3], [2.3, 0.52], [2.24, 0.72], [1.05, 0.86], [0.62, 0.9], [-1.5, 0.98], [-2.18, 0.95], [-2.3, 0.68]], green: [[0.62, 0.9], [0.0, 1.38], [-0.92, 1.4], [-1.5, 0.98]], r: 0.32, wb: [1.4, -1.35], seatU: -0.25, eye: 1.25, name: '轎車' },
+  hatch: { L: 3.9, W: 1.7, lower: [[-1.95, 0.3], [1.95, 0.3], [2.0, 0.56], [1.92, 0.74], [0.95, 0.86], [0.55, 0.92], [-1.88, 1.0], [-2.0, 0.6]], green: [[0.55, 0.92], [-0.05, 1.44], [-1.6, 1.45], [-1.88, 1.0]], r: 0.3, wb: [1.25, -1.25], seatU: -0.35, eye: 1.28, name: '小型車' },
+  suv: { L: 4.6, W: 1.86, lower: [[-2.3, 0.4], [2.3, 0.4], [2.35, 0.72], [2.26, 0.98], [1.25, 1.1], [0.85, 1.14], [-2.1, 1.18], [-2.32, 1.1], [-2.36, 0.72]], green: [[0.85, 1.14], [0.3, 1.7], [-2.0, 1.72], [-2.1, 1.18]], r: 0.38, wb: [1.45, -1.4], seatU: -0.2, eye: 1.55, name: '休旅車' },
+  sport: { L: 4.3, W: 1.9, lower: [[-2.15, 0.26], [2.15, 0.26], [2.22, 0.42], [2.12, 0.56], [0.7, 0.72], [0.35, 0.76], [-1.85, 0.82], [-2.2, 0.72]], green: [[0.35, 0.76], [-0.35, 1.12], [-1.0, 1.1], [-1.85, 0.82]], r: 0.33, wb: [1.35, -1.3], seatU: -0.5, eye: 1.02, name: '跑車' },
+  taxi: null, pickup: null,
+};
+CAR_TYPES.taxi = Object.assign({}, CAR_TYPES.sedan, { name: '計程車' });
+function makeVehicle(kind, color, police, opts) {
+  opts = opts || {};
+  const g = new THREE.Group(); const parts = {};
+  if (kind === 'scooter') return makeScooter(g, parts, color, police, opts);
+  let type = opts.type || (opts.sport ? 'sport' : opts.suv ? 'suv' : 'sedan');
+  if (type === 'bus') return makeBus(g, parts, color, opts);
+  if (type === 'garbage') return makeGarbage(g, parts, opts);
+  if (type === 'pickup') return makePickup(g, parts, color, opts);
+  const T = CAR_TYPES[type] || CAR_TYPES.sedan; const W = T.W, L = T.L;
+  const paint = vm(color);
+  // 車身（玩家的車各自一份幾何，才能撞凹）
+  let bodyGeo = extrudeProfile('low_' + type, T.lower, W, 0.06); if (opts.clearGlass) bodyGeo = bodyGeo.clone();
+  const body = new THREE.Mesh(bodyGeo, paint); g.add(body); parts.body = body;
+  // 車窗區
+  const Wg = W - 0.2;
+  const gm = opts.clearGlass ? GLASS_CLEAR : GLASS_DARK;
+  const green = new THREE.Mesh(extrudeProfile('grn_' + type, T.green, Wg, 0.03), gm); g.add(green);
+  const [a0, a1, c1, c0] = T.green;
+  // 車頂與柱子（車身顏色）
+  g.add(slab(a1[0] - 0.02, a1[1] + 0.02, c1[0] + 0.02, c1[1] + 0.02, Wg + 0.04, 0.06, paint));
+  for (const sx of [-1, 1]) {
+    const x = sx * (Wg / 2 + 0.005);
+    g.add(slab(a0[0], a0[1], a1[0], a1[1], 0.06, 0.07, paint, x));
+    g.add(slab(c1[0], c1[1], c0[0], c0[1], 0.06, 0.12, paint, x));
+    const bu = (a1[0] + c1[0]) / 2 + 0.1; g.add(slab(bu, (a0[1] + c0[1]) / 2, bu - 0.02, a1[1], 0.06, 0.09, paint, x));
+    // 後照鏡
+    g.add(boxAt(0.14, 0.1, 0.06, paint, sx * (W / 2 + 0.06), a0[1] + 0.05, -(a0[0] - 0.1)));
+    // 門縫、門把
+    const dz1 = -(a0[0] - 0.05), dz2 = -bu, dz3 = -(c0[0] + 0.2);
+    for (const dz of [dz1, dz2, dz3]) g.add(boxAt(0.01, a0[1] - 0.45, 0.015, TRIM_MAT, sx * (W / 2 + 0.003), (a0[1] + 0.4) / 2 + 0.05, dz));
+    g.add(boxAt(0.02, 0.03, 0.14, CHROME_MAT, sx * (W / 2 + 0.01), a0[1] - 0.12, dz2 + 0.25)); g.add(boxAt(0.02, 0.03, 0.14, CHROME_MAT, sx * (W / 2 + 0.01), a0[1] - 0.12, dz3 + 0.25));
+    // 輪拱
+    for (const wu of T.wb) { const arch = new THREE.Mesh(VGEO['arch' + T.r] || (VGEO['arch' + T.r] = new THREE.CircleGeometry(T.r + 0.07, 12, 0, Math.PI)), TRIM_MAT); arch.position.set(sx * (W / 2 + 0.004), T.r, -wu); arch.rotation.y = sx * Math.PI / 2; g.add(arch); }
+  }
+  // 車頭：大燈、水箱罩、車牌；車尾：尾燈、車牌
+  const fr = -T.lower[2][0], rr = -T.lower[T.lower.length - 1][0];
+  const fy = (T.lower[2][1] + T.lower[3][1]) / 2;
+  for (const sx of [-1, 1]) {
+    g.add(boxAt(0.42, 0.12, 0.08, HEAD_MAT, sx * (W / 2 - 0.3), fy + 0.06, fr - 0.04));
+    g.add(boxAt(0.12, 0.06, 0.06, AMBER_MAT, sx * (W / 2 - 0.08), fy + 0.02, fr - 0.02));
+    g.add(boxAt(0.4, 0.13, 0.06, TAIL_MAT, sx * (W / 2 - 0.25), fy + 0.12, rr + 0.04));
+  }
+  g.add(boxAt(0.6, 0.14, 0.05, TRIM_MAT, 0, fy - 0.02, fr - 0.04)); g.add(boxAt(0.6, 0.02, 0.06, CHROME_MAT, 0, fy + 0.04, fr - 0.05));
+  g.add(boxAt(W - 0.1, 0.12, 0.1, TRIM_MAT, 0, 0.38, fr - 0.03)); g.add(boxAt(W - 0.1, 0.12, 0.1, TRIM_MAT, 0, 0.38, rr + 0.03));
+  const pmat = plateMat(); g.add(boxAt(0.42, 0.14, 0.02, pmat, 0, 0.52, rr + 0.09)); g.add(boxAt(0.42, 0.14, 0.02, pmat, 0, 0.52, fr - 0.09));
+  for (const sx of [-1, 1]) for (const wu of T.wb) carWheel(g, sx * (W / 2 - 0.1), -wu, T.r, 0.22);
+  // 計程車頂燈
+  if (type === 'taxi') { const tm = texMat(signTex('計程車 TAXI', { bg: '#ffd800', fg: '#111', w: 256, h: 64 }), 0.8); const sg = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.18, 0.22), tm); sg.position.set(0, a1[1] + 0.14, -(a1[0] + c1[0]) / 2); g.add(sg); }
+  // 警車塗裝與警示燈
+  if (police) {
+    const side = policeDecal();
+    for (const sx of [-1, 1]) { const d = new THREE.Mesh(new THREE.PlaneGeometry(L * 0.72, 0.34), side); d.position.set(sx * (W / 2 + 0.012), 0.62, 0.05); d.rotation.y = sx * Math.PI / 2; if (sx < 0) d.scale.x = -1; g.add(d); }
+    const red = new THREE.MeshLambertMaterial({ color: 0x660000, emissive: 0xff0000, emissiveIntensity: 0 });
+    const blue = new THREE.MeshLambertMaterial({ color: 0x000066, emissive: 0x0040ff, emissiveIntensity: 0 });
+    const ry = a1[1] + 0.1, rz = -(a1[0] + c1[0]) / 2;
+    g.add(boxAt(1.2, 0.08, 0.3, TRIM_MAT, 0, ry, rz));
+    const rb = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.12, 0.26), red); rb.position.set(-0.3, ry + 0.09, rz); const bb = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.12, 0.26), blue); bb.position.set(0.3, ry + 0.09, rz);
+    g.add(rb, bb); parts.red = red; parts.blue = blue;
+  }
+  // 車內（玩家駕駛時看得到）
+  if (opts.clearGlass) {
+    // 車內地板／門板（蓋住車身上緣，從車內看起來是內裝）
+    const inner = new THREE.Mesh(new THREE.PlaneGeometry(W - 0.12, Math.abs(a0[0] - c0[0]) + 0.1), vm(0x34322f)); inner.rotation.x = -Math.PI / 2; inner.position.set(0, Math.max(a0[1], c0[1]) + 0.012, -(a0[0] + c0[0]) / 2); g.add(inner);
+    for (const sx of [-1, 1]) g.add(boxAt(0.04, 0.12, Math.abs(a0[0] - c0[0]), vm(0x2a2826), sx * (W / 2 - 0.12), Math.max(a0[1], c0[1]) + 0.06, -(a0[0] + c0[0]) / 2));
+    const dashU = a0[0] - 0.05, dy = a0[1] - 0.06;
+    g.add(slab(dashU + 0.05, dy + 0.02, dashU - 0.45, dy - 0.04, W - 0.25, 0.16, vm(0x1c1c1c)));
+    g.add(boxAt(W - 0.3, 0.35, 0.1, vm(0x222222), 0, dy - 0.25, -(dashU - 0.5)));
+    // 儀表板
+    const gauge = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.12), new THREE.MeshBasicMaterial({ map: gaugeTex() })); gauge.position.set(-0.38, dy + 0.06, -(dashU - 0.42)); gauge.rotation.x = -0.35; g.add(gauge);
+    const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.13), new THREE.MeshBasicMaterial({ color: 0x223a55 })); scr.position.set(0.05, dy + 0.02, -(dashU - 0.4)); scr.rotation.x = -0.4; g.add(scr);
+    // 方向盤（三輻）
+    const wheelG = new THREE.Group(); wheelG.position.set(-0.38, dy - 0.02, -(dashU - 0.62)); wheelG.rotation.x = -0.45;
+    wheelG.add(new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.022, 8, 20), vm(0x111111)));
+    for (const a of [0, 2.1, -2.1]) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.15, 0.02), vm(0x222222)); sp.position.set(Math.sin(a) * 0.08, -Math.cos(a) * 0.08, 0); sp.rotation.z = -a; wheelG.add(sp); }
+    wheelG.add(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.03, 10).rotateX(Math.PI / 2), vm(0x222222)));
+    g.add(wheelG); parts.wheel = wheelG;
+    // 座椅、中控台、車頂內襯
+    for (const sx of [-0.4, 0.4]) { g.add(boxAt(0.5, 0.12, 0.5, vm(0x2a2a2a), sx, 0.62, -(T.seatU))); g.add(boxAt(0.5, 0.6, 0.12, vm(0x2a2a2a), sx, 0.95, -(T.seatU) + 0.28)); g.add(boxAt(0.28, 0.16, 0.1, vm(0x2a2a2a), sx, 1.32, -(T.seatU) + 0.3)); }
+    g.add(boxAt(0.22, 0.25, 0.7, vm(0x1c1c1c), 0, 0.6, -(T.seatU) - 0.1));
+    const lining = new THREE.Mesh(new THREE.PlaneGeometry(Wg - 0.05, Math.abs(a1[0] - c1[0])), vm(0xb8b0a0, { side: THREE.DoubleSide })); lining.rotation.x = Math.PI / 2; lining.position.set(0, a1[1] - 0.01, -(a1[0] + c1[0]) / 2); g.add(lining);
+    // 車內後照鏡（畫面由後方鏡頭即時渲染）
+    const mu = a1[0] + (a0[0] - a1[0]) * 0.18, wv = a1[1] + (a0[1] - a1[1]) * 0.18; const mz = -mu, my = wv - 0.1;
+    const mir = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.06), MIRROR.mat); mir.position.set(-0.02, my, mz + 0.012); mir.rotation.y = 0.15; g.add(mir);
+    g.add(boxAt(0.22, 0.075, 0.02, vm(0x111111), -0.02, my, mz)); g.add(boxAt(0.02, 0.08, 0.02, vm(0x111111), -0.02, my + 0.06, mz));
+  }
+  if (opts.driver) {
+    const d = new THREE.Group(); d.add(boxAt(0.42, 0.5, 0.26, pm(pick(SHIRTS)), 0, a0[1] + 0.05, 0)); d.add(boxAt(0.2, 0.24, 0.22, pm(pick(SKINS)), 0, a0[1] + 0.45, 0)); d.add(boxAt(0.21, 0.08, 0.23, pm(0x1a1a1a), 0, a0[1] + 0.6, 0.01));
+    d.position.set(-0.38, 0, -T.seatU); g.add(d); parts.driver = { g: d };
+  }
+  parts.eyeY = T.eye; parts.seat = { x: -0.38, z: -T.seatU + 0.05 }; parts.len = L; parts.name = T.name;
+  return { g, parts };
+}
+function policeDecal() {
+  if (VMAT.policeDecal) return VMAT.policeDecal;
+  const t = canvasTex(512, 64, (g, w, h) => { g.fillStyle = '#0b3d91'; g.fillRect(0, 8, w, 40); g.fillStyle = '#ffd84a'; g.fillRect(0, 48, w, 8); g.fillStyle = '#fff'; g.font = '900 30px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('警察 POLICE　110', w / 2, 29); });
+  return (VMAT.policeDecal = new THREE.MeshLambertMaterial({ map: t, transparent: true, alphaTest: 0.1 }));
+}
+let GAUGE_TEX;
+function gaugeTex() {
+  return GAUGE_TEX || (GAUGE_TEX = canvasTex(256, 96, (g) => {
+    g.fillStyle = '#0d0d0d'; g.fillRect(0, 0, 256, 96);
+    for (const cx of [64, 192]) { g.strokeStyle = '#ddd'; g.lineWidth = 3; g.beginPath(); g.arc(cx, 60, 38, Math.PI * 0.8, Math.PI * 2.2); g.stroke(); for (let k = 0; k <= 8; k++) { const a = Math.PI * 0.8 + k * Math.PI * 1.4 / 8; g.beginPath(); g.moveTo(cx + Math.cos(a) * 30, 60 + Math.sin(a) * 30); g.lineTo(cx + Math.cos(a) * 37, 60 + Math.sin(a) * 37); g.stroke(); } g.strokeStyle = '#ff4020'; g.beginPath(); g.moveTo(cx, 60); g.lineTo(cx - 20, 40); g.stroke(); }
+    g.fillStyle = '#7fd0ff'; g.font = 'bold 12px sans-serif'; g.textAlign = 'center'; g.fillText('km/h', 64, 88); g.fillText('rpm', 192, 88);
+  }));
+}
+function makePickup(g, parts, color, opts) {
+  const paint = vm(color); const W = 1.7;
+  // 台灣常見的平頭小貨車：駕駛室在前、後面是貨斗
+  const cab = new THREE.Mesh(extrudeProfile('pk_cab', [[0.5, 0.4], [2.25, 0.4], [2.3, 0.85], [2.12, 1.15], [1.95, 1.85], [0.5, 1.9]], W, 0.06), paint); g.add(cab); parts.body = cab;
+  g.add(slab(2.1, 1.2, 1.96, 1.78, W - 0.2, 0.04, GLASS_DARK, 0)); g.children[g.children.length - 1].position.z -= 0.06;
+  for (const sx of [-1, 1]) g.add(boxAt(0.02, 0.5, 0.9, GLASS_DARK, sx * (W / 2 + 0.005), 1.45, -1.35));
+  g.add(boxAt(W, 0.12, 2.7, vm(0x555555), 0, 0.62, 0.85)); // 貨斗底
+  for (const sx of [-1, 1]) g.add(boxAt(0.05, 0.4, 2.7, paint, sx * (W / 2 - 0.02), 0.88, 0.85));
+  g.add(boxAt(W, 0.4, 0.05, paint, 0, 0.88, 2.18));
+  if (Math.random() < 0.6) g.add(boxAt(1.1, 0.45, 0.9, vm(pick([0x8a6a3a, 0x3a6a8a, 0xcccccc])), 0, 0.92, 0.9));
+  for (const sx of [-1, 1]) { g.add(boxAt(0.3, 0.15, 0.06, HEAD_MAT, sx * 0.6, 0.85, -2.3)); g.add(boxAt(0.25, 0.14, 0.05, TAIL_MAT, sx * 0.6, 0.75, 2.22)); }
+  g.add(boxAt(0.42, 0.14, 0.02, plateMat(), 0, 0.55, 2.23));
+  for (const sx of [-1, 1]) for (const wu of [1.55, -1.35]) carWheel(g, sx * (W / 2 - 0.1), -wu, 0.32, 0.22);
+  if (opts.driver) { const d = new THREE.Group(); d.add(boxAt(0.42, 0.5, 0.26, pm(pick(SHIRTS)), 0, 1.15, 0)); d.add(boxAt(0.2, 0.24, 0.22, pm(pick(SKINS)), 0, 1.55, 0)); d.position.set(-0.38, 0, -1.4); g.add(d); parts.driver = { g: d }; }
+  parts.eyeY = 1.62; parts.seat = { x: -0.38, z: -1.35 }; parts.len = 4.6; parts.name = '小貨車';
+  return { g, parts };
+}
+function makeBus(g, parts, color, opts) {
+  const W = 2.5, L = 11;
+  const paint = vm(color || 0x2f9a5a), white = vm(0xf4f4f0);
+  g.add(new THREE.Mesh(extrudeProfile('bus', [[-5.5, 0.35], [5.5, 0.35], [5.58, 0.7], [5.55, 3.0], [5.35, 3.15], [-5.45, 3.15], [-5.55, 2.9], [-5.55, 0.6]], W, 0.08), white));
+  parts.body = g.children[0];
+  for (const sx of [-1, 1]) {
+    g.add(boxAt(0.02, 1.05, L - 1.4, GLASS_DARK, sx * (W / 2 + 0.01), 2.25, 0.2));
+    g.add(boxAt(0.02, 0.5, L - 0.2, paint, sx * (W / 2 + 0.01), 1.05, 0));
+    for (let k = -4; k <= 4; k += 1.3) g.add(boxAt(0.025, 1.05, 0.06, white, sx * (W / 2 + 0.015), 2.25, k));
+  }
+  g.add(boxAt(W - 0.15, 1.6, 0.03, GLASS_DARK, 0, 2.05, -5.6)); g.add(boxAt(W - 0.3, 0.9, 0.03, GLASS_DARK, 0, 2.3, 5.6));
+  g.add(boxAt(0.02, 2.3, 1.1, vm(0x333333), W / 2 + 0.02, 1.5, -4.3)); g.add(boxAt(0.02, 2.3, 1.1, vm(0x333333), W / 2 + 0.02, 1.5, 0.8)); // 車門（右側）
+  const dest = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.32), texMat(signTex('300 台中車站', { bg: '#111', fg: '#ffb000', w: 512, h: 96 }), 1.2)); dest.position.set(0, 2.98, -5.62); dest.rotation.y = Math.PI; g.add(dest);
+  for (const sx of [-1, 1]) { g.add(boxAt(0.35, 0.18, 0.06, HEAD_MAT, sx * 0.9, 0.75, -5.62)); g.add(boxAt(0.3, 0.3, 0.06, TAIL_MAT, sx * 1.0, 1.0, 5.6)); }
+  for (const sx of [-1, 1]) for (const wz of [-3.4, 3.2]) carWheel(g, sx * (W / 2 - 0.15), wz, 0.48, 0.3);
+  if (opts.driver) { const d = new THREE.Group(); d.add(boxAt(0.45, 0.5, 0.28, pm(0x6ab0e0), 0, 1.6, 0)); d.add(boxAt(0.22, 0.25, 0.22, pm(pick(SKINS)), 0, 2.0, 0)); d.position.set(-0.7, 0, -4.6); g.add(d); parts.driver = { g: d }; }
+  parts.eyeY = 2.3; parts.seat = { x: -0.7, z: -4.6 }; parts.len = L; parts.name = '公車';
+  return { g, parts };
+}
+function makeGarbage(g, parts, opts) {
+  const W = 2.2; const yel = vm(0xf2c200), wht = vm(0xf4f4f0);
+  g.add(new THREE.Mesh(extrudeProfile('gcab', [[1.5, 0.45], [3.4, 0.45], [3.45, 1.0], [3.3, 2.5], [1.5, 2.55]], W, 0.07), wht)); parts.body = g.children[0];
+  g.add(boxAt(W - 0.25, 0.85, 0.03, GLASS_DARK, 0, 2.0, -3.38));
+  g.add(new THREE.Mesh(extrudeProfile('gbody', [[-3.4, 0.6], [1.4, 0.6], [1.4, 2.9], [-2.6, 2.9], [-3.4, 2.3]], W, 0.1), yel));
+  const lbl = new THREE.Mesh(new THREE.PlaneGeometry(3, 0.6), texMat(signTex('台中市政府環境保護局', { bg: '#f2c200', fg: '#0b5a2a', w: 512, h: 96 }), 0.3));
+  for (const sx of [-1, 1]) { const m = lbl.clone(); m.position.set(sx * (W / 2 + 0.11), 2.0, 1.0); m.rotation.y = sx * Math.PI / 2; g.add(m); }
+  for (const sx of [-1, 1]) { g.add(boxAt(0.3, 0.16, 0.06, HEAD_MAT, sx * 0.75, 0.9, -3.45)); g.add(boxAt(0.25, 0.25, 0.06, TAIL_MAT, sx * 0.9, 1.0, 3.45)); }
+  for (const sx of [-1, 1]) for (const wz of [-2.4, 1.0, 2.2]) carWheel(g, sx * (W / 2 - 0.15), wz, 0.48, 0.3);
+  if (opts.driver) { const d = new THREE.Group(); d.add(boxAt(0.45, 0.5, 0.28, pm(0xf2c200), 0, 1.6, 0)); d.add(boxAt(0.22, 0.25, 0.22, pm(pick(SKINS)), 0, 2.0, 0)); d.position.set(-0.55, 0, -2.4); g.add(d); parts.driver = { g: d }; }
+  parts.eyeY = 2.3; parts.seat = { x: -0.55, z: -2.4 }; parts.len = 7; parts.name = '垃圾車';
+  return { g, parts };
+}
+// 台灣速克達機車
+function makeScooter(g, parts, color, police, opts) {
+  const paint = vm(police ? 0xf4f6f8 : color); const W = 0.42;
+  const bodyGeo = extrudeProfile('scoot', [[-0.95, 0.38], [-0.25, 0.34], [0.36, 0.33], [0.55, 0.38], [0.64, 0.72], [0.6, 1.02], [0.5, 1.06], [0.4, 0.62], [0.32, 0.45], [-0.22, 0.45], [-0.32, 0.74], [-0.88, 0.8], [-1.0, 0.62]], W, 0.06);
+  const body = new THREE.Mesh(opts.clearGlass ? bodyGeo.clone() : bodyGeo, paint); g.add(body); parts.body = body;
+  g.add(boxAt(0.36, 0.03, 0.62, vm(0x2a2a2a), 0, 0.47, -0.05)); // 腳踏板
+  const seat = new THREE.Mesh(extrudeProfile('seat', [[-0.92, 0.78], [-0.25, 0.74], [-0.2, 0.84], [-0.5, 0.9], [-0.9, 0.9]], 0.34, 0.04), vm(0x161616)); g.add(seat);
+  // 龍頭、儀表、大燈、後照鏡
+  g.add(boxAt(0.66, 0.04, 0.04, vm(0x222222), 0, 1.12, -0.5)); g.add(boxAt(0.3, 0.14, 0.18, paint, 0, 1.08, -0.52));
+  for (const sx of [-1, 1]) { g.add(boxAt(0.09, 0.05, 0.05, vm(0x111111), sx * 0.33, 1.12, -0.5)); g.add(boxAt(0.015, 0.2, 0.015, vm(0x222222), sx * 0.22, 1.24, -0.5)); g.add(boxAt(0.09, 0.06, 0.02, CHROME_MAT, sx * 0.24, 1.35, -0.5)); }
+  g.add(boxAt(0.2, 0.1, 0.05, HEAD_MAT, 0, 1.05, -0.63)); g.add(boxAt(0.16, 0.08, 0.04, TAIL_MAT, 0, 0.74, 0.98));
+  for (const sx of [-1, 1]) { g.add(boxAt(0.06, 0.05, 0.04, AMBER_MAT, sx * 0.17, 0.98, -0.62)); g.add(boxAt(0.06, 0.05, 0.04, AMBER_MAT, sx * 0.14, 0.76, 0.97)); }
+  const dash = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.08), new THREE.MeshBasicMaterial({ map: gaugeTex() })); dash.position.set(0, 1.16, -0.43); dash.rotation.x = -0.9; g.add(dash);
+  parts.wheel = g.children[g.children.length - 1];
+  const hb = new THREE.Group(); g.add(hb); parts.wheel = hb; hb.position.set(0, 1.12, -0.5);
+  // 前土除、排氣管、輪子
+  g.add(boxAt(0.14, 0.05, 0.42, paint, 0, 0.55, -0.62));
+  g.add(boxAt(0.07, 0.07, 0.5, CHROME_MAT, 0.17, 0.3, 0.55));
+  for (const wz of [-0.62, 0.62]) { const t = new THREE.Mesh(VGEO.stire || (VGEO.stire = new THREE.CylinderGeometry(0.24, 0.24, 0.12, 14).rotateZ(Math.PI / 2)), TIRE_MAT); t.position.set(0, 0.24, wz); g.add(t); const r = new THREE.Mesh(VGEO.srim || (VGEO.srim = new THREE.CylinderGeometry(0.14, 0.14, 0.13, 10).rotateZ(Math.PI / 2)), RIM_MAT); r.position.set(0, 0.24, wz); g.add(r); }
+  g.add(boxAt(0.2, 0.12, 0.02, plateMat(), 0, 0.6, 1.0));
+  // 後箱／外送箱
+  if (opts.delivery) { const bm = vm(pick([0xd4145a, 0x10a050, 0xf28a00])); g.add(boxAt(0.46, 0.44, 0.44, bm, 0, 1.15, 0.72)); const lb = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.14), texMat(signTex('外送', { bg: '#fff', fg: '#d4145a', w: 128, h: 48 }), 0.3)); lb.position.set(0, 1.2, 0.95); g.add(lb); }
+  else if (opts.topbox || police) g.add(boxAt(0.36, 0.28, 0.34, police ? vm(0xf4f6f8) : vm(0x222222), 0, 1.02, 0.82));
+  if (police) {
+    g.add(boxAt(0.43, 0.12, 0.7, vm(0x0b3d91), 0, 0.6, 0.0));
+    const red = new THREE.MeshLambertMaterial({ color: 0x660000, emissive: 0xff0000, emissiveIntensity: 0 });
+    const blue = new THREE.MeshLambertMaterial({ color: 0x000066, emissive: 0x0040ff, emissiveIntensity: 0 });
+    const r = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.1, 0.1), red), b = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.1, 0.1), blue); r.position.set(-0.12, 1.22, 0.82); b.position.set(0.12, 1.22, 0.82); g.add(r, b); parts.red = red; parts.blue = blue;
+  }
+  if (opts.driver) {
+    const d = makePerson({ helmet: pick([0xffffff, 0xd94040, 0x2a4fa8, 0xf2c94c, 0x222222, 0x26c2a4]), shirt: opts.delivery ? pick([0xd4145a, 0x10a050]) : undefined });
+    d.g.position.set(0, -0.12, 0.42); d.g.rotation.y = Math.PI; posePerson(d, 'sit', 0); d.armL.rotation.x = -1.25; d.armR.rotation.x = -1.25; g.add(d.g); parts.driver = d;
+  }
+  parts.eyeY = 1.62; parts.seat = { x: 0, z: 0.35 }; parts.len = 1.9; parts.name = opts.delivery ? '外送機車' : '機車';
+  return { g, parts };
+}
+// 車內後照鏡：用第二台攝影機往後拍
+const MIRROR = {
+  rt: new THREE.WebGLRenderTarget(256, 80), cam: new THREE.PerspectiveCamera(50, 256 / 80, 0.5, 300), t: 0,
+};
+MIRROR.mat = new THREE.MeshBasicMaterial({ map: MIRROR.rt.texture });
+MIRROR.rt.texture.wrapS = THREE.RepeatWrapping; MIRROR.rt.texture.repeat.x = -1; MIRROR.rt.texture.offset.x = 1;
+function renderMirror(renderer) {
+  const v = P.veh; if (!v || v.spec.kind !== 'car' || P.mode !== 'vehicle') return;
+  MIRROR.t++; if (MIRROR.t % (IS_TOUCH ? 4 : 2)) return;
+  const fx = -Math.sin(v.yaw), fz = -Math.cos(v.yaw);
+  MIRROR.cam.position.set(v.x - fx * 0.2, 1.4, v.z - fz * 0.2); MIRROR.cam.lookAt(v.x - fx * 20, 1.2, v.z - fz * 20);
+  v.mesh.visible = false; renderer.setRenderTarget(MIRROR.rt); renderer.render(scene, MIRROR.cam); renderer.setRenderTarget(null); v.mesh.visible = true;
+}
+
 /* ================= 玩家：移動、開車、武器 ================= */
 const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.08, 1500);
 camera.rotation.order = 'YXZ'; scene.add(camera);
@@ -1432,10 +1632,11 @@ function isNight() { return S.time < 330 || S.time > 1110; }
 /* ---------- 玩家可駕駛的車 ---------- */
 const PVEHS = [];
 class PVeh {
-  constructor(key, x, z, yaw, color) {
+  constructor(key, x, z, yaw, color, type) {
     this.key = key; this.spec = VEH_SPECS[key]; this.police = key === 'police' || key === 'pscooter'; this.color = color != null ? color : this.spec.color;
     this.hp = 100; this.wreck = false; this.burning = null; this.civ = key === 'civcar' || key === 'civscoot';
-    const { g, parts } = makeVehicle(this.spec.kind, this.color, this.police, { sport: key === 'sport', suv: key === 'suv', clearGlass: true, L: key === 'sport' ? 4.3 : 4.5 });
+    this.type = type || { sport: 'sport', suv: 'suv' }[key] || 'sedan';
+    const { g, parts } = makeVehicle(this.spec.kind, this.color, this.police, { type: this.type, clearGlass: true, topbox: key === 'scooter' });
     this.mesh = g; this.parts = parts; scene.add(g);
     this.x = x; this.z = z; this.yaw = yaw || 0; this.speed = 0; this.steer = 0; this.siren = false; this.flash = 0; this.home = { x, z, yaw: yaw || 0 };
     this.sync();
@@ -1443,7 +1644,7 @@ class PVeh {
   sync() { this.mesh.position.set(this.x, 0, this.z); this.mesh.rotation.y = this.yaw; }
   circles() {
     const fx = -Math.sin(this.yaw), fz = -Math.cos(this.yaw);
-    if (this.spec.kind === 'car') return [[this.x + fx * 1.3, this.z + fz * 1.3, 1.0], [this.x - fx * 1.3, this.z - fz * 1.3, 1.0]];
+    if (this.spec.kind === 'car') { const o = (this.parts.len || 4.5) / 2 - 1.0; return [[this.x + fx * o, this.z + fz * o, 1.0], [this.x, this.z, 1.0], [this.x - fx * o, this.z - fz * o, 1.0]]; }
     return [[this.x, this.z, 0.6]];
   }
   reset() { this.x = this.home.x; this.z = this.home.z; this.yaw = this.home.yaw; this.speed = 0; this.siren = false; this.sync(); }
@@ -1620,8 +1821,9 @@ function toggleVehicle() {
     return;
   }
   const v = nearestPVeh(3.6);
-  if (!v) { const nv = TRAFFIC.find(t => t.state !== 'gone' && dist(t.px, t.pz, P.x, P.z) < 3.8); if (nv) commandeer(nv); return; }
+  if (!v) { const nv = TRAFFIC.find(t => t.state !== 'gone' && !t.cop && dist(t.px, t.pz, P.x, P.z) < 3.8); if (nv) commandeer(nv); return; }
   if (v.wreck) { radio('這台車已經燒毀了。', 'info'); return; }
+  if (!canDrive(v)) return;
   if (v.police && !S.onDuty) { radio('下班時間不能開警車，請騎自己的車。', 'info'); return; }
   P.mode = 'vehicle'; P.veh = v; P.lookYaw = 0; P.pitch = -0.05;
   $('speedo').classList.remove('hidden');
@@ -1635,8 +1837,10 @@ function commandeer(n) {
   if (n.speed > 2.5) { radio('車子還在開，等它停下來（例如紅燈時）再徵用。', 'info'); return; }
   const urgent = MIS.cur && (MIS.cur.type === 'robbery' || PURSUIT.car || MIS.cur.type === 'traffic');
   const t = '警察！緊急狀況，徵用你的車！'; showBubble('📢 ' + t); speak(t);
+  if (n.big) { radio('公車和垃圾車太大了，不能徵用。', 'info'); return; }
+  if (!canDrive(null)) return;
   const key = n.kind === 'car' ? 'civcar' : 'civscoot';
-  const v = new PVeh(key, n.px, n.pz, n.yaw, n.color); PVEHS.push(v);
+  const v = new PVeh(key, n.px, n.pz, n.yaw, n.color, n.kind === 'car' ? n.type : 'scooter'); PVEHS.push(v);
   const k = TRAFFIC.indexOf(n); if (k >= 0) TRAFFIC.splice(k, 1); scene.remove(n.mesh);
   const lx = -Math.cos(n.yaw), lz = Math.sin(n.yaw);
   const h = spawnHuman({ data: { role: 'civ' } }, n.px + lx * 1.8, n.pz + lz * 1.8, n.yaw + Math.PI / 2); h.walk = { vx: lx * 1.6, vz: lz * 1.6, t: 12 }; h.pose = 'walk';
@@ -1668,9 +1872,8 @@ function updatePlayer(dt) {
     // 車輛（擋人＋撞人）
     for (const v of TRAFFIC) {
       if (v.state === 'gone' || Math.abs(v.px - P.x) > 6 || Math.abs(v.pz - P.z) > 6) continue;
-      const fxv = -Math.sin(v.yaw), fzv = -Math.cos(v.yaw); const n = v.kind === 'car' ? [1.3, -1.3] : [0];
-      for (const o of n) {
-        const cx = v.px + fxv * o, cz = v.pz + fzv * o, r = (v.kind === 'car' ? 1.0 : 0.55) + 0.35; const d = dist(P.x, P.z, cx, cz);
+      for (const cc of v.circ()) {
+        const cx = cc[0], cz = cc[1], r = cc[2] + 0.35; const d = dist(P.x, P.z, cx, cz);
         if (d < r) {
           const k = (r - d) / (d || 1); P.x += (P.x - cx) * k; P.z += (P.z - cz) * k;
           if (v.speed > 5 && P.hurtT > 1) { hurtPlayer(Math.round(v.speed * 1.6), v.px, v.pz); radio('你被車撞了！小心車輛。', 'warn'); }
@@ -1727,10 +1930,10 @@ function driveVehicle(dt, lookX, lookY) {
   if (hit) { v.x += cx; v.z += cz; if (sAbs > 6) { AU.bump(); damageVeh(v, (sAbs - 4) * 1.6, ix, iz); P.shake = Math.max(P.shake || 0, Math.min(0.8, sAbs / 30)); if (sAbs > 16) hurtPlayer(Math.round(sAbs * 0.6)); } v.speed *= sAbs > 6 ? -0.25 : 0.5; }
   // 撞車流
   for (const n of TRAFFIC) {
-    if (n.state === 'gone' || Math.abs(n.px - v.x) > 8 || Math.abs(n.pz - v.z) > 8) continue;
-    const nfx = -Math.sin(n.yaw), nfz = -Math.cos(n.yaw); const nc = n.kind === 'car' ? [[1.3, 1.0], [-1.3, 1.0]] : [[0, 0.55]];
+    if (n.state === 'gone' || Math.abs(n.px - v.x) > 12 || Math.abs(n.pz - v.z) > 12) continue;
+    const nc = n.circ();
     for (const c of v.circles()) for (const q of nc) {
-      const qx = n.px + nfx * q[0], qz = n.pz + nfz * q[0]; const d = dist(c[0], c[1], qx, qz), r = c[2] + q[1];
+      const qx = q[0], qz = q[1]; const d = dist(c[0], c[1], qx, qz), r = c[2] + q[2];
       if (d < r) {
         const k = (r - d) / (d || 1); v.x += (c[0] - qx) * k; v.z += (c[1] - qz) * k;
         if (Math.abs(v.speed) > 3) { AU.bump(); const rs = Math.abs(v.speed); damageVeh(v, (rs - 3) * 0.9, (c[0] + qx) / 2, (c[1] + qz) / 2); MIS.onRam(n, rs); if (n.state === 'drive') { n.speed = 0; n.stuck = 0; } }
@@ -1743,7 +1946,7 @@ function driveVehicle(dt, lookX, lookY) {
     if (!pd.alive || Math.abs(pd.x - v.x) > 4 || Math.abs(pd.z - v.z) > 4) continue;
     for (const c of v.circles()) if (dist(c[0], c[1], pd.x, pd.z) < c[2] + 0.4) {
       if (sAbs > 3.5) { pd.knock(25); AU.bump(); MIS.civHitByCar(); v.speed *= 0.6; }
-      else { pd.scare(v.x, v.z); }
+      else { pd.scare(v.x, v.z); if (!pd._carT || performance.now() - pd._carT > 8000) { pd._carT = performance.now(); pedSay(pd, 'car'); } }
     }
   }
   for (const o of PVEHS) if (o !== v) for (const c of v.circles()) for (const q of o.circles()) { const d = dist(c[0], c[1], q[0], q[1]), r = c[2] + q[2]; if (d < r) { const k = (r - d) / (d || 1); v.x += (c[0] - q[0]) * k; v.z += (c[1] - q[1]) * k; v.speed *= 0.5; } }
@@ -1988,7 +2191,7 @@ function stopDialog(ctx, car, drv, reason, fled, done) {
 /* ---------- 任務：交通違規攔查 ---------- */
 function misTraffic(car, reason, witnessed) {
   if (!car) {
-    const c = TRAFFIC.filter(v => v.state === 'drive' && !v.flag && v.kind === 'car' && (d => d > 70 && d < 230)(dist(v.x, v.z, P.x, P.z)));
+    const c = TRAFFIC.filter(v => v.state === 'drive' && !v.flag && v.kind === 'car' && !v.big && !v.cop && (d => d > 70 && d < 230)(dist(v.x, v.z, P.x, P.z)));
     if (!c.length) { MIS.timer = 5; return; } car = pick(c);
   }
   car.flag = true; if (reason === '超速') car.maxSp = 20;
@@ -2049,7 +2252,7 @@ function misRobbery(kind) {
   // 逃逸車
   let getaway = null, gaState = 'none', gaRobber = null;
   if (Math.random() < 0.38) {
-    getaway = new NPCVeh('car'); getaway.color = 0x111111;
+    getaway = new NPCVeh('car', 'sedan');
     const j = site.bj + 1, i = site.bi; const s = XR[i + 1] - site.curb.x;
     getaway.place(i + 1, j, i, j, s); getaway.off = getaway.offT = hW(j) / 2 - 1.8; getaway.calcPos(); getaway.mesh.position.set(getaway.x, 0, getaway.z);
     getaway.state = 'parked'; getaway.flag = true; TRAFFIC.push(getaway); gaState = 'parked';
@@ -2228,6 +2431,7 @@ function misCheckpoint() {
 function clockIn() {
   if (S.onDuty) return;
   const late = isWorkday(S.day) && !S.workedToday && S.time > 8 * 60 + 30;
+  if (TLAW.chase) endCop();
   S.onDuty = true; S.clockIn = S.time; S.workedToday = true;
   S.ammo = 15; S.reserve = 45; S.taser = 4; S.weapon = 0;
   for (const pv of [POLICE_CAR, POLICE_SCOOT]) { if (pv.wreck || pv.hp < 100) restoreVeh(pv); else pv.reset(); }
@@ -2303,6 +2507,7 @@ function goSleep() {
     respawnOwned(); for (const pv of [POLICE_CAR, POLICE_SCOOT]) if (pv.wreck || pv.hp < 100) restoreVeh(pv); POLICE_CAR.reset(); POLICE_SCOOT.reset();
     const h = SITES.home; P.x = h.x; P.z = h.z + 1.5; P.yaw = Math.PI; P.pitch = 0;
     saveGame();
+    setTimeout(() => deliverMail(), 3600);
     setTimeout(() => { toast('rank', '☀️ 第 ' + S.day + ' 天（週' + WEEK[weekday(S.day)] + '）早上 07:00', isWorkday(S.day) ? '08:00 要到大墩分局打卡上班（08:30 後算遲到）' : '今天週日放假！'); }, 700);
   });
 }
@@ -2563,6 +2768,12 @@ function misFugitive() {
       return out;
     },
     onShout() { shoutAt(list); },
+    hint(pd) {
+      if (h.state !== 'wander' || h.reacted) return null;
+      if (dist(pd.x, pd.z, h.x, h.z) > 170) return '穿' + sh[1] + '衣服的人喔？我沒看到耶。';
+      area = { x: h.x + rand(-8, 8), z: h.z + rand(-8, 8) }; areaT = 0;
+      return '有！剛剛有個穿' + sh[1] + '上衣的男生，鬼鬼祟祟往' + roadNameAt(h.x, h.z) + '那邊走過去了！';
+    },
     onShot(r, type) { return suspectShot(r, type, list) || (!r.h && h.state === 'fight'); },
     cleanup() { hideArea(); removeAll(list); },
   };
@@ -2812,6 +3023,12 @@ function misMissing() {
         MODAL.show(`<h2>🔎 找到了！</h2><p>${elder ? '老人家看起來很迷惘：「我要回家…我家在哪裡…」' : '小朋友哭著說：「我找不到媽媽…」'}</p><p>確認身分：${who}，穿${sh[1]}上衣 ✔</p><p>家屬在 <b>${nearCross(fam.x, fam.z)}</b> 等候。帶他過去，他會跟著你，也可以讓他坐警車。</p>`,
           [['好，跟我走', 'g', () => { MODAL.close(); st = 'escort'; h.state = 'follow'; radio('已找到走失者，請送回家屬身邊。', 'info'); }]]);
       } }];
+    },
+    hint(pd) {
+      if (st !== 'search') return null;
+      if (dist(pd.x, pd.z, h.x, h.z) > 170) return '沒有看到耶，要不要問問看別人？';
+      area = { x: h.x + rand(-8, 8), z: h.z + rand(-8, 8) }; areaT = 0;
+      return '有喔！剛剛有一個穿' + sh[1] + '衣服的' + (elder ? '老人家' : '小朋友') + '，在' + roadNameAt(h.x, h.z) + '那邊走來走去，好像迷路了。';
     },
     cleanup() { hideArea(); removeAll(list); },
   };
@@ -3098,7 +3315,7 @@ function wreckVeh(v) {
 }
 function restoreVeh(v) {
   scene.remove(v.mesh);
-  const { g, parts } = makeVehicle(v.spec.kind, v.color, v.police, { sport: v.key === 'sport', suv: v.key === 'suv', clearGlass: true, L: v.key === 'sport' ? 4.3 : 4.5 });
+  const { g, parts } = makeVehicle(v.spec.kind, v.color, v.police, { type: v.type, clearGlass: true, topbox: v.key === 'scooter' });
   v.mesh = g; v.parts = parts; scene.add(g); v.hp = 100; v.wreck = false; v.burning = null; v.warned = false; v.reset();
 }
 function updateVehDamage(dt) {
@@ -3201,6 +3418,375 @@ const RADIO = {
   },
 };
 
+/* ---------- 垃圾車音樂（貝多芬《給愛麗絲》，公共領域） ---------- */
+const ELISE = (() => {
+  const n = { E5: 659.3, Ds5: 622.3, B4: 493.9, D5: 587.3, C5: 523.3, A4: 440, C4: 261.6, E4: 329.6, Gs4: 415.3, A3: 220 };
+  const seq = [['E5', 1], ['Ds5', 1], ['E5', 1], ['Ds5', 1], ['E5', 1], ['B4', 1], ['D5', 1], ['C5', 1], ['A4', 2], [null, 1], ['C4', 1], ['E4', 1], ['A4', 1], ['B4', 2], [null, 1], ['E4', 1], ['Gs4', 1], ['B4', 1], ['C5', 2], [null, 1], ['E4', 1],
+    ['E5', 1], ['Ds5', 1], ['E5', 1], ['Ds5', 1], ['E5', 1], ['B4', 1], ['D5', 1], ['C5', 1], ['A4', 2], [null, 1], ['C4', 1], ['E4', 1], ['A4', 1], ['B4', 2], [null, 1], ['E4', 1], ['C5', 1], ['B4', 1], ['A4', 3], [null, 3]];
+  return { n, seq, i: 0, next: 0, gain: null };
+})();
+function updateGarbageMusic() {
+  if (!AU.ctx) return;
+  let best = 1e9; for (const v of TRAFFIC) if (v.type === 'garbage' && v.state !== 'gone') best = Math.min(best, dist(v.px, v.pz, P.x, P.z));
+  if (!ELISE.gain) { ELISE.gain = AU.ctx.createGain(); ELISE.gain.connect(AU.master); }
+  const vol = best < 90 ? clamp(1 - best / 90, 0, 1) * 0.12 : 0;
+  ELISE.gain.gain.setTargetAtTime(vol, AU.ctx.currentTime, 0.3);
+  if (vol <= 0) { ELISE.next = 0; return; }
+  const c = AU.ctx; if (ELISE.next < c.currentTime) ELISE.next = c.currentTime + 0.05;
+  while (ELISE.next < c.currentTime + 0.2) {
+    const [nm, len] = ELISE.seq[ELISE.i]; ELISE.i = (ELISE.i + 1) % ELISE.seq.length; const dur = len * 0.2;
+    if (nm) { const o = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o.frequency.value = ELISE.n[nm]; g.gain.setValueAtTime(0.0001, ELISE.next); g.gain.exponentialRampToValueAtTime(1, ELISE.next + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, ELISE.next + dur * 1.6); o.connect(g); g.connect(ELISE.gain); o.start(ELISE.next); o.stop(ELISE.next + dur * 1.7); }
+    ELISE.next += dur;
+  }
+}
+
+/* ================= 下班交通違規：依《道路交通管理處罰條例》 ================= */
+// 速限：台灣大道、文心路 60，其他一般道路 50（km/h）
+function speedLimitAt(x, z) { const n = roadNameAt(x, z); return (n === '台灣大道' || n === '文心路') ? 60 : 50; }
+const LAWDB = {
+  // 超速：一般道路。小型車依裁罰基準；機車以第 40／43 條法定最低額計。
+  speed(kind, over) {
+    const car = kind === 'car';
+    if (over <= 10) return null; // 未逾 10 公里得勸導免罰
+    if (over <= 40) return { law: '道路交通管理處罰條例第 40 條（超速）', range: '1,200～2,400 元', fine: car ? (over <= 20 ? 1600 : 1800) : 1200, pts: 1 };
+    const fine = car ? (over <= 60 ? 12000 : over <= 80 ? 16000 : 36000) : 6000;
+    return { law: '道路交通管理處罰條例第 43 條第 1 項第 2 款（超速逾 40 公里，危險駕駛）', range: '6,000～36,000 元', fine, pts: 3, plate: 180, lecture: true, extra: '當場禁止駕駛、吊扣該車牌照 6 個月、須參加道路交通安全講習' };
+  },
+  red(kind) { return { law: '道路交通管理處罰條例第 53 條第 1 項（闖紅燈）', range: '1,800～5,400 元', fine: kind === 'car' ? 2700 : 1800, pts: 3 }; },
+  escape(kind) { return { law: '道路交通管理處罰條例第 60 條第 1 項（拒絕停車接受稽查而逃逸）', range: '10,000～30,000 元', fine: 10000, lic: 180, lecture: true, extra: '吊扣駕駛執照 6 個月、須參加道路交通安全講習' }; },
+};
+const TLAW = { cams: [], viol: null, redAt: -99, inter: null, chase: null, flashT: 0, lastSpeed: 0 };
+function ensureLawState() { S.mail = S.mail || []; S.points = S.points || []; S.plateUntil = S.plateUntil || {}; S.licUntil = S.licUntil || 0; }
+/* ---------- 相機與標誌 ---------- */
+function buildCams() {
+  const camMat = new THREE.MeshLambertMaterial({ color: 0x8a8f96 });
+  const lens = new THREE.MeshLambertMaterial({ color: 0x111111, emissive: 0x330000, emissiveIntensity: 0.6 });
+  const mkPole = (x, z, h, face) => {
+    addGeo('pole', MAT.pole, boxGeo(0.18, h, 0.18, x, 0.18, z));
+    const b = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.7), camMat); b.position.set(x, h + 0.1, z); b.rotation.y = face; scene.add(b);
+    const l = new THREE.Mesh(new THREE.CircleGeometry(0.12, 10), lens); l.position.set(x - Math.sin(face) * 0.36, h + 0.1, z - Math.cos(face) * 0.36); l.rotation.y = face + Math.PI; scene.add(l);
+  };
+  // 測速照相：[道路方向(東西 h/南北 v), 道路索引, 位置, 車流方向 +1/-1]
+  const spots = [['h', 5, -200, 1], ['h', 5, 120, -1], ['v', 7, -120, 1], ['v', 7, 200, -1], ['v', 3, 120, -1], ['h', 6, -40, 1], ['h', 2, 200, -1], ['v', 5, -280, 1]];
+  for (const [ax, idx, pos, dir] of spots) {
+    let x, z, dx, dz, w;
+    if (ax === 'h') { w = hW(idx); dx = dir; dz = 0; z = ZR[idx] + dir * (w / 2 + 1.2); x = pos; } else { w = vW(idx); dx = 0; dz = dir; x = XR[idx] - dir * (w / 2 + 1.2); z = pos; }
+    // 右側車道：往 +x 的車在 z 大的一側（右手邊）；往 +z 的車在 x 小的一側
+    const lim = ax === 'h' ? (HNAMES[idx] === '台灣大道' ? 60 : 50) : (VNAMES[idx] === '文心路' ? 60 : 50);
+    mkPole(x, z, 5, Math.atan2(dx, dz));
+    TLAW.cams.push({ kind: 'speed', x: ax === 'h' ? pos : XR[idx] - dir * w / 4, z: ax === 'h' ? ZR[idx] + dir * w / 4 : pos, dx, dz, lim, cd: 0, name: (ax === 'h' ? HNAMES[idx] : VNAMES[idx]) });
+    // 前方 150 公尺警告標誌（道路交通管理處罰條例第 7 條之 2：一般道路應於 100～300 公尺前設置）
+    const sx = x - dx * 150, sz = z - dz * 150;
+    addGeo('pole', MAT.pole, boxGeo(0.08, 2.4, 0.08, sx, 0.18, sz));
+    const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1), signMat('測速\n取締\n' + lim)); sg.position.set(sx, 2.9, sz); sg.rotation.y = Math.atan2(-dx, -dz); scene.add(sg);
+  }
+  // 路口闖紅燈照相
+  const reds = [[5, 5], [7, 5], [3, 6], [7, 3], [5, 7], [2, 5], [8, 6]];
+  for (const [i, j] of reds) { const x = XR[i] + vW(i) / 2 + 1.5, z = ZR[j] - hW(j) / 2 - 1.5; mkPole(x, z, 6, Math.PI * 0.75); TLAW.cams.push({ kind: 'red', i, j, x, z, cd: 0 }); }
+  // 速限標誌（每段路口出來 18 公尺，右側）
+  const sm50 = signMat('50', true), sm60 = signMat('60', true);
+  const plate = (x, z, ry, lim) => { addGeo('pole', MAT.pole, boxGeo(0.07, 2.2, 0.07, x, 0.18, z)); const g = new THREE.CircleGeometry(0.38, 16); g.rotateY(ry); g.translate(x, 2.6, z); addGeo('lim' + lim, lim === 60 ? sm60 : sm50, g); };
+  for (let i = 0; i < XR.length; i++) for (let j = 0; j < ZR.length - 1; j++) { const w = vW(i), lim = VNAMES[i] === '文心路' ? 60 : 50; plate(XR[i] - w / 2 - 0.8, ZR[j] + hW(j) / 2 + 18, Math.PI, lim); plate(XR[i] + w / 2 + 0.8, ZR[j + 1] - hW(j + 1) / 2 - 18, 0, lim); }
+  for (let j = 0; j < ZR.length; j++) for (let i = 0; i < XR.length - 1; i++) { const w = hW(j), lim = HNAMES[j] === '台灣大道' ? 60 : 50; plate(XR[i] + vW(i) / 2 + 18, ZR[j] + w / 2 + 0.8, -Math.PI / 2, lim); plate(XR[i + 1] - vW(i + 1) / 2 - 18, ZR[j] - w / 2 - 0.8, Math.PI / 2, lim); }
+  flushMerges();
+}
+const SIGNM = {};
+function signMat(t, round) {
+  return SIGNM[t] || (SIGNM[t] = new THREE.MeshLambertMaterial({
+    side: THREE.DoubleSide, transparent: !!round, map: canvasTex(128, 128, (g) => {
+      if (round) { g.fillStyle = '#fff'; g.beginPath(); g.arc(64, 64, 60, 0, 7); g.fill(); g.strokeStyle = '#d01010'; g.lineWidth = 14; g.beginPath(); g.arc(64, 64, 54, 0, 7); g.stroke(); g.fillStyle = '#111'; g.font = '900 56px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, 64, 68); }
+      else { g.fillStyle = '#fff'; g.fillRect(0, 0, 128, 128); g.strokeStyle = '#d01010'; g.lineWidth = 8; g.strokeRect(4, 4, 120, 120); g.fillStyle = '#111'; g.font = '900 30px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; t.split('\n').forEach((l, k) => g.fillText(l, 64, 30 + k * 34)); }
+    })
+  }));
+}
+/* ---------- 違規偵測 ---------- */
+function interAt(x, z) { for (let i = 0; i < XR.length; i++) { if (Math.abs(x - XR[i]) > vW(i) / 2) continue; for (let j = 0; j < ZR.length; j++) if (Math.abs(z - ZR[j]) <= hW(j) / 2) return [i, j]; } return null; }
+function updateTrafficLaw(dt) {
+  ensureLawState();
+  TLAW.flashT -= dt; for (const c of TLAW.cams) c.cd -= dt;
+  const v = P.mode === 'vehicle' ? P.veh : null;
+  TLAW.viol = null;
+  if (!v || S.onDuty || v.police) { TLAW.inter = v ? interAt(P.x, P.z) : null; updateCops(dt); return; }
+  const kind = v.spec.kind; const kmh = Math.abs(v.speed) * 3.6; const lim = speedLimitAt(P.x, P.z);
+  if (kmh > lim + 10) TLAW.viol = { type: 'speed', over: Math.round(kmh - lim), kmh: Math.round(kmh), lim };
+  // 闖紅燈：進入路口時看自己方向的號誌
+  const it = interAt(P.x, P.z);
+  if (it && (!TLAW.inter || TLAW.inter[0] !== it[0] || TLAW.inter[1] !== it[1]) && Math.abs(v.speed) > 2) {
+    const fx = -Math.sin(v.yaw), fz = -Math.cos(v.yaw); const axis = Math.abs(fx) > Math.abs(fz) ? 'ew' : 'ns';
+    if (lightState(axis) === 'R') { TLAW.redAt = performance.now(); TLAW.viol = { type: 'red' }; const cam = TLAW.cams.find(c => c.kind === 'red' && c.i === it[0] && c.j === it[1]); if (cam && cam.cd <= 0) { cam.cd = 4; snap('red', { place: nearCross(P.x, P.z) }); } }
+  }
+  TLAW.inter = it;
+  // 測速照相
+  if (TLAW.viol && TLAW.viol.type === 'speed') {
+    const fx = -Math.sin(v.yaw), fz = -Math.cos(v.yaw);
+    for (const c of TLAW.cams) if (c.kind === 'speed' && c.cd <= 0 && dist(P.x, P.z, c.x, c.z) < 11 && fx * c.dx + fz * c.dz > 0.5 && kmh > c.lim + 10) { c.cd = 4; snap('speed', { place: c.name + '（' + nearCross(c.x, c.z) + '）', over: Math.round(kmh - c.lim), kmh: Math.round(kmh), lim: c.lim }); }
+  }
+  updateCops(dt);
+}
+function snap(type, info) {
+  const v = P.veh; const f = $('flash'); f.style.opacity = 0.85; setTimeout(() => f.style.opacity = 0, 120); AU.tone(2200, 0.06, 0.15, 'square');
+  S.mail.push(Object.assign({ type, mode: 'mail', day: S.day, time: S.time, veh: v.key, vehName: v.spec.name, kind: v.spec.kind }, info));
+  radio('📸 閃了一下！你被' + (type === 'red' ? '路口闖紅燈照相' : '測速照相') + '拍到了，罰單會寄到家裡。', 'warn');
+}
+/* ---------- 交通警察攔停 ---------- */
+function updateCops(dt) {
+  const C = TLAW.chase;
+  if (!C) {
+    if (!TLAW.viol || S.onDuty || P.mode !== 'vehicle') return;
+    for (const c of TRAFFIC) {
+      if (!c.cop || c.state !== 'drive') continue;
+      const d = dist(c.px, c.pz, P.x, P.z); if (d > 65) continue;
+      if (!losClear(c.px, 1.5, c.pz, P.x, 1.2, P.z)) continue;
+      startCopChase(c, Object.assign({}, TLAW.viol, { place: nearCross(P.x, P.z) })); break;
+    }
+    return;
+  }
+  const c = C.car; C.t += dt;
+  // 警示燈
+  const ph = Math.floor(C.t * 6) % 2; if (c.parts.red) { c.parts.red.emissiveIntensity = ph ? 2 : 0; c.parts.blue.emissiveIntensity = ph ? 0 : 2; }
+  const d = dist(c.px, c.pz, P.x, P.z);
+  if (C.state === 'chase') {
+    // 開車追：遠的時候走道路、近的時候直接跟在後面
+    C.pathT -= dt;
+    let tx = P.x, tz = P.z;
+    if (d > 28) { if (C.pathT <= 0) { C.pathT = 0.8; C.path = findPath(c.px, c.pz, P.x, P.z); } const p = (C.path || []).find(q => dist(q[0], q[1], c.px, c.pz) > 8); if (p) { tx = p[0]; tz = p[1]; } }
+    else { const pv = P.veh; if (pv) { tx = pv.x + Math.sin(pv.yaw) * 7; tz = pv.z + Math.cos(pv.yaw) * 7; } }
+    freeDrive(c, tx, tz, d > 28 ? 26 : clamp(d - 6, 0, 22), dt);
+    const pspd = P.mode === 'vehicle' ? Math.abs(P.veh.speed) : 0;
+    if (d < 20 && pspd < 1.5) { C.stopT += dt; if (C.stopT > 2) copPullOver(); } else C.stopT = Math.max(0, C.stopT - dt * 0.5);
+    if (d > 230) { C.lostT += dt; if (C.lostT > 12) copLost(); } else C.lostT = 0;
+    if (S.onDuty) endCop();
+  } else if (C.state === 'stopped') {
+    c.speed = 0;
+    if (C.officer) { const o = C.officer; const tx = C.spot.x, tz = C.spot.z; const dd = dist(o.x, o.z, tx, tz); if (dd > 0.5) { moveHuman(o, tx - o.x, tz - o.z, 1.6, dt); posePerson(o.P, 'walk', dt, 1.6); } else { o.yaw = Math.atan2(P.x - o.x, P.z - o.z); posePerson(o.P, 'talk', dt); if (!C.talked) { C.talked = true; copTicketDialog(); } } o.P.g.position.set(o.x, 0.2, o.z); o.P.g.rotation.y = o.yaw; }
+    if (P.mode === 'vehicle' && Math.abs(P.veh.speed) > 5 && !C.talked) { C.state = 'chase'; C.escapeTry = true; radio('🚨 你在員警走過來時開走了！', 'warn'); }
+  }
+  AU.copSiren(C.state === 'chase' ? clamp(1 - d / 150, 0, 1) : 0);
+}
+function startCopChase(c, viol) {
+  c.state = 'chase'; c.speed = c.speed || 10; c.x = c.px; c.z = c.pz;
+  TLAW.chase = { car: c, viol, state: 'chase', t: 0, stopT: 0, lostT: 0, pathT: 0, path: null };
+  radio('🚨 後方警車鳴笛示意你靠邊停車！（' + (viol.type === 'red' ? '闖紅燈' : '超速 ' + viol.kmh + ' km/h，速限 ' + viol.lim) + '）停車受檢，逃逸會依第 60 條吊扣駕照 6 個月。', 'warn');
+  showBubble('📢 前面的車，請靠邊停車！'); speak('前面的車，請靠邊停車');
+}
+function freeDrive(c, tx, tz, maxSp, dt) {
+  const want = Math.atan2(-(tx - c.x), -(tz - c.z)); const d = angDiff(c.yaw, want);
+  c.yaw += clamp(d, -2.2 * dt, 2.2 * dt);
+  const sp = maxSp * (1 - Math.min(0.7, Math.abs(d) * 0.8)); c.speed += clamp(sp - c.speed, -14 * dt, 9 * dt);
+  c.x += -Math.sin(c.yaw) * c.speed * dt; c.z += -Math.cos(c.yaw) * c.speed * dt;
+  const p = { x: c.x, z: c.z }; if (collideCircle(p, 1.2, 0.5)) c.speed *= 0.7; c.x = p.x; c.z = p.z;
+  c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.yaw;
+}
+function copPullOver() {
+  const C = TLAW.chase; C.state = 'stopped'; const c = C.car; const v = P.veh || { x: P.x, z: P.z, yaw: P.yaw };
+  const lx = -Math.cos(v.yaw), lz = Math.sin(v.yaw);
+  C.spot = { x: v.x + lx * 1.6, z: v.z + lz * 1.6 };
+  C.officer = spawnHuman({ police: true, shirt: 0x9cc3e6, pants: 0x1b2a4a, fem: false, data: { role: 'cop', ai: true } }, c.px - Math.cos(c.yaw) * 1.5, c.pz + Math.sin(c.yaw) * 1.5, 0);
+  radio('員警下車走過來了，等一下。', 'info');
+}
+function copTicketDialog() {
+  const C = TLAW.chase; const v = P.veh; const kind = v ? v.spec.kind : 'scooter';
+  const t = Object.assign({ mode: 'spot', day: S.day, time: S.time, veh: v ? v.key : '', vehName: v ? v.spec.name : '', kind }, C.viol);
+  if (C.escapeTry) t.escape = true;
+  const r = calcTicket(t);
+  const said = t.type === 'red' ? '你剛剛在' + t.place + '闖紅燈喔。' : '你剛剛時速 ' + t.kmh + '，這裡速限 ' + t.lim + '，超速 ' + t.over + ' 公里喔。';
+  MODAL.show(`<h2>👮 交通警察攔查</h2><p>員警：「先生你好，${said}駕照、行照麻煩給我。」</p><p>員警看了你的證件：「欸？你也是警察喔…規定就是規定，一樣要開單。」</p>${ticketHTML(t, r)}`,
+    [['簽收罰單', 'y', () => { MODAL.close(); applyTicket(t, r); endCop(true); }]]);
+}
+function copLost() {
+  const C = TLAW.chase; radio('你甩掉了警車…但車牌已經被記下來了。', 'warn');
+  const v = P.veh; const base = { mode: 'mail', day: S.day, time: S.time, veh: v ? v.key : '', vehName: v ? v.spec.name : '', kind: v ? v.spec.kind : 'car' };
+  S.mail.push(Object.assign({}, base, C.viol)); S.mail.push(Object.assign({}, base, { type: 'escape', place: C.viol.place }));
+  endCop();
+}
+function endCop(ok) {
+  const C = TLAW.chase; if (!C) return; const c = C.car;
+  if (C.officer) removeHuman(C.officer);
+  if (c.parts.red) { c.parts.red.emissiveIntensity = 0; c.parts.blue.emissiveIntensity = 0; }
+  const r = randomSegNear(P.x, P.z, 120, 200); if (r) c.place(...r); else c.state = 'drive';
+  TLAW.chase = null; AU.copSiren(0);
+}
+/* ---------- 罰單計算與執行 ---------- */
+function calcTicket(t) {
+  if (t.type === 'speed') return LAWDB.speed(t.kind, t.over);
+  if (t.type === 'red') return LAWDB.red(t.kind);
+  return LAWDB.escape(t.kind);
+}
+function ticketHTML(t, r) {
+  if (!r) return '<p>超速未逾 10 公里，依規定勸導免罰。</p>';
+  const spot = t.mode === 'spot';
+  return `<div class="shopitem" style="display:block"><b>📄 ${t.type === 'speed' ? '超速 ' + t.over + ' 公里（' + t.kmh + '／速限 ' + t.lim + '）' : t.type === 'red' ? '闖紅燈' : '拒絕停車受檢而逃逸'}</b><small>${t.place || ''}・${t.vehName}・${spot ? '當場舉發' : '逕行舉發（照相）'}</small>
+  <small>依據：${r.law}<br>法定罰鍰：${r.range}，本單罰鍰 <b style="color:#ffd84a">${fmtMoney(r.fine)}</b>${spot && r.pts ? '・記違規點數 ' + r.pts + ' 點' : spot ? '' : '・逕行舉發不記點'}${r.extra ? '<br>另：' + r.extra : ''}</small></div>`;
+}
+function applyTicket(t, r) {
+  ensureLawState(); if (!r) return;
+  S.money -= r.fine;
+  if (t.mode === 'spot' && r.pts) { S.points.push({ day: S.day, p: r.pts }); }
+  if (r.plate && t.veh) { S.plateUntil[t.veh] = Math.max(S.plateUntil[t.veh] || 0, S.day + r.plate); radio('🚫 ' + t.vehName + ' 牌照吊扣 6 個月（到第 ' + (S.day + r.plate) + ' 天）。', 'warn'); }
+  if (r.lic) { S.licUntil = Math.max(S.licUntil, S.day + r.lic); radio('🚫 駕照吊扣 6 個月（到第 ' + S.licUntil + ' 天），這段期間不能開車騎車。', 'warn'); }
+  // 一年內違規點數滿 12 點：吊扣駕照 2 個月
+  S.points = S.points.filter(q => S.day - q.day < 365); const sum = S.points.reduce((a, q) => a + q.p, 0);
+  if (sum >= 12) { S.licUntil = Math.max(S.licUntil, S.day + 60); S.points = []; radio('🚫 一年內違規點數滿 12 點，吊扣駕照 2 個月（到第 ' + S.licUntil + ' 天）。', 'warn'); }
+  addLog('🧾 交通罰單 ' + fmtMoney(r.fine) + '（' + (t.type === 'speed' ? '超速' : t.type === 'red' ? '闖紅燈' : '逃逸') + '）');
+  punish(t.type === 'escape' ? 'dem' : 'rep', '下班時交通違規被開罰單（' + (t.type === 'speed' ? '超速' : t.type === 'red' ? '闖紅燈' : '拒絕停車受檢而逃逸') + '）');
+  updateHUD(true); saveGame();
+}
+// 早上起床時收到寄來的罰單
+function deliverMail() {
+  ensureLawState(); if (!S.mail.length) return;
+  const list = S.mail.splice(0); const rs = list.map(t => calcTicket(t));
+  const total = rs.reduce((a, r) => a + (r ? r.fine : 0), 0);
+  MODAL.show(`<h2>📬 監理站寄來 ${list.length} 張罰單</h2>${list.map((t, k) => ticketHTML(t, rs[k])).join('')}<p>合計 <b>${fmtMoney(total)}</b>，已從存款扣繳。</p>`,
+    [['好，我會小心開車', 'g', () => { MODAL.close(); list.forEach((t, k) => applyTicket(t, rs[k])); }]]);
+}
+function canDrive(v) {
+  ensureLawState();
+  if (S.licUntil > S.day) { radio('🚫 你的駕照吊扣中（到第 ' + S.licUntil + ' 天），不能開車騎車。', 'warn'); return false; }
+  if (v && S.plateUntil[v.key] > S.day) { radio('🚫 這台車的牌照吊扣中（到第 ' + S.plateUntil[v.key] + ' 天），不能上路。', 'warn'); return false; }
+  return true;
+}
+AU.copSiren = function (vol) {
+  if (!this.ctx) return;
+  if (!this.cop) { const o = this.ctx.createOscillator(); o.type = 'square'; const g = this.ctx.createGain(); g.gain.value = 0; const f = this.ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2000; o.connect(f); f.connect(g); g.connect(this.master); o.start(); this.cop = { o, g }; }
+  const t = this.ctx.currentTime; this.cop.g.gain.setTargetAtTime(vol * 0.07, t, 0.1);
+  if (vol > 0) { const ph = (performance.now() / 1000) % 1.4; this.cop.o.frequency.setTargetAtTime(ph < 0.7 ? 700 + ph * 800 : 1260 - (ph - 0.7) * 800, t, 0.02); }
+};
+
+/* ================= NPC 會講話：對話泡泡、語音、台語口頭禪 ================= */
+const LINES = {
+  greetCop: ['警察先生辛苦了！', '警察大人好～', '欸，有警察耶，好安心。', '阿sir早！', '少年欸，辛苦喔！'],
+  greetCopOld: ['少年欸，辛苦喔！', '警察先生，呷飽未？', '多謝恁顧咱的治安喔。'],
+  hi: ['你好～', '早安！', '今天天氣不錯耶。', '嗨～'],
+  hiOld: ['呷飽未？', '今仔日足熱欸。', '少年欸，你好！', '欸，好久不見。'],
+  chatA: ['你昨天有看那個新聞嗎？', '我最近在減肥啦…', '夜市那家雞排真的讚！', '今天股票又跌了，夭壽喔！', '你家小孩考試考怎樣？', '颱風好像要來了耶。', '房價真的買不起…', '晚上要不要去吃火鍋？', '最近油價又漲了。', '我剛剛差點被機車撞到！'],
+  chatAOld: ['今仔日菜價足貴！', '阮孫仔真乖喔。', '彼間廟仔足靈驗。', '腳骨足酸，老囉。'],
+  chatB: ['真的假的？', '對啊對啊！', '哈哈哈，你很好笑欸。', '嘿啊～', '我也是這樣想。', '好啦好啦。', '母湯啦，這樣不行啦！', '讚啦！'],
+  chatBOld: ['嘿啊嘿啊。', '敢有影？', '按呢喔。', '真正是按呢。'],
+  bump: ['歹勢歹勢！', '欸！走路看路好不好！', '唉唷，撞到我了啦！', '你很急喔？'],
+  car: ['夭壽喔！開那麼快！', '騎慢一點啦！', '差點撞到我！', '你是在開賽車喔？'],
+  siren: ['有警察！發生什麼事了？', '欸，警車耶。', '是不是有搶案？'],
+  vendor: ['來喔來喔！雞排一份 85！', '俗俗賣喔！', '珍奶第二杯半價喔！', '少年欸，來呷看嘜！', '燒喔～剛起鍋的！', '好吃不貴喔！'],
+  hurt: ['救命啊…', '好痛…', '快叫救護車…'],
+};
+const BUBS = [];
+function bubbleTex(text) {
+  const c = document.createElement('canvas'); const g = c.getContext('2d'); g.font = '700 34px ' + FONT;
+  const w = Math.min(980, Math.ceil(g.measureText(text).width) + 48); c.width = w; c.height = 92;
+  g.font = '700 34px ' + FONT; g.fillStyle = 'rgba(255,255,255,0.94)'; g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 3;
+  const r = 22; g.beginPath(); g.moveTo(r, 2); g.lineTo(w - r, 2); g.quadraticCurveTo(w - 2, 2, w - 2, r); g.lineTo(w - 2, 64 - r); g.quadraticCurveTo(w - 2, 64, w - r, 64); g.lineTo(w / 2 + 12, 64); g.lineTo(w / 2, 88); g.lineTo(w / 2 - 12, 64); g.lineTo(r, 64); g.quadraticCurveTo(2, 64, 2, 64 - r); g.lineTo(2, r); g.quadraticCurveTo(2, 2, r, 2); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle = '#111'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, w / 2, 34);
+  const t = new THREE.CanvasTexture(c); t.minFilter = THREE.LinearFilter; return { t, aspect: w / 92 };
+}
+let lastVoice = 0;
+function npcSpeak(text, fem, elder) {
+  try {
+    if (!window.speechSynthesis || performance.now() - lastVoice < 2200) return; lastVoice = performance.now();
+    const u = new SpeechSynthesisUtterance(text.replace(/[～~]/g, '')); u.lang = 'zh-TW'; u.rate = elder ? 0.9 : 1.08; u.pitch = fem ? 1.35 : elder ? 0.75 : 0.95; u.volume = 0.9;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  } catch (e) { }
+}
+// 讓某人說話（target 有 x、z；可選 fem、elder、h=頭頂高度）
+function say(target, text, opt) {
+  opt = opt || {};
+  if (dist(P.x, P.z, target.x, target.z) > 30) return;
+  let b = BUBS.find(q => q.t > 0 && q.target === target) || BUBS.find(q => q.t <= 0); if (!b) { if (BUBS.length < 10) { b = { sp: new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthTest: false, sizeAttenuation: false })), t: 0 }; b.sp.renderOrder = 5; scene.add(b.sp); BUBS.push(b); } else b = BUBS.reduce((a, q) => q.t < a.t ? q : a); }
+  if (b.sp.material.map) b.sp.material.map.dispose();
+  const { t, aspect } = bubbleTex(text); b.sp.material.map = t; b.sp.material.needsUpdate = true;
+  const H = IS_TOUCH ? 0.085 : 0.065; b.sp.scale.set(H * aspect, H, 1); b.target = target; b.h = opt.h || 2.25; b.t = opt.dur || 3.4; b.sp.visible = true;
+  if (!opt.silent && dist(P.x, P.z, target.x, target.z) < 15) npcSpeak(text, opt.fem, opt.elder);
+}
+const TALK = { t: 0, vendorT: 3, bumpT: 0, sirenT: 0, greeted: new WeakSet() };
+function pedSay(pd, kind) {
+  const old = pd.elder; const L = (old && LINES[kind + 'Old']) ? LINES[kind + 'Old'] : LINES[kind];
+  say(pd, pick(L), { fem: pd.fem, elder: old });
+}
+function updateTalk(dt) {
+  for (const b of BUBS) {
+    if (b.t <= 0) { b.sp.visible = false; continue; }
+    b.t -= dt; const tg = b.target; b.sp.position.set(tg.x, (tg.y0 || 0.18) + b.h, tg.z); b.sp.material.opacity = Math.min(1, b.t * 2);
+  }
+  TALK.t -= dt; TALK.bumpT -= dt; TALK.sirenT -= dt; TALK.vendorT -= dt;
+  // 走路撞到人
+  if (P.mode === 'foot' && TALK.bumpT <= 0) for (const pd of PEDS) if (pd.alive && pd.state === 'walk' && dist(pd.x, pd.z, P.x, P.z) < 0.75) { TALK.bumpT = 4; pedSay(pd, 'bump'); pd.state = 'idle'; pd.timer = 1.5; break; }
+  // 警笛
+  if (P.veh && P.veh.siren && TALK.sirenT <= 0) { const pd = PEDS.find(p => p.alive && p.state === 'walk' && dist(p.x, p.z, P.x, P.z) < 22); if (pd && Math.random() < 0.5) { pedSay(pd, 'siren'); TALK.sirenT = 8; } else TALK.sirenT = 3; }
+  // 夜市叫賣
+  if (TALK.vendorT <= 0) { TALK.vendorT = rand(3, 6); if (marketOpen() && dist(P.x, P.z, SITES.market.x, SITES.market.z) < 45) { const st = pick(SITES.market.stalls); say({ x: st.x, z: st.z, y0: 0 }, pick(LINES.vendor), { h: 2.9, fem: Math.random() < 0.5 }); } }
+  if (TALK.t > 0) return; TALK.t = rand(1.2, 2.4);
+  const near = PEDS.filter(p => p.alive && (p.state === 'walk' || p.state === 'idle') && dist(p.x, p.z, P.x, P.z) < 20);
+  if (!near.length) return;
+  const pd = pick(near); const d = dist(pd.x, pd.z, P.x, P.z);
+  if (d < 7 && !TALK.greeted.has(pd) && Math.random() < 0.5) { TALK.greeted.add(pd); pedSay(pd, S.onDuty ? 'greetCop' : 'hi'); return; }
+  // 兩個路人聊天
+  const mate = near.find(q => q !== pd && dist(q.x, q.z, pd.x, pd.z) < 5);
+  if (mate && Math.random() < 0.6) {
+    pd.state = mate.state = 'idle'; pd.timer = mate.timer = 6;
+    pd.P.g.rotation.y = Math.atan2(mate.x - pd.x, mate.z - pd.z); mate.P.g.rotation.y = Math.atan2(pd.x - mate.x, pd.z - mate.z);
+    pedSay(pd, 'chatA'); setTimeout(() => { if (mate.alive) pedSay(mate, 'chatB'); }, 2000);
+  }
+}
+/* ---------- 跟路人聊天 ---------- */
+function nearestChatPed() {
+  let best = null, bd = 2.1;
+  for (const pd of PEDS) { if (!pd.alive || !['walk', 'idle'].includes(pd.state)) continue; const d = dist(pd.x, pd.z, P.x, P.z); if (d < bd) { bd = d; best = pd; } }
+  return best;
+}
+const PLACES = () => [['大墩分局', SITES.station], ['一中街夜市', SITES.market], ['大墩醫院', SITES.hospital], ['大墩車業', SITES.dealer], ['我家（大墩華廈）', SITES.home], ['麥麥商業銀行', { x: SITES.bank.door.x, z: SITES.bank.door.z }], ['最近的麥麥超商', (() => { const s = SITES.stores.slice().sort((a, b) => dist(a.door.x, a.door.z, P.x, P.z) - dist(b.door.x, b.door.z, P.x, P.z))[0]; return { x: s.door.x, z: s.door.z }; })()]];
+function directionsTo(tx, tz) {
+  const path = findPath(P.x, P.z, tx, tz); let acc = 0, turn = null;
+  for (let s = 1; s < path.length - 1; s++) {
+    const [ax, az] = path[s - 1], [bx, bz] = path[s], [cx, cz] = path[s + 1]; acc += Math.hypot(bx - ax, bz - az);
+    const d1x = bx - ax, d1z = bz - az, d2x = cx - bx, d2z = cz - bz; const l1 = Math.hypot(d1x, d1z), l2 = Math.hypot(d2x, d2z); if (l1 < 1 || l2 < 1) continue;
+    const cr = (d1x * d2z - d1z * d2x) / (l1 * l2);
+    if (Math.abs(cr) > 0.5 && s > 1) { turn = { dist: Math.round(acc / 10) * 10, right: cr > 0, road: roadNameAt(bx + d2x / l2 * 20, bz + d2z / l2 * 20) }; break; }
+  }
+  const total = Math.round(path.reduce((a, p, k) => k ? a + Math.hypot(p[0] - path[k - 1][0], p[1] - path[k - 1][1]) : 0, 0) / 10) * 10;
+  return { turn, total };
+}
+function chatDialog(pd) {
+  pd.state = 'idle'; pd.timer = 30; pd.P.g.rotation.y = Math.atan2(P.x - pd.x, P.z - pd.z);
+  if (!pd.name) pd.name = randName();
+  const who = pd.elder ? (pd.fem ? '阿嬤' : '阿伯') : (pd.fem ? '小姐' : '先生');
+  let reply = pd.elder ? pick(['少年欸，啥物代誌？', '欸，你好啊！']) : S.onDuty ? pick(['警察先生，有什麼事嗎？', '您好，需要幫忙嗎？']) : pick(['你好，有事嗎？', '嗨～']);
+  const talkOut = (t) => { reply = t; say(pd, t, { fem: pd.fem, elder: pd.elder }); };
+  say(pd, reply, { fem: pd.fem, elder: pd.elder });
+  const render = (extra) => {
+    $('mbox').innerHTML = `<h2>💬 ${pd.name}（${who}）</h2><p style="font-size:17px">「${reply}」</p>${extra || ''}
+    <div class="btns"><button class="btn" data-c="hi">👋 打招呼</button><button class="btn" data-c="way">🗺 問路</button><button class="btn" data-c="sus">🔎 有沒有看到可疑的人？</button>${S.onDuty ? '<button class="btn y" data-c="pr">📢 交通安全宣導</button>' : ''}<button class="btn gray" data-c="bye">再見</button></div>`;
+    $('mbox').querySelectorAll('[data-c]').forEach(b => b.onclick = () => act(b.dataset.c));
+  };
+  const act = (c) => {
+    AU.click();
+    if (c === 'bye') { say(pd, pd.elder ? '好，慢走喔！' : pick(['掰掰～', '謝謝！', '再見！']), { fem: pd.fem, elder: pd.elder }); MODAL.close(); pd.timer = 2; return; }
+    if (c === 'hi') { talkOut(pick(pd.elder ? LINES.hiOld.concat(LINES.chatAOld) : LINES.hi.concat(LINES.chatA))); render(); return; }
+    if (c === 'way') {
+      render(`<h3>想去哪裡？</h3><div class="btns">${PLACES().map((p, k) => `<button class="btn" data-p="${k}">${p[0]}</button>`).join('')}</div>`);
+      $('mbox').querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
+        const [nm, pl] = PLACES()[+b.dataset.p]; const { turn, total } = directionsTo(pl.x, pl.z);
+        const t = total < 40 ? `${nm}就在附近啦，看一下就看到了！` : turn ? `${nm}喔？往前走大概 ${turn.dist} 公尺，在${turn.road}${turn.right ? '右轉' : '左轉'}，全部大概 ${total} 公尺。` : `${nm}喔？直直走大概 ${total} 公尺就到了。`;
+        talkOut((pd.elder ? '喔～' : '') + t);
+        render(`<div class="btns"><button class="btn g" id="setNav">📍 幫我設成導航</button></div>`);
+        $('setNav').onclick = () => { NAV.way = null; setWaypoint(pl.x, pl.z); MODAL.close(); talkOut('不會，路上小心喔！'); };
+      });
+      return;
+    }
+    if (c === 'sus') {
+      const h = MIS.cur && MIS.cur.hint && MIS.cur.hint(pd);
+      talkOut(h || pick(['沒有耶，今天都很正常。', '好像沒有看到耶…', pd.elder ? '阮攏無注意著呢。' : '不好意思，我剛剛在滑手機沒注意。']));
+      render(); return;
+    }
+    if (c === 'pr') {
+      if (pd.promo) { talkOut('你剛剛講過了啦！'); render(); return; }
+      pd.promo = true; S._promo = S._promo && S._promo.day === S.day ? S._promo : { day: S.day, n: 0 };
+      const t = pick(['過馬路要走斑馬線，看清楚紅綠燈喔。', '騎機車一定要戴安全帽喔。', '喝酒不開車，開車不喝酒。', '小心詐騙，接到可疑電話打 165 查證。']);
+      say({ x: P.x, z: P.z, y0: 0.18 }, t, { silent: true }); talkOut(pick(['好的，謝謝警察先生！', '我知道了，會注意的！', pd.elder ? '好啦好啦，多謝喔！' : '了解～謝謝！']));
+      if (S._promo.n < 5) { S._promo.n++; S.merit += 1; updateHUD(true); render('<p class="res-good">✔ 完成一次社區宣導（考績 +1）</p>'); } else render();
+      return;
+    }
+  };
+  MODAL.custom(() => render());
+}
+
 /* ================= 介面 ================= */
 const GAME = { running: false, tscale: 1, mapOpen: false };
 function radio(msg, type) {
@@ -3245,6 +3831,7 @@ function findInteract() {
   let best = null, bd = 1e9;
   const list = STATIC_INTERACT.concat(MIS.interacts());
   for (const it of list) { if (inVeh && !it.veh) continue; const d = dist(P.x, P.z, it.x, it.z); const r = inVeh ? it.r + 8 : it.r; if (d < r && d < bd) { bd = d; best = it; } }
+  if (!best && !inVeh) { const pd = nearestChatPed(); if (pd) best = { x: pd.x, z: pd.z, r: 2.1, label: '和路人聊天', act: () => chatDialog(pd) }; }
   return best;
 }
 function updatePrompt() {
@@ -3305,6 +3892,8 @@ function showHelp() {
   <h3>🎯 拿槍指人</h3><p>按住右鍵（手機按 🎯）瞄準。被指的路人會害怕舉手、尖叫逃跑；沒有危險卻拿槍指著民眾，民眾會打 110 投訴（申誡、記過）。嫌犯被槍指著再喊話比較容易投降，但有些壞人會拔槍反擊或逃跑。</p>
   <h3>📋 更多勤務</h3><p><b>車禍處理</b>：放交通錐、先救傷者、雙方都要酒測、問目擊者，再判斷誰的責任。<b>通緝犯追捕</b>：在黃色範圍找衣服顏色對的人，他跑了就追上去撲倒。<b>糾紛調解</b>：問清楚雙方和現場再決定勸導、開罰或逮捕。<b>尋人</b>：找到走失的長者或小孩，帶回家屬身邊。<b>毒品臨檢</b>：有可疑跡象才能搜身，二級毒品要逮捕、少量三級毒品是罰鍰加講習。</p>
   <p>16:45 以後不再派新案子；打卡下班時，手上還沒做完的任務會交接給同仁，不扣考績。</p>
+  <h3>🚦 下班開車要守法</h3><p>下班時騎自己的車，超速（超過速限 10 公里以上）或闖紅燈會被罰，全部照《道路交通管理處罰條例》：路上有<b>測速照相</b>（前方 150 公尺有「測速取締」牌子）和<b>路口闖紅燈照相</b>，被拍到罰單會寄到家（逕行舉發不記點）；被<b>交通警察</b>看到會鳴笛攔你，停下來會當場開單並記點，逃跑依第 60 條罰 1 萬元起、吊扣駕照 6 個月。超速 40 公里以上依第 43 條吊扣車牌 6 個月。一年內違規點數滿 12 點吊扣駕照 2 個月。身為警察，被開罰單還會申誡。上班開警車執勤不受影響。速限：台灣大道、文心路 60，其他路 50。</p>
+  <h3>💬 跟路人聊天</h3><p>走到路人旁邊按 E 可以聊天：打招呼、問路（可以直接幫你設導航）、問有沒有看到可疑的人（追通緝犯、找走失者時會給線索），上班時還能做交通安全宣導。路人會互相聊天、跟警察打招呼、被撞到會唸你。</p>
   <h3>🧭 導航、電台、車輛</h3><p><b>導航</b>：有勤務時會自動導航，跟著小地圖的黃色路線和路面箭頭走，右上角會提示前面要左轉還是右轉。按 M 打開大地圖，點一下任何地方就能設定紫色的自訂目的地，再點一次取消。<br>
   <b>電台</b>：開車時按 N（手機按 📻）換台：流行、Lo-Fi、台語金曲、新聞台。<br>
   <b>撞壞</b>：車子撞多了會凹、冒白煙再冒黑煙，車況 0% 會起火，5 秒內不下車就會爆炸！警車撞壞會被申誡，分局會準備新的警車；自己的車睡覺時會送修（每台 $3,000）。<br>
@@ -3467,18 +4056,19 @@ function loop(now) {
     for (let k = MHUMANS.length - 1; k >= 0; k--) { const h = MHUMANS[k]; if (h.role === 'robber' || h.role === 'clerk' || h.ai) continue;
       if (h.walk) { h.x += h.walk.vx * dt; h.z += h.walk.vz * dt; h.P.g.rotation.y = Math.atan2(h.walk.vx, h.walk.vz); h.walk.t -= dt; if (h.walk.t <= 0) { removeHuman(h); continue; } }
       posePerson(h.P, h.pose || 'idle', dt, 1.6); h.P.g.position.set(h.x, 0.2, h.z); }
-    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt);
+    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateGarbageMusic(); updateTrafficLaw(dt); updateTalk(dt);
   } else AU.update(false, 0, false);
   frame++;
   updateSky();
   updatePrompt();
   updateHUD(false);
   if (frame % 3 === 0) drawMini();
+  renderMirror(renderer);
   renderer.render(scene, camera);
 }
 
 // 測試用：快速模擬（不畫圖）
-function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); } }
+function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateTrafficLaw(dt); updateTalk(dt); } }
 
 /* ---------- 開始 ---------- */
 function startGame(fresh) {
@@ -3513,7 +4103,7 @@ MIS.update = function (dt) {
 function boot() {
   if (!window.THREE) { $('loading').textContent = '⚠️ 3D 引擎載入失敗，請確認網路連線後重新整理。'; return; }
   try {
-    buildCity(); buildMapImage(); initPlayerVehicles(); initStaticInteracts();
+    buildCity(); buildCams(); buildMapImage(); initPlayerVehicles(); initStaticInteracts();
   } catch (e) { $('loading').textContent = '⚠️ 載入錯誤：' + e.message; console.error(e); return; }
   P.x = SITES.home.x; P.z = SITES.home.z + 1.5; P.yaw = Math.PI;
   camera.position.set(SITES.station.x - 60, 40, SITES.station.z + 80); camera.lookAt(SITES.station.x, 0, SITES.station.z);
