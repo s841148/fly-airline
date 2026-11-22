@@ -154,6 +154,7 @@ body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;w
   <button class="tb" id="tWeap" style="right:15vw;bottom:42vh">🔄<small>武器</small></button>
   <button class="tb" id="tRun" style="left:calc(3vw + 155px);bottom:calc(5vh + 96px)">🏃<small>跑/煞車</small></button>
   <button class="tb" id="tMap" style="right:calc(10px + 180px);top:10px;width:46px;height:46px;font-size:18px">🗺</button>
+  <button class="tb" id="tAim" style="right:25vw;bottom:44vh">🎯<small>瞄準</small></button>
   <button class="tb" id="tRadio" style="right:25vw;bottom:26vh">📻<small>電台</small></button>
   <button class="tb" id="tMenu" style="right:calc(10px + 180px);top:66px;width:46px;height:46px;font-size:18px">☰</button>
 </div>
@@ -1299,6 +1300,7 @@ class Ped {
     let sp = this.speed, pose = 'walk';
     if (this.state === 'flee') { sp = 5; pose = 'run'; this.timer -= dt; if (this.timer <= 0) this.state = 'walk'; }
     if (this.state === 'idle') { sp = 0; pose = 'idle'; this.timer -= dt; if (this.timer <= 0) this.state = 'walk'; }
+    if (this.state === 'cower') { sp = 0; pose = 'kneel'; this.timer -= dt; if (this.timer <= 0) { this.state = 'flee'; this.timer = rand(6, 10); this.dir = Math.random() < .5 ? 1 : -1; } }
     const ox = this.x, oz = this.z;
     this.t += sp * dt * this.dir; this.calc();
     const dx = this.x - ox, dz = this.z - oz;
@@ -1308,6 +1310,7 @@ class Ped {
     if (this.state === 'walk' && Math.random() < dt * 0.02) { this.state = 'idle'; this.timer = rand(2, 6); }
   }
   scare(x, z) { if (this.state === 'down') return; this.state = 'flee'; this.timer = rand(6, 10); const r = this.rect; const cx = (r.x0 + r.x1) / 2, cz = (r.z0 + r.z1) / 2; this.dir = Math.random() < .5 ? 1 : -1; }
+  cower() { if (this.state === 'down') return; if (this.state !== 'cower') { this.state = 'cower'; if (Math.random() < 0.3) showBubble(pick(['路人：「不要開槍！」', '路人：「啊——！」', '路人：「我什麼都沒做！」'])); } this.timer = 2.5; }
   knock(t) { this.state = 'down'; this.timer = t || 20; this.alive = false; }
   recycle() {
     const night = isNight();
@@ -1432,7 +1435,7 @@ function initTouch() {
   tap('tFire', () => { INP.fireHeld = true; fire(); }, () => { INP.fireHeld = false; });
   tap('tAct', doInteract); tap('tCar', toggleVehicle); tap('tShout', shout); tap('tSiren', toggleSiren); tap('tRel', reload);
   tap('tWeap', () => setWeapon(S.weapon === 0 ? 1 : 0)); tap('tRun', () => { INP.run = true; }, () => { INP.run = false; });
-  tap('tMap', toggleMap); tap('tMenu', openPause); tap('tRadio', () => RADIO.cycle());
+  tap('tMap', toggleMap); tap('tMenu', openPause); tap('tRadio', () => RADIO.cycle()); tap('tAim', () => { INP.aim = !INP.aim; $('tAim').style.background = INP.aim ? 'rgba(255,216,74,.7)' : ''; });
 }
 
 /* ---------- 第一人稱手與槍 ---------- */
@@ -1752,7 +1755,8 @@ const MIS = {
       else MARK.visible = false;
     } else if (S.onDuty) {
       this.timer -= dt;
-      if (this.timer <= 0) newCall();
+      const shiftOver = S.time >= 16 * 60 + 45 && !(S.clockIn >= 16 * 60 + 45);
+      if (this.timer <= 0) { if (shiftOver) { this.timer = 9999; if (!S._offMsgDay || S._offMsgDay !== S.day) { S._offMsgDay = S.day; radio('📻 勤務指揮中心：今天不再派案了，辛苦了！回分局打卡下班吧。', 'radio'); } } else newCall(); }
       // 目擊闖紅燈
       this.redScan -= dt;
       if (this.redScan <= 0) {
@@ -1778,7 +1782,8 @@ const MIS = {
         return;
       }
     }
-    if (type === 'gun' && (!this.cur || this.cur.type !== 'robbery') && performance.now() - this.shotT > 30000) { this.shotT = performance.now(); punish('dem', '沒有危害情況下開槍（違反警械使用規定）'); }
+    const threat = this.cur && (this.cur.type === 'robbery' || (this.cur.armedThreat && this.cur.armedThreat()));
+    if (type === 'gun' && !threat && performance.now() - this.shotT > 30000) { this.shotT = performance.now(); punish('dem', '沒有危害情況下開槍（違反警械使用規定）'); }
   },
   onShout() { if (this.cur && this.cur.onShout) this.cur.onShout(); },
   onRam(n, sp) {
@@ -1800,10 +1805,11 @@ function newCall() {
   const r = Math.random(); const hour = S.time / 60;
   const bankOpen = hour >= 9 && hour < 15.5;
   if (S.stats.days === 0 && !S._firstCall) { S._firstCall = true; misPatrol(); return; }
-  if (r < 0.36) misTraffic(null, Math.random() < 0.6 ? '超速' : '闖紅燈');
-  else if (r < 0.58) misRobbery(bankOpen && Math.random() < 0.35 ? 'bank' : 'store');
-  else if (r < 0.82) misPatrol();
-  else misCheckpoint();
+  const W = [['traffic', 18], ['robbery', 12], ['patrol', 10], ['check', 6], ['accident', 12], ['fugitive', 11], ['dispute', 11], ['missing', 9], ['drug', 9]];
+  let tot = W.reduce((a, b) => a + b[1], 0) * r, k = 'traffic'; for (const [n, w] of W) { tot -= w; if (tot <= 0) { k = n; break; } }
+  if (k === MIS.lastType && Math.random() < 0.7) { MIS.lastType = null; return newCall(); }
+  MIS.lastType = k;
+  ({ traffic: () => misTraffic(null, Math.random() < 0.6 ? '超速' : '闖紅燈'), robbery: () => misRobbery(bankOpen && Math.random() < 0.35 ? 'bank' : 'store'), patrol: misPatrol, check: misCheckpoint, accident: misAccident, fugitive: misFugitive, dispute: misDispute, missing: misMissing, drug: misDrug })[k]();
 }
 
 /* ---------- 追車 ---------- */
@@ -2021,7 +2027,7 @@ function misRobbery(kind) {
         if (!['hold', 'alert', 'fight'].includes(h.state)) continue;
         const d = dist(P.x, P.z, h.x, h.z); if (d > 38) continue;
         h.shouts++;
-        let p = D.surrender * (h.shouts > 2 ? 0.4 : 1) + (aimingAt(h) ? 0.18 : 0) + (all().some(o => o.state === 'cuffed' || o.state === 'down') ? 0.12 : 0);
+        let p = D.surrender * (h.shouts > 2 ? 0.4 : 1) + (aimingAt(h) ? 0.3 : 0) + (all().some(o => o.state === 'cuffed' || o.state === 'down') ? 0.12 : 0);
         if (Math.random() < p) surrender(h); else if (h.state === 'hold') { h.state = 'alert'; h.timer = 1.2; showBubble('搶匪：「不要過來！」'); }
       }
     },
@@ -2164,16 +2170,17 @@ function offDutyNow() {
 }
 function clockOut() {
   const st = SITES.station;
-  if (P.mode === 'vehicle') { radio('請下車再打卡。', 'info'); return; }
+  if (P.mode === 'vehicle') { if (Math.abs(P.veh.speed) > 3) { radio('先把車停好再打卡。', 'info'); return; } P.veh.speed = 0; P.veh.siren = false; toggleVehicle(); }
   const doOut = (extraPen) => {
-    if (MIS.cur) MIS.cancel();
+    if (MIS.cur) { if (S.time >= 16 * 60 + 30) { addLog('下班交接勤務：' + MIS.cur.title); MIS.end(true, '勤務指揮中心：收到，' + MIS.cur.title + '交接給夜班同仁，辛苦了。'); } else MIS.cancel(); }
     const p = payToday(); S.money += p.pay; S.stats.days++;
     offDutyNow();
     if (extraPen) { POLICE_CAR.reset(); POLICE_SCOOT.reset(); punish('rep', extraPen); }
     toast('good', '🕔 打卡下班　薪水 ' + fmtMoney(p.pay), '今天工作 ' + Math.floor(p.mins / 60) + ' 小時 ' + Math.round(p.mins % 60) + ' 分' + (p.ot > 0 ? '（含加班 ' + Math.round(p.ot) + ' 分）' : ''));
     addLog('下班，領薪水 ' + p.pay); updateHUD(true); saveGame();
   };
-  const far = [POLICE_CAR, POLICE_SCOOT].find(v => dist(v.x, v.z, st.x, st.z) > 45);
+  const L = st.lot; const inLot = v => v.x > L.x0 - 25 && v.x < L.x1 + 25 && v.z > L.z0 - 25 && v.z < L.z1 + 30;
+  const far = [POLICE_CAR, POLICE_SCOOT].find(v => !v.wreck && !inLot(v) && dist(v.x, v.z, st.x, st.z) > 60);
   const early = isWorkday(S.day) && S.time < 17 * 60 && S.time > S.clockIn;
   if (far) {
     MODAL.show(`<h2>🚓 警車還沒停回分局</h2><p>${far.spec.name}還停在外面。要自己開回來，還是請同仁幫忙開回（會被申誡一次）？</p>`,
@@ -2268,7 +2275,7 @@ function dealerMenu() {
 }
 function initStaticInteracts() {
   const st = SITES.station, home = SITES.home;
-  STATIC_INTERACT.push({ x: st.x, z: st.z, r: 3, label: () => S.onDuty ? '打卡下班' : '打卡上班（領槍、換制服）', act: () => S.onDuty ? clockOut() : clockIn() });
+  STATIC_INTERACT.push({ x: st.x, z: st.z, r: 4, veh: true, label: () => S.onDuty ? '打卡下班' : '打卡上班（領槍、換制服）', act: () => S.onDuty ? clockOut() : clockIn() });
   STATIC_INTERACT.push({
     x: home.door.x, z: home.door.z, r: 2.6, label: () => '回家', act: () => {
       MODAL.show(`<h2>🏠 我家（大墩華廈）</h2><p>現在 ${fmtTime(S.time)}　❤️ ${Math.round(S.hp)}　⚡ ${Math.round(S.energy)}</p>`,
@@ -2284,6 +2291,531 @@ function initStaticInteracts() {
       MODAL.show(`<h2>🏥 大墩醫院</h2><p>治療傷口，生命回滿。${S.onDuty ? '因公受傷免費。' : '自費 $500。'}</p>`, [['治療', 'g', () => { if (!S.onDuty) { if (S.money < 500) { radio('錢不夠。', 'warn'); return; } S.money -= 500; } S.hp = 100; S.time += 30; MODAL.close(); updateHUD(true); }], ['離開', 'gray', () => MODAL.close()]]);
     }
   });
+}
+
+/* ================= 拿槍指人 ================= */
+const AIM = { h: null, civT: 0, cool: 0, cDay: 0, cCount: 0, tick: 0 };
+const INNOCENT = ['civ', 'clerk', 'witness', 'party', 'missing', 'family', 'injured'];
+function aimRay(maxD) {
+  const o = camera.getWorldPosition(new THREE.Vector3()), d = camera.getWorldDirection(new THREE.Vector3());
+  let bt = rayCols(o.x, o.y, o.z, d.x, d.y, d.z, maxD), bh = null;
+  const test = h => { for (const s of humanSpheres(h)) { const t = raySphere(o, d, h.x, s[0], h.z, s[1] + 0.15); if (t > 0 && t < bt) { bt = t; bh = h; } } };
+  for (const h of MHUMANS) if (h.alive && !h.inCar && h.state !== 'down') test(h);
+  for (const pd of PEDS) if (pd.alive && pd.P.g.visible) { pd.pose = pd.state === 'cower' ? 'kneel' : 'walk'; pd.y0 = 0.18; test(pd); }
+  return bh;
+}
+function updateAim(dt) {
+  AIM.cool -= dt;
+  const active = S.onDuty && P.mode === 'foot' && P.aim > 0.5;
+  if (!active) { AIM.h = null; AIM.civT = Math.max(0, AIM.civT - dt * 0.5); return; }
+  const h = aimRay(40); AIM.h = h; AIM.tick -= dt;
+  // 附近的路人看到警察拿槍也會緊張
+  if (AIM.tick <= 0) { AIM.tick = 1; for (const pd of PEDS) if (pd.alive && pd.state === 'walk' && dist(pd.x, pd.z, P.x, P.z) < 9 && Math.random() < 0.3) pd.scare(P.x, P.z); }
+  if (!h) { AIM.civT = Math.max(0, AIM.civT - dt * 0.3); return; }
+  let innocent = false;
+  if (h.kind === 'ped') { h.cower(); innocent = true; }
+  else if (INNOCENT.includes(h.role)) { if (h.state !== 'down' && h.role !== 'injured') h.cowerT = 2.5; innocent = !h.hostile; }
+  else if (h.role === 'robber' || h.role === 'suspect') suspectAimed(h, dt);
+  if (innocent) {
+    AIM.civT += dt;
+    if (AIM.civT > 1.3 && AIM.cool <= 0) {
+      AIM.civT = 0; AIM.cool = 40; if (AIM.cDay !== S.day) { AIM.cDay = S.day; AIM.cCount = 0; } AIM.cCount++;
+      punish(AIM.cCount >= 2 ? 'dem' : 'rep', '拿槍指著無辜民眾（民眾打 110 投訴）');
+    }
+  }
+}
+function suspectAimed(h, dt) {
+  h.aimT = (h.aimT || 0) + dt; if (h.aimT < 1) return; h.aimT = 0;
+  const d = dist(P.x, P.z, h.x, h.z); if (d > 28) return;
+  const D = DIFF[S.diff];
+  if (h.role === 'robber') { if (['hold', 'alert', 'fight'].includes(h.state) && Math.random() < D.surrender * 0.35) surrender(h, '好啦好啦！別開槍！'); return; }
+  if (['idle', 'wander', 'talk'].includes(h.state)) { reactSuspect(h, true); return; }
+  if (h.state === 'flee' && d < 22 && Math.random() < 0.28) surrender(h, '好！我不跑了！');
+  else if (h.state === 'fight' && Math.random() < 0.15) surrender(h, '我放下了！我放下了！');
+}
+// 嫌犯被警察發現／被指／被喊話時的反應
+function reactSuspect(h, aimed) {
+  if (h.reacted) return; h.reacted = true;
+  const r = Math.random(); if (h.temper !== 'calm') h.resisted = true;
+  if (h.temper === 'fight' && h.armed) { h.state = 'fight'; h.P.gun.visible = true; h.shootT = 1.2; h.moveT = 0; h.tx = h.x; h.tz = h.z; showBubble('嫌犯拔槍了！小心！'); radio('⚠️ 嫌犯持槍反抗！找掩護！', 'warn'); }
+  else if (h.temper === 'flee' && !(aimed && r < 0.35)) { h.state = 'flee'; h.fleeAng = 0; showBubble('嫌犯拔腿就跑！'); radio('嫌犯逃跑了！追上去，靠近按 E 撲倒，或用電擊槍（2）。', 'warn'); }
+  else surrender(h, aimed ? '別開槍！我投降！' : '好啦…我跟你走。');
+}
+/* ---------- 通用嫌犯／民眾 AI ---------- */
+function moveHuman(h, dx, dz, sp, dt) {
+  const L = Math.hypot(dx, dz) || 1; const ox = h.x, oz = h.z;
+  h.x += dx / L * sp * dt; h.z += dz / L * sp * dt; const p = { x: h.x, z: h.z }; collideCircle(p, 0.35); h.x = p.x; h.z = p.z;
+  h.yaw = Math.atan2(dx, dz); return Math.hypot(h.x - ox, h.z - oz) / (sp * dt + 1e-6);
+}
+function rectPos(r, t) {
+  const w = r.x1 - r.x0, hh = r.z1 - r.z0, per = 2 * (w + hh); t = ((t % per) + per) % per;
+  if (t < w) return [r.x0 + t, r.z0]; if ((t -= w) < hh) return [r.x1, r.z0 + t]; if ((t -= hh) < w) return [r.x1 - t, r.z1]; t -= w; return [r.x0, r.z1 - t];
+}
+function suspAI(h, dt) {
+  const P_ = h.P; const D = DIFF[S.diff]; const d = dist(h.x, h.z, P.x, P.z);
+  let pose = 'idle', sp = 1.4;
+  if (h.inCar) { P_.g.visible = false; return; } P_.g.visible = true;
+  switch (h.state) {
+    case 'down': pose = 'down'; break;
+    case 'stun': h.timer -= dt; pose = 'stun'; if (h.timer <= 0) { h.state = 'surrender'; } break;
+    case 'surrender': pose = 'kneel'; break;
+    case 'cuffed': pose = 'cuffed'; break;
+    case 'wander': {
+      h.t += 1.2 * dt * (h.dir || 1); const [nx, nz] = rectPos(h.rect, h.t); h.yaw = Math.atan2(nx - h.x, nz - h.z) || h.yaw; h.x = nx; h.z = nz; pose = 'walk';
+      if (h.role === 'suspect' && d < 10 && losClear(h.x, 1.6, h.z, P.x, camera.position.y, P.z) && S.onDuty) reactSuspect(h, false);
+      break;
+    }
+    case 'idle': case 'talk':
+      pose = h.state === 'talk' ? 'talk' : 'idle'; if (d < 7) h.yaw = Math.atan2(P.x - h.x, P.z - h.z); else if (h.faceTo) h.yaw = Math.atan2(h.faceTo.x - h.x, h.faceTo.z - h.z);
+      break;
+    case 'flee': {
+      let ax = h.x - P.x, az = h.z - P.z; const L = Math.hypot(ax, az) || 1; ax /= L; az /= L;
+      const a = h.fleeAng || 0; const fx = ax * Math.cos(a) - az * Math.sin(a), fz = ax * Math.sin(a) + az * Math.cos(a);
+      const eff = moveHuman(h, fx, fz, 5.6 * (S.diff === 0 ? 0.85 : 1), dt);
+      if (eff < 0.4) h.fleeAng = (h.fleeAng || 0) + (Math.random() < 0.5 ? 1 : -1) * Math.PI / 2; else h.fleeAng = (h.fleeAng || 0) * (1 - dt * 0.5);
+      pose = 'run'; sp = 5.6;
+      if (d > 85) { h.lostT = (h.lostT || 0) + dt; } else h.lostT = 0;
+      break;
+    }
+    case 'fight': {
+      h.yaw = Math.atan2(P.x - h.x, P.z - h.z); h.moveT -= dt;
+      if (h.moveT <= 0) { h.moveT = rand(1.6, 3); h.tx = h.x + rand(-4, 4); h.tz = h.z + rand(-4, 4); }
+      const mx = h.tx - h.x, mz = h.tz - h.z;
+      if (Math.hypot(mx, mz) > 0.3) { moveHuman(h, mx, mz, 1.8, dt); h.yaw = Math.atan2(P.x - h.x, P.z - h.z); pose = 'walk'; } else pose = 'aim';
+      h.shootT -= dt;
+      const see = d < 45 && losClear(h.x, 1.6, h.z, P.x, camera.position.y, P.z);
+      if (h.shootT <= 0 && see) {
+        h.shootT = rand(1.1, 2.2); AU.shot(d); spawnFX(new THREE.Vector3(h.x + Math.sin(h.yaw) * 0.6, 1.45, h.z + Math.cos(h.yaw) * 0.6), 0xffd27a, 0.1, 0.08);
+        const p = clamp(0.58 - d / 45, 0.07, 0.5) * D.acc * (P.moving ? 0.75 : 1) * (P.mode === 'vehicle' ? 0.6 : 1);
+        if (Math.random() < p) { hurtPlayer(D.dmg + randi(-3, 4), h.x, h.z); radio('你中彈了！找掩護！', 'warn'); }
+        scareNear(h.x, h.z, 50);
+      }
+      break;
+    }
+    case 'follow': {
+      if (d > 2.4) { moveHuman(h, P.x - h.x, P.z - h.z, d > 8 ? 4 : 2.6, dt); pose = 'walk'; sp = 2.6; } else { pose = 'idle'; h.yaw = Math.atan2(P.x - h.x, P.z - h.z); }
+      break;
+    }
+  }
+  if (h.cowerT > 0 && !['down', 'cuffed', 'stun', 'flee', 'fight'].includes(h.state)) { h.cowerT -= dt; pose = 'kneel'; }
+  if (pose === 'aim' || (h.state === 'fight' && pose === 'walk')) { posePerson(P_, pose, dt, sp); if (pose === 'walk') P_.armR.rotation.x = -Math.PI / 2; }
+  else posePerson(P_, pose, dt, sp);
+  h.pose = pose; P_.g.rotation.y = h.yaw || 0; P_.g.position.set(h.x, h.y0 != null ? h.y0 : 0.2, h.z);
+}
+// 對嫌犯開槍的判定（新任務共用）
+function suspectShot(r, type, list) {
+  const h = r.h; if (!h || !list.includes(h)) return false;
+  if (h.role !== 'suspect') return false;
+  if (type === 'taser') { if (!['cuffed', 'down'].includes(h.state)) { h.state = 'stun'; h.timer = 7; h.P.gun.visible = false; h.reacted = true; radio('電擊命中！快過去上手銬（E）。', 'info'); } return true; }
+  const threat = h.state === 'fight' && h.armed;
+  if (['surrender', 'cuffed', 'stun'].includes(h.state)) punish('major', '對已投降、失去抵抗能力的人開槍');
+  else if (h.state === 'flee' && !h.armed) punish('major', '對逃跑但沒有持械的嫌犯開槍');
+  else if (!threat) punish('dem', '對沒有威脅的人開槍');
+  h.hp -= r.head ? 100 : 40; h.reacted = true;
+  if (h.hp <= 0) { h.state = 'down'; h.P.gun.visible = false; radio('嫌犯中彈倒地，已呼叫救護車。', 'info'); }
+  else if (h.armed && h.state !== 'fight') { h.state = 'fight'; h.P.gun.visible = true; h.shootT = 1; h.moveT = 0; h.tx = h.x; h.tz = h.z; }
+  return true;
+}
+// 上銬、撲倒（新任務共用）
+function suspectInteracts(list) {
+  const out = []; if (P.mode !== 'foot') return out;
+  for (const h of list) {
+    if (h.role !== 'suspect') continue;
+    if (h.state === 'surrender' || h.state === 'stun') out.push({ x: h.x, z: h.z, r: 2.2, label: '上手銬逮捕', act: () => { h.state = 'cuffed'; h.P.gun.visible = false; AU.cuff(); radio('嫌犯已上銬。', 'info'); } });
+    else if (h.state === 'flee') out.push({ x: h.x, z: h.z, r: 2.3, label: '撲倒壓制！', act: () => { h.state = 'stun'; h.timer = 4; AU.bump(); showBubble('撲倒了！快上銬！'); } });
+  }
+  return out;
+}
+function shoutAt(list) {
+  for (const h of list) {
+    if (h.role !== 'suspect') continue; const d = dist(P.x, P.z, h.x, h.z); if (d > 26) continue;
+    const ap = aimingAt(h) ? 0.3 : 0;
+    if (h.state === 'flee') { if (Math.random() < 0.18 + ap) surrender(h, '好啦！我不跑了！'); }
+    else if (h.state === 'fight') { if (Math.random() < DIFF[S.diff].surrender * 0.6 + ap) surrender(h, '我放下了！別開槍！'); }
+    else if (['idle', 'wander', 'talk'].includes(h.state) && h.wanted) { if (Math.random() < 0.3 + ap) surrender(h, '好啦…我跟你走。'); else reactSuspect(h, false); }
+  }
+}
+function spawnAI(opts, x, z, yaw, data) { const h = spawnHuman(Object.assign({ data: Object.assign({ ai: true }, data || {}) }, opts), x, z, yaw || 0); return h; }
+function sidewalkSpot(dmin, dmax, types) {
+  const c = BLOCKS.filter(b => (types || ['old', 'mid', 'res', 'tower']).includes(b.type) && (d => d > dmin && d < dmax)(dist(b.cx, b.cz, P.x, P.z)));
+  const b = c.length ? pick(c) : pick(BLOCKS.filter(b => b.type === 'mid'));
+  const rect = { x0: b.x0 + 1.5, x1: b.x1 - 1.5, z0: b.z0 + 1.5, z1: b.z1 - 1.5 }; const per = 2 * ((rect.x1 - rect.x0) + (rect.z1 - rect.z0));
+  const t = rand(0, per); const [x, z] = rectPos(rect, t); return { x, z, b, rect, t, per };
+}
+// 搜尋範圍圈
+const AREA = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1.5, 48, 1, true), new THREE.MeshBasicMaterial({ color: 0xffd84a, transparent: true, opacity: 0.25, side: THREE.DoubleSide, depthWrite: false }));
+AREA.visible = false; scene.add(AREA);
+function showArea(x, z, r) { AREA.visible = true; AREA.position.set(x, 0.75, z); AREA.scale.set(r, 1, r); }
+function hideArea() { AREA.visible = false; }
+const SHIRTS_NAMED = [[0xd94040, '紅色'], [0x2a4fa8, '藍色'], [0xf2c94c, '黃色'], [0x3a8a4a, '綠色'], [0xffffff, '白色'], [0x8a5ac8, '紫色'], [0xe07a30, '橘色']];
+function removeAll(list) { for (const h of list) removeHuman(h); }
+function resultModal(title, lines, ok, after) {
+  MODAL.show(`<h2>📋 ${title}</h2><ul style="padding-left:18px">${lines.map(l => `<li class="${l[0] ? 'res-good' : 'res-bad'}">${l[0] ? '✔' : '✘'} ${l[1]}</li>`).join('')}</ul>`, [['確定', 'g', () => { MODAL.close(); after && after(); }]]);
+}
+
+/* ================= 任務：通緝犯徒步追捕 ================= */
+function misFugitive() {
+  const sp = sidewalkSpot(120, 320); const sh = pick(SHIRTS_NAMED); const crime = pick(['竊盜', '詐欺', '傷害', '毒品', '搶奪']);
+  const h = spawnAI({ shirt: sh[0], pants: 0x222222 }, sp.x, sp.z, 0, { role: 'suspect', wanted: true });
+  Object.assign(h, { state: 'wander', rect: sp.rect, t: sp.t, dir: Math.random() < .5 ? 1 : -1, armed: Math.random() < 0.25, name: randName() });
+  h.temper = h.armed ? (Math.random() < 0.5 ? 'fight' : 'flee') : (Math.random() < 0.72 ? 'flee' : 'calm');
+  let area = { x: h.x + rand(-25, 25), z: h.z + rand(-25, 25) }, areaT = 0, done = false;
+  const list = [h];
+  const m = {
+    type: 'fugitive', icon: '🏃', title: '通緝犯追捕',
+    radio: `勤務指揮中心：民眾通報在${nearCross(h.x, h.z)}附近看到通緝犯 ${h.name}（${crime}），男性，穿${sh[1]}上衣、黑色長褲。請前往黃色範圍搜尋。`,
+    target: () => (h.state === 'wander' && !h.reacted) ? area : { x: h.x, z: h.z },
+    obj: () => h.state === 'wander' && !h.reacted ? `在黃色圈圈裡找<b>穿${sh[1]}上衣</b>的男子（下車用走的比較好找）` : h.state === 'flee' ? '追上去！靠近按 E 撲倒，或用電擊槍（2）' : h.state === 'fight' ? '嫌犯持槍反抗！找掩護，喊話（Q）要他投降' : h.state === 'surrender' || h.state === 'stun' ? '過去上手銬（E）' : '處理完畢',
+    armedThreat: () => h.state === 'fight' && h.armed,
+    update(dt) {
+      suspAI(h, dt);
+      if (h.state === 'wander' && !h.reacted) { areaT += dt; if (areaT > 30) { areaT = 0; area = { x: h.x + rand(-25, 25), z: h.z + rand(-25, 25) }; radio('勤務指揮中心：監視器看到嫌犯往' + roadNameAt(h.x, h.z) + '方向移動。', 'info'); } showArea(area.x, area.z, 40); }
+      else hideArea();
+      if (done) return;
+      if (h.state === 'flee' && h.lostT > 12) { done = true; MIS.end(false, '勤務指揮中心：嫌犯跑掉了，已調閱監視器持續追查。'); S.merit = Math.max(0, S.merit - 5); return; }
+      if (h.state === 'cuffed' || h.state === 'down') {
+        done = true; const ok = h.state === 'cuffed';
+        setTimeout(() => { MIS.end(true, '勤務指揮中心：通緝犯 ' + h.name + (ok ? ' 已逮捕歸案' : ' 中彈送醫') + '，辛苦了！'); award(ok ? 30 : 10, ok ? 4000 : 1000, '逮捕通緝犯 ' + h.name + '（' + crime + '）', ok ? 'com' : null); if (ok) S.stats.arrests++; }, 900);
+      }
+    },
+    interacts() {
+      const out = suspectInteracts(list);
+      if (P.mode === 'foot' && ['wander'].includes(h.state) && !h.reacted && dist(P.x, P.z, h.x, h.z) < 3) out.push({ x: h.x, z: h.z, r: 3, label: '盤查這個人', act: () => reactSuspect(h, false) });
+      return out;
+    },
+    onShout() { shoutAt(list); },
+    onShot(r, type) { return suspectShot(r, type, list) || (!r.h && h.state === 'fight'); },
+    cleanup() { hideArea(); removeAll(list); },
+  };
+  MIS.start(m);
+}
+
+/* ================= 任務：糾紛調解 ================= */
+function misDispute() {
+  const night = isNight() && S.time > 17 * 60;
+  const kind = pick(night ? ['noise', 'domestic', 'drunk', 'drunk'] : ['noise', 'domestic', 'drunk']);
+  let sp;
+  if (kind === 'drunk' && marketOpen()) { const st = pick(SITES.market.stalls); sp = { x: st.x, z: st.z }; }
+  else if (kind === 'drunk') { const s = pick(SITES.stores); sp = { x: s.door.x + 3, z: s.door.z + 0.5 }; }
+  else sp = sidewalkSpot(100, 320, ['res', 'old']);
+  const people = [];
+  const A = spawnAI({ shirt: pick(SHIRTS), apron: kind === 'drunk' ? 0xb01010 : undefined }, sp.x - 1.1, sp.z, 0, { role: 'party', name: randName() });
+  const B = spawnAI({ shirt: pick(SHIRTS) }, sp.x + 1.1, sp.z, 0, { role: kind === 'drunk' || kind === 'domestic' ? 'suspect' : 'party', name: randName() });
+  A.state = 'talk'; B.state = 'talk'; A.faceTo = B; B.faceTo = A; people.push(A, B);
+  const repeated = Math.random() < 0.5, injury = Math.random() < 0.6, damage = Math.random() < 0.6;
+  B.temper = kind === 'drunk' ? (Math.random() < 0.35 ? 'flee' : 'calm') : kind === 'domestic' ? (Math.random() < 0.3 ? 'flee' : 'calm') : 'calm';
+  const S_ = {
+    noise: { title: '噪音糾紛', A: `我住樓上，樓下這位每天晚上唱卡拉OK，吵到我小孩都不能睡！`, B: `我在自己家唱歌也不行喔？${repeated ? '（不太耐煩）你們上次來過了啦。' : '我又不知道會吵到人。'}`, clue: repeated ? '管理員：「他已經被檢舉第三次了，之前警察來勸過，他還是照唱。」' : '管理員：「這是第一次有人檢舉他。」',
+      opts: [['warn', '當場勸導、請他降低音量，並做紀錄'], ['fine', '依社會秩序維護法第 72 條（深夜喧譁，經制止不聽）舉發罰鍰'], ['arrest', '以現行犯逮捕樓下住戶'], ['leave', '雙方自己溝通，警察不介入']], ans: repeated ? 'fine' : 'warn',
+      why: repeated ? '之前已經勸導過還是不改，屬於「經制止而不聽」，可以依社會秩序維護法第 72 條舉發。' : '第一次被檢舉，先勸導改善並做紀錄就好；勸導後仍不聽才舉發。' },
+    domestic: { title: '家庭糾紛', A: injury ? '他喝了酒回家就打人…（手臂上有瘀青，一直在發抖）' : '我們只是在吵架，鄰居就報警了…', B: injury ? '沒有啦！是她自己撞到的！（滿身酒味）' : '夫妻吵架而已啦，警察管這麼多？（有點酒味）', clue: injury ? 'A 的手臂有新的瘀青，家具倒在地上，小孩躲在房間哭。' : '屋內沒有打鬥痕跡，雙方都沒有受傷，只是大聲口角。',
+      opts: [['arrest', '以家暴現行犯逮捕 B，並通報社工（家暴中心）'], ['report', '勸導雙方冷靜，並通報社工（家暴中心）關懷'], ['warn', '勸導雙方後離開，不用通報'], ['leave', '家務事，警察不介入']], ans: injury ? 'arrest' : 'report',
+      why: injury ? '有傷勢、而且是剛發生的，屬於家庭暴力的現行犯，依家庭暴力防治法要逮捕並通報。' : '沒有人受傷只是口角，勸導就好；但依家庭暴力防治法，警察知道有疑似家暴還是要通報社工。' },
+    drunk: { title: '酒客鬧事', A: damage ? '他喝醉了一直鬧，還把我的椅子踢壞了！我要告他！' : '他喝醉了一直大聲罵人，客人都被嚇跑了…', B: '我沒醉啦！我又沒怎樣！你們警察管什麼！（站都站不穩）', clue: damage ? '地上有一張被踢壞的塑膠椅，老闆堅持要提告毀損。' : '店裡沒有東西損壞，老闆說只要他離開就好。',
+      opts: [['arrest', '以毀損現行犯逮捕，帶回派出所'], ['warn', '勸離，幫他叫計程車回家'], ['fine', '開罰單後放他走'], ['leave', '叫老闆自己處理']], ans: damage ? 'arrest' : 'warn',
+      why: damage ? '他當場踢壞東西、老闆要提告，屬於毀損的現行犯，可以逮捕。' : '沒有損壞也沒有人受傷，勸他離開、安全回家就好。' },
+  }[kind];
+  const heard = { A: false, B: false, clue: false }; let done = false, decided = false;
+  const finish = (choice) => {
+    decided = true; const lines = []; let pts = 8, bad = null;
+    const heardAll = heard.A && heard.B && heard.clue;
+    if (!heardAll) { lines.push([false, '沒有把雙方說法和現場都問清楚就下判斷']); pts -= 5; }
+    if (choice === S_.ans) { lines.push([true, S_.why]); pts += 16; }
+    else {
+      lines.push([false, '處理方式不對。' + S_.why]);
+      if (choice === 'arrest') bad = ['dem', '沒有法律依據就逮捕民眾'];
+      else if (kind === 'domestic' && (choice === 'warn' || choice === 'leave')) bad = ['rep', '疑似家暴案件沒有依規定通報'];
+      else if (choice === 'leave') bad = ['rep', '受理報案卻沒有處理'];
+      pts = 0;
+    }
+    resultModal(S_.title + '處理結果', lines, true, () => {
+      if (bad) punish(bad[0], bad[1]); else award(Math.max(3, pts), 1500, S_.title + '處理完成', pts >= 20 ? 'com' : null);
+      if (choice === 'arrest' && (B.temper === 'flee')) { B.reacted = false; reactSuspect(B, false); radio('B 突然推開你逃跑了！', 'warn'); return; }
+      if (choice === 'arrest') { B.state = 'cuffed'; AU.cuff(); S.stats.arrests++; }
+      done = true; setTimeout(() => MIS.end(true), 1500);
+    });
+  };
+  const talk = (who) => {
+    heard[who] = true; const h = who === 'A' ? A : B;
+    const render = () => {
+      $('mbox').innerHTML = `<h2>💬 ${S_.title}</h2>
+      <p>${heard.A ? `<b>報案人 ${A.name}：</b>「${S_.A}」` : '（還沒問報案人）'}</p>
+      <p>${heard.B ? `<b>${kind === 'noise' ? '樓下住戶' : kind === 'domestic' ? '先生' : '酒客'} ${B.name}：</b>「${S_.B}」` : '（還沒問另一方）'}</p>
+      <p>${heard.clue ? '🔍 <b>現場：</b>' + S_.clue : '（還沒查看現場）'}</p>
+      <div class="btns"><button class="btn" id="dA" ${heard.A ? 'disabled' : ''}>問報案人</button><button class="btn" id="dB" ${heard.B ? 'disabled' : ''}>問另一方</button><button class="btn" id="dC" ${heard.clue ? 'disabled' : ''}>🔍 查看現場</button></div>
+      <h3>怎麼處理？</h3>${S_.opts.map(o => `<button class="btn ${o[0] === 'arrest' ? 'r' : ''}" style="display:block;width:100%;margin:6px 0;text-align:left" data-o="${o[0]}">${o[1]}</button>`).join('')}
+      <div class="btns"><button class="btn gray" id="dX">先離開</button></div>`;
+      $('dA').onclick = () => { heard.A = true; AU.click(); render(); }; $('dB').onclick = () => { heard.B = true; AU.click(); render(); }; $('dC').onclick = () => { heard.clue = true; AU.click(); render(); };
+      $('dX').onclick = () => MODAL.close();
+      $('mbox').querySelectorAll('[data-o]').forEach(b => b.onclick = () => { MODAL.close(); finish(b.dataset.o); });
+    };
+    MODAL.custom(render);
+  };
+  let arrived = false;
+  const m = {
+    type: 'dispute', icon: '🗣', title: S_.title,
+    radio: `勤務指揮中心：${nearCross(sp.x, sp.z)}${kind === 'drunk' && marketOpen() ? '（一中街夜市）' : ''}有民眾報案，${{ noise: '鄰居噪音糾紛', domestic: '疑似家庭糾紛、有人在大聲爭吵', drunk: '有酒客喝醉鬧事' }[kind]}，請前往處理。`,
+    target: () => B.state === 'flee' ? { x: B.x, z: B.z } : { x: sp.x, z: sp.z },
+    obj: () => B.state === 'flee' ? '追上逃跑的人！靠近按 E 撲倒' : B.state === 'surrender' || B.state === 'stun' ? '上手銬（E）' : decided ? '處理完畢' : '問清楚雙方說法、查看現場，再決定怎麼處理（走過去按 E）',
+    armedThreat: () => false,
+    update(dt) {
+      for (const h of people) suspAI(h, dt);
+      if (!arrived && dist(P.x, P.z, sp.x, sp.z) < 10) {
+        arrived = true;
+        if (kind === 'drunk' && B.temper === 'flee' && Math.random() < 0.5) { reactSuspect(B, false); }
+      }
+      if (decided && !done) {
+        if (B.state === 'cuffed' || B.state === 'down') { done = true; S.stats.arrests++; setTimeout(() => MIS.end(true, '嫌犯已經制伏，支援警力會帶回派出所。'), 1200); award(8, 1000, '制伏逃跑的嫌犯'); }
+        else if (B.state === 'flee' && B.lostT > 12) { done = true; MIS.end(false, '嫌犯跑掉了，已通報協尋。'); }
+      }
+      if (!decided && B.state === 'flee' && B.lostT > 12) { done = true; decided = true; MIS.end(false, '鬧事的人跑掉了。'); }
+      if (!decided && !done && (B.state === 'cuffed' || B.state === 'down')) { done = true; decided = true; S.stats.arrests++; award(14, 1500, '制伏逃跑的' + S_.title + '當事人'); setTimeout(() => MIS.end(true, '人已經制伏，支援警力會帶回派出所釐清。'), 1200); }
+    },
+    interacts() {
+      const out = suspectInteracts(people);
+      if (!decided && P.mode === 'foot' && !['flee', 'fight', 'stun', 'surrender', 'cuffed'].includes(B.state)) {
+        out.push({ x: A.x, z: A.z, r: 2.4, label: '詢問報案人 ' + A.name, act: () => talk('A') });
+        out.push({ x: B.x, z: B.z, r: 2.4, label: '詢問 ' + B.name, act: () => talk('B') });
+      }
+      return out;
+    },
+    onShout() { shoutAt(people); },
+    onShot(r, type) { return suspectShot(r, type, people); },
+    cleanup() { removeAll(people); },
+  };
+  MIS.start(m);
+}
+
+/* ================= 任務：車禍處理 ================= */
+function misAccident() {
+  const r = randomSegNear(P.x, P.z, 140, 330) || [5, 5, 6, 5, 30];
+  const g = segInfo(r[0], r[1], r[2], r[3]); const s0 = clamp(r[4], 20, g.L - 30);
+  const off = g.w * 0.25, yaw = Math.atan2(-g.dx, -g.dz);
+  const px = (s, o) => [g.x0 + g.dx * s + g.rx * o, g.z0 + g.dz * s + g.rz * o];
+  const kind = pick(['red', 'left', 'rear']); const fault = Math.random() < 0.5 ? 'A' : 'B';
+  const cars = []; const people = []; const props = [];
+  const mk = (s, o, yw) => { const c = new NPCVeh('car'); const [x, z] = px(s, o); c.state = 'stopped'; c.flag = true; c.hp = 35; c.x = x; c.z = z; c.yaw = yw; c.mesh.position.set(x, 0, z); c.mesh.rotation.y = yw; TRAFFIC.push(c); cars.push(c); return c; };
+  const carA = mk(s0, off, yaw + (kind === 'rear' ? 0.08 : rand(-0.6, 0.6)));
+  const carB = mk(s0 + (kind === 'rear' ? 5.2 : 3.2), off + (kind === 'rear' ? 0.3 : -1.2), yaw + (kind === 'rear' ? -0.05 : rand(0.6, 1.2)));
+  const curb = g.w / 2 + 1.6;
+  const [ax, az] = px(s0 - 1, curb), [bx2, bz2] = px(s0 + 3, curb), [wx, wz] = px(s0 + 10, curb + 1.5);
+  const A = spawnAI({}, ax, az, 0, { role: 'party', name: randName() }); const B = spawnAI({}, bx2, bz2, 0, { role: 'party', name: randName() });
+  const W = spawnAI({ shirt: pick(SHIRTS) }, wx, wz, 0, { role: 'witness' });
+  A.state = B.state = 'talk'; W.state = 'idle'; A.faceTo = B; B.faceTo = A; people.push(A, B, W);
+  let injured = null; if (Math.random() < 0.55) { const [ix, iz] = px(s0 + 1.5, curb - 0.4); injured = spawnAI({}, ix, iz, 0, { role: 'injured' }); injured.state = 'down'; people.push(injured); }
+  const F = fault === 'A' ? A : B, cF = fault === 'A' ? carA : carB, cN = fault === 'A' ? carB : carA;
+  const col = c => (COLOR_NAMES[c.color] || '') + c.model;
+  A.alc = 0; B.alc = 0; if (Math.random() < 0.35) F.alc = Math.round(rand(0.16, 0.6) * 100) / 100;
+  A.lic = Math.random() < 0.06 ? 'none' : 'ok'; B.lic = Math.random() < 0.06 ? 'none' : 'ok';
+  const VIO = { red: '闖紅燈', left: '轉彎車未禮讓直行車', rear: '未保持安全距離（追撞）' }[kind];
+  const witnessSay = { red: `我在等紅燈，親眼看到那台${col(cF)}闖紅燈衝出來！`, left: `那台${col(cF)}左轉都沒有讓直行車，就撞上去了。`, rear: '我只聽到「碰」一聲，沒看清楚是怎麼撞的耶…' }[kind];
+  const sceneSay = { red: '路口號誌正常運作，地上有長長的煞車痕。', left: `${col(cF)}停在路口中間，右前方凹陷；另一台車頭受損。`, rear: `${col(cF)}車頭凹陷、${col(cN)}車尾受損，${col(cF)}後面有一段煞車痕。` }[kind];
+  const st = { cones: false, amb: injured ? 'need' : 'none', ambT: 0, alcA: false, alcB: false, licA: false, licB: false, heardA: false, heardB: false, heardW: false, scene: false };
+  let done = false;
+  const conePos = px(s0 - 16, off);
+  const driverDlg = (h, car, who) => {
+    const render = () => {
+      const k = who; const said = k === 'A' ? 'heardA' : 'heardB'; st[said] = true;
+      const claim = h === F ? (kind === 'rear' ? '他突然煞車我哪來得及！' : '是他撞我的啦！我是綠燈！') : (kind === 'rear' ? '我停紅燈，他從後面直接撞上來！' : '我正常開，是他撞過來的！');
+      $('mbox').innerHTML = `<h2>🚗 ${who} 車駕駛 ${h.name}</h2><p>車輛：${col(car)}（${car.plate}）</p><p>「${claim}」${h.alc >= 0.1 ? '<br><span class="res-bad">😵 講話有酒味</span>' : ''}</p>
+      ${st['lic' + k] ? `<p>🪪 駕照：${h.lic === 'ok' ? '<span class="res-good">有效</span>' : '<span class="res-bad">沒有駕照</span>'}</p>` : ''}
+      ${st['alc' + k] ? `<p>🌬 酒測：<b class="${h.alc >= 0.15 ? 'res-bad' : 'res-good'}">${h.alc.toFixed(2)} mg/L</b></p>` : ''}
+      <div class="btns"><button class="btn" id="kL" ${st['lic' + k] ? 'disabled' : ''}>🪪 查駕照</button><button class="btn" id="kA" ${st['alc' + k] ? 'disabled' : ''}>🌬 酒測</button><button class="btn gray" id="kX">好，先這樣</button></div>`;
+      $('kL').onclick = () => { st['lic' + k] = true; AU.click(); render(); }; $('kA').onclick = () => { st['alc' + k] = true; AU.click(); render(); }; $('kX').onclick = () => MODAL.close();
+    };
+    MODAL.custom(render);
+  };
+  const finalDlg = () => {
+    st.scene = true;
+    const tick = { red: false, left: false, rear: false, dui: false, nolic: false }; let who = null, arrest = false;
+    const render = () => {
+      const rows = [['red', '闖紅燈'], ['left', '轉彎車未禮讓直行車'], ['rear', '未保持安全距離（追撞）']];
+      $('mbox').innerHTML = `<h2>📐 繪製現場圖・判斷肇事責任</h2>
+      <p>🔍 現場：${sceneSay}</p><p>👀 目擊者：${st.heardW ? '「' + witnessSay + '」' : '（還沒問目擊者）'}</p>
+      <p>🚗 A 車：${col(carA)}・駕駛 ${A.name}　🚙 B 車：${col(carB)}・駕駛 ${B.name}</p>
+      <h3>① 主要肇事責任</h3><div class="btns">${['A', 'B', '雙方'].map(x => `<button class="btn ${who === x ? 'y' : ''}" data-w="${x}">${x === '雙方' ? '雙方都有責任' : x + ' 車'}</button>`).join('')}</div>
+      <h3>② 舉發肇事者的違規</h3>${rows.map(([k, n]) => `<label class="chk"><input type="checkbox" data-k="${k}" ${tick[k] ? 'checked' : ''}> ${n}</label>`).join('')}
+      <label class="chk"><input type="checkbox" data-k="dui" ${tick.dui ? 'checked' : ''}> 酒後駕車</label><label class="chk"><input type="checkbox" data-k="nolic" ${tick.nolic ? 'checked' : ''}> 無照駕駛</label>
+      <label class="chk"><input type="checkbox" id="kArr" ${arrest ? 'checked' : ''}> 🔗 以公共危險罪逮捕（酒測 0.25 以上）</label>
+      <div class="btns"><button class="btn g" id="kDone" ${who ? '' : 'disabled'}>✅ 完成處理</button><button class="btn gray" id="kX">還要再查</button></div>`;
+      $('mbox').querySelectorAll('[data-w]').forEach(b => b.onclick = () => { who = b.dataset.w; AU.click(); render(); });
+      $('mbox').querySelectorAll('[data-k]').forEach(c => c.onchange = () => { tick[c.dataset.k] = c.checked; });
+      $('kArr').onchange = e => { arrest = e.target.checked; };
+      $('kX').onclick = () => MODAL.close(); $('kDone').onclick = () => { MODAL.close(); grade(who, tick, arrest); };
+    };
+    MODAL.custom(render);
+  };
+  const grade = (who, tick, arrest) => {
+    const L = []; let pts = 10, bad = null;
+    if (who === fault) { L.push([true, `肇事責任判斷正確：${fault} 車${VIO}。`]); pts += 12; } else { L.push([false, `判斷錯了，主要肇事的是 ${fault} 車（${VIO}）。`]); pts -= 6; }
+    if (tick[kind]) { L.push([true, '舉發 ' + VIO]); pts += 5; S.stats.tickets++; } else L.push([false, '漏開：' + VIO]);
+    for (const k of ['red', 'left', 'rear']) if (k !== kind && tick[k]) { L.push([false, '開了不存在的違規']); pts -= 4; }
+    if (!st.alcA || !st.alcB) { L.push([false, '發生車禍，雙方駕駛都要酒測（你漏測了）']); bad = ['rep', '肇事後未依規定對雙方駕駛實施酒測']; }
+    else L.push([true, '雙方都有酒測']);
+    const drunk = F.alc >= 0.15;
+    if (drunk) { if (tick.dui) { L.push([true, '舉發酒後駕車（' + F.alc.toFixed(2) + ' mg/L）']); pts += 6; } else L.push([false, '漏開酒駕']); }
+    else if (tick.dui) { L.push([false, '沒有酒駕卻開酒駕罰單']); bad = bad || ['rep', '違法開立罰單']; }
+    const nl = (A.lic !== 'ok' && st.licA) || (B.lic !== 'ok' && st.licB); if (A.lic !== 'ok' || B.lic !== 'ok') { if (tick.nolic) { L.push([true, '舉發無照駕駛']); pts += 4; } else L.push([false, nl ? '查到無照卻沒開' : '沒查駕照，漏掉無照駕駛']); }
+    if (F.alc >= 0.25) { if (arrest) { L.push([true, '酒測 0.25 以上，依刑法第 185 條之 3 公共危險罪逮捕']); pts += 10; S.stats.arrests++; } else { L.push([false, '酒測超過 0.25 卻沒有逮捕']); bad = ['dem', '酒駕肇事未依法逮捕']; } }
+    else if (arrest) { L.push([false, '沒有逮捕的理由']); bad = ['dem', '違法逮捕民眾']; }
+    if (st.amb === 'late') { L.push([false, '沒有先救護傷者就先處理車禍']); bad = bad || ['rep', '沒有優先救護傷者']; }
+    else if (injured) L.push([true, '優先呼叫救護車救護傷者']);
+    if (st.cones) { L.push([true, '有放交通錐保護現場']); pts += 3; } else L.push([false, '沒放交通錐，後方來車容易追撞']);
+    resultModal('車禍處理結果', L, true, () => { if (bad) punish(bad[0], bad[1]); else award(Math.max(4, pts), 2000, '車禍處理完成', pts >= 28 ? 'com' : null); done = true; radio('拖吊車已經把事故車輛拖走，道路恢復通行。', 'info'); MIS.end(true); });
+  };
+  const m = {
+    type: 'accident', icon: '💥', title: '車禍處理',
+    radio: `勤務指揮中心：${nearCross(carA.x, carA.z)}附近（${roadNameAt(carA.x, carA.z)}）發生兩車車禍${injured ? '，有人受傷' : ''}，請前往處理。`,
+    target: () => ({ x: carA.x, z: carA.z }),
+    obj: () => {
+      const todo = [];
+      if (!st.cones) todo.push('放交通錐'); if (st.amb === 'need') todo.push('<b>先救護傷者</b>');
+      if (!st.heardA || !st.heardB) todo.push('問雙方駕駛（酒測）'); if (!st.heardW) todo.push('問目擊者');
+      return '處理車禍：' + (todo.length ? todo.join('、') : '到兩車中間按 E 判斷責任');
+    },
+    armedThreat: () => false,
+    update(dt) {
+      for (const h of people) suspAI(h, dt);
+      if (st.amb === 'called') { st.ambT -= dt; if (st.ambT <= 0) { st.amb = 'done'; radio('🚑 救護車到了，傷者已經送往大墩醫院。', 'info'); if (injured) { removeHuman(injured); people.splice(people.indexOf(injured), 1); injured = null; } } }
+    },
+    interacts() {
+      if (P.mode !== 'foot' || done) return [];
+      const out = [];
+      if (!st.cones) out.push({ x: conePos[0], z: conePos[1], r: 3.5, label: '放置交通錐', act: () => { st.cones = true; AU.click(); for (let k = 0; k < 5; k++) { const [x, z] = px(s0 - 16 + k * 2.4, off - 2 + k * 0.5); const c = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.75, 8), MAT.cone); c.position.set(x, 0.38, z); scene.add(c); props.push(c); } radio('交通錐放好了。', 'info'); } });
+      if (injured && st.amb === 'need') out.push({ x: injured.x, z: injured.z, r: 2.4, label: '查看傷者・呼叫救護車', act: () => { st.amb = 'called'; st.ambT = 15; AU.radio(); radio('📻 已呼叫救護車，約 15 秒到場。先讓傷者保持不動。', 'radio'); } });
+      out.push({ x: A.x, z: A.z, r: 2.2, label: '詢問 A 車駕駛', act: () => { if (st.amb === 'need') st.amb = 'late'; driverDlg(A, carA, 'A'); } });
+      out.push({ x: B.x, z: B.z, r: 2.2, label: '詢問 B 車駕駛', act: () => { if (st.amb === 'need') st.amb = 'late'; driverDlg(B, carB, 'B'); } });
+      out.push({ x: W.x, z: W.z, r: 2.2, label: '詢問目擊者', act: () => { st.heardW = true; MODAL.show(`<h2>👀 目擊者</h2><p>「${witnessSay}」</p>`, [['謝謝', 'g', () => MODAL.close()]]); } });
+      const mx = (carA.x + carB.x) / 2, mz = (carA.z + carB.z) / 2;
+      out.push({ x: mx, z: mz, r: 3, label: '繪製現場圖・判斷責任', act: () => { if (st.amb === 'need') st.amb = 'late'; finalDlg(); } });
+      return out;
+    },
+    cleanup() { removeAll(people); for (const c of cars) { const k = TRAFFIC.indexOf(c); if (k >= 0) TRAFFIC.splice(k, 1); scene.remove(c.mesh); } props.forEach(p => scene.remove(p)); },
+  };
+  MIS.start(m);
+}
+
+/* ================= 任務：尋人 ================= */
+function misMissing() {
+  const elder = Math.random() < 0.7; const sh = pick(SHIRTS_NAMED);
+  const sp = sidewalkSpot(130, 330, ['res', 'old', 'mid']);
+  const h = spawnAI({ shirt: sh[0], pants: 0x555555, hair: elder ? 0xdddddd : 0x111111 }, sp.x, sp.z, 0, { role: 'missing' });
+  Object.assign(h, { state: 'wander', rect: sp.rect, t: sp.t, dir: 1, name: randName() });
+  if (!elder) h.P.g.scale.setScalar(0.62);
+  const fam = sidewalkSpot(150, 400, ['res', 'old', 'mid']); let famH = null;
+  let area = { x: h.x + rand(-28, 28), z: h.z + rand(-28, 28) }, areaT = 0, st = 'search', done = false;
+  const who = elder ? `${pick(['阿嬤', '阿公'])} ${h.name}（${randi(76, 88)} 歲，有失智症）` : `小朋友 ${h.name}（${randi(5, 8)} 歲）`;
+  const list = [h];
+  const m = {
+    type: 'missing', icon: '🔎', title: '協尋' + (elder ? '走失長者' : '走失兒童'),
+    radio: `勤務指揮中心：家屬報案，${who}走失了，最後在${nearCross(h.x, h.z)}附近出現，穿${sh[1]}上衣。請前往協尋。`,
+    target: () => st === 'search' ? area : st === 'escort' ? { x: fam.x, z: fam.z } : null,
+    obj: () => st === 'search' ? `在黃色範圍找穿<b>${sh[1]}上衣</b>的${elder ? '老人家' : '小朋友'}，找到按 E` : st === 'escort' ? '帶他回家屬身邊（他會跟著你，坐警車也可以）' : '完成',
+    armedThreat: () => false,
+    update(dt) {
+      if (h.state === 'follow' && P.mode === 'vehicle') { if (!h.inCar && dist(P.x, P.z, h.x, h.z) < 10) { h.inCar = true; radio('他上車了，坐在後座。', 'info'); } }
+      if (h.inCar) { h.x = P.x; h.z = P.z; if (P.mode === 'foot') { h.inCar = false; h.x = P.x + 1.2; h.z = P.z + 1.2; } }
+      h.y0 = 0.2; suspAI(h, dt);
+      if (st === 'search') { areaT += dt; if (areaT > 35) { areaT = 0; area = { x: h.x + rand(-28, 28), z: h.z + rand(-28, 28) }; } showArea(area.x, area.z, 45); }
+      else hideArea();
+      if (st === 'escort') {
+        if (!famH && dist(P.x, P.z, fam.x, fam.z) < 80) { famH = spawnAI({}, fam.x, fam.z, 0, { role: 'family' }); famH.state = 'idle'; list.push(famH); }
+        if (famH) suspAI(famH, dt);
+        if (!done && famH && !h.inCar && dist(h.x, h.z, fam.x, fam.z) < 5) {
+          done = true; h.state = 'idle'; showBubble('家屬：「謝謝警察先生！真的太感謝了！」');
+          setTimeout(() => { MIS.end(true, '勤務指揮中心：走失的' + (elder ? '長者' : '小朋友') + '已經平安交給家屬，辛苦了！'); award(20, 2000, '協尋走失' + (elder ? '長者' : '兒童') + '平安返家', 'com'); }, 1500);
+        }
+      }
+    },
+    interacts() {
+      if (P.mode !== 'foot' || st !== 'search') return [];
+      return [{ x: h.x, z: h.z, r: 2.6, label: '上前關心', act: () => {
+        MODAL.show(`<h2>🔎 找到了！</h2><p>${elder ? '老人家看起來很迷惘：「我要回家…我家在哪裡…」' : '小朋友哭著說：「我找不到媽媽…」'}</p><p>確認身分：${who}，穿${sh[1]}上衣 ✔</p><p>家屬在 <b>${nearCross(fam.x, fam.z)}</b> 等候。帶他過去，他會跟著你，也可以讓他坐警車。</p>`,
+          [['好，跟我走', 'g', () => { MODAL.close(); st = 'escort'; h.state = 'follow'; radio('已找到走失者，請送回家屬身邊。', 'info'); }]]);
+      } }];
+    },
+    cleanup() { hideArea(); removeAll(list); },
+  };
+  MIS.start(m);
+}
+
+/* ================= 任務：毒品臨檢 ================= */
+function misDrug() {
+  const sp = sidewalkSpot(130, 330, ['old', 'mid']); const n = randi(2, 3); const people = [];
+  for (let k = 0; k < n; k++) {
+    const h = spawnAI({ shirt: pick([0x222222, 0x444444, 0x8a1c1c, 0x1d3f7a, 0xffffff]) }, sp.x + (k - 1) * 1.3, sp.z + rand(-0.6, 0.6), 0, { role: 'suspect', name: randName() });
+    const r = Math.random(); h.drug = r < 0.35 ? 'meth' : r < 0.6 ? 'ket' : null; h.wanted = Math.random() < 0.15; h.armed = !!h.drug && Math.random() < 0.18;
+    h.clue = h.drug || h.wanted ? pick(['神情緊張、一直看四周', '手上拿著小夾鏈袋，看到你就塞進口袋', '身上有奇怪的燒焦塑膠味', '眼神渙散、一直流汗']) : pick(['態度配合', '說在等朋友', '一直在滑手機', '說剛下班']);
+    h.temper = h.armed ? (Math.random() < 0.5 ? 'fight' : 'flee') : (h.drug || h.wanted) ? (Math.random() < 0.35 ? 'flee' : 'calm') : 'calm';
+    h.state = 'idle'; h.faceTo = { x: sp.x, z: sp.z }; h.checked = { id: false, search: false }; h.resolved = false; people.push(h);
+  }
+  let alerted = false, done = false; const log = [];
+  const dlg = (h) => {
+    const render = () => {
+      const c = h.checked;
+      $('mbox').innerHTML = `<h2>🕵️ 盤查 ${h.name}</h2><p>觀察：${h.clue}</p>
+      ${c.id ? `<p>🪪 身分查詢：${h.wanted ? '<span class="res-bad">⚠️ 通緝中！</span>' : '沒有通緝'}</p>` : ''}
+      ${c.search ? `<p>🔍 搜身結果：${h.drug === 'meth' ? '<span class="res-bad">一小包白色結晶（第二級毒品 安非他命）</span>' : h.drug === 'ket' ? '<span class="res-bad">一小包白色粉末（第三級毒品 K他命，約 2 公克）</span>' : '沒有違禁品'}</p>` : ''}
+      <div class="btns"><button class="btn" id="gI" ${c.id ? 'disabled' : ''}>🪪 查證身分</button><button class="btn" id="gS" ${c.search ? 'disabled' : ''}>🔍 搜身</button></div>
+      <h3>處理</h3><div class="btns">
+      <button class="btn r" id="gA">🔗 逮捕（二級毒品／通緝）</button><button class="btn y" id="gT">📝 開單＋毒品危害講習（三級毒品）</button><button class="btn g" id="gR">🙂 沒問題，放行</button><button class="btn gray" id="gX">等一下</button></div>`;
+      $('gI').onclick = () => { c.id = true; AU.radio(); render(); };
+      $('gS').onclick = () => { c.search = true; AU.click(); if (!(h.drug || h.wanted)) log.push('noSusp'); render(); };
+      $('gX').onclick = () => MODAL.close();
+      const resolve = (act) => {
+        MODAL.close(); h.resolved = act;
+        if (act === 'arrest') { h.state = 'cuffed'; AU.cuff(); } else { h.state = 'idle'; h.faceTo = null; h.walk = null; }
+      };
+      $('gA').onclick = () => resolve('arrest'); $('gT').onclick = () => resolve('ticket'); $('gR').onclick = () => resolve('release');
+    };
+    MODAL.custom(render);
+  };
+  const gradeAll = () => {
+    const L = []; let pts = 8, bad = null;
+    for (const h of people) {
+      const nm = h.name;
+      const need = (h.drug === 'meth' || h.wanted) ? 'arrest' : h.drug === 'ket' ? 'ticket' : 'release';
+      let act = h.resolved; if (h.state === 'cuffed') act = 'arrest'; if (h.state === 'down') act = 'down';
+      if (act === 'escaped') { L.push([false, nm + ' 逃走了']); pts -= 6; continue; }
+      if (act === 'down') { L.push([true, nm + ' 持槍反抗被制伏，送醫']); pts += 4; continue; }
+      if (need === 'arrest') {
+        if (act === 'arrest') { L.push([true, nm + '：' + (h.drug === 'meth' ? '持有第二級毒品，依毒品危害防制條例第 11 條以現行犯逮捕' : '') + (h.wanted ? '（通緝犯）' : '')]); pts += 14; S.stats.arrests++; }
+        else { L.push([false, nm + ' 應該要逮捕（' + (h.drug === 'meth' ? '持有二級毒品' : '通緝犯') + '）' + (h.checked.search || h.checked.id ? '' : '，你沒有查證或搜身')]); bad = ['dem', '臨檢疏失，放走毒品／通緝嫌犯']; }
+      } else if (need === 'ticket') {
+        if (act === 'ticket') { L.push([true, nm + '：持有少量第三級毒品，依毒品危害防制條例第 11 條之 1 處罰鍰，並接受毒品危害講習']); pts += 10; S.stats.tickets++; }
+        else if (act === 'arrest' && h.resisted) { L.push([true, nm + '：持有三級毒品又拒捕，帶回偵辦']); pts += 8; }
+        else if (act === 'arrest') { L.push([false, nm + '：少量三級毒品是行政罰，不用逮捕']); pts -= 4; }
+        else L.push([false, nm + '：有三級毒品卻放行']);
+      } else {
+        if (act === 'release') { L.push([true, nm + '：沒有問題，放行']); pts += 3; }
+        else if (act === 'arrest' && h.resisted) { L.push([true, nm + '：拒捕逃跑，帶回釐清']); }
+        else { L.push([false, nm + '：沒有違法卻被' + (act === 'arrest' ? '逮捕' : '開單')]); bad = ['dem', '違法逮捕／處罰民眾']; }
+      }
+    }
+    if (log.includes('noSusp')) { L.push([false, '對沒有可疑跡象的人搜身（要有合理懷疑才能搜身）']); bad = bad || ['rep', '沒有合理懷疑就搜身']; }
+    resultModal('毒品臨檢結果', L, true, () => { if (bad) punish(bad[0], bad[1]); else award(Math.max(4, pts), 3000, '毒品臨檢勤務完成', pts >= 30 ? 'com' : null); MIS.end(true, '勤務指揮中心：臨檢結束，收隊。'); });
+  };
+  const m = {
+    type: 'drug', icon: '💊', title: '毒品臨檢',
+    radio: `勤務指揮中心：民眾檢舉${nearCross(sp.x, sp.z)}附近有人聚集、疑似販毒，請前往臨檢。注意：要有可疑跡象才能搜身。`,
+    target: () => { const f = people.find(h => h.state === 'flee' || h.state === 'fight'); return f ? { x: f.x, z: f.z } : { x: sp.x, z: sp.z }; },
+    obj: () => { const left = people.filter(h => !h.resolved && !['cuffed', 'down'].includes(h.state)).length; return people.some(h => h.state === 'flee') ? '有人逃跑了！追上去撲倒（E）' : people.some(h => h.state === 'fight') ? '有人持槍反抗！找掩護、喊話（Q）' : `逐一盤查（E），剩下 ${left} 人`; },
+    armedThreat: () => people.some(h => h.state === 'fight' && h.armed),
+    update(dt) {
+      for (const h of people) { suspAI(h, dt); if (h.resolved === 'release' || h.resolved === 'ticket') { if (!h.walk) { h.walk = 1; h.state = 'wander'; const s2 = sidewalkSpot(0, 60); h.rect = s2.rect; h.t = s2.t; h.role = 'civ'; } } if (h.state === 'flee' && h.lostT > 12) { h.resolved = 'escaped'; h.state = 'idle'; h.P.g.visible = false; } }
+      if (!alerted && dist(P.x, P.z, sp.x, sp.z) < 9) { alerted = true; for (const h of people) if (h.temper !== 'calm' && Math.random() < 0.7) setTimeout(() => reactSuspect(h, false), rand(200, 1500)); }
+      if (!done && people.every(h => h.resolved || ['cuffed', 'down'].includes(h.state))) { done = true; setTimeout(gradeAll, 800); }
+    },
+    interacts() {
+      const out = suspectInteracts(people);
+      if (P.mode === 'foot') for (const h of people) if (!h.resolved && ['idle', 'talk'].includes(h.state)) out.push({ x: h.x, z: h.z, r: 2.2, label: '盤查 ' + h.name, act: () => dlg(h) });
+      return out;
+    },
+    onShout() { shoutAt(people); },
+    onShot(r, type) { return suspectShot(r, type, people) || (!r.h && people.some(h => h.state === 'fight')); },
+    cleanup() { removeAll(people); },
+  };
+  MIS.start(m);
 }
 
 /* ================= GPS 導航 ================= */
@@ -2364,7 +2896,7 @@ function updateNav(dt) {
   if (NAV.way && dTarget < 15) { NAV.way = null; toast('good', '🏁 已抵達目的地', ''); AU.good(); return; }
   NAV.t -= dt;
   const key = Math.round(tg.x) + ',' + Math.round(tg.z);
-  if (NAV.t <= 0 || key !== NAV.tgtKey) { NAV.t = 0.6; NAV.tgtKey = key; NAV.path = findPath(P.x, P.z, tg.x, tg.z); NAV.color = tg.color; }
+  if (NAV.t <= 0 || key !== NAV.tgtKey || !NAV.from || dist(P.x, P.z, NAV.from[0], NAV.from[1]) > 25) { NAV.from = [P.x, P.z]; NAV.t = 0.6; NAV.tgtKey = key; NAV.path = findPath(P.x, P.z, tg.x, tg.z); NAV.color = tg.color; }
   const path = NAV.path; if (!path) return;
   path[0] = [P.x, P.z];
   // 路面箭頭：沿路線每 9 公尺一個，靠右車道
@@ -2630,18 +3162,18 @@ function updateHUD(force) {
 let curAct = null;
 function findInteract() {
   if (MODAL.open) return null;
-  if (P.mode === 'vehicle') return null;
+  const inVeh = P.mode === 'vehicle';
   let best = null, bd = 1e9;
   const list = STATIC_INTERACT.concat(MIS.interacts());
-  for (const it of list) { const d = dist(P.x, P.z, it.x, it.z); if (d < it.r && d < bd) { bd = d; best = it; } }
+  for (const it of list) { if (inVeh && !it.veh) continue; const d = dist(P.x, P.z, it.x, it.z); const r = inVeh ? it.r + 8 : it.r; if (d < r && d < bd) { bd = d; best = it; } }
   return best;
 }
 function updatePrompt() {
   curAct = findInteract(); const el = $('prompt'); let t = '';
   const key = IS_TOUCH ? '' : 'E ';
   if (curAct) t = '【' + key + '】' + (typeof curAct.label === 'function' ? curAct.label() : curAct.label);
-  if (P.mode === 'foot') { const v = nearestPVeh(3.6); if (v) t += (t ? '　' : '') + '【' + (IS_TOUCH ? '🚗' : 'F') + '】上車：' + v.spec.name; }
-  else if (Math.abs(P.veh.speed) < 3) t = '【' + (IS_TOUCH ? '🚗' : 'F') + '】下車';
+  if (P.mode === 'foot') { const v = nearestPVeh(3.6); if (v) t += (t ? '　' : '') + '【' + (IS_TOUCH ? '🚗' : 'F') + '】上車：' + v.spec.name; else if (S.onDuty && TRAFFIC.some(n => n.state !== 'gone' && !n.flag && dist(n.px, n.pz, P.x, P.z) < 3.8)) t += (t ? '　' : '') + '【' + (IS_TOUCH ? '🚗' : 'F') + '】緊急徵用車輛'; }
+  else if (Math.abs(P.veh.speed) < 3) t += (t ? '　' : '') + '【' + (IS_TOUCH ? '🚗' : 'F') + '】下車';
   if (t) { el.textContent = t.replace(/【】/g, ''); el.classList.remove('hidden'); } else el.classList.add('hidden');
 }
 function doInteract() { if (!GAME.running || MODAL.open) return; const it = curAct || findInteract(); if (it) { AU.click(); it.act(); } }
@@ -2691,6 +3223,9 @@ function showHelp() {
   <h3>🚔 勤務</h3><p><b>交通攔查</b>：找到目標車，坐警車開警笛（H）跟在後面，駕駛會靠邊停。下車走到駕駛座窗邊按 E，先查證件、查通緝、看有沒有酒味要酒測，再決定開什麼罰單或逮捕。<br>
   <b>搶案</b>：到現場先找掩護、喊話（Q）要嫌犯放下武器。投降的走過去按 E 上手銬。嫌犯開槍才還擊，沒警告就開槍、或對投降的人開槍會被懲處。電擊槍（2）可以不傷人制伏。<br>
   <b>巡邏</b>：到紅色巡邏箱下車按 E 簽巡邏表。<b>酒測臨檢</b>：到臨檢點設站，盤查 5 輛車。</p>
+  <h3>🎯 拿槍指人</h3><p>按住右鍵（手機按 🎯）瞄準。被指的路人會害怕舉手、尖叫逃跑；沒有危險卻拿槍指著民眾，民眾會打 110 投訴（申誡、記過）。嫌犯被槍指著再喊話比較容易投降，但有些壞人會拔槍反擊或逃跑。</p>
+  <h3>📋 更多勤務</h3><p><b>車禍處理</b>：放交通錐、先救傷者、雙方都要酒測、問目擊者，再判斷誰的責任。<b>通緝犯追捕</b>：在黃色範圍找衣服顏色對的人，他跑了就追上去撲倒。<b>糾紛調解</b>：問清楚雙方和現場再決定勸導、開罰或逮捕。<b>尋人</b>：找到走失的長者或小孩，帶回家屬身邊。<b>毒品臨檢</b>：有可疑跡象才能搜身，二級毒品要逮捕、少量三級毒品是罰鍰加講習。</p>
+  <p>16:45 以後不再派新案子；打卡下班時，手上還沒做完的任務會交接給同仁，不扣考績。</p>
   <h3>🧭 導航、電台、車輛</h3><p><b>導航</b>：有勤務時會自動導航，跟著小地圖的黃色路線和路面箭頭走，右上角會提示前面要左轉還是右轉。按 M 打開大地圖，點一下任何地方就能設定紫色的自訂目的地，再點一次取消。<br>
   <b>電台</b>：開車時按 N（手機按 📻）換台：流行、Lo-Fi、台語金曲、新聞台。<br>
   <b>撞壞</b>：車子撞多了會凹、冒白煙再冒黑煙，車況 0% 會起火，5 秒內不下車就會爆炸！警車撞壞會被申誡，分局會準備新的警車；自己的車睡覺時會送修（每台 $3,000）。<br>
@@ -2850,10 +3385,10 @@ function loop(now) {
     updateTraffic(dt);
     updatePeds(dt);
     MIS.update(dt);
-    for (let k = MHUMANS.length - 1; k >= 0; k--) { const h = MHUMANS[k]; if (h.role === 'robber' || h.role === 'clerk') continue;
+    for (let k = MHUMANS.length - 1; k >= 0; k--) { const h = MHUMANS[k]; if (h.role === 'robber' || h.role === 'clerk' || h.ai) continue;
       if (h.walk) { h.x += h.walk.vx * dt; h.z += h.walk.vz * dt; h.P.g.rotation.y = Math.atan2(h.walk.vx, h.walk.vz); h.walk.t -= dt; if (h.walk.t <= 0) { removeHuman(h); continue; } }
       posePerson(h.P, h.pose || 'idle', dt, 1.6); h.P.g.position.set(h.x, 0.2, h.z); }
-    updateFX(dt); updateVehDamage(dt); updateNav(dt);
+    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt);
   } else AU.update(false, 0, false);
   frame++;
   updateSky();
@@ -2864,7 +3399,7 @@ function loop(now) {
 }
 
 // 測試用：快速模擬（不畫圖）
-function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); } }
+function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); } }
 
 /* ---------- 開始 ---------- */
 function startGame(fresh) {
