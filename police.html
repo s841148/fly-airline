@@ -225,7 +225,7 @@ body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;w
       E 互動 · P 手機 · F 上下車 · Q 喊話「警察！不要動！」 · H 警笛 · R 換彈匣 · 1 手槍 / 2 電擊槍 / 3 警棍 / 4 步槍（特勤隊）· V 揍人 · M 地圖（點地圖設導航）· N 車上電台 · B 請求支援（再按一次叫特勤隊）· G 對空鳴槍 · Esc 選單<br>
       開車：W 油門 · S 煞車/倒車 · A D 轉彎 · 空白鍵 手煞車<br>
       <b>📱 手機</b>：橫拿手機，左邊搖桿移動 / 開車，右邊滑動看四周，按鈕操作。<br>
-      <b>🏙️ 怎麼玩</b>：開局從三個角色選一個，一開始沒有工作。用手機（P）看求職、買股票、網購；想當警察就到「大墩分局」人事室考特考，考上後每天 8:00 打卡上班、17:00 下班。回家睡覺跳到隔天。
+      <b>🗺️ 全台中地圖</b>：市區、海線（台中港、梧棲、沙鹿、清水、大甲、高美濕地）、山線（豐原、潭子、大雅、大坑、東勢）、屯區（太平、大里、霧峰、烏日、高鐵站），主要道路用真實路名，按比例縮小。按 M 開地圖，＋／－ 縮放。<br><b>🏙️ 怎麼玩</b>：開局從三個角色選一個，一開始沒有工作。用手機（P）看求職、買股票、網購；想當警察就到「大墩分局」人事室考特考，考上後每天 8:00 打卡上班、17:00 下班。回家睡覺跳到隔天。
     </div>
     <div class="copy">© 2026 麥麥的遊戲工廠 版權所有 · 本遊戲為原創作品，地名街景為虛構重現，未經授權請勿轉載或作商業用途</div>
   </div>
@@ -397,15 +397,180 @@ function signTex(text, opt) {
   });
 }
 
+/* ================= 全台中道路網（真實路名，依實際相對位置等比例縮小約 1:7） =================
+   座標：x 往東、z 往南（以台灣大道方向為水平軸，台中車站在原點）。
+   每條線 = [座標, 路寬, [[起, 迄, 路名], ...]]；同一條線不同段可以有不同路名。
+   起迄相同的段是「端點」（死巷口，例如港區大門）。 */
+const VDEF = [
+  // ---- 海線 ----
+  [-2960, 14, [[-120, 0, '港埠路']]],
+  [-2870, 12, [[-120, 0, '梧北路']]],
+  [-2790, 12, [[-120, 0, '文化路']]],
+  [-2620, 18, [[-970, 0, '臨港路']]],
+  [-2540, 12, [[-450, -330, '鎮政路']]],
+  [-2460, 12, [[-450, -330, '中華路']]],
+  [-2360, 12, [[-450, -330, '中正街']]],
+  [-2330, 12, [[0, 120, '光華路']]],
+  [-2300, 12, [[-1960, -1830, '文武路']]],
+  [-2230, 18, [[-1960, -390, '中山路'], [-390, 400, '中山路'], [400, 1120, '沙田路']]],
+  [-2140, 12, [[-1960, -1830, '光明路']]],
+  [-1980, 12, [[1060, 1120, '育英路']]],
+  [-1900, 12, [[1060, 1120, '文昌路']]],
+  // ---- 東海、工業區 ----
+  [-1530, 12, [[-130, 0, '藝術街']]],
+  [-1390, 14, [[-130, 0, '東大路']]],
+  [-1200, 12, [[-900, -830, '神林路']]],
+  [-1190, 14, [[0, 360, '工業區一路']]],
+  [-1100, 18, [[-900, -330, '中清路']]],
+  [-1000, 22, [[-900, -830, '雅潭路'], [-830, 960, '國道1號']]],
+  // ---- 市區 ----
+  [-935, 20, [[-760, 960, '環中路']]],
+  [-855, 16, [[-250, -110, '逢甲路'], [-110, 360, '黎明路']]],
+  [-775, 16, [[-250, 280, '河南路']]],
+  [-705, 12, [[900, 960, '高鐵路']]],
+  [-690, 14, [[-110, 200, '惠中路']]],
+  [-620, 22, [[-400, 440, '文心路']]],
+  [-600, 12, [[960, 1040, '新興路']]],
+  [-555, 14, [[0, 360, '大墩路']]],
+  [-520, 12, [[960, 1040, '五光路']]],
+  [-440, 16, [[-330, 0, '忠明路'], [0, 440, '忠明南路']]],
+  [-420, 12, [[-1850, -1660, '圓環西路']]],
+  [-335, 16, [[-110, 360, '英才路']]],
+  [-290, 18, [[-1850, -1760, '中正路'], [-1760, -1000, '豐原大道'], [-1000, -250, '崇德路']]],
+  [-225, 18, [[-330, 360, '五權路'], [360, 440, '五權南路']]],
+  [-200, 12, [[-1850, -1660, '圓環東路']]],
+  [-155, 16, [[-620, -250, '興安路'], [-250, 200, '中華路']]],
+  [-150, 12, [[-1130, -1050, '復興路']]],
+  [-80, 14, [[-620, -250, '北屯路'], [-250, 300, '三民路']]],
+  [30, 16, [[-250, 300, '建國路']]],
+  [120, 14, [[-620, 0, '東光路'], [0, 300, '大智路']]],
+  [150, 12, [[485, 620, '國光路']]],
+  [265, 16, [[-760, -300, '環中東路'], [-300, 0, '東英路'], [0, 200, '旱溪東路'], [200, 960, '中興路']]],
+  [500, 12, [[-180, 0, '中平路']]],
+  [600, 14, [[-180, 0, '中興東路'], [-1370, -620, '東山路']]],
+  [640, 12, [[880, 960, '林森路']]],
+  [720, 12, [[880, 960, '民生路']]],
+  [980, 12, [[-2615, -2550, '新豐街']]],
+  [1040, 14, [[-2615, -1760, '豐勢路']]],
+  [1100, 12, [[-2615, -2550, '三民街']]],
+];
+const HDEF = [
+  [-2615, 12, [[980, 1100, '東關路']]],
+  [-2550, 12, [[980, 1100, '第一橫街']]],
+  [-1960, 12, [[-2300, -2140, '水源路']]],
+  [-1900, 12, [[-2300, -2140, '蔣公路']]],
+  [-1850, 12, [[-420, -200, '中山路']]],
+  [-1830, 12, [[-2300, -2140, '順天路']]],
+  [-1760, 16, [[-420, 1040, '豐勢路']]],
+  [-1660, 12, [[-420, -200, '中興路']]],
+  [-1370, 12, [[600, 600, '']]],
+  [-1130, 12, [[-290, -150, '潭興路']]],
+  [-1050, 12, [[-290, -150, '圓通南路']]],
+  [-970, 14, [[-2620, -2230, '高美路']]],
+  [-900, 12, [[-1200, -1000, '民生路']]],
+  [-830, 14, [[-1200, -1000, '雅環路']]],
+  [-760, 20, [[-935, 265, '環中路']]],
+  [-620, 14, [[-290, 120, '松竹路'], [120, 600, '東山路']]],
+  [-500, 14, [[-290, 120, '昌平路']]],
+  [-450, 12, [[-2540, -2230, '鰲峰路']]],
+  [-400, 22, [[-620, -80, '文心路']]],
+  [-390, 14, [[-2540, -2230, '中山路']]],
+  [-330, 18, [[-1100, -225, '中清路'], [-2540, -2360, '民族路']]],
+  [-250, 14, [[-935, -775, '福星路'], [-620, 30, '漢口路']]],
+  [-180, 12, [[500, 600, '東平路']]],
+  [-130, 12, [[-1530, -1390, '國際街']]],
+  [-120, 14, [[-2960, -2620, '大智路']]],
+  [-110, 16, [[-935, -335, '西屯路'], [-335, -80, '健行路'], [-80, 265, '精武路']]],
+  [-90, 12, [[500, 600, '永平路']]],
+  [0, 28, [[-2960, 30, '台灣大道'], [30, 265, '建成路'], [265, 600, '振興路']]],
+  [50, 12, [[-2330, -2230, '鎮政路']]],
+  [105, 16, [[-935, -555, '市政路'], [-225, 30, '民生路']]],
+  [120, 12, [[-2330, -2230, '鎮南路']]],
+  [180, 12, [[-1190, -1000, '工業區二十八路']]],
+  [200, 16, [[-855, -225, '公益路'], [-155, 265, '復興路']]],
+  [280, 16, [[-935, -335, '向上路']]],
+  [300, 14, [[-80, 265, '國光路']]],
+  [360, 18, [[-1190, -225, '五權西路']]],
+  [440, 16, [[-620, -225, '文心南路']]],
+  [485, 12, [[150, 265, '德芳路']]],
+  [540, 12, [[150, 265, '大里路']]],
+  [620, 12, [[150, 265, '爽文路']]],
+  [880, 12, [[640, 720, '四德路']]],
+  [900, 12, [[-705, -705, '']]],
+  [960, 16, [[-1000, -520, '中山路'], [265, 720, '中正路']]],
+  [1040, 12, [[-600, -520, '光日路']]],
+  [1060, 12, [[-1980, -1900, '自治路']]],
+  [1120, 16, [[-2230, -1900, '沙田路']]],
+];
+// 區域（地名標示、建築風格）
+const DISTRICTS = [
+  { name: '台中港', x: -2900, z: 60, r: 120 }, { name: '梧棲', x: -2830, z: -60, r: 90 }, { name: '沙鹿', x: -2280, z: 70, r: 110 },
+  { name: '清水', x: -2420, z: -390, r: 120 }, { name: '大甲', x: -2220, z: -1890, r: 110 }, { name: '高美濕地', x: -2960, z: -970, r: 80 },
+  { name: '龍井', x: -2230, z: 700, r: 80 }, { name: '大肚', x: -1940, z: 1090, r: 90 }, { name: '東海', x: -1460, z: -60, r: 100 },
+  { name: '大雅', x: -1100, z: -865, r: 100 }, { name: '西屯', x: -760, z: -130, r: 150 }, { name: '南屯', x: -700, z: 330, r: 150 },
+  { name: '北屯', x: -150, z: -520, r: 160 }, { name: '中區', x: -60, z: -40, r: 90 }, { name: '東區', x: 180, z: 60, r: 120 },
+  { name: '南區', x: -40, z: 250, r: 110 }, { name: '北區', x: -200, z: -180, r: 100 }, { name: '西區', x: -330, z: 120, r: 110 },
+  { name: '潭子', x: -220, z: -1090, r: 90 }, { name: '豐原', x: -310, z: -1755, r: 120 }, { name: '大坑', x: 600, z: -1300, r: 120 },
+  { name: '東勢', x: 1040, z: -2585, r: 100 }, { name: '太平', x: 550, z: -90, r: 100 }, { name: '大里', x: 210, z: 550, r: 110 },
+  { name: '霧峰', x: 680, z: 920, r: 100 }, { name: '烏日', x: -620, z: 980, r: 100 }, { name: '高鐵台中站', x: -705, z: 870, r: 50 },
+];
+function districtAt(x, z) { let b = null, bd = 1e9; for (const d of DISTRICTS) { const q = dist(x, z, d.x, d.z) / d.r; if (q < bd) { bd = q; b = d; } } return bd < 2.2 ? b.name : '郊區'; }
+const WORLD = { x0: -3150, x1: 1250, z0: -2720, z1: 1220 };
+
+// ---- 建立格線與道路圖 ----
+const XR = [], ZR = [], VLN = [], HLN = [];
+(function () {
+  const vm = new Map(), hm = new Map();
+  for (const [x, w, r] of VDEF) { const o = vm.get(x) || { w: 0, r: [] }; o.w = Math.max(o.w, w); o.r.push(...r); vm.set(x, o); }
+  for (const [z, w, r] of HDEF) { const o = hm.get(z) || { w: 0, r: [] }; o.w = Math.max(o.w, w); o.r.push(...r); hm.set(z, o); }
+  for (const x of [...vm.keys()].sort((a, b) => a - b)) { XR.push(x); const o = vm.get(x); o.r.sort((a, b) => a[0] - b[0]); VLN.push(o); }
+  for (const z of [...hm.keys()].sort((a, b) => a - b)) { ZR.push(z); const o = hm.get(z); o.r.sort((a, b) => a[0] - b[0]); HLN.push(o); }
+  // 合併相連路段成「覆蓋區間」
+  for (const L of [...VLN, ...HLN]) { L.cov = []; for (const [a, b] of L.r) { const c = L.cov[L.cov.length - 1]; if (c && a <= c[1] + 0.5) c[1] = Math.max(c[1], b); else L.cov.push([a, b]); } }
+})();
+function vW(i) { return VLN[i].w; }
+function hW(j) { return HLN[j].w; }
+function covIdx(L, t) { for (let k = 0; k < L.cov.length; k++) if (t >= L.cov[k][0] - 0.5 && t <= L.cov[k][1] + 0.5) return k; return -1; }
+function vCov(i, z) { return covIdx(VLN[i], z) >= 0; }
+function hCov(j, x) { return covIdx(HLN[j], x) >= 0; }
+function rangeName(L, t) { for (const [a, b, n] of L.r) if (t >= a - 0.5 && t <= b + 0.5 && n) return n; return ''; }
+function vName(i, z) { return rangeName(VLN[i], z); }
+function hName(j, x) { return rangeName(HLN[j], x); }
+function isNode(i, j) { return vCov(i, ZR[j]) && hCov(j, XR[i]); }
+const NKEY = (i, j) => i * 1000 + j;
+const ADJ = new Map(), NODES = [], EDGES = [];
+(function () {
+  for (let i = 0; i < XR.length; i++) for (let j = 0; j < ZR.length; j++) if (isNode(i, j)) { NODES.push([i, j]); ADJ.set(NKEY(i, j), []); }
+  const link = (a, b, ax) => {
+    ADJ.get(NKEY(...a)).push(b); ADJ.get(NKEY(...b)).push(a);
+    const L = Math.abs(XR[b[0]] - XR[a[0]]) + Math.abs(ZR[b[1]] - ZR[a[1]]);
+    const name = ax === 'ew' ? hName(a[1], (XR[a[0]] + XR[b[0]]) / 2) : vName(a[0], (ZR[a[1]] + ZR[b[1]]) / 2);
+    EDGES.push({ a, b, ax, L, name, w: ax === 'ew' ? hW(a[1]) : vW(a[0]) });
+  };
+  for (let j = 0; j < ZR.length; j++) { // 東西向
+    let prev = null;
+    for (let i = 0; i < XR.length; i++) {
+      if (!isNode(i, j)) continue;
+      if (prev != null && covIdx(HLN[j], XR[prev]) === covIdx(HLN[j], XR[i])) link([prev, j], [i, j], 'ew');
+      prev = i;
+    }
+  }
+  for (let i = 0; i < XR.length; i++) { // 南北向
+    let prev = null;
+    for (let j = 0; j < ZR.length; j++) {
+      if (!isNode(i, j)) continue;
+      if (prev != null && covIdx(VLN[i], ZR[prev]) === covIdx(VLN[i], ZR[j])) link([i, prev], [i, j], 'ns');
+      prev = j;
+    }
+  }
+})();
+function neighbors(i, j) { return ADJ.get(NKEY(i, j)) || []; }
+function nodeDeg(i, j) { return neighbors(i, j).length; }
+function speedLimitName(n) { return n === '國道1號' ? 100 : ['台灣大道', '文心路', '環中路', '五權西路', '中清路', '豐勢路', '臨港路'].includes(n) ? 60 : 50; }
+
 /* ================= 城市：仿台中 ================= */
 const scene = new THREE.Scene();
-const XR = [-400, -320, -240, -160, -80, 0, 80, 160, 240, 320, 400];
-const ZR = XR.slice();
-const VNAMES = ['中華路', '三民路', '英才路', '五權路', '忠明路', '大墩路', '黎明路', '文心路', '河南路', '朝富路', '環中東路'];
-const HNAMES = ['環中路', '漢口路', '崇德路', '市政路', '健行路', '台灣大道', '公益路', '大業路', '向上路', '美村路', '五權西路'];
-function vW(i) { const x = XR[i]; return x === 160 ? 22 : x === -160 ? 18 : 14; }
-function hW(j) { const z = ZR[j]; return z === 0 ? 28 : z === 80 ? 18 : 14; }
-const LIMIT = 500;
+// 道路格線定義在 roads.js
 
 /* ---------- 碰撞盒與空間格 ---------- */
 const COLS = []; const CGRID = new Map(); const CELL = 20; let colStamp = 1;
@@ -444,8 +609,8 @@ function collideCircle(p, r, ylow) {
       }
     }
   }
-  if (p.x < -LIMIT) { p.x = -LIMIT; hit = true; } if (p.x > LIMIT) { p.x = LIMIT; hit = true; }
-  if (p.z < -LIMIT) { p.z = -LIMIT; hit = true; } if (p.z > LIMIT) { p.z = LIMIT; hit = true; }
+  if (p.x < WORLD.x0) { p.x = WORLD.x0; hit = true; } if (p.x > WORLD.x1) { p.x = WORLD.x1; hit = true; }
+  if (p.z < WORLD.z0) { p.z = WORLD.z0; hit = true; } if (p.z > WORLD.z1) { p.z = WORLD.z1; hit = true; }
   return hit;
 }
 // 射線 vs 建築盒（3D），回傳距離
@@ -481,7 +646,14 @@ function losClear(ax, ay, az, bx, by, bz) {
 
 /* ---------- 幾何合併 ---------- */
 const MERGE = {};
-function addGeo(key, mat, geo) { (MERGE[key] || (MERGE[key] = { mat, geos: [] })).geos.push(geo); }
+const CHUNK = 700;
+function addGeo(key, mat, geo) {
+  // 依位置分區合併，遠處的區塊可以被視錐剔除
+  const p = geo.attributes.position.array; let cx = 0, cz = 0; const n = p.length / 3, st = Math.max(1, Math.floor(n / 8)); let c = 0;
+  for (let k = 0; k < n; k += st) { cx += p[k * 3]; cz += p[k * 3 + 2]; c++; }
+  const ck = key + '#' + Math.floor(cx / c / CHUNK) + ',' + Math.floor(cz / c / CHUNK);
+  (MERGE[ck] || (MERGE[ck] = { mat, geos: [] })).geos.push(geo);
+}
 function mergeGeos(list) {
   let n = 0; const ni = list.map(g => { const q = g.index ? g.toNonIndexed() : g; n += q.attributes.position.count; return q; });
   const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2); let o = 0;
@@ -655,63 +827,74 @@ function blockOf(i, j) { return BLOCKS.find(b => b.i === i && b.j === j); }
 function blockAtXZ(x, z) { return BLOCKS.find(b => x >= b.x0 && x <= b.x1 && z >= b.z0 && z <= b.z1); }
 function roadNameAt(x, z) {
   let best = 1e9, name = '';
-  for (let i = 0; i < XR.length; i++) { const d = Math.abs(x - XR[i]); if (d < best) { best = d; name = VNAMES[i]; } }
-  for (let j = 0; j < ZR.length; j++) { const d = Math.abs(z - ZR[j]); if (d < best) { best = d; name = HNAMES[j]; } }
+  for (let i = 0; i < XR.length; i++) { const d = Math.abs(x - XR[i]); if (d < best && vCov(i, z)) { const n = vName(i, z); if (n) { best = d; name = n; } } }
+  for (let j = 0; j < ZR.length; j++) { const d = Math.abs(z - ZR[j]); if (d < best && hCov(j, x)) { const n = hName(j, x); if (n) { best = d; name = n; } } }
   return name;
 }
+function nearNode(x, z) { let b = NODES[0], bd = 1e9; for (const n of NODES) { const d = dist(x, z, XR[n[0]], ZR[n[1]]); if (d < bd) { bd = d; b = n; } } return b; }
 function nearCross(x, z) { // 最近路口名
-  let bi = 0, bj = 0, bd = 1e9;
-  for (let i = 0; i < XR.length; i++) for (let j = 0; j < ZR.length; j++) { const d = dist(x, z, XR[i], ZR[j]); if (d < bd) { bd = d; bi = i; bj = j; } }
-  return VNAMES[bi] + '與' + HNAMES[bj] + '口';
+  const [i, j] = nearNode(x, z); const a = vName(i, ZR[j]) || vName(i, ZR[j] + 1) || vName(i, ZR[j] - 1), b = hName(j, XR[i]) || hName(j, XR[i] + 1) || hName(j, XR[i] - 1);
+  return a && b && a !== b ? a + '與' + b + '口' : (a || b) + (districtAt(x, z) !== '郊區' ? '（' + districtAt(x, z) + '）' : '');
 }
-
 function buildCity() {
   buildSignAtlas(); initMaterials();
   // 大地（郊區稻田）
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), MAT.paddy); ground.rotation.x = -Math.PI / 2; ground.position.y = -0.02;
-  MAT.paddy.map.repeat.set(1400 / 40, 1400 / 40); scene.add(ground);
-  // 道路
+  const GW = WORLD.x1 - WORLD.x0 + 800, GD = WORLD.z1 - WORLD.z0 + 800;
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(GW, GD), MAT.paddy); ground.rotation.x = -Math.PI / 2; ground.position.set((WORLD.x0 + WORLD.x1) / 2, -0.02, (WORLD.z0 + WORLD.z1) / 2);
+  MAT.paddy.map.repeat.set(GW / 40, GD / 40); scene.add(ground);
+  // 道路：路段 + 路口
   const RW = MAT.road;
-  for (let i = 0; i < XR.length; i++) { const w = vW(i); const x = XR[i]; addGeo('road', RW, flatQuad(x - w / 2, -420, x + w / 2, 420, 0.02, [0, 0, w / 8, 840 / 8])); }
-  for (let j = 0; j < ZR.length; j++) {
-    const w = hW(j), z = ZR[j];
-    const segs = [-420, ...XR, 420];
-    for (let k = 0; k < segs.length - 1; k++) {
-      let a = segs[k], b = segs[k + 1];
-      const ia = XR.indexOf(a), ib = XR.indexOf(b);
-      if (ia >= 0) a += vW(ia) / 2; if (ib >= 0) b -= vW(ib) / 2;
-      addGeo('road', RW, flatQuad(a, z - w / 2, b, z + w / 2, 0.02, [0, 0, (b - a) / 8, w / 8]));
+  for (const e of EDGES) {
+    const [ai, aj] = e.a, [bi, bj] = e.b;
+    if (e.ax === 'ew') {
+      const z = ZR[aj], w = e.w, xa = XR[ai] + (vCov(ai, z) ? vW(ai) / 2 : 0), xb = XR[bi] - vW(bi) / 2;
+      if (xb > xa) addGeo('road', RW, flatQuad(xa, z - w / 2, xb, z + w / 2, 0.02, [0, 0, (xb - xa) / 8, w / 8]));
+      e.cut = [xa, xb]; laneMarks('h', z, w, xa, xb, nodeDeg(ai, aj) >= 3, nodeDeg(bi, bj) >= 3);
+    } else {
+      const x = XR[ai], w = e.w, za = ZR[aj] + hW(aj) / 2, zb = ZR[bj] - hW(bj) / 2;
+      if (zb > za) addGeo('road', RW, flatQuad(x - w / 2, za, x + w / 2, zb, 0.02, [0, 0, w / 8, (zb - za) / 8]));
+      e.cut = [za, zb]; laneMarks('v', x, w, za, zb, nodeDeg(ai, aj) >= 3, nodeDeg(bi, bj) >= 3);
     }
   }
-  // 標線
-  for (let i = 0; i < XR.length; i++) for (let j = -1; j < ZR.length; j++) {
-    const x = XR[i], w = vW(i); const za = j < 0 ? -420 : ZR[j] + hW(j) / 2, zb = j + 1 >= ZR.length ? 420 : ZR[j + 1] - hW(j + 1) / 2;
-    laneMarks('v', x, w, za, zb);
-  }
-  for (let j = 0; j < ZR.length; j++) for (let i = -1; i < XR.length; i++) {
-    const z = ZR[j], w = hW(j); const xa = i < 0 ? -420 : XR[i] + vW(i) / 2, xb = i + 1 >= XR.length ? 420 : XR[i + 1] - vW(i + 1) / 2;
-    laneMarks('h', z, w, xa, xb);
-  }
-  // 區塊
-  for (let i = 0; i < XR.length - 1; i++) for (let j = 0; j < ZR.length - 1; j++) {
-    const b = { i, j, x0: XR[i] + vW(i) / 2, x1: XR[i + 1] - vW(i + 1) / 2, z0: ZR[j] + hW(j) / 2, z1: ZR[j + 1] - hW(j + 1) / 2, type: 'gen' };
-    b.cx = (b.x0 + b.x1) / 2; b.cz = (b.z0 + b.z1) / 2;
-    BLOCKS.push(b);
-    addGeo('walk', MAT.walk, boxGeo(b.x1 - b.x0, 0.18, b.z1 - b.z0, b.cx, 0, b.cz, 'world'));
+  for (const [i, j] of NODES) { const x = XR[i], z = ZR[j], wx = vW(i), wz = hW(j); addGeo('road', RW, flatQuad(x - wx / 2, z - wz / 2, x + wx / 2, z + wz / 2, 0.021, [0, 0, wx / 8, wz / 8])); }
+  // 區塊：每條東西向路段往南找最近的封閉矩形
+  const hEdge = (j, ia, ib) => { const k = covIdx(HLN[j], XR[ia]); return k >= 0 && k === covIdx(HLN[j], XR[ib]); };
+  const vEdge = (i, ja, jb) => { const k = covIdx(VLN[i], ZR[ja]); return k >= 0 && k === covIdx(VLN[i], ZR[jb]); };
+  // 從每個路口（西北角）往東找第一個有往南道路的路口、往南找第一個有往東道路的路口
+  for (const [ia, j] of NODES) {
+    const z0 = ZR[j], x0 = XR[ia];
+    if (!vCov(ia, z0 + 1) || !hCov(j, x0 + 1)) continue;
+    let ib = -1; for (let i = ia + 1; i < XR.length; i++) { if (!hEdge(j, ia, i)) break; if (isNode(i, j) && vCov(i, z0 + 1)) { ib = i; break; } }
+    let j2 = -1; for (let q = j + 1; q < ZR.length; q++) { if (!vEdge(ia, j, q)) break; if (isNode(ia, q) && hCov(q, x0 + 1)) { j2 = q; break; } }
+    if (ib < 0 || j2 < 0 || !isNode(ib, j2) || !hEdge(j2, ia, ib) || !vEdge(ib, j, j2)) continue;
+    const bl = { i: ia, j, iE: ib, jS: j2, x0: XR[ia] + vW(ia) / 2, x1: XR[ib] - vW(ib) / 2, z0: ZR[j] + hW(j) / 2, z1: ZR[j2] - hW(j2) / 2, type: 'gen' };
+    bl.cx = (bl.x0 + bl.x1) / 2; bl.cz = (bl.z0 + bl.z1) / 2; bl.w = bl.x1 - bl.x0; bl.d = bl.z1 - bl.z0;
+    const mx = Math.max(bl.w, bl.d), mn = Math.min(bl.w, bl.d);
+    if ((mx > 230 && mn > 120) || mx > 420) bl.type = 'rural'; else if (mx > 230) bl.type = 'strip';
+    // 裡面還有路口（被大圈道路包住的小鎮）就不算一個街廓
+    if (NODES.some(([a, c]) => XR[a] > bl.x0 + 1 && XR[a] < bl.x1 - 1 && ZR[c] > bl.z0 + 1 && ZR[c] < bl.z1 - 1)) continue;
+    BLOCKS.push(bl);
   }
   const bk = (x, z) => blockAtXZ(x, z);
-  bk(40, 40).type = 'station'; bk(-280, 200).type = 'home'; bk(200, 200).type = 'home_b'; bk(-200, -40).type = 'home_c'; bk(120, 200).type = 'dealer'; bk(-120, -200).type = 'hospital';
-  bk(-280, -120).type = 'market'; bk(-40, -200).type = 'park'; bk(280, -120).type = 'lake'; bk(-40, -40).type = 'bank';
-  [[-120, 120], [120, -40], [280, 120], [-200, 200], [200, 280]].forEach(([x, z]) => bk(x, z).type = 'store');
+  const setT = (x, z, t) => { const b = bk(x, z); if (b) b.type = t; else console.warn('no block', x, z, t); return b; };
+  setT(-500, 100, 'station'); setT(-500, 240, 'home'); setT(-220, -450, 'home_b'); setT(-118, 50, 'home_c');
+  setT(-530, 400, 'dealer'); setT(-390, 100, 'hospital'); setT(-25, -180, 'market'); setT(-118, -55, 'park'); setT(-815, 50, 'lake');
+  setT(-280, 100, 'bank'); setT(-655, 50, 'cityhall'); setT(-655, 150, 'opera'); setT(-730, 50, 'sogo'); setT(-390, -55, 'museum');
+  setT(-280, 240, 'artmus'); setT(-815, -180, 'fengchia'); setT(-25, 250, 'nchu'); setT(-1460, -65, 'thu'); setT(75, 100, 'tra');
+  setT(-2185, -1865, 'jenn'); setT(-2830, -60, 'wuqi');
+  for (const [x, z] of [[-730, 240], [-530, -55], [-190, 50], [75, 250], [-2280, 85], [-2410, -360], [-2270, -1930], [-245, -1805], [550, -45], [205, 580], [-560, 1000], [-1940, 1090], [-220, -1090], [-1050, -865], [1070, -2580], [690, 920]]) setT(x, z, 'store');
   for (const b of BLOCKS) {
-    const x = b.cx, z = b.cz;
     if (b.type !== 'gen') continue;
-    if (x > 160 && z < 0) b.type = 'tower';
-    else if (z > 160 && x < 160) b.type = 'res';
-    else if (x < -80) b.type = 'old';
+    const x = b.cx, z = b.cz;
+    if (x > -1200 && x < -1000 && z > 0 && z < 360) b.type = 'ind';
+    else if (x < -1100 || x > 320 || z < -800 || z > 470) b.type = 'town';
+    else if (x < -540 && z > -260 && z < 300) b.type = 'tower';
+    else if (z < -340 || z > 300) b.type = 'res';
+    else if (x > -160) b.type = 'old';
     else b.type = 'mid';
   }
   for (const b of BLOCKS) {
+    if (b.type !== 'rural') addGeo('walk', MAT.walk, boxGeo(b.x1 - b.x0, 0.18, b.z1 - b.z0, b.cx, 0, b.cz, 'world'));
     switch (b.type) {
       case 'station': buildStation(b); break;
       case 'home': buildHome(b, 'a'); break;
@@ -724,12 +907,18 @@ function buildCity() {
       case 'lake': buildPark(b, true); break;
       case 'bank': buildShop(b, 'bank'); break;
       case 'store': buildShop(b, 'store'); break;
-      default: fillBlock(b, b.type, null);
+      case 'rural': buildRural(b); break;
+      case 'strip': { const n = Math.ceil(Math.max(b.w, b.d) / 90), along = b.w > b.d; for (let k = 0; k < n; k++) { const sb = along ? { x0: b.x0 + k * b.w / n, x1: b.x0 + (k + 1) * b.w / n, z0: b.z0, z1: b.z1 } : { x0: b.x0, x1: b.x1, z0: b.z0 + k * b.d / n, z1: b.z0 + (k + 1) * b.d / n }; sb.cx = (sb.x0 + sb.x1) / 2; sb.cz = (sb.z0 + sb.z1) / 2; fillBlock(sb, b.cx < -900 ? 'old' : 'mid', null); } break; }
+      case 'ind': buildIndustrial(b); break;
+      case 'town': fillBlock(b, 'old', null); break;
+      case 'mid': case 'old': case 'res': case 'tower': fillBlock(b, b.type, null); break;
+      default: buildLandmark(b);
     }
   }
+  buildCountryside();
   streetFurniture();
   // 巡邏箱
-  const cand = BLOCKS.filter(b => ['old', 'mid', 'res', 'tower'].includes(b.type));
+  const cand = BLOCKS.filter(b => ['old', 'mid', 'res', 'tower'].includes(b.type) && dist(b.cx, b.cz, SITES.station.x, SITES.station.z) < 700);
   for (let k = 0; k < 18 && cand.length; k++) {
     const b = cand.splice(randi(0, cand.length - 1), 1)[0];
     const corner = randi(0, 3); const x = corner % 2 ? b.x1 - 1.2 : b.x0 + 1.2, z = corner < 2 ? b.z0 + 1.2 : b.z1 - 1.2;
@@ -737,15 +926,116 @@ function buildCity() {
     addGeo('redbox', MAT.redbox, boxGeo(0.45, 0.55, 0.3, x, 1.2, z));
     PATROL_BOXES.push({ x, z, name: nearCross(x, z) });
   }
-  // 酒測路檢點
-  CHECK_SITES.push({ x: -120, z: 7, yaw: -Math.PI / 2, dir: [1, 0], name: '台灣大道（五權路至忠明路）' });
-  CHECK_SITES.push({ x: 160 - 5.5, z: 120, yaw: Math.PI, dir: [0, 1], name: '文心路（公益路至大業路）' });
-  CHECK_SITES.push({ x: -160 + 4.5, z: -200, yaw: 0, dir: [0, -1], name: '五權路（崇德路至漢口路）' });
-  CHECK_SITES.push({ x: 200, z: 80 + 4.5, yaw: -Math.PI / 2, dir: [1, 0], name: '公益路（文心路至河南路）' });
+  // 酒測路檢點（在路段上：方向 = 車流方向）
+  const chk = (x, z, dir, name) => CHECK_SITES.push({ x, z, yaw: Math.atan2(-dir[0], -dir[1]), dir, name });
+  chk(-400, 7, [1, 0], '台灣大道（忠明路至英才路）');
+  chk(-620 - 5.5, 160, [0, 1], '文心路（市政路至公益路）');
+  chk(-225 + 4.5, -180, [0, -1], '五權路（健行路至漢口路）');
+  chk(-700, 200 + 4.5, [1, 0], '公益路（惠中路至文心路）');
   flushMerges();
 }
-function laneMarks(axis, c, w, a, b) {
-  // c=道路中心座標, a..b 沿路方向範圍
+// 郊區大區塊：農舍、樹、稻田
+function buildRural(b) {
+  const n = Math.floor((b.w + b.d) / 120);
+  for (let k = 0; k < n; k++) {
+    const side = randi(0, 3); let x, z;
+    if (side === 0) { x = rand(b.x0 + 20, b.x1 - 20); z = b.z0 + 9; } else if (side === 1) { x = rand(b.x0 + 20, b.x1 - 20); z = b.z1 - 9; } else if (side === 2) { x = b.x0 + 9; z = rand(b.z0 + 20, b.z1 - 20); } else { x = b.x1 - 9; z = rand(b.z0 + 20, b.z1 - 20); }
+    const w = rand(8, 12), d = rand(8, 10);
+    building(x - w / 2, x + w / 2, z - d / 2, z + d / 2, randi(2, 4) * 3.2 + 1, pick(['old', 'tile', 'brick']), null, false);
+    if (Math.random() < 0.6) addTree(x + rand(-12, 12), z + rand(-12, 12), rand(0.9, 1.4));
+  }
+}
+function buildIndustrial(b) {
+  const lot = lotOf(b);
+  for (let x = lot.x0 + 4; x < lot.x1 - 30; x += 46) for (let z = lot.z0 + 4; z < lot.z1 - 24; z += 40) {
+    const w = rand(28, 40), d = rand(22, 32);
+    addGeo('f_white', MAT.f_white, boxGeo(w, rand(8, 12), d, x + w / 2, 0, z + d / 2, 'facade')); addCol(x, x + w, z, z + d, 12, 'bld');
+    addGeo('roof', MAT.roof, boxGeo(w, 0.6, d, x + w / 2, 11.5, z + d / 2));
+  }
+  signBoard('台中工業區', { bg: '#335', fg: '#fff', w: 512, h: 96 }, 8, 1.4, b.cx, 3, b.z1 + 0.5, 0, 0.6);
+}
+// 特色地標
+function landmarkBox(b, w, h, d, style, sign, opt) {
+  const cx = b.cx, cz = b.cz; const z1 = cz + d / 2;
+  addGeo('f_' + style, MAT['f_' + style], boxGeo(w, h, d, cx, 0, cz, 'facade')); addCol(cx - w / 2, cx + w / 2, cz - d / 2, cz + d / 2, h, 'bld');
+  if (sign) signBoard(sign, opt || { bg: '#222', fg: '#fff', w: 512, h: 96 }, Math.min(w - 2, 16), 2.2, cx, Math.min(h - 2, 8), z1 + 0.3, 0, 0.9);
+}
+function buildLandmark(b) {
+  const lot = lotOf(b);
+  const grassAll = () => addGeo('grass', MAT.grass, boxGeo(b.x1 - b.x0 - 2, 0.22, b.z1 - b.z0 - 2, b.cx, 0, b.cz, 'world'));
+  switch (b.type) {
+    case 'cityhall': landmarkBox(b, 50, 40, 26, 'glass', '臺中市政府', { bg: '#fff', fg: '#0b3d91', w: 512, h: 96 }); break;
+    case 'opera': {
+      addGeo('f_white', MAT.f_white, boxGeo(56, 26, 40, b.cx, 0, b.cz, 'facade')); addCol(b.cx - 28, b.cx + 28, b.cz - 20, b.cz + 20, 26, 'bld');
+      for (let k = 0; k < 5; k++) { const g = new THREE.CylinderGeometry(4, 4, 26, 10, 1, true); g.translate(b.cx - 22 + k * 11, 13, b.cz + 20.2); addGeo('dark', MAT.dark, g); }
+      signBoard('臺中國家歌劇院', { bg: '#fff', fg: '#111', w: 512, h: 96 }, 14, 2.4, b.cx, 3.5, b.cz + 22, 0, 0.9); break;
+    }
+    case 'sogo': landmarkBox(b, 50, 60, 36, 'glass', '新光三越・大遠百', { bg: '#c0002a', fg: '#fff', w: 512, h: 96 }); break;
+    case 'museum': grassAll(); landmarkBox(b, 70, 18, 40, 'brick', '國立自然科學博物館', { bg: '#0d4d2a', fg: '#fff', w: 512, h: 96 }); break;
+    case 'artmus': grassAll(); landmarkBox(b, 50, 14, 30, 'white', '國立臺灣美術館', { bg: '#fff', fg: '#333', w: 512, h: 96 }); break;
+    case 'nchu': grassAll(); landmarkBox(b, 40, 16, 22, 'brick', '國立中興大學', { bg: '#7a1a1a', fg: '#fff', w: 512, h: 96 }); for (let k = 0; k < 18; k++) addTree(rand(lot.x0, lot.x1), rand(lot.z0, lot.z0 + 20), 1.2); break;
+    case 'thu': {
+      grassAll(); for (let k = 0; k < 40; k++) addTree(rand(lot.x0, lot.x1), rand(lot.z0, lot.z1), rand(1, 1.5));
+      // 路思義教堂（雙曲面屋頂）
+      const g = new THREE.ConeGeometry(9, 22, 4, 1, true); g.rotateY(Math.PI / 4); g.translate(b.cx, 11, b.cz); addGeo('tile', MAT.f_tile, g); addCol(b.cx - 6, b.cx + 6, b.cz - 6, b.cz + 6, 22, 'bld');
+      signBoard('東海大學・路思義教堂', { bg: '#2a4a2a', fg: '#fff', w: 512, h: 96 }, 9, 1.4, b.cx, 1.5, b.z1 - 1, 0, 0.6); break;
+    }
+    case 'fengchia': {
+      fillBlock(b, 'old', { x0: b.cx - 8, x1: b.cx + 8, z0: b.z0, z1: b.z1 });
+      for (let z = b.z0 + 4; z < b.z1 - 4; z += 2.4) { const g = new THREE.SphereGeometry(0.28, 8, 6); g.translate(b.cx, 3.6, z); addGeo('lantern', MAT.lantern, g); }
+      signBoard('逢甲夜市', { bg: '#b01010', fg: '#ffd84a', w: 512, h: 128, border: '#ffd84a' }, 8, 2, b.cx, 6, b.z1 + 0.5, 0, 1.1);
+      signBoard('逢甲大學', { bg: '#a00', fg: '#fff', w: 512, h: 96 }, 6, 1, b.cx - 20, 3, b.z0 - 0.5, Math.PI, 0.6); break;
+    }
+    case 'tra': {
+      // 台中車站（新站＋舊站紅磚站房）預留給台鐵：先做站前廣場
+      addGeo('lot', MAT.lot, boxGeo(b.x1 - b.x0, 0.22, b.z1 - b.z0, b.cx, 0, b.cz));
+      addGeo('f_brick', MAT.f_brick, boxGeo(26, 10, 12, b.x0 + 18, 0, b.z0 + 10, 'facade')); addCol(b.x0 + 5, b.x0 + 31, b.z0 + 4, b.z0 + 16, 10, 'bld');
+      signBoard('臺中車站', { bg: '#fff', fg: '#7a1a1a', w: 512, h: 96 }, 8, 1.4, b.x0 + 18, 8, b.z0 + 16.3, 0, 0.8);
+      SITES.tra = { x: b.x0 + 18, z: b.z0 + 20 }; break;
+    }
+    case 'jenn': {
+      fillBlock(b, 'old', { x0: b.cx - 16, x1: b.cx + 16, z0: b.cz - 14, z1: b.z1 });
+      addGeo('redbox', MAT.redbox, boxGeo(26, 8, 18, b.cx, 0, b.cz, 'world')); addCol(b.cx - 13, b.cx + 13, b.cz - 9, b.cz + 9, 8, 'bld');
+      const r = new THREE.ConeGeometry(17, 5, 4); r.rotateY(Math.PI / 4); r.scale(1, 1, 0.75); r.translate(b.cx, 10.5, b.cz); addGeo('roof', MAT.roof, r);
+      signBoard('大甲鎮瀾宮', { bg: '#b01010', fg: '#ffd84a', w: 512, h: 96 }, 8, 1.6, b.cx, 6.5, b.cz + 9.3, 0, 1.0); break;
+    }
+    case 'wuqi': fillBlock(b, 'old', null); signBoard('梧棲・朝元宮', { bg: '#b01010', fg: '#ffd84a', w: 512, h: 96 }, 6, 1.1, b.cx, 3.2, b.z1 + 0.6, 0, 0.8); break;
+    default: fillBlock(b, 'mid', null);
+  }
+}
+// 海、山、高鐵站、港區
+function buildCountryside() {
+  // 東邊山區（大坑、東勢、霧峰）
+  const hillMat = new THREE.MeshLambertMaterial({ color: 0x3f6f35 });
+  const nearRoad = (x, z, r) => EDGES.some(e => { const ax = XR[e.a[0]], az = ZR[e.a[1]], bx = XR[e.b[0]], bz = ZR[e.b[1]]; const cx = clamp(x, Math.min(ax, bx), Math.max(ax, bx)), cz = clamp(z, Math.min(az, bz), Math.max(az, bz)); return dist(x, z, cx, cz) < r; });
+  for (let k = 0; k < 90; k++) {
+    let x, z;
+    if (k < 55) { x = rand(700, 1250); z = rand(-2650, -500); } else if (k < 75) { x = rand(820, 1250); z = rand(400, 1200); } else { x = rand(380, 900); z = rand(-1700, -700); }
+    const r = rand(90, 220), h = rand(50, 160) * (x > 900 ? 1.4 : 1);
+    if (nearRoad(x, z, r * 0.9) || blockAtXZ(x, z)) continue;
+    const g = new THREE.ConeGeometry(r, h, 7, 1); g.translate(x, h / 2 - 2, z); addGeo('hill', hillMat, g);
+  }
+  // 高鐵台中站
+  addGeo('f_white', MAT.f_white, boxGeo(120, 16, 40, -705, 0, 870, 'facade')); addCol(-765, -645, 850, 890, 16, 'bld');
+  addGeo('roof', MAT.roof, boxGeo(130, 1.2, 46, -705, 16, 870));
+  signBoard('高鐵台中站', { bg: '#ff6a00', fg: '#fff', w: 512, h: 96 }, 14, 2.4, -705, 11, 890.4, 0, 0.9);
+  SITES.hsr = { x: -705, z: 893 };
+  // 台中港：貨櫃、起重機
+  const crane = new THREE.MeshLambertMaterial({ color: 0xd8461f });
+  for (let k = 0; k < 4; k++) { const x = -3030, z = -400 + k * 110; addGeo('crane', crane, boxGeo(2, 40, 2, x, 0, z - 8)); addGeo('crane', crane, boxGeo(2, 40, 2, x, 0, z + 8)); addGeo('crane', crane, boxGeo(60, 3, 3, x - 10, 38, z)); }
+  const cont = [0xb03030, 0x2050a0, 0x2a8a3a, 0xd8a020, 0x777777];
+  for (let k = 0; k < 70; k++) { const x = rand(-2995, -2980), z = rand(-480, 120); if (Math.abs(z) < 20 || Math.abs(z + 120) < 14) continue; const c = pick(cont); const m = MAT['ct' + c] || (MAT['ct' + c] = new THREE.MeshLambertMaterial({ color: c })); const h = randi(1, 3) * 2.6; addGeo('ct' + c, m, boxGeo(12, h, 2.4, x, 0, z)); addCol(x - 6, x + 6, z - 1.2, z + 1.2, h, 'bld'); }
+  signBoard('臺中港', { bg: '#0b3d91', fg: '#fff', w: 512, h: 96 }, 10, 2, -2950, 6, 15, Math.PI / 2, 0.8);
+  // 高美濕地：木棧道＋風車
+  addGeo('counter', MAT.counter, boxGeo(80, 0.4, 3, -3010, 0.3, -970));
+  for (let k = 0; k < 6; k++) { const z = -1150 + k * 70; addGeo('pole', MAT.white, boxGeo(1.6, 60, 1.6, -3060, 0, z)); addGeo('pole', MAT.white, boxGeo(1, 30, 1, -3058, 46, z)); }
+  signBoard('高美濕地', { bg: '#1d6a8a', fg: '#fff', w: 512, h: 96 }, 8, 1.6, -2975, 2.5, -963, 0, 0.6);
+  // 大坑風景區、東勢
+  signBoard('大坑風景區', { bg: '#2a5a2a', fg: '#fff', w: 512, h: 96 }, 7, 1.4, 615, 3, -1370, -Math.PI / 2, 0.6);
+  flushMerges();
+}
+function laneMarks(axis, c, w, a, b, ca, cb) {
+  // c=道路中心座標, a..b 沿路方向範圍；ca/cb：兩端是不是有號誌的路口
   const L = b - a; if (L < 6) return;
   const put = (off, len, gap, mat, key, thick) => {
     for (let s = a + 2; s < b - 2; s += len + gap) {
@@ -763,6 +1053,7 @@ function laneMarks(axis, c, w, a, b) {
   // 斑馬線（路口兩端）
   for (const end of [a, b]) {
     const sgn = end === a ? 1 : -1;
+    if (end === a ? ca === false : cb === false) continue;
     for (let k = -w / 2 + 1; k < w / 2 - 1; k += 1.2) {
       const p0 = end + sgn * 0.6, p1 = end + sgn * 3.6;
       if (axis === 'v') addGeo('mwhite', MAT.white, flatQuad(c + k, Math.min(p0, p1), c + k + 0.6, Math.max(p0, p1), 0.036));
@@ -841,19 +1132,7 @@ function addTree(x, z, s) {
 
 /* ---------- 街道家具：路燈、紅綠燈、行道樹 ---------- */
 function streetFurniture() {
-  // 路燈（沿路每 40m 兩側）
-  for (let i = 0; i < XR.length; i++) {
-    const x = XR[i], w = vW(i);
-    for (let z = -400; z <= 400; z += 40) for (const sd of [-1, 1]) { if (ZR.includes(z)) continue; lampAt(x + sd * (w / 2 + 1), z + 20 * (sd > 0 ? 0 : 1) - 10, sd > 0 ? 'w' : 'e'); }
-  }
-  for (let j = 0; j < ZR.length; j++) {
-    const z = ZR[j], w = hW(j);
-    for (let x = -400; x <= 400; x += 40) for (const sd of [-1, 1]) { if (XR.includes(x)) continue; lampAt(x + 20 * (sd > 0 ? 0 : 1) - 10, z + sd * (w / 2 + 1), sd > 0 ? 'n' : 's'); }
-  }
-  // 行道樹：台灣大道、文心路
-  for (let x = -395; x < 400; x += 16) { if (XR.some(v => Math.abs(v - x) < 12)) continue; addTree(x, -14 - 1.6, 0.9); addTree(x, 14 + 1.6, 0.9); }
-  for (let z = -395; z < 400; z += 16) { if (ZR.some(v => Math.abs(v - z) < 16)) continue; addTree(160 - 11 - 1.6, z, 0.9); addTree(160 + 11 + 1.6, z, 0.9); }
-  // 公車站（台灣大道、文心路）
+  const urbanAt = (x, z) => BLOCKS.some(b => b.type !== 'rural' && x > b.x0 - 30 && x < b.x1 + 30 && z > b.z0 - 30 && z < b.z1 + 30);
   const busSign = new THREE.MeshLambertMaterial({ map: signTex('🚌 公車站', { bg: '#0b6a3a', fg: '#fff', w: 256, h: 64 }), emissive: 0xffffff, emissiveMap: null });
   const stop = (x, z, alongX, side) => {
     const L = 5, D = 1.4; const w = alongX ? L : D, d = alongX ? D : L;
@@ -864,13 +1143,32 @@ function streetFurniture() {
     addGeo('counter', MAT.counter, boxGeo(alongX ? 3 : 0.4, 0.45, alongX ? 0.4 : 3, x + (alongX ? 0 : side * 0.35), 0.18, z + (alongX ? side * 0.35 : 0)));
     const s = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.3), busSign); s.position.set(x, 2.85, z); s.rotation.y = alongX ? 0 : Math.PI / 2; scene.add(s);
   };
-  for (let k = 0; k < XR.length - 1; k++) { const mx = (XR[k] + XR[k + 1]) / 2; stop(mx, -14 - 1.8, true, -1); stop(mx, 14 + 1.8, true, 1); }
-  for (let k = 0; k < ZR.length - 1; k++) { const mz = (ZR[k] + ZR[k + 1]) / 2; stop(160 - 11 - 1.8, mz, false, -1); stop(160 + 11 + 1.8, mz, false, 1); }
-  // 紅綠燈
-  for (let i = 0; i < XR.length; i++) for (let j = 0; j < ZR.length; j++) {
+  for (const e of EDGES) {
+    const [c0, c1] = e.cut; if (c1 - c0 < 10) continue;
+    const h = e.ax === 'ew', c = h ? ZR[e.a[1]] : XR[e.a[0]], w = e.w;
+    const midX = h ? (c0 + c1) / 2 : c, midZ = h ? c : (c0 + c1) / 2;
+    const urban = urbanAt(midX, midZ);
+    const step = urban ? 40 : 90;
+    // 路燈
+    for (let t = c0 + step / 2; t < c1 - 4; t += step) for (const sd of urban ? [-1, 1] : [1]) {
+      const tt = t + (sd > 0 ? 0 : step / 2) - (sd > 0 ? 0 : step / 4); if (tt > c1 - 4) continue;
+      if (h) lampAt(tt, c + sd * (w / 2 + 1), sd > 0 ? 'n' : 's'); else lampAt(c + sd * (w / 2 + 1), tt, sd > 0 ? 'w' : 'e');
+    }
+    // 行道樹：台灣大道、文心路、五權西路、中清路（市區）
+    if (urban && ['台灣大道', '文心路', '五權西路', '中清路', '環中路'].includes(e.name)) for (let t = c0 + 8; t < c1 - 8; t += 16) for (const sd of [-1, 1]) {
+      if (h) addTree(t, c + sd * (w / 2 + 1.6), 0.9); else addTree(c + sd * (w / 2 + 1.6), t, 0.9);
+    }
+    // 公車站
+    if ((urban || e.name === '台灣大道') && ['台灣大道', '文心路', '中清路', '五權路', '豐勢路', '中山路', '中興路'].includes(e.name) && c1 - c0 > 50) {
+      const m = (c0 + c1) / 2;
+      if (h) { stop(m, c - w / 2 - 1.8, true, -1); stop(m + 14, c + w / 2 + 1.8, true, 1); } else { stop(c - w / 2 - 1.8, m, false, -1); stop(c + w / 2 + 1.8, m + 14, false, 1); }
+    }
+  }
+  // 紅綠燈（三岔以上的路口）
+  for (const [i, j] of NODES) {
+    if (nodeDeg(i, j) < 3) continue;
     const x = XR[i], z = ZR[j], wx = vW(i) / 2 + 0.8, wz = hW(j) / 2 + 0.8;
-    // 角落：NW, NE, SW, SE
-    trafficLight(x - wx, z - wz, 'ew', -1, 0); // 面向東行（從西來的車）看得到
+    trafficLight(x - wx, z - wz, 'ew', -1, 0);
     trafficLight(x + wx, z + wz, 'ew', 1, 0);
     trafficLight(x + wx, z - wz, 'ns', 0, -1);
     trafficLight(x - wx, z + wz, 'ns', 0, 1);
@@ -977,7 +1275,7 @@ function buildPark(b, lake) {
     const g = new THREE.CircleGeometry(20, 24); g.rotateX(-Math.PI / 2); g.translate(b.cx, 0.25, b.cz); addGeo('water', MAT.water, g);
     addCol(b.cx - 14, b.cx + 14, b.cz - 14, b.cz + 14, 0.4, 'low');
     signBoard('秋紅谷景觀公園', { bg: '#2a5a2a', fg: '#fff', w: 512, h: 96 }, 6, 1.1, b.cx, 1.4, lot.z1 - 2, 0, 0.5);
-  } else signBoard('大墩公園', { bg: '#2a5a2a', fg: '#fff', w: 512, h: 96 }, 5, 1, b.cx, 1.4, lot.z1 - 2, 0, 0.5);
+  } else { SITES.park = { x: b.cx, z: b.cz }; signBoard('臺中公園', { bg: '#2a5a2a', fg: '#fff', w: 512, h: 96 }, 5, 1, b.cx, 1.4, lot.z1 - 2, 0, 0.5); }
   for (let k = 0; k < 26; k++) { const x = rand(lot.x0 + 3, lot.x1 - 3), z = rand(lot.z0 + 3, lot.z1 - 3); if (lake && dist(x, z, b.cx, b.cz) < 24) continue; addTree(x, z, rand(0.9, 1.5)); }
 }
 function buildMarket(b) {
@@ -1046,10 +1344,9 @@ function buildShop(b, kind) {
   addGeo('inwall', MAT.inwall, boxGeo(W, 0.6, 0.2, cx, H - 0.6, z1 - 0.1));
   addGeo('infloor', MAT.infloor, flatQuad(x0, z0, x1, z1, 0.21, [0, 0, W / 2, D / 2]));
   addGeo('inwall', MAT.inwall, quadGeo([x0, H - 0.01, z1], [x0, H - 0.01, z0], [x1, H - 0.01, z0], [x1, H - 0.01, z1]));
-  const site = { kind, x0, x1, z0, z1, cx, door: { x: cx, z: z1 + 1.2 }, name: '', H, bi: b.i, bj: b.j };
+  const site = { kind, x0, x1, z0, z1, cx, door: { x: cx, z: z1 + 1.2 }, name: '', H, bi: b.i, bj: b.j, biE: b.iE, bjS: b.jS };
   if (kind === 'store') {
-    const names = ['麥麥超商 文心店', '麥麥超商 公益店', '麥麥超商 河南店', '麥麥超商 英才店', '麥麥超商 大業店'];
-    site.name = names[SITES.stores.length % names.length];
+    site.name = '麥麥超商 ' + (districtAt(cx, z1) === '郊區' ? hName(b.jS, cx).replace('路', '') : districtAt(cx, z1)) + '店';
     signBoard('麥麥超商　MM MART', { bg: '#fff', fg: '#127a3a', w: 1024, h: 128, stripe: '#ff7a00' }, W - 1, 1.1, cx, H - 0.35, z1 + 0.25, 0, 1.0);
     // 櫃檯
     const ctrX = x1 - 3.2, ctrZ = z1 - 4;
@@ -1073,10 +1370,10 @@ function buildShop(b, kind) {
     SITES.bank = site;
   }
   // 門前路邊（給逃逸車）
-  const j = b.j + 1; const rz = ZR[j], w = hW(j);
+ const j = b.jS; const rz = ZR[j], w = hW(j);
   site.curb = { x: cx + 6, z: rz - w / 2 + 1.8, yaw: Math.PI / 2 };
-  site.road = HNAMES[j];
-  fillBlock(b, b.x0 < -80 ? 'old' : 'mid', { x0: x0 - 3, x1: x1 + 3, z0: z0 - 8, z1: z1 + 4 });
+  site.road = hName(j, cx);
+  fillBlock(b, b.x0 > -160 || b.cx < -1100 || b.cx > 320 || b.cz < -800 || b.cz > 470 ? 'old' : 'mid', { x0: x0 - 3, x1: x1 + 3, z0: z0 - 8, z1: z1 + 4 });
 }
 function insideShop(x, z) { for (const s of [...SITES.stores, SITES.bank]) if (s && x > s.x0 && x < s.x1 && z > s.z0 && z < s.z1) return s; return null; }
 
@@ -1251,9 +1548,8 @@ function segInfo(i, j, ni, nj) {
   const dx = Math.sign(bx0 - ax0), dz = Math.sign(bz0 - az0);
   const w = ax === 'ew' ? hW(j) : vW(i);
   const crossW = ax === 'ew' ? vW(ni) : hW(nj);
-  return { ax, x0: ax0, z0: az0, L, dx, dz, rx: -dz, rz: dx, w, crossW };
+  return { ax, x0: ax0, z0: az0, L, dx, dz, rx: -dz, rz: dx, w, crossW, lit: nodeDeg(ni, nj) >= 3 };
 }
-function neighbors(i, j) { const o = []; if (i > 0) o.push([i - 1, j]); if (i < XR.length - 1) o.push([i + 1, j]); if (j > 0) o.push([i, j - 1]); if (j < ZR.length - 1) o.push([i, j + 1]); return o; }
 class NPCVeh {
   constructor(kind, type, cop) {
     this.kind = kind; this.cop = !!cop;
@@ -1291,7 +1587,7 @@ class NPCVeh {
     if (flee) {
       let best = -1e9; for (const o of opts) { const d = dist(XR[o[0]], ZR[o[1]], P.x, P.z) + rand(0, 60); if (d > best) { best = d; ch = o; } }
     } else {
-      const straight = opts.find(([a, b]) => a - this.ni === this.ni - this.i && b - this.nj === this.nj - this.j);
+      const straight = opts.find(([a, b]) => Math.sign(XR[a] - XR[this.ni]) === Math.sign(XR[this.ni] - XR[this.i]) && Math.sign(ZR[b] - ZR[this.nj]) === Math.sign(ZR[this.nj] - ZR[this.j]));
       ch = (straight && Math.random() < 0.6) ? straight : pick(opts);
     }
     if (!ch) ch = [this.i, this.j];
@@ -1321,7 +1617,7 @@ class NPCVeh {
       if (this.type === 'bus') { if (this.busT > 0) { this.busT -= dt; v = 0; } else if (g.w >= 22 && !this.busDone && this.s > g.L * 0.5 - 8 && this.s < g.L * 0.5) { v = Math.min(v, Math.max(0, (g.L * 0.5 - this.s) * 0.8)); if (this.s > g.L * 0.5 - 1.5) { this.busT = 5; this.busDone = true; } } }
       // 紅綠燈
       const sStop = g.L - (g.crossW / 2 + 5);
-      const st = lightState(g.ax);
+      const st = g.lit ? lightState(g.ax) : 'G';
       if (st !== 'G' && !this.runRed && this.s < sStop + 0.3) {
         const room = sStop - this.s;
         if (!(st === 'Y' && room < this.speed * 1.2)) v = Math.min(v, Math.sqrt(Math.max(0, 2 * 4 * (room - 0.3))));
@@ -1340,7 +1636,7 @@ class NPCVeh {
         for (const h of MHUMANS) if (h.alive !== false) chk(h.x, h.z, 0.3, 0.3);
       }
     }
-    if (this.speed < 0.3 && this.state === 'drive' && lightState(g.ax) === 'G') { this.stuck += dt; if (this.stuck > 7) { this.ghost = 2.5; this.stuck = 0; if (Math.random() < 0.5 && dist(this.x, this.z, P.x, P.z) < 30) AU.honk(); } } else if (this.speed > 1) this.stuck = 0;
+    if (this.speed < 0.3 && this.state === 'drive' && (!g.lit || lightState(g.ax) === 'G')) { this.stuck += dt; if (this.stuck > 7) { this.ghost = 2.5; this.stuck = 0; if (Math.random() < 0.5 && dist(this.x, this.z, P.x, P.z) < 30) AU.honk(); } } else if (this.speed > 1) this.stuck = 0;
     if (this.ghost > 0) this.ghost -= dt;
     const acc = this.state === 'flee' ? 9 : 3.5;
     this.speed += clamp(v - this.speed, -9 * dt, acc * dt);
@@ -1357,20 +1653,25 @@ class NPCVeh {
   get px() { return this.mesh.position.x; } get pz() { return this.mesh.position.z; }
 }
 function randomSegNear(cx, cz, dmin, dmax) {
+  // 只看附近的路段
+  const near = EDGES.filter(e => { const ax = XR[e.a[0]], az = ZR[e.a[1]], bx = XR[e.b[0]], bz = ZR[e.b[1]]; const qx = clamp(cx, Math.min(ax, bx), Math.max(ax, bx)), qz = clamp(cz, Math.min(az, bz), Math.max(az, bz)); return dist(cx, cz, qx, qz) < dmax && e.L > 34; });
+  if (!near.length) return null;
   for (let tries = 0; tries < 40; tries++) {
-    const i = randi(0, XR.length - 1), j = randi(0, ZR.length - 1); const nb = pick(neighbors(i, j)); const g = segInfo(i, j, nb[0], nb[1]);
+    const e = pick(near); const fwd = Math.random() < 0.5; const A = fwd ? e.a : e.b, B = fwd ? e.b : e.a;
+    const g = segInfo(A[0], A[1], B[0], B[1]);
     const s = rand(8, g.L - 24); const x = g.x0 + g.dx * s, z = g.z0 + g.dz * s; const d = dist(x, z, cx, cz);
     if (d < dmin || d > dmax) continue;
     if (TRAFFIC.some(o => o.state !== 'gone' && dist(o.x, o.z, x, z) < 14)) continue;
-    return [i, j, nb[0], nb[1], s];
+    return [A[0], A[1], B[0], B[1], s];
   }
   return null;
 }
+function anySeg() { const e = EDGES.find(e => e.L > 60) || EDGES[0]; return [e.a[0], e.a[1], e.b[0], e.b[1], 20]; }
 function initTraffic() {
   const nc = IS_TOUCH ? 22 : 34, ns = IS_TOUCH ? 10 : 16;
-  for (let k = 0; k < nc + ns; k++) { const v = new NPCVeh(k < nc ? 'car' : 'scooter'); const r = randomSegNear(P.x, P.z, 20, 190) || [5, 5, 6, 5, 20]; v.place(...r); TRAFFIC.push(v); }
-  for (let k = 0; k < (IS_TOUCH ? 1 : 2); k++) { const v = new NPCVeh('car', 'sedan', true); const r = randomSegNear(P.x, P.z, 60, 190) || [5, 5, 6, 5, 20]; v.place(...r); TRAFFIC.push(v); }
-  for (const t of ['bus', 'bus', 'garbage', 'ambulance', 'fire', 'cga']) { const v = new NPCVeh('car', t); const r = randomSegNear(P.x, P.z, 40, 190) || [5, 5, 6, 5, 20]; v.place(...r); TRAFFIC.push(v); }
+  for (let k = 0; k < nc + ns; k++) { const v = new NPCVeh(k < nc ? 'car' : 'scooter'); const r = randomSegNear(P.x, P.z, 20, 190) || anySeg(); v.place(...r); TRAFFIC.push(v); }
+  for (let k = 0; k < (IS_TOUCH ? 1 : 2); k++) { const v = new NPCVeh('car', 'sedan', true); const r = randomSegNear(P.x, P.z, 60, 190) || anySeg(); v.place(...r); TRAFFIC.push(v); }
+  for (const t of ['bus', 'bus', 'garbage', 'ambulance', 'fire', 'cga']) { const v = new NPCVeh('car', t); const r = randomSegNear(P.x, P.z, 40, 190) || anySeg(); v.place(...r); TRAFFIC.push(v); }
 }
 function updateTraffic(dt) {
   for (const v of TRAFFIC) {
@@ -1793,7 +2094,7 @@ function makeBoat() {
 }
 
 /* ================= 玩家：移動、開車、武器 ================= */
-const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.08, 1500);
+const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.08, 700);
 camera.rotation.order = 'YXZ'; scene.add(camera);
 const P = { x: 0, z: 0, yaw: 0, pitch: 0, mode: 'foot', veh: null, lookYaw: 0, lookT: 0, bob: 0, moving: false, run: false, hurtT: 99, aim: 0 };
 const KEYS = {}; const INP = { mx: 0, my: 0, joyX: 0, joyY: 0, run: false, fireHeld: false, aim: false };
@@ -2314,7 +2615,7 @@ const MIS = {
         for (const v of TRAFFIC) {
           if (!v.runRed || v.state !== 'drive' || v.flag) continue;
           const g = v.seg, sStop = g.L - (g.crossW / 2 + 5);
-          if (lightState(g.ax) === 'R' && v.s > sStop && v.s < sStop + 6 && dist(v.x, v.z, P.x, P.z) < 70) { misTraffic(v, '闖紅燈', true); break; }
+          if (g.lit && lightState(g.ax) === 'R' && v.s > sStop && v.s < sStop + 6 && dist(v.x, v.z, P.x, P.z) < 70) { misTraffic(v, '闖紅燈', true); break; }
         }
       }
     }
@@ -2506,7 +2807,7 @@ function misTraffic(car, reason, witnessed) {
 
 /* ---------- 任務：搶案 ---------- */
 function misRobbery(kind) {
-  const site = kind === 'bank' ? SITES.bank : pick(SITES.stores);
+  const site = kind === 'bank' ? SITES.bank : pick(SITES.stores.filter(q => dist(q.cx, q.z1, SITES.station.x, SITES.station.z) < 900));
   const nR = kind === 'bank' ? randi(2, 3) : randi(1, 2);
   const robbers = []; const civs = [];
   const D = DIFF[S.diff];
@@ -2525,8 +2826,8 @@ function misRobbery(kind) {
   let getaway = null, gaState = 'none', gaRobber = null;
   if (Math.random() < 0.38) {
     getaway = new NPCVeh('car', 'sedan');
-    const j = site.bj + 1, i = site.bi; const s = XR[i + 1] - site.curb.x;
-    getaway.place(i + 1, j, i, j, s); getaway.off = getaway.offT = hW(j) / 2 - 1.8; getaway.calcPos(); getaway.mesh.position.set(getaway.x, 0, getaway.z);
+    const j = site.bjS, i = site.bi, iE = site.biE; const s = XR[iE] - site.curb.x;
+    getaway.place(iE, j, i, j, s); getaway.off = getaway.offT = hW(j) / 2 - 1.8; getaway.calcPos(); getaway.mesh.position.set(getaway.x, 0, getaway.z);
     getaway.state = 'parked'; getaway.flag = true; TRAFFIC.push(getaway); gaState = 'parked';
   }
   let st = 'go', arrived = false, warned = false, earlyShotPun = false, deadCount = 0;
@@ -3120,7 +3421,7 @@ function misDispute() {
   const kind = pick(night ? ['noise', 'domestic', 'drunk', 'drunk'] : ['noise', 'domestic', 'drunk']);
   let sp;
   if (kind === 'drunk' && marketOpen()) { const st = pick(SITES.market.stalls); sp = { x: st.x, z: st.z }; }
-  else if (kind === 'drunk') { const s = pick(SITES.stores); sp = { x: s.door.x + 3, z: s.door.z + 0.5 }; }
+  else if (kind === 'drunk') { const s = SITES.stores.slice().sort((a, b) => dist(a.cx, a.z1, P.x, P.z) - dist(b.cx, b.z1, P.x, P.z))[randi(0, 2)]; sp = { x: s.door.x + 3, z: s.door.z + 0.5 }; }
   else sp = sidewalkSpot(100, 320, ['res', 'old']);
   const people = [];
   const A = spawnAI({ shirt: pick(SHIRTS), apron: kind === 'drunk' ? 0xb01010 : undefined }, sp.x - 1.1, sp.z, 0, { role: 'party', name: randName() });
@@ -3457,21 +3758,17 @@ const NAV = { way: null, path: null, color: '#ffd84a', t: 0, tgtKey: '', instr: 
 // 找最近的道路段，回傳投影點與兩端節點
 function nearestRoad(x, z) {
   let best = null;
-  for (let i = 0; i < XR.length; i++) { // 南北向
-    const d = Math.abs(x - XR[i]); if (best && d >= best.d) continue;
-    const zc = clamp(z, ZR[0], ZR[ZR.length - 1]); let j = 0; while (j < ZR.length - 2 && zc > ZR[j + 1]) j++;
-    best = { d: d + Math.abs(z - zc), px: XR[i], pz: zc, a: [i, j], b: [i, j + 1], la: zc - ZR[j], lb: ZR[j + 1] - zc };
-  }
-  for (let j = 0; j < ZR.length; j++) { // 東西向
-    const d = Math.abs(z - ZR[j]); if (d >= best.d) continue;
-    const xc = clamp(x, XR[0], XR[XR.length - 1]); let i = 0; while (i < XR.length - 2 && xc > XR[i + 1]) i++;
-    best = { d: d + Math.abs(x - xc), px: xc, pz: ZR[j], a: [i, j], b: [i + 1, j], la: xc - XR[i], lb: XR[i + 1] - xc };
+  for (const e of EDGES) {
+    const ax = XR[e.a[0]], az = ZR[e.a[1]], bx = XR[e.b[0]], bz = ZR[e.b[1]];
+    const px = clamp(x, Math.min(ax, bx), Math.max(ax, bx)), pz = clamp(z, Math.min(az, bz), Math.max(az, bz));
+    const d = Math.abs(x - px) + Math.abs(z - pz);
+    if (!best || d < best.d) best = { d, px, pz, a: e.a, b: e.b, la: Math.abs(px - ax) + Math.abs(pz - az), lb: Math.abs(px - bx) + Math.abs(pz - bz) };
   }
   return best;
 }
 function findPath(sx, sz, tx, tz) {
   const A = nearestRoad(sx, sz), B = nearestRoad(tx, tz);
-  const key = (n) => n[0] * 100 + n[1];
+  const key = (n) => NKEY(n[0], n[1]);
   // 同一段路
   if (key(A.a) === key(B.a) && key(A.b) === key(B.b)) return [[sx, sz], [A.px, A.pz], [B.px, B.pz], [tx, tz]];
   const distM = new Map(), prev = new Map(), done = new Set();
@@ -3484,7 +3781,7 @@ function findPath(sx, sz, tx, tz) {
     if (u == null || ud >= bestCost) break;
     done.add(u);
     if (goal.has(u) && ud + goal.get(u) < bestCost) { bestCost = ud + goal.get(u); bestGoal = u; }
-    const i = Math.floor(u / 100), j = u % 100;
+    const i = Math.floor(u / 1000), j = u % 1000;
     for (const [ni, nj] of neighbors(i, j)) {
       const nk = key([ni, nj]); const nd = ud + Math.abs(XR[ni] - XR[i]) + Math.abs(ZR[nj] - ZR[j]);
       if (!distM.has(nk) || nd < distM.get(nk)) { distM.set(nk, nd); prev.set(nk, u); }
@@ -3493,7 +3790,7 @@ function findPath(sx, sz, tx, tz) {
   if (bestGoal == null) return [[sx, sz], [tx, tz]];
   const nodes = []; for (let k = bestGoal; k != null; k = prev.get(k)) nodes.unshift(k);
   const pts = [[sx, sz], [A.px, A.pz]];
-  for (const k of nodes) pts.push([XR[Math.floor(k / 100)], ZR[k % 100]]);
+  for (const k of nodes) pts.push([XR[Math.floor(k / 1000)], ZR[k % 1000]]);
   pts.push([B.px, B.pz], [tx, tz]);
   // 去掉重複點
   return pts.filter((p, n) => n === 0 || Math.hypot(p[0] - pts[n - 1][0], p[1] - pts[n - 1][1]) > 0.5);
@@ -3746,7 +4043,7 @@ const RADIO = {
     const lines = [
       `大墩新聞台，現在時間${h}點${Math.floor(S.time % 60)}分。`,
       `本台快訊，大墩分局員警至今已經逮捕${S.stats.arrests}名嫌犯，處理${S.stats.robbery}件搶案，治安維護有成。`,
-      `路況報導，${pick(HNAMES)}和${pick(VNAMES)}一帶車多，請用路人多加小心。`,
+      `路況報導，${pick(EDGES).name || '台灣大道'}和${pick(EDGES).name || '文心路'}一帶車多，請用路人多加小心。`,
       `交通部提醒，酒後不開車，呼氣酒精濃度超過每公升零點一五毫克就會被開罰。`,
       `一中街夜市${S.time >= 17 * 60 ? '現在正在營業，人潮眾多' : '傍晚五點開始營業'}，歡迎民眾前往品嚐台中小吃。`,
       `氣象報導，台中今天${pick(['晴朗', '多雲', '晴時多雲'])}，氣溫${randi(19, 29)}度。`,
@@ -3781,7 +4078,7 @@ function updateGarbageMusic() {
 
 /* ================= 下班交通違規：依《道路交通管理處罰條例》 ================= */
 // 速限：台灣大道、文心路 60，其他一般道路 50（km/h）
-function speedLimitAt(x, z) { const n = roadNameAt(x, z); return (n === '台灣大道' || n === '文心路') ? 60 : 50; }
+function speedLimitAt(x, z) { return speedLimitName(roadNameAt(x, z)); }
 const LAWDB = {
   // 超速：一般道路。小型車依裁罰基準；機車以第 40／43 條法定最低額計。
   speed(kind, over) {
@@ -3805,28 +4102,35 @@ function buildCams() {
     const b = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.7), camMat); b.position.set(x, h + 0.1, z); b.rotation.y = face; scene.add(b);
     const l = new THREE.Mesh(new THREE.CircleGeometry(0.12, 10), lens); l.position.set(x - Math.sin(face) * 0.36, h + 0.1, z - Math.cos(face) * 0.36); l.rotation.y = face + Math.PI; scene.add(l);
   };
-  // 測速照相：[道路方向(東西 h/南北 v), 道路索引, 位置, 車流方向 +1/-1]
-  const spots = [['h', 5, -200, 1], ['h', 5, 120, -1], ['v', 7, -120, 1], ['v', 7, 200, -1], ['v', 3, 120, -1], ['h', 6, -40, 1], ['h', 2, 200, -1], ['v', 5, -280, 1]];
-  for (const [ax, idx, pos, dir] of spots) {
+  // 測速照相：[道路方向(東西 h/南北 v), 道路座標, 位置, 車流方向 +1/-1]
+  const spots = [['h', 0, -480, 1], ['h', 0, -1700, -1], ['v', -620, 60, 1], ['v', -620, -200, -1], ['h', 360, -800, 1], ['h', -330, -700, -1], ['v', -1000, 600, 1], ['h', -1760, 300, 1]];
+  for (const [ax, c, pos, dir] of spots) {
+    const idx = ax === 'h' ? ZR.indexOf(c) : XR.indexOf(c); if (idx < 0) continue;
     let x, z, dx, dz, w;
-    if (ax === 'h') { w = hW(idx); dx = dir; dz = 0; z = ZR[idx] + dir * (w / 2 + 1.2); x = pos; } else { w = vW(idx); dx = 0; dz = dir; x = XR[idx] - dir * (w / 2 + 1.2); z = pos; }
+    if (ax === 'h') { w = hW(idx); dx = dir; dz = 0; z = c + dir * (w / 2 + 1.2); x = pos; } else { w = vW(idx); dx = 0; dz = dir; x = c - dir * (w / 2 + 1.2); z = pos; }
     // 右側車道：往 +x 的車在 z 大的一側（右手邊）；往 +z 的車在 x 小的一側
-    const lim = ax === 'h' ? (HNAMES[idx] === '台灣大道' ? 60 : 50) : (VNAMES[idx] === '文心路' ? 60 : 50);
+    const name = ax === 'h' ? hName(idx, pos) : vName(idx, pos), lim = speedLimitName(name);
     mkPole(x, z, 5, Math.atan2(dx, dz));
-    TLAW.cams.push({ kind: 'speed', x: ax === 'h' ? pos : XR[idx] - dir * w / 4, z: ax === 'h' ? ZR[idx] + dir * w / 4 : pos, dx, dz, lim, cd: 0, name: (ax === 'h' ? HNAMES[idx] : VNAMES[idx]) });
+    TLAW.cams.push({ kind: 'speed', x: ax === 'h' ? pos : c - dir * w / 4, z: ax === 'h' ? c + dir * w / 4 : pos, dx, dz, lim, cd: 0, name });
     // 前方 150 公尺警告標誌（道路交通管理處罰條例第 7 條之 2：一般道路應於 100～300 公尺前設置）
     const sx = x - dx * 150, sz = z - dz * 150;
     addGeo('pole', MAT.pole, boxGeo(0.08, 2.4, 0.08, sx, 0.18, sz));
     const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1), signMat('測速\n取締\n' + lim)); sg.position.set(sx, 2.9, sz); sg.rotation.y = Math.atan2(-dx, -dz); scene.add(sg);
   }
   // 路口闖紅燈照相
-  const reds = [[5, 5], [7, 5], [3, 6], [7, 3], [5, 7], [2, 5], [8, 6]];
+  const reds = [[-620, 0], [-440, 0], [-225, 0], [-620, 200], [-775, -110], [-155, -110], [-855, 360]].map(([x, z]) => nearNode(x, z));
   for (const [i, j] of reds) { const x = XR[i] + vW(i) / 2 + 1.5, z = ZR[j] - hW(j) / 2 - 1.5; mkPole(x, z, 6, Math.PI * 0.75); TLAW.cams.push({ kind: 'red', i, j, x, z, cd: 0 }); }
-  // 速限標誌（每段路口出來 18 公尺，右側）
-  const sm50 = signMat('50', true), sm60 = signMat('60', true);
-  const plate = (x, z, ry, lim) => { addGeo('pole', MAT.pole, boxGeo(0.07, 2.2, 0.07, x, 0.18, z)); const g = new THREE.CircleGeometry(0.38, 16); g.rotateY(ry); g.translate(x, 2.6, z); addGeo('lim' + lim, lim === 60 ? sm60 : sm50, g); };
-  for (let i = 0; i < XR.length; i++) for (let j = 0; j < ZR.length - 1; j++) { const w = vW(i), lim = VNAMES[i] === '文心路' ? 60 : 50; plate(XR[i] - w / 2 - 0.8, ZR[j] + hW(j) / 2 + 18, Math.PI, lim); plate(XR[i] + w / 2 + 0.8, ZR[j + 1] - hW(j + 1) / 2 - 18, 0, lim); }
-  for (let j = 0; j < ZR.length; j++) for (let i = 0; i < XR.length - 1; i++) { const w = hW(j), lim = HNAMES[j] === '台灣大道' ? 60 : 50; plate(XR[i] + vW(i) / 2 + 18, ZR[j] + w / 2 + 0.8, -Math.PI / 2, lim); plate(XR[i + 1] - vW(i + 1) / 2 - 18, ZR[j] - w / 2 - 0.8, Math.PI / 2, lim); }
+  // 速限標誌（每段路口出來 18 公尺，右側；長路段每 400 公尺再一面）
+  const SM = {};
+  const plate = (x, z, ry, lim) => { const m = SM[lim] || (SM[lim] = signMat(String(lim), true)); addGeo('pole', MAT.pole, boxGeo(0.07, 2.2, 0.07, x, 0.18, z)); const g = new THREE.CircleGeometry(0.38, 16); g.rotateY(ry); g.translate(x, 2.6, z); addGeo('lim' + lim, m, g); };
+  for (const e of EDGES) {
+    const [c0, c1] = e.cut || [0, 0]; if (c1 - c0 < 40) continue;
+    const lim = speedLimitName(e.name), w = e.w;
+    for (let t = 18; t < c1 - c0 - 10; t += 400) {
+      if (e.ax === 'ns') { const x = XR[e.a[0]]; plate(x - w / 2 - 0.8, c0 + t, Math.PI, lim); plate(x + w / 2 + 0.8, c1 - t, 0, lim); }
+      else { const z = ZR[e.a[1]]; plate(c0 + t, z + w / 2 + 0.8, -Math.PI / 2, lim); plate(c1 - t, z - w / 2 - 0.8, Math.PI / 2, lim); }
+    }
+  }
   flushMerges();
 }
 const SIGNM = {};
@@ -3839,7 +4143,7 @@ function signMat(t, round) {
   }));
 }
 /* ---------- 違規偵測 ---------- */
-function interAt(x, z) { for (let i = 0; i < XR.length; i++) { if (Math.abs(x - XR[i]) > vW(i) / 2) continue; for (let j = 0; j < ZR.length; j++) if (Math.abs(z - ZR[j]) <= hW(j) / 2) return [i, j]; } return null; }
+function interAt(x, z) { for (let i = 0; i < XR.length; i++) { if (Math.abs(x - XR[i]) > vW(i) / 2) continue; for (let j = 0; j < ZR.length; j++) if (Math.abs(z - ZR[j]) <= hW(j) / 2 && isNode(i, j) && nodeDeg(i, j) >= 3) return [i, j]; } return null; }
 function updateTrafficLaw(dt) {
   ensureLawState();
   TLAW.flashT -= dt; for (const c of TLAW.cams) c.cd -= dt;
@@ -4070,7 +4374,7 @@ function nearestChatPed() {
   for (const pd of PEDS) { if (!pd.alive || !['walk', 'idle'].includes(pd.state)) continue; const d = dist(pd.x, pd.z, P.x, P.z); if (d < bd) { bd = d; best = pd; } }
   return best;
 }
-const PLACES = () => [['大墩分局', SITES.station], ['一中街夜市', SITES.market], ['大墩醫院', SITES.hospital], ['大墩車業', SITES.dealer], ['我家（大墩華廈）', SITES.home], ['麥麥商業銀行', { x: SITES.bank.door.x, z: SITES.bank.door.z }], ['最近的麥麥超商', (() => { const s = SITES.stores.slice().sort((a, b) => dist(a.door.x, a.door.z, P.x, P.z) - dist(b.door.x, b.door.z, P.x, P.z))[0]; return { x: s.door.x, z: s.door.z }; })()]];
+const PLACES = () => [['大墩分局', SITES.station], ['一中街夜市', SITES.market], ['大墩醫院', SITES.hospital], ['大墩車業', SITES.dealer], ['我家（' + SITES.home.short + '）', SITES.home], ['麥麥商業銀行', { x: SITES.bank.door.x, z: SITES.bank.door.z }], ['最近的麥麥超商', (() => { const s = SITES.stores.slice().sort((a, b) => dist(a.door.x, a.door.z, P.x, P.z) - dist(b.door.x, b.door.z, P.x, P.z))[0]; return { x: s.door.x, z: s.door.z }; })()]];
 function directionsTo(tx, tz) {
   const path = findPath(P.x, P.z, tx, tz); let acc = 0, turn = null;
   for (let s = 1; s < path.length - 1; s++) {
@@ -4149,7 +4453,7 @@ function updateResponders(dt) {
     if (R.getTarget) { const g = R.getTarget(); if (g) { R.tx = g.x; R.tz = g.z; } }
     if (R.state === 'respond' || R.state === 'leave') {
       let tx = R.tx, tz = R.tz;
-      if (R.state === 'leave') { if (!R.away) { const a = randomSegNear(P.x, P.z, 220, 330); R.away = a ? { x: XR[a[2]], z: ZR[a[3]] } : { x: 400, z: 400 }; } tx = R.away.x; tz = R.away.z; }
+      if (R.state === 'leave') { if (!R.away) { const a = randomSegNear(P.x, P.z, 220, 330); R.away = a ? { x: XR[a[2]], z: ZR[a[3]] } : { x: P.x + 300, z: P.z }; } tx = R.away.x; tz = R.away.z; }
       const d = dist(c.x, c.z, tx, tz);
       R.pathT -= dt; if (R.pathT <= 0) { R.pathT = 0.8; R.path = findPath(c.x, c.z, tx, tz); }
       const p = (R.path || []).find(q => dist(q[0], q[1], c.x, c.z) > 7); let gx = tx, gz = tz; if (p && d > 25) { gx = p[0]; gz = p[1]; }
@@ -4393,9 +4697,9 @@ function updateColleagues(dt) {
 }
 /* ---------- 任務：火災現場交通管制 ---------- */
 function misFire() {
-  const b = pick(BLOCKS.filter(q => ['old', 'mid', 'res'].includes(q.type) && (d => d > 140 && d < 330)(dist(q.cx, q.cz, P.x, P.z))) || BLOCKS.filter(q => q.type === 'mid'));
+  const b = pick(BLOCKS.filter(q => ['old', 'mid', 'res', 'town'].includes(q.type) && (d => d > 140 && d < 330)(dist(q.cx, q.cz, P.x, P.z))) || BLOCKS.filter(q => q.type === 'mid'));
   const fx = b.cx + rand(-15, 15), fz = b.z1 - 3.6, fy = rand(5, 9);
-  const roadZ = ZR[b.j + 1], w = hW(b.j + 1);
+  const roadZ = ZR[b.jS], w = hW(b.jS);
   const conePt = { x: fx - 30, z: roadZ - w / 4 }, crowdPt = { x: fx + 9, z: b.z1 - 1.5 };
   let fire = 1, st = { cones: false, crowd: false, trucks: 0 }, done = false; const props = [], crowd = [], ffs = [], trucks = [];
   for (let k = 0; k < 4; k++) { const h = spawnAI({}, crowdPt.x + rand(-2, 2), crowdPt.z + rand(-0.6, 0.6), 0, { role: 'party' }); h.state = 'idle'; h.faceTo = { x: fx, z: fz }; crowd.push(h); }
@@ -4443,23 +4747,25 @@ function misFire() {
 /* ---------- 西邊海岸：海巡隊 ---------- */
 let PATROL_BOAT;
 function buildCoast() {
-  const sea = new THREE.Mesh(new THREE.PlaneGeometry(240, 1400), new THREE.MeshLambertMaterial({ color: 0x2a6f9a, emissive: 0x0a2030, emissiveIntensity: 0.5 })); sea.rotation.x = -Math.PI / 2; sea.position.set(-590, 0.06, 0); scene.add(sea);
-  const sand = new THREE.Mesh(new THREE.PlaneGeometry(26, 1400), new THREE.MeshLambertMaterial({ color: 0xd8c690 })); sand.rotation.x = -Math.PI / 2; sand.position.set(-457, 0.04, 0); scene.add(sand);
-  // 海巡隊大樓
-  addGeo('f_white', MAT.f_white, boxGeo(18, 9, 22, -430, 0, 60, 'facade')); addCol(-439, -421, 49, 71, 9, 'bld');
-  const sg = signBoard('海巡署 台中海巡隊', { bg: '#0a6a3a', fg: '#fff', w: 512, h: 96 }, 9, 1.6, -420.8, 6.2, 60, Math.PI / 2, 0.8);
-  addGeo('lot', MAT.lot, boxGeo(14, 0.2, 30, -414, 0, 60));
+  const SX = -3010; // 海岸線
+  const sea = new THREE.Mesh(new THREE.PlaneGeometry(900, 5000), new THREE.MeshLambertMaterial({ color: 0x2a6f9a, emissive: 0x0a2030, emissiveIntensity: 0.5 })); sea.rotation.x = -Math.PI / 2; sea.position.set(SX - 450, 0.06, -750); scene.add(sea);
+  const sand = new THREE.Mesh(new THREE.PlaneGeometry(24, 5000), new THREE.MeshLambertMaterial({ color: 0xd8c690 })); sand.rotation.x = -Math.PI / 2; sand.position.set(SX + 10, 0.04, -750); scene.add(sand);
+  // 海巡隊大樓（台中港南側）
+  const hx = -2930, hz = 70;
+  addGeo('f_white', MAT.f_white, boxGeo(18, 9, 22, hx, 0, hz, 'facade')); addCol(hx - 9, hx + 9, hz - 11, hz + 11, 9, 'bld');
+  signBoard('海巡署 台中海巡隊', { bg: '#0a6a3a', fg: '#fff', w: 512, h: 96 }, 9, 1.6, hx + 9.2, 6.2, hz, Math.PI / 2, 0.8);
+  addGeo('lot', MAT.lot, boxGeo(14, 0.2, 30, hx + 16, 0, hz));
   // 碼頭
-  addGeo('counter', MAT.counter, boxGeo(40, 0.5, 4, -480, 0.4, 60));
-  const docked = makeBoat(); docked.position.set(-492, 0.1, 54); docked.rotation.y = Math.PI / 2; scene.add(docked);
-  PATROL_BOAT = makeBoat(); PATROL_BOAT.position.set(-560, 0.1, 0); scene.add(PATROL_BOAT);
+  addGeo('counter', MAT.counter, boxGeo(40, 0.5, 4, SX - 18, 0.4, hz));
+  const docked = makeBoat(); docked.position.set(SX - 30, 0.1, hz - 6); docked.rotation.y = Math.PI / 2; scene.add(docked);
+  PATROL_BOAT = makeBoat(); PATROL_BOAT.position.set(SX - 90, 0.1, 0); scene.add(PATROL_BOAT);
   flushMerges();
-  SITES.cga = { x: -414, z: 60, name: '海巡隊' };
+  SITES.cga = { x: hx + 16, z: hz, name: '海巡隊' };
 }
 function updateCoast(dt) {
   if (!PATROL_BOAT) return;
   const t = performance.now() / 1000 * 0.02; const z = Math.sin(t) * 420; const dz = Math.cos(t);
-  PATROL_BOAT.position.set(-560 + Math.sin(t * 3) * 10, 0.1 + Math.sin(performance.now() / 700) * 0.12, z); PATROL_BOAT.rotation.y = dz > 0 ? Math.PI : 0;
+  PATROL_BOAT.position.set(-3100 + Math.sin(t * 3) * 10, 0.1 + Math.sin(performance.now() / 700) * 0.12, z - 400); PATROL_BOAT.rotation.y = dz > 0 ? Math.PI : 0;
 }
 function updateServices(dt) { updateSirenYield(dt); updateResponders(dt); updateEmergencyTraffic(dt); updateOfficers(dt); updateColleagues(dt); updateCoast(dt); }
 
@@ -5034,9 +5340,9 @@ function friendSpot(k) {
   const slot = c.hang.find(s => hr >= s.from && hr < s.to);
   if (!slot) return null;
   let p;
-  if (slot.site === 'store') { const st = SITES.stores[0]; p = { x: st.door.x + 2.5, z: st.door.z + 2.2 }; }
+  if (slot.site === 'store') { const hm = SITES.homes[k]; const st = SITES.stores.slice().sort((a, b) => dist(a.cx, a.z1, hm.x, hm.z) - dist(b.cx, b.z1, hm.x, hm.z))[0]; p = { x: st.door.x + 2.5, z: st.door.z + 2.2 }; }
   else if (slot.site === 'bank') p = { x: SITES.bank.door.x - 3, z: SITES.bank.door.z + 2.5 };
-  else if (slot.site === 'park') { const b = blockAtXZ(-40, -200); p = { x: b.cx + 6, z: b.cz + 4 }; }
+  else if (slot.site === 'park') { p = { x: SITES.park.x + 6, z: SITES.park.z + 4 }; }
   else if (slot.site === 'market') { const s = SITES.market.stalls[k === 'a' ? 1 : k === 'b' ? 4 : 7] || SITES.market.stalls[0]; p = { x: s.x + 1.8, z: s.z + 1.2 }; }
   else { const s = SITES[slot.site]; p = { x: s.x + 3, z: s.z + 3 }; }
   return Object.assign(p, { slot });
@@ -5429,34 +5735,51 @@ function showHelp() {
     [['返回', 'g', () => { MODAL.close(); openPause(); }]]);
 }
 /* ---------- 小地圖 ---------- */
-let MAPIMG;
+let MAPIMG; const MAP_RES = 0.5; // 地圖圖檔：每公尺 0.5 像素
 function buildMapImage() {
-  const c = document.createElement('canvas'); c.width = c.height = 1000; const g = c.getContext('2d');
-  g.fillStyle = '#5f8a46'; g.fillRect(0, 0, 1000, 1000);
-  const T = (v) => v + 500;
-  g.fillStyle = '#2a6f9a'; g.fillRect(0, 0, T(-470), 1000); g.fillStyle = '#d8c690'; g.fillRect(T(-470), 0, 26, 1000);
+  const W = Math.ceil((WORLD.x1 - WORLD.x0) * MAP_RES), H = Math.ceil((WORLD.z1 - WORLD.z0) * MAP_RES);
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  const T = (x) => (x - WORLD.x0) * MAP_RES, U = (z) => (z - WORLD.z0) * MAP_RES;
+  g.fillStyle = '#6f9a4e'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#2a6f9a'; g.fillRect(0, 0, T(-3010), H); g.fillStyle = '#d8c690'; g.fillRect(T(-3010), 0, 10 * MAP_RES, H);
+  g.fillStyle = '#4a7a3a'; // 山區
+  g.beginPath(); g.ellipse(T(1000), U(-1600), 300 * MAP_RES, 1100 * MAP_RES, 0, 0, 7); g.fill(); g.beginPath(); g.ellipse(T(1050), U(850), 230 * MAP_RES, 380 * MAP_RES, 0, 0, 7); g.fill();
   for (const b of BLOCKS) {
-    g.fillStyle = { park: '#4f8a3a', lake: '#4f8a3a', market: '#a8584a', station: '#3a5aa8', home: '#a88a3a', dealer: '#6a6a7a', hospital: '#c8c8c8', tower: '#5a6a80', store: '#6a7a6a', bank: '#6a6a8a' }[b.type] || '#7a7468';
-    g.fillRect(T(b.x0), T(b.z0), b.x1 - b.x0, b.z1 - b.z0);
-    if (b.type === 'lake') { g.fillStyle = '#3f7fa8'; g.beginPath(); g.arc(T(b.cx), T(b.cz), 20, 0, 7); g.fill(); }
+    if (b.type === 'rural') continue;
+    g.fillStyle = { park: '#4f8a3a', lake: '#4f8a3a', thu: '#4f8a3a', museum: '#4f8a3a', artmus: '#4f8a3a', nchu: '#4f8a3a', market: '#a8584a', fengchia: '#a8584a', station: '#3a5aa8', home: '#a88a3a', home_b: '#a88a3a', home_c: '#a88a3a', dealer: '#6a6a7a', hospital: '#c8c8c8', tower: '#5a6a80', store: '#6a7a6a', bank: '#6a6a8a', ind: '#8a8a90' }[b.type] || '#8a8070';
+    g.fillRect(T(b.x0), U(b.z0), (b.x1 - b.x0) * MAP_RES, (b.z1 - b.z0) * MAP_RES);
+    if (b.type === 'lake') { g.fillStyle = '#3f7fa8'; g.beginPath(); g.arc(T(b.cx), U(b.cz), 20 * MAP_RES, 0, 7); g.fill(); }
   }
-  g.fillStyle = '#d8d4c8';
-  for (let i = 0; i < XR.length; i++) g.fillRect(T(XR[i]) - vW(i) / 2, T(-420), vW(i), 840);
-  for (let j = 0; j < ZR.length; j++) g.fillRect(T(-420), T(ZR[j]) - hW(j) / 2, 840, hW(j));
-  g.fillStyle = '#333'; g.font = 'bold 11px ' + FONT; g.textAlign = 'center';
-  for (let i = 0; i < XR.length; i++) { g.save(); g.translate(T(XR[i]) + 3, T(-300)); g.rotate(Math.PI / 2); g.fillText(VNAMES[i], 0, 0); g.restore(); }
-  for (let j = 0; j < ZR.length; j++) g.fillText(HNAMES[j], T(-280), T(ZR[j]) + 4);
+  for (const e of EDGES) {
+    const ax = XR[e.a[0]], az = ZR[e.a[1]], bx = XR[e.b[0]], bz = ZR[e.b[1]], w = Math.max(e.w, 10) * MAP_RES * 1.6;
+    g.fillStyle = e.name === '國道1號' ? '#f0b040' : e.w >= 18 ? '#f4e6a8' : '#e8e4d8';
+    if (e.ax === 'ew') g.fillRect(T(ax), U(az) - w / 2, (bx - ax) * MAP_RES, w); else g.fillRect(T(ax) - w / 2, U(az), w, (bz - az) * MAP_RES);
+  }
   MAPIMG = c;
 }
+// 路名、地名（畫在地圖上，依縮放顯示）
+function drawMapLabels(g, X, Z, sc, big) {
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  const seen = new Set();
+  for (const e of EDGES) {
+    if (!e.name) continue; const L = e.L * sc; if (L < (big ? 70 : 90)) continue;
+    const ax = XR[e.a[0]], az = ZR[e.a[1]], bx = XR[e.b[0]], bz = ZR[e.b[1]]; const mx = X((ax + bx) / 2), mz = Z((az + bz) / 2);
+    const k = e.name + Math.round(mx / 160) + ',' + Math.round(mz / 160); if (seen.has(k)) continue; seen.add(k);
+    g.save(); g.translate(mx, mz); if (e.ax === 'ns') g.rotate(Math.PI / 2);
+    g.font = 'bold ' + (big ? 12 : 11) + 'px ' + FONT; g.lineWidth = 3; g.strokeStyle = 'rgba(255,255,255,.85)'; g.fillStyle = '#333'; g.strokeText(e.name, 0, 0); g.fillText(e.name, 0, 0); g.restore();
+  }
+  if (big) for (const d of DISTRICTS) { const x = X(d.x), z = Z(d.z); g.font = 'bold 16px ' + FONT; g.lineWidth = 4; g.strokeStyle = 'rgba(0,0,0,.6)'; g.fillStyle = '#fff6c8'; g.strokeText(d.name, x, z - 26); g.fillText(d.name, x, z - 26); }
+}
 const ICONS = () => [
-  [SITES.station, '👮', '大墩分局'], [SITES.cga, '⚓', '海巡隊'], [SITES.home, '🏠', '我家'], [SITES.market, '🏮', '一中街夜市'], [SITES.dealer, '🚘', '車行'], [SITES.hospital, '🏥', '醫院'], [SITES.bank, '🏦', '銀行'],
+  [SITES.station, '👮', '大墩分局'], [SITES.cga, '⚓', '海巡隊'], [SITES.tra, '🚉', '台中車站'], [SITES.hsr, '🚄', '高鐵台中站'], [SITES.home, '🏠', '我家'], [SITES.market, '🏮', '一中街夜市'], [SITES.dealer, '🚘', '車行'], [SITES.hospital, '🏥', '醫院'], [SITES.bank, '🏦', '銀行'],
   ...SITES.stores.map(s => [s, '🏪', '超商']),
 ];
 function drawMini() {
   const c = $('mini'), g = c.getContext('2d'), W = c.width, sc = 0.62;
   g.save(); g.fillStyle = '#1b2433'; g.fillRect(0, 0, W, W);
   g.translate(W / 2, W / 2); g.rotate(P.yaw); g.scale(sc, sc);
-  g.drawImage(MAPIMG, -P.x - 500, -P.z - 500);
+  g.drawImage(MAPIMG, WORLD.x0 - P.x, WORLD.z0 - P.z, MAPIMG.width / MAP_RES, MAPIMG.height / MAP_RES);
+  drawMapLabels(g, x => x - P.x, z => z - P.z, sc, false);
   g.font = '22px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
   const drawIcon = (x, z, ic) => { g.save(); g.translate(x - P.x, z - P.z); g.rotate(-P.yaw); g.fillText(ic, 0, 0); g.restore(); };
   for (const [s, ic] of ICONS()) if (s) drawIcon(s.x != null ? s.x : s.cx, s.z != null ? s.z : (s.z1 + 2), ic);
@@ -5481,27 +5804,44 @@ function toggleMap() {
   if (GAME.mapOpen) { releasePointer(); drawBigMap(); }
   else if (!IS_TOUCH && GAME.running && !MODAL.open) { try { canvas.requestPointerLock(); } catch (e) { } }
 }
+const BM = { zi: 1, cx: 0, cz: 0, follow: true };
+const BM_SPAN = [4400, 2400, 1200, 600]; // 地圖顯示範圍（公尺）
+function bmView() {
+  const span = BM_SPAN[BM.zi]; let cx = BM.follow ? P.x : BM.cx, cz = BM.follow ? P.z : BM.cz;
+  if (BM.zi === 0) { cx = (WORLD.x0 + WORLD.x1) / 2; cz = (WORLD.z0 + WORLD.z1) / 2; }
+  return { cx, cz, sc: 900 / span };
+}
 function drawBigMap() {
-  const c = $('bigc'), g = c.getContext('2d'); const s = 900 / 1000;
-  g.clearRect(0, 0, 900, 900);
-  g.save(); g.scale(s, s); g.drawImage(MAPIMG, 0, 0);
-  g.save(); g.translate(500, 500); drawRoute(g, 0, 0, 6); g.restore();
-  g.font = '26px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-  for (const [st, ic, nm] of ICONS()) if (st) { const x = (st.x != null ? st.x : st.cx) + 500, z = (st.z != null ? st.z : st.z1 + 2) + 500; g.fillText(ic, x, z); g.font = 'bold 13px ' + FONT; g.fillStyle = '#fff'; g.strokeStyle = '#000'; g.lineWidth = 3; g.strokeText(nm, x, z + 20); g.fillText(nm, x, z + 20); g.font = '26px sans-serif'; }
+  const c = $('bigc'), g = c.getContext('2d'); const V = bmView(), sc = V.sc;
+  const X = (x) => (x - V.cx) * sc + 450, Z = (z) => (z - V.cz) * sc + 450;
+  g.fillStyle = '#6f9a4e'; g.fillRect(0, 0, 900, 900); g.fillStyle = '#2a6f9a'; g.fillRect(0, 0, Math.max(0, X(-3010)), 900);
+  g.imageSmoothingEnabled = true;
+  g.drawImage(MAPIMG, X(WORLD.x0), Z(WORLD.z0), MAPIMG.width / MAP_RES * sc, MAPIMG.height / MAP_RES * sc);
+  drawMapLabels(g, X, Z, sc, true);
+  g.save(); g.translate(450 - V.cx * sc, 450 - V.cz * sc); g.scale(sc, sc); drawRoute(g, 0, 0, 6 / sc); g.restore();
+  g.font = '22px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const [st, ic, nm] of ICONS()) if (st) { const x = X(st.x != null ? st.x : st.cx), z = Z(st.z != null ? st.z : st.z1 + 2); if (x < -20 || x > 920 || z < -20 || z > 920) continue; g.fillText(ic, x, z); if (BM.zi >= 2 || ic !== '🏪') { g.font = 'bold 12px ' + FONT; g.fillStyle = '#fff'; g.strokeStyle = '#000'; g.lineWidth = 3; g.strokeText(nm, x, z + 18); g.fillText(nm, x, z + 18); g.font = '22px sans-serif'; } }
   const tg = MIS.cur && MIS.cur.target && MIS.cur.target();
-  if (tg) { g.fillStyle = '#ffd84a'; g.strokeStyle = '#000'; g.lineWidth = 3; g.beginPath(); g.arc(tg.x + 500, tg.z + 500, 12, 0, 7); g.fill(); g.stroke(); }
-  if (NAV.way) { g.fillStyle = '#c060ff'; g.strokeStyle = '#fff'; g.lineWidth = 3; g.beginPath(); g.arc(NAV.way.x + 500, NAV.way.z + 500, 13, 0, 7); g.fill(); g.stroke(); g.fillStyle = '#fff'; g.font = 'bold 16px sans-serif'; g.fillText('📍', NAV.way.x + 500, NAV.way.z + 500 - 22); }
-  g.translate(P.x + 500, P.z + 500); g.rotate(-P.yaw); g.fillStyle = '#5cb8ff'; g.strokeStyle = '#000'; g.lineWidth = 2;
-  g.beginPath(); g.moveTo(0, -16); g.lineTo(11, 12); g.lineTo(0, 6); g.lineTo(-11, 12); g.closePath(); g.fill(); g.stroke();
-  g.restore();
-  g.fillStyle = 'rgba(0,0,0,.65)'; g.fillRect(10, 10, 520, 34); g.fillStyle = '#fff'; g.font = 'bold 16px ' + FONT; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-  g.fillText('🗺 點地圖設定導航目的地（再點一次取消）・M 或 ✕ 關閉', 20, 33);
+  if (tg) { g.fillStyle = '#ffd84a'; g.strokeStyle = '#000'; g.lineWidth = 3; g.beginPath(); g.arc(X(tg.x), Z(tg.z), 10, 0, 7); g.fill(); g.stroke(); }
+  if (NAV.way) { g.fillStyle = '#c060ff'; g.strokeStyle = '#fff'; g.lineWidth = 3; g.beginPath(); g.arc(X(NAV.way.x), Z(NAV.way.z), 11, 0, 7); g.fill(); g.stroke(); g.fillStyle = '#fff'; g.font = 'bold 16px sans-serif'; g.fillText('📍', X(NAV.way.x), Z(NAV.way.z) - 20); }
+  g.save(); g.translate(X(P.x), Z(P.z)); g.rotate(-P.yaw); g.fillStyle = '#5cb8ff'; g.strokeStyle = '#000'; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(0, -14); g.lineTo(10, 11); g.lineTo(0, 5); g.lineTo(-10, 11); g.closePath(); g.fill(); g.stroke(); g.restore();
+  g.fillStyle = 'rgba(0,0,0,.65)'; g.fillRect(10, 10, 600, 34); g.fillStyle = '#fff'; g.font = 'bold 15px ' + FONT; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+  g.fillText('🗺 點地圖設導航（再點一次取消）・＋／－ 縮放・M 或 ✕ 關閉', 20, 33);
+  // 縮放按鈕
+  for (const [k, t] of [[0, '－'], [1, '＋']]) { const x = 840, y = 760 + k * 60; g.fillStyle = 'rgba(20,30,60,.85)'; g.fillRect(x - 24, y - 24, 48, 48); g.fillStyle = '#fff'; g.font = 'bold 28px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, x, y); }
+  g.fillStyle = 'rgba(20,30,60,.85)'; g.fillRect(780, 640, 108, 40); g.fillStyle = '#fff'; g.font = 'bold 14px ' + FONT; g.fillText(BM.zi === 0 ? '全台中' : BM_SPAN[BM.zi] / 1000 * 7 + ' 公里', 834, 660);
 }
 function mapPick(cx, cy) {
-  const r = $('bigc').getBoundingClientRect(); const x = (cx - r.left) / r.width * 1000 - 500, z = (cy - r.top) / r.height * 1000 - 500;
-  if (x < -480 || x > 480 || z < -480 || z > 480) return;
+  const r = $('bigc').getBoundingClientRect(); const px = (cx - r.left) / r.width * 900, py = (cy - r.top) / r.height * 900;
+  if (Math.abs(px - 840) < 26 && Math.abs(py - 760) < 26) { BM.zi = Math.max(0, BM.zi - 1); AU.click(); drawBigMap(); return; }
+  if (Math.abs(px - 840) < 26 && Math.abs(py - 820) < 26) { BM.zi = Math.min(BM_SPAN.length - 1, BM.zi + 1); AU.click(); drawBigMap(); return; }
+  if (px > 780 && px < 888 && py > 640 && py < 680) return;
+  const V = bmView(); const x = (px - 450) / V.sc + V.cx, z = (py - 450) / V.sc + V.cz;
+  if (x < WORLD.x0 || x > WORLD.x1 || z < WORLD.z0 || z > WORLD.z1) return;
   setWaypoint(x, z); AU.click(); NAV.t = 0; updateNav(0); drawBigMap();
 }
+$('bigc').addEventListener('wheel', e => { e.preventDefault(); BM.zi = clamp(BM.zi + (e.deltaY < 0 ? 1 : -1), 0, BM_SPAN.length - 1); drawBigMap(); }, { passive: false });
 $('bigc').addEventListener('click', e => { e.stopPropagation(); mapPick(e.clientX, e.clientY); });
 $('bigc').addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); const t = e.changedTouches[0]; mapPick(t.clientX, t.clientY); }, { passive: false });
 $('mapClose').addEventListener('click', e => { e.stopPropagation(); toggleMap(); });
