@@ -632,7 +632,7 @@ IC('i_pickle',P=>{P(5,2,'#8a5a32',6,2);P(4,4,'#dce8f0',8,11);P(5,6,'#6ac04a',6,8
 IC('i_bouquet',P=>{P(7,8,'#4a9a3a',2,7);P(5,10,'#4a9a3a',6,1);for(const [x,y,c] of [[4,2,'#f86aa0'],[9,3,'#f8d040'],[6,5,'#e8e8f8'],[3,6,'#c87af8'],[10,6,'#f86aa0']]) P(x,y,c,3,3);P(5,11,'#f0c8e0',6,3);});
 IC('i_pendant',P=>{for(let k=0;k<6;k++){P(2+k,1+k,'#c8c8d8');P(13-k,1+k,'#c8c8d8');}P(6,7,'#40a8f0',4,5);P(7,12,'#40a8f0',2,2);P(7,8,'#c0f0ff',2,2);});
 IC('i_fegg',P=>{P(5,3,'#f86aa0',6,11);P(4,5,'#f86aa0',8,8);P(4,8,'#fff',8,1);P(4,10,'#5ac8f8',8,1);P(6,2,'#f86aa0',4,1);});
-tile('bed_foot',(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++) px(g,x,y,shade('#b8302a',0.92+r()*0.1));g.fillStyle='#d8584a';for(let y=2;y<16;y+=5) g.fillRect(0,y,16,1);g.fillStyle='#7a1a14';g.fillRect(0,15,16,1);});
+tile('bed_foot',(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++) px(g,x,y,shade('#b8302a',0.92+r()*0.1));g.fillStyle='#7a1a14';g.fillRect(0,15,16,1);});
 
 // ---- 槍械與戰鬥模組：圖示、材質 ----
 {const WD='#8a5a2a',DW='#5a3a1a',MT='#3a3a40',ML='#7a7a84',BK='#1c1c20',OL='#5a6a3a',TN='#b8a070',BR='#d8a840';
@@ -825,7 +825,8 @@ defB('ARMORY',{n:'軍火箱',tex:tx3('armory_top','armory_side','armory_side'),h
 const IT={};const ITL={};let NID=256;
 function defI(key,o){const id=NID++;o.key=key;o.id=id;o.item=true;o.stack=o.stack||64;IT[key]=id;ITL[id]=o;return id;}
 defI('I_STICK',{n:'木棍',ic:T.i_stick,fuel:5});defI('I_COAL',{n:'煤炭',ic:T.i_coal,fuel:80});defI('I_CHARCOAL',{n:'木炭',ic:T.i_charcoal,fuel:80});
-defI('I_IRON',{n:'鐵錠',ic:T.i_iron});defI('I_GOLD',{n:'金錠',ic:T.i_gold});defI('I_DIAMOND',{n:'鑽石',ic:T.i_diamond});
+icon('i_buddy',(g,r)=>{g.fillStyle='#3d4ac8';g.fillRect(4,1,8,5);g.fillStyle='#f0c8a0';g.fillRect(5,3,6,3);g.fillStyle='#111';g.fillRect(6,4,1,1);g.fillRect(9,4,1,1);g.fillStyle='#8a0020';g.fillRect(4,6,8,1);g.fillStyle='#e82028';g.fillRect(4,7,8,8);g.fillStyle='#2a3070';g.fillRect(5,13,2,2);g.fillRect(9,13,2,2);});
+defI('I_BUDDY',{n:'娃況召喚鈴（叫夥伴／右鍵使用）',ic:T.i_buddy,stack:1});defI('I_IRON',{n:'鐵錠',ic:T.i_iron});defI('I_GOLD',{n:'金錠',ic:T.i_gold});defI('I_DIAMOND',{n:'鑽石',ic:T.i_diamond});
 defI('I_REDSTONE',{n:'紅石粉',ic:T.i_redstone,place:'WIRE'});defI('I_LAPIS',{n:'青金石',ic:T.i_lapis});defI('I_QUARTZ',{n:'地獄石英',ic:T.i_quartz});defI('I_GLOWDUST',{n:'螢石粉',ic:T.i_glowdust});
 defI('I_WHEAT',{n:'小麥',ic:T.i_wheat});defI('I_SEEDS',{n:'小麥種子',ic:T.i_seeds,plant:true});
 defI('I_BREAD',{n:'麵包',ic:T.i_bread,food:5,sat:6});defI('I_APPLE',{n:'蘋果',ic:T.i_apple,food:4,sat:2.4});defI('I_GAPPLE',{n:'金蘋果',ic:T.i_gapple,food:4,sat:9.6,heal:8});
@@ -1118,7 +1119,9 @@ function meshChunk(c){const dim=c.dim;const A={o:[[],[],[],[]],c:[[],[],[],[]],w
   for(let y=0;y<=maxY;y++)for(let lz=0;lz<16;lz++)for(let lx=0;lx<16;lx++){
     const id=c.data[IDX(lx,y,lz)];if(!id) continue;const b=BL[id];const x=X0+lx,z=Z0+lz;
     if(b.panel){const arr=A.c;const uv=UVT[b.paint?T['paint'+(Math.floor(h3(x,y,z)*3))]:b.tex[1]];const [s,bl]=light(lx,y,lz);let q=null;const e=0.06;
-      if(at(lx,y,lz-1)&&BL[at(lx,y,lz-1)].solid) q=[[1,0,e],[1,1,e],[0,1,e],[0,0,e]];else if(at(lx,y,lz+1)&&BL[at(lx,y,lz+1)].solid) q=[[0,0,1-e],[0,1,1-e],[1,1,1-e],[1,0,1-e]];
+      const lm=id===B.LADDER?W.meta[dim+':'+x+','+y+','+z]:null;const lf=lm&&lm.f!==undefined?lm.f:-1;const LD=[[0,-1],[0,1],[-1,0],[1,0]];const lok=lf>=0&&(()=>{const w=at(lx+LD[lf][0],y,lz+LD[lf][1]);return w&&BL[w].solid;})();
+      if(lok){q=[[[1,0,e],[1,1,e],[0,1,e],[0,0,e]],[[0,0,1-e],[0,1,1-e],[1,1,1-e],[1,0,1-e]],[[e,0,0],[e,1,0],[e,1,1],[e,0,1]],[[1-e,0,1],[1-e,1,1],[1-e,1,0],[1-e,0,0]]][lf];}
+      else if(at(lx,y,lz-1)&&BL[at(lx,y,lz-1)].solid) q=[[1,0,e],[1,1,e],[0,1,e],[0,0,e]];else if(at(lx,y,lz+1)&&BL[at(lx,y,lz+1)].solid) q=[[0,0,1-e],[0,1,1-e],[1,1,1-e],[1,0,1-e]];
       else if(at(lx-1,y,lz)&&BL[at(lx-1,y,lz)].solid) q=[[e,0,0],[e,1,0],[e,1,1],[e,0,1]];else q=[[1-e,0,1],[1-e,1,1],[1-e,1,0],[1-e,0,0]];
       const base=arr[0].length/3;for(let k=0;k<4;k++){arr[0].push(x+q[k][0],y+q[k][1],z+q[k][2]);arr[1].push(UVC[k][0]?uv[1]:uv[0],UVC[k][1]?uv[3]:uv[2]);arr[2].push(s*0.9,bl*0.9,0.9);}(arr.i=arr.i||[]).push(base,base+1,base+2,base,base+2,base+3);continue;}
     if(b.cross||b.flat){const arr=b.glow?A.g:A.c;const uv=UVT[b.tex[1]];const [s,bl]=light(lx,y,lz);
@@ -1459,7 +1462,7 @@ function initRecipes(){const PL=B.PLANKS,ST=IT.I_STICK;
   rs(['GGG','GAG','GGG'],{G:IT.I_GOLD,A:IT.I_APPLE},IT.I_GAPPLE);
   for(const [blk,ing] of [[B.IRON_BLOCK,IT.I_IRON],[B.GOLD_BLOCK,IT.I_GOLD],[B.DIAMOND_BLOCK,IT.I_DIAMOND],[B.LAPIS_BLOCK,IT.I_LAPIS],[B.RS_BLOCK,IT.I_REDSTONE]]){rs(['XXX','XXX','XXX'],{X:ing},blk);rl([blk],ing,9);}
   rs(['SS','SS'],{S:B.STONE},B.STONE_BRICKS,4);rs(['SS','SS'],{S:B.SAND},B.SANDSTONE);rs(['GG','GG'],{G:IT.I_GLOWDUST},B.GLOWSTONE);rl([IT.I_BONE],IT.I_BONEMEAL,3);
-  rs(['SS','SS'],{S:IT.I_STRING},B.WOOL_WHITE);rs(['WWW','PPP'],{W:B.WOOL_WHITE,P:PL},B.BED);rs(['WWW','PPP'],{W:B.WOOL_RED,P:PL},B.BED);rs(['PP','PP','PP'],{P:PL},B.DOOR,3);
+  rs([' I ','IGI',' I '],{I:IT.I_IRON,G:IT.I_GOLD},IT.I_BUDDY);rs(['SS','SS'],{S:IT.I_STRING},B.WOOL_WHITE);rs(['WWW','PPP'],{W:B.WOOL_WHITE,P:PL},B.BED);rs(['WWW','PPP'],{W:B.WOOL_RED,P:PL},B.BED);rs(['PP','PP','PP'],{P:PL},B.DOOR,3);
   for(const [dye,out] of [[B.FLOWER_R,B.WOOL_RED],[B.FLOWER_Y,B.WOOL_YELLOW],[IT.I_LAPIS,B.WOOL_BLUE],[B.CACTUS,B.WOOL_GREEN],[IT.I_COAL,B.WOOL_BLACK],[B.PUMPKIN,B.WOOL_ORANGE]]) rl([B.WOOL_WHITE,dye],out);
   rs(['S','C'],{S:ST,C:B.COBBLE},B.LEVER);rl([B.STONE],B.BUTTON);rs(['SS'],{S:B.STONE},B.PLATE);rs(['R','S'],{R:IT.I_REDSTONE,S:ST},B.RTORCH);rs([' R ','RGR',' R '],{R:IT.I_REDSTONE,G:B.GLOWSTONE},B.LAMP);
   rl([IT.I_CARROT,IT.I_GOLD],IT.I_GCARROT);rl([B.PUMPKIN,IT.I_SUGAR,IT.I_EGG],IT.I_PIE);rl([IT.I_WHEAT,IT.I_WHEAT,IT.I_WHEAT,IT.I_SUGAR,IT.I_SUGAR,IT.I_EGG,IT.I_MBUCKET],IT.I_CAKE);
@@ -1561,6 +1564,7 @@ function renderUI(){if(!UI.kind) return;const k=UI.kind;let h='';
   else if(k==='share') h+=`<div class="mc-lab">共用倉庫（所有玩家、所有共用倉庫裡的東西都一樣）</div><div class="mc-grid g9">${W.cont[UI.key].map((s,i)=>slotHTML(s,'ch',i)).join('')}</div>`;
   else if(k==='ptrade') h+=tradeHTML();
   else if(k==='hopper') h+=`<div class="mc-lab">漏斗（上面的箱子、掉在上面的東西會被吸進來，再送到下面或旁邊的箱子、熔爐）</div><div class="mc-grid g9" style="grid-template-columns:repeat(5,40px)">${W.cont[UI.key].map((s,i)=>slotHTML(s,'ch',i)).join('')}</div>`;
+  else if(k==='chest'&&UI.key==='buddy') h+=budUI();
   else if(k==='chest') h+=`<div class="mc-lab">${typeof shipLabel==='function'?shipLabel():'箱子'}</div><div class="mc-grid g9">${W.cont[UI.key].map((s,i)=>slotHTML(s,'ch',i)).join('')}</div>`;
   else if(k==='ench') h+=enchHTML();else if(k==='anvil') h+=anvilHTML();
   else if(k==='trade'){const T3=TRADES[UI.trade.prof]||TRADES[0];h+=`<div class="mc-lab">${PROFS[UI.trade.prof][0]}想跟你交易：</div><div class="trades">${T3.map((t,i)=>{const g=tid(t[0]),o=tid(t[2]);const can=W.mode==='creative'||countItem(g)>=t[1];
@@ -1824,13 +1828,13 @@ function players(){const L=[{id:myId(),x:P.x,y:P.y,z:P.z,dead:P.dead,mode:W.mode
 const ARMORED={heli:1};const armoredRide=()=>!!(P.ride&&ARMORED[P.ride.type]);
 function armorPing(){if(typeof gunSnd==='function') gunSnd('clank',0.6);if(P.ride) puff(P.ride.x+rand(-1,1),P.ride.y+1.2,P.ride.z+rand(-1,1),0xffe080,3,0.2);}
 function hurtPlayer(pl,dmg,why,kx,kz,bul){if(pl.local){if(W.mode==='creative'||P.dead) return;if(bul&&armoredRide()){armorPing();return;}const before=P.hp;hurt(dmg,why,false,'mob');if(P.hp<before){P.vx=kx;P.vz=kz;P.kbT=0.25;P.vy=Math.max(P.vy,5);}}else NET.sendTo(pl.id,{t:'hurt',dmg,why,kx,kz,bul:bul?1:0});}
-function damageMob(e,dmg,src){if(e.dead||e.hurtT>0.4) return false;if(MOBS[e.type].townie){if(src&&src.by===myId()) toast('不可以打鎮民！');return false;}const T2=MOBS[e.type];e.hp-=dmg;e.hurtT=0.5;playSnd('hit');
+function damageMob(e,dmg,src){if(e.dead||e.hurtT>0.4) return false;if(MOBS[e.type].buddy&&src&&src.by===myId()&&!src.buddy&&!src.expl) return false;if(MOBS[e.type].townie){if(src&&src.by===myId()) toast('不可以打鎮民！');return false;}const T2=MOBS[e.type];e.hp-=dmg;e.hurtT=0.5;playSnd('hit');
   if(src&&src.kx!==undefined){e.vx+=src.kx;e.vz+=src.kz;e.vy=Math.max(e.vy,4.5);}if(src&&src.fire) e.fire=src.fire*4;
   if(T2.pass){let fx=null;if(src&&src.by!==undefined){const pl=players().find(p=>p.id===src.by);if(pl) fx=[pl.x,pl.z];}if(!fx&&src&&src.kx!==undefined) fx=[e.x-src.kx,e.z-src.kz];
     for(const m of mobs()){if(m.dim!==e.dim||!MOBS[m.type].pass||m.type==='villager'&&e.type!=='villager') continue;const d=Math.hypot(m.x-e.x,m.z-e.z);if(d>12) continue;m.ai.flee=m===e?5:4+Math.random()*2;m.ai.from=fx||[e.x,e.z];m.ai.t=0;}}if((T2.neutral||T2.hostile)&&src&&src.by){e.ai.target=src.by;e.ai.anger=30;if(e.type==='zpig') for(const m of mobs()) if(m.type==='zpig'&&Math.hypot(m.x-e.x,m.z-e.z)<16){m.ai.target=src.by;m.ai.anger=30;}}
   if(e.type==='wolf'&&e.tamed&&src&&src.by===e.tamed){e.ai.target=null;}
   if(e.hp<=0) killMob(e,src);return true;}
-function killMob(e,src){e.dead=true;const T2=MOBS[e.type];playSnd('pop');bloodFx(e,true);puff(e.x,e.y+e.h/2,e.z,0xdddddd,8);
+function killMob(e,src){e.dead=true;const T2=MOBS[e.type];if(T2.buddy&&typeof budDie==='function') budDie(e);playSnd('pop');bloodFx(e,true);puff(e.x,e.y+e.h/2,e.z,0xdddddd,8);
   if(src&&src.by&&!e.baby){const list=[];for(const [k,a,b,ch] of T2.drops||[]){if(ch&&Math.random()>ch) continue;let n=irand(a,b);if(ch) n=Math.max(1,n);if(e.fire>0&&IT[k]&&ITL[IT[k]].cook) list.push([IT[ITL[IT[k]].cook],n]);else if(n>0) list.push([IT[k]||B[k],n]);}
     if(e.type==='sheep'&&!e.sheared) list.push([B['WOOL_'+WOOLC[e.wool][0].toUpperCase()],1]);
     const xp=irand(T2.xp[0],T2.xp[1]);
@@ -1852,7 +1856,7 @@ function puff(x,y,z,col,n,sp){for(let i=0;i<(n||6);i++){const m=new THREE.Mesh(p
 function blockBits(x,y,z,id){if(!BL[id]||!BL[id].tex) return;const mat=matTile(BL[id].tex[1]);for(let i=0;i<8;i++){const m=new THREE.Mesh(puffGeo,mat);m.scale.setScalar(rand(0.6,1.2));m.position.set(x+rand(0.2,0.8),y+rand(0.2,0.8),z+rand(0.2,0.8));scene.add(m);PARTS.push({m,vx:rand(-2,2),vy:rand(1,4),vz:rand(-2,2),t:0,life:rand(0.4,0.9),g:12,keep:true});}}
 function partsTick(dt){for(let i=PARTS.length-1;i>=0;i--){const p=PARTS[i];p.t+=dt;p.vy-=(p.g||0)*dt;p.m.position.x+=p.vx*dt;p.m.position.y+=p.vy*dt;p.m.position.z+=p.vz*dt;if(!p.keep) p.m.material.opacity=1-p.t/p.life;if(p.t>p.life){scene.remove(p.m);if(!p.keep) p.m.material.dispose();PARTS.splice(i,1);}}}
 // 生物 AI（主機才跑）
-function mobAI(e,dt){const T2=MOBS[e.type];const a=e.ai;if(T2.soldier&&typeof soldierAI==='function'&&soldierAI(e,dt)) return;if(T2.townie&&e.post&&typeof townieHold==='function'&&townieHold(e,dt)) return;a.t-=dt;a.cool-=dt;if(a.flee>0) a.flee-=dt;if(a.anger>0) a.anger-=dt;if(a.love>0) a.love-=dt;
+function mobAI(e,dt){const T2=MOBS[e.type];const a=e.ai;if(T2.buddy&&buddyAI(e,dt)) return;if(T2.soldier&&typeof soldierAI==='function'&&soldierAI(e,dt)) return;if(T2.townie&&e.post&&typeof townieHold==='function'&&townieHold(e,dt)) return;a.t-=dt;a.cool-=dt;if(a.flee>0) a.flee-=dt;if(a.anger>0) a.anger-=dt;if(a.love>0) a.love-=dt;
   if(e.age<0){e.age+=dt*20;if(e.age>=0){e.baby=false;e.mesh.scale.setScalar(T2.split?e.size*0.5:1);e.w=T2.w;e.h=T2.h;}}
   if(T2.villager){const z=mobs().find(m=>(m.type==='zombie'||m.type==='husk')&&Math.hypot(m.x-e.x,m.z-e.z)<8);if(z){a.flee=2;a.tx=e.x+(e.x-z.x)*2;a.tz=e.z+(e.z-z.z)*2;a.t=1;}
     else if(e.home&&Math.hypot(e.home[0]-e.x,e.home[1]-e.z)>22&&a.t<=0){a.tx=e.home[0]+rand(-6,6);a.tz=e.home[1]+rand(-6,6);a.t=6;}
@@ -1903,6 +1907,7 @@ function mobAnim(e,dt){const T2=MOBS[e.type];const p=e.model.parts;const spd=Mat
   if(p.tail) p.tail.rotation.x=e.tamed?-0.6:0.3;
   if(e.type==='jelly') for(let k=0;k<6;k++) if(p['t'+k]) p['t'+k].rotation.x=Math.sin(performance.now()/300+k)*0.3;
   if(T2.hop&&p.outer){const s=e.onGround?1:1.1;p.outer.scale.set(1/s,s,1/s);}
+  if(e.type==='buddy'&&p.aR&&e.work>0){p.aR.rotation.x=-1.1-Math.abs(Math.sin(performance.now()/110))*0.9;}
   e.mesh.position.set(e.x,e.y+(e.fsleep?0.3:e.fsit?-0.28:0),e.z);let dy=e.yaw-e.mesh.rotation.y;while(dy>Math.PI) dy-=Math.PI*2;while(dy<-Math.PI) dy+=Math.PI*2;e.mesh.rotation.y+=dy*Math.min(1,dt*10);
   if(e.type==='townie'){e.mesh.rotation.order='YXZ';e.mesh.rotation.x=e.fsleep?-Math.PI/2:0;if(e.fsit&&p.l0){p.l0.rotation.x=p.l1.rotation.x=-1.45;if(p.aL){p.aL.rotation.x=p.aR.rotation.x=-0.3;}}}
   else if(e.type==='wolf'&&e.ai&&e.ai.sit){e.mesh.rotation.x=-0.3;}else e.mesh.rotation.x=0;
@@ -1996,6 +2001,7 @@ function attackEntity(){if(P.dead) return false;if(typeof vehHit==='function'&&v
 // ---- 右鍵使用 ----
 const USE={eat:0,bow:0,mode:null};
 function useItem(){if(P.dead||uiOpen) return;if(typeof vehUse==='function'&&vehUse()) return;if(typeof tradeClick==='function'&&tradeClick()) return;const s=held();const d=s&&DEF(s.id);armSwing(true);
+  if(s&&IT.I_BUDDY&&s.id===IT.I_BUDDY){callBuddy();return;}
   // 生物互動
   const hm=rayMob(3.5);if(hm&&(!AIM.id||hm.t<AIM.t)){if(mobUse(hm.m,s)) return;}
   // 方塊互動
@@ -2045,6 +2051,12 @@ function useItem(){if(P.dead||uiOpen) return;if(typeof vehUse==='function'&&vehU
   if(id===B.BED){const v=lookDir();const dx=Math.abs(v.x)>Math.abs(v.z)?Math.sign(v.x):0,dz=dx?0:Math.sign(v.z)||1;const hx=px+dx,hz=pz+dz;const hb=getB(hx,py,hz);
     if((hb&&!BL[hb].replace&&BL[hb].solid!==false)||hb===B.BED||hb===B.BED_FOOT||!BL[getB(hx,py-1,hz)].solid||Math.floor(P.x)===hx&&Math.floor(P.z)===hz){toast('床要兩格空間：前面那一格要是空的');return;}
     setB(px,py,pz,B.BED_FOOT);setB(hx,py,hz,B.BED);consumeHeld(1);playSnd('wood',0.8);return;}
+  if(id===B.LADDER){const LD=[[0,-1],[0,1],[-1,0],[1,0]];let f=-1;const solidAt=(a,c)=>{const q=getB(px+a,py,pz+c);return q&&BL[q].solid&&!BL[q].panel;};
+    if(h.id===B.LADDER){const hm=W.meta[W.dim+':'+h.x+','+h.y+','+h.z];if(hm&&hm.f!==undefined&&solidAt(LD[hm.f][0],LD[hm.f][1])) f=hm.f;}
+    if(f<0&&h.ny===0&&h.id!==B.LADDER){const k=LD.findIndex(([a,c])=>a===-h.nx&&c===-h.nz);if(k>=0&&solidAt(LD[k][0],LD[k][1])) f=k;}
+    if(f<0){const v=lookDir();const ord=[0,1,2,3].sort((i,j)=>(LD[j][0]*v.x+LD[j][1]*v.z)-(LD[i][0]*v.x+LD[i][1]*v.z));f=ord.find(i=>solidAt(LD[i][0],LD[i][1]));}
+    if(f===undefined||f<0){toast('梯子要貼在牆壁上');return;}
+    const mk=W.dim+':'+px+','+py+','+pz;W.meta[mk]={f};if(typeof netMeta==='function') netMeta(mk);}
   if(BL[id].shape==='stairs'){const v=lookDir();const f=Math.abs(v.x)>Math.abs(v.z)?(v.x>0?1:3):(v.z>0?2:0);const mk=W.dim+':'+px+','+py+','+pz;W.meta[mk]={f};if(typeof netMeta==='function') netMeta(mk);}
   if(id===B.PISTON||id===B.STICKY_PISTON){const v=lookDir();const ax=Math.abs(v.x),ay=Math.abs(v.y),az=Math.abs(v.z);const f=ay>ax&&ay>az?(v.y>0?3:2):ax>az?(v.x>0?1:0):(v.z>0?5:4);const mk=W.dim+':'+px+','+py+','+pz;W.meta[mk]={f,ext:false};if(typeof netMeta==='function') netMeta(mk);}
   setB(px,py,pz,id);consumeHeld(1);playSnd(BL[id].snd||'stone',0.8);
@@ -2062,6 +2074,7 @@ function growTree(x,y,z){const h=irand(4,6);for(let k=1;k<=h;k++) if(getB(x,y+k,
   setB(x,y+h,z,B.OAK_LEAVES);return true;}
 function throwEgg(v){const m=new THREE.Mesh(new THREE.BoxGeometry(0.15,0.2,0.15),new THREE.MeshLambertMaterial({color:0xf0e0c0}));scene.add(m);const o=eyePos();ENTS.push({kind:'egg',eid:EID++,x:o.x,y:o.y,z:o.z,vx:v.x*18,vy:v.y*18,vz:v.z*18,mesh:m,age:0,dim:W.dim});playSnd('bow',0.4);}
 function mobUse(m,s){const T2=MOBS[m.type];const id=s&&s.id;
+  if(T2.buddy){if(P.sneak){budMode(null);}else{budBag();openUI('chest','buddy');}return true;}
   if(m.type==='townie'){if(typeof townTalk==='function') townTalk(m,s);return true;}
   if(typeof farmPet==='function'&&farmPet(m,s)) return true;
   if(id===IT.I_NAMETAG&&m.type!=='villager'){askName(m);return true;}
@@ -2467,7 +2480,7 @@ function liquidTick(dt){if(typeof isHost==='function'&&!isHost()) {LIQ.q.clear()
 
 // ================= 多人連線（房間代碼）=================
 const DIMS=['over','nether','sky'];
-const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611142100'};
+const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611271200'};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
 function peerOpts(){const o={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
@@ -3587,6 +3600,139 @@ function soldierParts(t){const ww2=t==='soldier';const U=ww2?'#5a6248':'#8a7a5a'
   if(!ww2) L.push(['vest',[8.8,8,4.8],[0,19,0],'#4a4a32']);else L.push(['belt',[8.6,1.4,4.6],[0,12.6,0],'#3a2a1a']);return L;}
 MOBS.soldier={n:'二戰敵兵',hp:22,w:0.3,h:1.9,sp:2.2,hostile:true,dmg:0,soldier:'ww2',drops:[['A_RIF',1,4],['A_PIS',0,3],['G_BOLT',0,0,0.06],['G_SMG',0,0,0.04],['T_GREN',0,0,0.12]],xp:[8,8],snd:'hmm',parts:soldierParts('soldier')};
 MOBS.msoldier={n:'現代敵兵',hp:26,w:0.3,h:1.9,sp:2.5,hostile:true,dmg:0,soldier:'mod',drops:[['A_RIF',2,6],['A_SHL',0,2],['G_AR',0,0,0.05],['G_SG',0,0,0.04],['T_GREN',0,0,0.12],['T_SMOKE',0,0,0.08]],xp:[10,10],snd:'hmm',parts:soldierParts('msoldier')};
+
+// ================= 夥伴「娃況」模組 =================
+FACE.buddy=faceCanvas((g,f)=>{f('#3d4ac8',0,0,8,3);f('#f0c8a0',0,3,8,5);f('#111',2,4);f('#111',5,4);f('#c85050',3,6,2,1);f('#fff',3,1,2,1);});
+MOBS.buddy={n:'娃況',hp:40,w:0.3,h:1.8,sp:3.4,buddy:true,tame:true,drops:[],xp:[0,0],snd:'hmm',
+  parts:[['body',[8,12,4],[0,18,0],'#e82028'],['stripe',[8.4,1.6,4.4],[0,23.2,0],'#8a0020'],['head',[8,8,8],[0,28,0],'#3d4ac8','buddy'],['capH',[3,1.2,0.6],[0,32.4,4.2],'#ffffff'],['aL',[4,12,4],[-6,18,0],'#e82028'],['aR',[4,12,4],[6,18,0],'#e82028'],['l0',[4,12,4],[-2,6,0],'#2a3070'],['l1',[4,12,4],[2,6,0],'#2a3070'],['pack',[7,9,3],[0,19,-3.6],'#6a4a2a'],['packT',[7.4,2,3.4],[0,24.2,-3.6],'#8a6a3a']]};
+const BUD_MODES={follow:'跟隨',stay:'待命',wood:'採集（砍樹）',mine:'挖礦'};
+function budSt(){return W.meta.buddy||(W.meta.buddy={mode:'follow'});}
+function budBag(){return W.cont.buddy||(W.cont.buddy=Array(18).fill(null));}
+function budNet(){if(typeof netCont==='function') netCont('buddy');}
+function budCnt(id){let n=0;for(const s of budBag()) if(s&&s.id===id) n+=s.n;return n;}
+function budTake(id,n){const b=budBag();for(let i=0;i<b.length&&n>0;i++){const s=b[i];if(s&&s.id===id){const k=Math.min(n,s.n);s.n-=k;n-=k;if(!s.n) b[i]=null;}}budNet();}
+function budAdd(e,id,n,extra){const left=putInto(budBag(),0,18,Object.assign({},extra||{},{id,n}));if(left>0&&e) spawnDrop(id,left,e.x,e.y+0.6,e.z);budNet();}
+function budIsLog(id){return !!(id&&BL[id]&&/LOG$/.test(BL[id].key||''));}
+function budTakeLog(){const b=budBag();for(let i=0;i<b.length;i++){const s=b[i];if(s&&s.id<BL.length&&budIsLog(s.id)){s.n--;if(!s.n) b[i]=null;return true;}}return false;}
+function budPlanks(e,n){let g=0;while(budCnt(B.PLANKS)<n&&g++<20&&budTakeLog()) budAdd(e,B.PLANKS,4);budNet();return budCnt(B.PLANKS)>=n;}
+function budSticks(e,n){let g=0;while(budCnt(IT.I_STICK)<n&&g++<10){if(!budPlanks(e,2)) return false;budTake(B.PLANKS,2);budAdd(e,IT.I_STICK,4);}return budCnt(IT.I_STICK)>=n;}
+function budTool(type){let best=null,bi=-1,bt=-1;const b=budBag();for(let i=0;i<b.length;i++){const s=b[i];if(!s) continue;const d=DEF(s.id);if(d&&d.tool&&d.tool.type===type){const v=d.tool.tier*100+d.tool.sp;if(v>bt){bt=v;best=s;bi=i;}}}return best?{s:best,i:bi}:null;}
+function budSay(e,msg){const t=performance.now();if(t-(e.sayT||0)<25000) return;e.sayT=t;toast('娃況：'+msg);}
+function budCraft(e,type){const need=type==='sword'?2:3,stk=type==='sword'?1:2;const cur=budTool(type);const ct=cur?DEF(cur.s.id).tool.tier:0;
+  const opts=[['diamond',4,IT.I_DIAMOND],['iron',3,IT.I_IRON],['stone',2,B.COBBLE],['wood',1,B.PLANKS]];
+  for(const [m,t,id] of opts){if(t<=ct) continue;const item=IT['T_'+type+'_'+m];if(!item) continue;
+    if(id===B.PLANKS){if(!(budSticks(e,stk)&&budPlanks(e,need))) continue;}else{if(budCnt(id)<need||!budSticks(e,stk)) continue;}
+    budTake(id,need);budTake(IT.I_STICK,stk);budAdd(e,item,1);budSay(e,'我做好了新的'+DEF(item).n+'！');playSnd('click',0.5);return true;}
+  return false;}
+function budWear(sl){const b=budBag();const s=b[sl.i];if(!s) return;s.d=(s.d||0)+1;if(s.d>=DEF(s.id).tool.dur){b[sl.i]=null;playSnd('pop',0.5);}budNet();}
+function callBuddy(){if(!isHost()){toast('只有房主可以召喚夥伴');return;}let e=mobs().find(m=>m.type==='buddy');
+  if(e){e.x=P.x+1;e.y=P.y;e.z=P.z+1;e.vx=e.vy=e.vz=0;puff(e.x,e.y+1,e.z,0x66aaff,10);toast('娃況來了！（右鍵他開背包、蹲下＋右鍵切換模式）');return;}
+  e=spawnMob('buddy',P.x+1,P.y,P.z+1,{tamed:myId()});if(!e) return;e.keep=true;budSt();budBag();budTag(e);puff(e.x,e.y+1,e.z,0x66aaff,14);playSnd('portal',0.5);toast('娃況加入了你的隊伍！右鍵他開背包、蹲下＋右鍵切換模式');}
+function budTag(e){e.pname='娃況·'+BUD_MODES[budSt().mode].slice(0,2);if(typeof petTag==='function') petTag(e);}
+function budMode(m){const st=budSt();const order=['follow','stay','wood','mine'];if(!m) m=order[(order.indexOf(st.mode)+1)%4];st.mode=m;if(typeof netMeta==='function') netMeta('buddy');
+  const e=mobs().find(x=>x.type==='buddy');if(e){budTag(e);e.ai.mine=null;e.ai.tg=null;}toast('娃況模式：'+BUD_MODES[m]);if(uiOpen&&UI.key==='buddy') renderUI();}
+function budUI(){const st=budSt();let h='<div class="mc-lab">娃況的背包（右鍵他打開，他挖到的東西會自動放進來）</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin:4px 0">';
+  for(const k in BUD_MODES) h+=`<button class="mcb" style="min-width:88px;${st.mode===k?'outline:3px solid #ffe27a':''}" onclick="budMode('${k}')">${BUD_MODES[k]}</button>`;
+  h+='</div><div class="mc-grid g9">'+budBag().map((s,i)=>slotHTML(s,'ch',i)).join('')+'</div>';return h;}
+function budDie(e){const b=budBag();for(let i=0;i<b.length;i++){const s=b[i];if(s){spawnDrop(s.id,s.n,e.x,e.y+0.6,e.z,s,true);b[i]=null;}}budNet();toast('娃況倒下了…背包的東西掉在地上，用召喚鈴可以再叫他回來');}
+function budStep(e,tx,tz,sp){const dx=tx-e.x,dz=tz-e.z,d=Math.hypot(dx,dz)||1;e.vx=dx/d*sp;e.vz=dz/d*sp;e.yaw=Math.atan2(dx,dz);
+  if(e.onGround){const fx=e.x+dx/d*0.7,fz=e.z+dz/d*0.7;const b1=BL[getB(fx,e.y+0.2,fz)],b2=BL[getB(fx,e.y+1.2,fz)];if(b1&&b1.solid&&!(b2&&b2.solid)) e.vy=8;}
+  if(e.inWater) e.vy=3;}
+function budFind(e,mode,home,pick){const r=mode==='wood'?13:10;const cx=Math.floor(home.x),cy=Math.floor(home.y),cz=Math.floor(home.z);let best=null,bd=1e9;const re=mode==='wood'?/LOG$/:/ORE$/;const skip=e.ai.skip||{};const now=performance.now();
+  const y0=mode==='wood'?-2:-9,y1=mode==='wood'?9:4;
+  for(let dx=-r;dx<=r;dx++)for(let dz=-r;dz<=r;dz++)for(let dy=y0;dy<=y1;dy++){const x=cx+dx,y=cy+dy,z=cz+dz;const id=getB(x,y,z);if(!id||!BL[id]||!re.test(BL[id].key||'')) continue;
+    if(mode==='mine'&&BL[id].tier&&!(pick&&DEF(pick.s.id).tool.tier>=BL[id].tier)) continue;
+    const k=x+','+y+','+z;if(skip[k]&&skip[k]>now) continue;const d=Math.hypot(x+0.5-e.x,(y+0.5-e.y)*1.3,z+0.5-e.z);if(d<bd){bd=d;best=[x,y,z,id];}}
+  return best;}
+function budMineDone(e,m){const id=getB(m.x,m.y,m.z);if(!id||id!==m.id){e.ai.mine=null;return;}const b=BL[id];const mode=budSt().mode;const tl=budTool(b.btool==='axe'?'axe':'pick')||(mode==='wood'?budTool('axe'):budTool('pick'));
+  const tt=tl&&DEF(tl.s.id).tool;const ok=!b.tier||(tt&&tt.type==='pick'&&tt.tier>=b.tier);
+  for(const [d,n] of dropOf(id,ok,tl?tl.s:null)) if(n>0) budAdd(e,d,n);
+  playSnd(b.snd||'stone',0.8);if(typeof blockBits==='function') blockBits(m.x,m.y,m.z,id);setB(m.x,m.y,m.z,0);fallCheck(m.x,m.y+1,m.z);
+  if(tl) budWear(tl);e.ai.mine=null;if(b.xp&&ok) spawnXP(m.x+0.5,m.y+0.5,m.z+0.5,irand(b.xp[0],b.xp[1]));}
+function budStartMine(e,x,y,z,mode){const id=getB(x,y,z);const b=BL[id];if(!b||b.h<0) return false;if(id===B.BEDROCK||id===B.CHEST) return false;const tl=budTool(b.btool==='axe'?'axe':'pick');const sp=tl?DEF(tl.s.id).tool.sp:1;e.ai.mine={x,y,z,id,t:0,need:clamp(b.h*1.5/sp,0.3,6)};return true;}
+function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Math.max(0,(e.work||0)-dt);a.cool-=0;
+  e.hp=Math.min(e.maxHp,e.hp+dt*0.4);if(e.hurtT>0) e.hurtT-=0;
+  const PL=players().filter(p=>!p.dead&&p.dim===e.dim);let ow=null,od=1e9;for(const p of PL){const d=Math.hypot(p.x-e.x,p.y-e.y,p.z-e.z);if(d<od){od=d;ow=p;}}
+  if(!ow){e.vx=e.vz=0;return true;}
+  const hd=Math.hypot(ow.x-e.x,ow.z-e.z);if(hd>28||Math.abs(ow.y-e.y)>24){e.x=ow.x+rand(-1.5,1.5);e.z=ow.z+rand(-1.5,1.5);e.y=ow.y+0.2;e.vx=e.vy=e.vz=0;a.mine=null;puff(e.x,e.y+1,e.z,0x66aaff,6);return true;}
+  // 戰鬥：附近的壞東西
+  let foe=null,fd=9;for(const m of mobs()){if(m===e||m.dead||m.dim!==e.dim) continue;const T=MOBS[m.type];if(!T.hostile||T.soldier) continue;const d=Math.hypot(m.x-e.x,m.z-e.z);if(d<fd&&Math.hypot(m.x-ow.x,m.z-ow.z)<14){fd=d;foe=m;}}
+  if(foe&&!(mode==='stay'&&fd>3.5)){a.mine=null;const dx=foe.x-e.x,dz=foe.z-e.z,d=Math.hypot(dx,dz)||1;if(d>1.5) budStep(e,foe.x,foe.z,MOBS.buddy.sp*1.15);else{e.vx=e.vz=0;e.yaw=Math.atan2(dx,dz);}
+    a.cd=(a.cd||0)-dt;if(d<1.9&&a.cd<=0){a.cd=0.7;const sw=budTool('sword');const dmg=Math.max(3,sw?DEF(sw.s.id).tool.dmg+1:3);e.work=0.4;if(sw) budWear(sw);damageMob(foe,dmg,{by:myId(),buddy:true,kx:dx/d*4,kz:dz/d*4});if(!foe.dead){foe.ai.target=e.eid;foe.ai.anger=12;}}
+    return true;}
+  // 待命
+  if(mode==='stay'){e.vx=e.vz=0;return true;}
+  // 工作
+  if(mode==='wood'||mode==='mine'){
+    let em=mode;let pick=budTool('pick');
+    if(mode==='mine'&&!pick){a.cr=(a.cr||0)-dt;if(a.cr<=0){a.cr=3;budCraft(e,'pick');pick=budTool('pick');}if(!pick){em='wood';budSay(e,'我還沒有鎬子，先去砍樹做一支！');}}
+    if(em==='wood'&&!budTool('axe')){a.cr2=(a.cr2||0)-dt;if(a.cr2<=0){a.cr2=4;budCraft(e,'axe');}}
+    if(mode==='mine'&&pick){a.cr3=(a.cr3||0)-dt;if(a.cr3<=0){a.cr3=8;budCraft(e,'pick');budCraft(e,'sword');}}
+    if(mode==='wood'){a.cr4=(a.cr4||0)-dt;if(a.cr4<=0){a.cr4=10;budCraft(e,'sword');}}
+    if(hd>20){budStep(e,ow.x,ow.z,MOBS.buddy.sp*1.2);a.mine=null;return true;}
+    // 正在挖
+    if(a.mine){const m=a.mine;if(getB(m.x,m.y,m.z)!==m.id){a.mine=null;}else{e.vx=e.vz=0;e.work=0.3;e.yaw=Math.atan2(m.x+0.5-e.x,m.z+0.5-e.z);m.t+=dt;a.stuck=0;if(Math.random()<dt*5&&typeof blockBits==='function'){playSnd('hit',0.25);}if(m.t>=m.need) budMineDone(e,m);return true;}}
+    // 找目標
+    a.scan=(a.scan||0)-dt;if(a.scan<=0||!a.tg){a.scan=2.5;a.tg=budFind(e,em,ow,pick);}
+    if(!a.tg){ // 沒東西可做：回到主人身邊
+      if(hd>4) budStep(e,ow.x,ow.z,MOBS.buddy.sp); else{e.vx=e.vz=0;}
+      budSay(e,em==='wood'?'附近沒有樹了':'附近找不到我挖得動的礦');return true;}
+    const [tx,ty,tz,tid]=a.tg;if(getB(tx,ty,tz)!==tid){a.tg=null;return true;}
+    const dist=Math.hypot(tx+0.5-e.x,ty+0.5-(e.y+0.9),tz+0.5-e.z);
+    if(dist<=3.2){if(budStartMine(e,tx,ty,tz,em)) return true;a.tg=null;return true;}
+    // 走過去；被擋住就挖開
+    const hz=Math.hypot(tx+0.5-e.x,tz+0.5-e.z);
+    if(hz<1.3&&ty<Math.floor(e.y)-0.5&&em==='mine'){e.vx=e.vz=0;const by=Math.floor(e.y)-1;if(getB(Math.floor(e.x),by,Math.floor(e.z))&&budStartMine(e,Math.floor(e.x),by,Math.floor(e.z),em)) return true;}
+    if(hz<0.35){e.vx=e.vz=0;}else budStep(e,tx+0.5,tz+0.5,MOBS.buddy.sp);
+    const fx=e.x+Math.sin(e.yaw)*0.8,fz=e.z+Math.cos(e.yaw)*0.8;const bf=getB(fx,e.y+0.2,fz),bh=getB(fx,e.y+1.2,fz);
+    const moved=Math.hypot(e.x-(a.lx||e.x),e.z-(a.lz||e.z));a.lx=e.x;a.lz=e.z;if(moved<0.004*dt*60) a.stuck=(a.stuck||0)+dt;else a.stuck=0;
+    if(a.stuck>6){e.x=ow.x+rand(-1,1);e.z=ow.z+rand(-1,1);e.y=ow.y+0.2;e.vx=e.vz=e.vy=0;a.stuck=0;a.tg=null;return true;}
+    if(a.stuck>0.8){const cand=BL[bh]&&BL[bh].solid?[Math.floor(fx),Math.floor(e.y+1.2),Math.floor(fz),bh]:BL[bf]&&BL[bf].solid?[Math.floor(fx),Math.floor(e.y+0.2),Math.floor(fz),bf]:null;
+      if(cand&&em==='mine'&&budStartMine(e,cand[0],cand[1],cand[2],em)){a.stuck=0;}
+      else if(em==='mine'&&ty<e.y-1&&Math.hypot(tx+0.5-e.x,tz+0.5-e.z)<1.6&&budStartMine(e,Math.floor(e.x),Math.floor(e.y)-1,Math.floor(e.z),em)){a.stuck=0;}
+      else if(a.stuck>5){a.skip=a.skip||{};a.skip[tx+','+ty+','+tz]=performance.now()+60000;a.tg=null;a.stuck=0;}}
+    return true;}
+  // 跟隨
+  if(hd>3.2){budStep(e,ow.x,ow.z,MOBS.buddy.sp*(hd>9?1.25:1));}else{e.vx*=0.5;e.vz*=0.5;if(hd<1.6){const dx=e.x-ow.x,dz=e.z-ow.z,d=Math.hypot(dx,dz)||1;e.vx=dx/d*1.2;e.vz=dz/d*1.2;}}
+  return true;}
+
+// ================= 自動偵測並修復 BUG =================
+const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611271200'};
+function diagLog(msg){try{DIAG.log.push({t:new Date().toISOString().slice(0,19),v:DIAG.ver,m:String(msg).slice(0,200)});if(DIAG.log.length>40) DIAG.log.shift();localStorage.setItem('mmvox_buglog',JSON.stringify(DIAG.log));}catch(e){}}
+function diagFree(x,y,z){return !collides(x,y,z);}
+function selfCheck(manual){const fixed=[];if(!running) return fixed;
+  // 1) 玩家數值壞掉（NaN）
+  const bad=['x','y','z','vx','vy','vz'].some(k=>!isFinite(P[k]));
+  if(bad){const sf=DIAG.safe;if(sf&&sf[3]===W.dim){P.x=sf[0];P.y=sf[1];P.z=sf[2];}else{P.x=W.spawn?W.spawn[0]+0.5:0.5;P.z=W.spawn?W.spawn[2]+0.5:0.5;P.y=surfaceY(Math.floor(P.x),Math.floor(P.z))+1;}P.vx=P.vy=P.vz=0;fixed.push('位置資料壞掉，已把你送回安全的地方');}
+  for(const k of ['hp','food','sat','air','xp']) if(!isFinite(P[k])){P[k]=k==='hp'||k==='food'?20:k==='air'?300:0;fixed.push('玩家'+k+'資料壞掉，已重設');}
+  if(P.hp>20) P.hp=20;if(P.food>20) P.food=20;
+  // 2) 卡在方塊裡
+  if(!P.fly&&!P.dead&&!P.ride&&!P.sleeping&&collides(P.x,P.y,P.z)&&collides(P.x,P.y+0.3,P.z)){let ok=false;for(let dy=0.25;dy<=24;dy+=0.25){if(diagFree(P.x,P.y+dy,P.z)){P.y+=dy;ok=true;break;}}
+    if(!ok){const sf=DIAG.safe;if(sf&&sf[3]===W.dim){P.x=sf[0];P.y=sf[1];P.z=sf[2];ok=true;}}
+    if(ok){P.vy=0;P.vx=P.vz=0;fixed.push('你卡在方塊裡，已自動救出來');}}
+  // 3) 掉到世界外
+  if(P.y<-8&&!P.dead&&W.dim!=='sky'&&!P.fly){const sf=DIAG.safe;if(sf&&sf[3]===W.dim){P.x=sf[0];P.y=sf[1];P.z=sf[2];}else{P.x=W.spawn?W.spawn[0]+0.5:0.5;P.z=W.spawn?W.spawn[2]+0.5:0.5;P.y=surfaceY(Math.floor(P.x),Math.floor(P.z))+1;}P.vy=0;P.fallStart=null;fixed.push('你掉到世界外面了，已送回地面');}
+  // 4) 背包壞資料
+  const fixInv=(arr)=>{for(let i=0;i<arr.length;i++){const q=arr[i];if(!q) continue;if(!DEF(q.id)||!isFinite(q.n)||q.n<=0){arr[i]=null;fixed.push('背包裡有壞掉的物品，已清除');}else{const ms=maxStack(q.id);if(q.n>ms){q.n=ms;fixed.push('物品數量超過上限，已修正');}}}};
+  fixInv(P.inv);if(P.armor) fixInv(P.armor);if(!(P.sel>=0&&P.sel<9)){P.sel=0;fixed.push('快捷欄選到不存在的格子，已修正');}
+  // 5) 實體壞掉
+  for(const e of ENTS){if(e.dead) continue;if(!isFinite(e.x)||!isFinite(e.y)||!isFinite(e.z)||e.y<-60){e.dead=true;fixed.push('清除了一個壞掉的實體');}}
+  // 6) 夥伴被卡住（太久沒動）
+  const bd=mobs().find(m=>m.type==='buddy');if(bd){const mv=Math.hypot(bd.x-(bd._dx||bd.x),bd.z-(bd._dz||bd.z),bd.y-(bd._dy||bd.y));bd._dx=bd.x;bd._dy=bd.y;bd._dz=bd.z;
+    if(mv<0.05&&!bd.ai.mine&&budSt().mode!=='stay'&&Math.hypot(P.x-bd.x,P.z-bd.z)>6){bd._st=(bd._st||0)+1;if(bd._st>=4){bd.x=P.x+1;bd.y=P.y+0.2;bd.z=P.z+1;bd.vx=bd.vy=bd.vz=0;bd._st=0;bd.ai.tg=null;fixed.push('娃況卡住了，已把他帶回你身邊');}}else bd._st=0;
+    if(collides&&aabbHit(bd.x,bd.y,bd.z,0.3,1.8)){bd.y+=1;fixed.push('娃況卡在方塊裡，已救出');}}
+  if(fixed.length){DIAG.nFix+=fixed.length;for(const f of new Set(fixed)) diagLog('修復：'+f);}
+  return [...new Set(fixed)];}
+function diagTick(dt){DIAG.t+=dt;DIAG.st+=dt;
+  if(DIAG.st>1.5){DIAG.st=0;if(P.onGround&&!P.dead&&!P.fly&&P.y>0&&!collides(P.x,P.y,P.z)&&isFinite(P.x+P.y+P.z)) DIAG.safe=[P.x,P.y,P.z,W.dim];}
+  if(DIAG.t>=4){DIAG.t=0;const f=selfCheck(false);if(f.length) toast('🔧 自動修復：'+f.join('；'));}}
+function diagErr(err){DIAG.errN++;const now=performance.now();if(now-DIAG.errT>5000){DIAG.errT=now;DIAG.burst=0;}DIAG.burst=(DIAG.burst||0)+1;
+  if(DIAG.errN<=3||DIAG.errN%200===0) diagLog('錯誤：'+(err&&err.message||err));
+  if(DIAG.burst===3){toast('🔧 偵測到小問題，正在自動修復…');const f=selfCheck(true);if(f.length) toast('🔧 已修復：'+f.join('；'));}
+  if(DIAG.burst===40){for(const e of ENTS) if(e.kind==='mob'&&!e.dead&&!(MOBS[e.type]&&(MOBS[e.type].townie||MOBS[e.type].buddy))) e.dead=true;toast('🔧 已清掉附近的生物來排除問題');}
+  if(DIAG.burst===200) toast('⚠️ 問題還在，請重新整理遊戲（存檔不會受影響）');}
+addEventListener('error',e=>{diagLog('window.error '+e.message);});addEventListener('unhandledrejection',e=>{diagLog('promise '+(e.reason&&e.reason.message||e.reason));});
+addEventListener('keydown',e=>{if(e.code==='F8'&&running){e.preventDefault();const f=selfCheck(true);toast(f.length?'🔧 診斷完成，已修好：'+f.join('；'):'🔧 診斷完成：沒有發現問題 ✅');}});
 function losClear(a,b){const d=new THREE.Vector3(b[0]-a[0],b[1]-a[1],b[2]-a[2]);const L=d.length();d.normalize();const r=rayCast(new THREE.Vector3(a[0],a[1],a[2]),d,L);if(r&&r.id&&r.t<L-0.5) return false;return !smokeBlocks(a,b);}
 function soldierAI(e,dt){if(!W.war&&!e.keep){e.dead=true;return true;}const a=e.ai;a.fire=(a.fire||0)-dt;a.st=(a.st||0)-dt;e.stun=Math.max(0,(e.stun||0)-dt);
   let tgt=null,bd=46;for(const p of players()){if(p.dead||p.mode==='creative'||(p.dim||'over')!==e.dim) continue;const d=Math.hypot(p.x-e.x,p.z-e.z);if(d<bd){bd=d;tgt=p;}}
@@ -3867,7 +4013,7 @@ let _stepD=0,_ambS=4,_animAcc=0;
 function surfSnd(b){const n=(BL[b]&&BL[b].key)||'';if(/sand/i.test(n)) return 'step_sand';if(/snow/i.test(n)) return 'step_snow';if(/plank|log|wood|door|table|chest|bed/i.test(n)) return 'step_wood';if(/grass|dirt|leaves|farm|soil|mud/i.test(n)) return 'step_grass';if(/water/i.test(n)) return 'step_water';return 'step_stone';}
 function footTick(moved){if(!P.onGround||P.ride) return;_stepD+=moved;if(_stepD>1.9){_stepD=0;try{const b=getB(P.x,P.y-0.2,P.z,W.dim);playSnd(surfSnd(b),0.8);
   if(typeof AMB!=='undefined'&&AMB.geo){}}catch(e){}}}
-function polishTick(dt){if(!running) return;_animAcc+=dt;try{if(typeof animTiles==='function') animTiles(dt);}catch(e){}
+function polishTick(dt){if(!running) return;try{diagTick(dt);}catch(e){diagLog('diag '+e.message);}_animAcc+=dt;try{if(typeof animTiles==='function') animTiles(dt);}catch(e){}
   _ambS-=dt;if(_ambS<=0){_ambS=rand(5,11);if(W.dim==='over'){const d=dayLight();const underground=P.y<40;if(underground){if(Math.random()<0.7) playSnd('drip',0.7);}else if(d>0.45){playSnd(Math.random()<0.8?'bird':'wind',0.6);}else{playSnd('cricket',0.8);}}}}
 function ambTick(dt){polishTick(dt);AMB.t-=dt;const over=W.dim==='over';
   if(AMB.t<=0&&running){AMB.t=0.1;const day=dayLight();const l=lightAt(P.x,P.y+1,P.z);
@@ -3938,7 +4084,7 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(0.05,(now-last)
   renderer.autoClear=true;renderer.render(scene,camera);
   if(!P.third&&!P.dead&&!P.sleeping&&!document.body.classList.contains('nohud')&&USE.mode!=='spy'&&!keys.KeyZ&&!(typeof gunAiming==='function'&&gunAiming()&&gunDef(held()).scope)){renderer.autoClear=false;renderer.clearDepth();renderer.render(vmScene,vmCam);renderer.autoClear=true;}
   if(SHOT){SHOT=false;try{const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='麥麥方塊世界_截圖_'+Date.now()+'.png';document.body.appendChild(a);a.click();a.remove();toast('已截圖存檔');}catch(e){toast('截圖失敗');}}
-  }catch(err){console.error(err);if(!frame.err){frame.err=1;toast('發生錯誤：'+err.message);}}}
+  }catch(err){console.error(err);diagErr(err);}}
 // 啟動
 applyShader();startTitle();requestAnimationFrame(frame);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&running){saveWorld(true);if(!paused&&!NET.on) openPause();}});
