@@ -2336,7 +2336,7 @@ function punch() {
 AU.swoosh = function () { if (!AU.ctx) return; const c = AU.ctx, t = c.currentTime; const n = c.createBufferSource(); const b = c.createBuffer(1, c.sampleRate * 0.15, c.sampleRate); const a = b.getChannelData(0); for (let i = 0; i < a.length; i++) a[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / a.length); n.buffer = b; const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.setValueAtTime(600, t); f.frequency.linearRampToValueAtTime(2200, t + 0.15); const g = c.createGain(); g.gain.value = 0.25; n.connect(f); f.connect(g); g.connect(AU.master); n.start(t); };
 AU.punchHit = function () { if (!AU.ctx) return; const c = AU.ctx, t = c.currentTime; const o = c.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12); const g = c.createGain(); g.gain.setValueAtTime(0.7, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.16); o.connect(g); g.connect(AU.master); o.start(t); o.stop(t + 0.18);
   const n = c.createBufferSource(); const b = c.createBuffer(1, c.sampleRate * 0.05, c.sampleRate); const a = b.getChannelData(0); for (let i = 0; i < a.length; i++) a[i] = (Math.random() * 2 - 1) * (1 - i / a.length); n.buffer = b; const g2 = c.createGain(); g2.gain.value = 0.35; n.connect(g2); g2.connect(AU.master); n.start(t); };
-function setWeapon(w) { if (!S.onDuty) { radio('下班時間沒有配槍（槍枝已繳回械彈室），只能用拳頭（V）。', 'info'); return; } if (w === 3 && S.unit !== 'swat') { radio('步槍只配發給維安特勤隊員。', 'info'); return; } S.weapon = w; AU.click(); updateHUD(true); }
+function setWeapon(w) { if (!S.onDuty) { radio(isCop() ? '下班時間沒有配槍（槍枝已繳回械彈室），只能用拳頭（V）。' : '你沒有槍，只能用拳頭（V）。', 'info'); return; } if (w === 3 && S.unit !== 'swat') { radio('步槍只配發給維安特勤隊員。', 'info'); return; } S.weapon = w; AU.click(); updateHUD(true); }
 
 /* ---------- 射擊判定 ---------- */
 function humanSpheres(h) {
@@ -2439,7 +2439,7 @@ function toggleVehicle() {
   if (!v) { const nv = TRAFFIC.find(t => t.state !== 'gone' && !t.cop && dist(t.px, t.pz, P.x, P.z) < 3.8); if (nv) commandeer(nv); return; }
   if (v.wreck) { radio('這台車已經燒毀了。', 'info'); return; }
   if (!canDrive(v)) return;
-  if (v.police && !S.onDuty) { radio('下班時間不能開警車，請騎自己的車。', 'info'); return; }
+  if (v.police && !S.onDuty) { radio(isCop() ? '下班時間不能開警車，請騎自己的車。' : '這是警車，一般人不能開。', 'info'); return; }
   startEnter(v);
 }
 /* ---------- 上下車動畫（開門 → 坐進去 → 關門） ---------- */
@@ -4310,7 +4310,7 @@ function copTicketDialog() {
   if (C.escapeTry) t.escape = true;
   const r = calcTicket(t);
   const said = t.type === 'red' ? '你剛剛在' + t.place + '闖紅燈喔。' : '你剛剛時速 ' + t.kmh + '，這裡速限 ' + t.lim + '，超速 ' + t.over + ' 公里喔。';
-  MODAL.show(`<h2>👮 交通警察攔查</h2><p>員警：「先生你好，${said}駕照、行照麻煩給我。」</p><p>員警看了你的證件：「欸？你也是警察喔…規定就是規定，一樣要開單。」</p>${ticketHTML(t, r)}`,
+  MODAL.show(`<h2>👮 交通警察攔查</h2><p>員警：「${myChar().sex === '女' ? '小姐' : '先生'}你好，${said}駕照、行照麻煩給我。」</p><p>${isCop() ? '員警看了你的證件：「欸？你也是警察喔…規定就是規定，一樣要開單。」' : '員警核對完你的證件：「依規定開單，請簽收。」'}</p>${ticketHTML(t, r)}`,
     [['簽收罰單', 'y', () => { MODAL.close(); applyTicket(t, r); endCop(true); }]]);
 }
 function copLost() {
@@ -4348,7 +4348,7 @@ function applyTicket(t, r) {
   S.points = S.points.filter(q => S.day - q.day < 365); const sum = S.points.reduce((a, q) => a + q.p, 0);
   if (sum >= 12) { S.licUntil = Math.max(S.licUntil, S.day + 60); S.points = []; radio('🚫 一年內違規點數滿 12 點，吊扣駕照 2 個月（到第 ' + S.licUntil + ' 天）。', 'warn'); }
   addLog('🧾 交通罰單 ' + fmtMoney(r.fine) + '（' + (t.type === 'speed' ? '超速' : t.type === 'red' ? '闖紅燈' : '逃逸') + '）');
-  punish(t.type === 'escape' ? 'dem' : 'rep', '下班時交通違規被開罰單（' + (t.type === 'speed' ? '超速' : t.type === 'red' ? '闖紅燈' : '拒絕停車受檢而逃逸') + '）');
+  if (isCop()) punish(t.type === 'escape' ? 'dem' : 'rep', '下班時交通違規被開罰單（' + (t.type === 'speed' ? '超速' : t.type === 'red' ? '闖紅燈' : '拒絕停車受檢而逃逸') + '）');
   updateHUD(true); saveGame();
 }
 // 早上起床時收到寄來的罰單
@@ -5203,7 +5203,7 @@ function arrestPlayer(why) {
   AU.cuff();
   fadeTo('🚔 ' + (why || '你被警方逮捕了') + '…移送臺中地檢署', () => {
     const st = SITES.station; P.x = st.x; P.z = st.z + 6; P.yaw = 0; S.time += 180;
-    courtJudge(codes, 'arrest', '被告於下班時間在臺中市西屯區犯下列各罪，經檢察官起訴，判決如下：');
+    courtJudge(codes, 'arrest', (isCop() ? '被告於下班時間' : '被告') + '在臺中市' + ((d => d === '郊區' ? '' : d + (['西屯', '南屯', '北屯', '太平', '大里', '霧峰', '烏日', '大甲', '清水', '沙鹿', '梧棲', '龍井', '大肚', '大雅', '潭子', '豐原', '東勢'].includes(d) ? '區' : ''))(districtAt(P.x, P.z))) + '犯下列各罪，經檢察官起訴，判決如下：');
   });
 }
 function dedupe(a) { return [...new Set(a)]; }
@@ -5383,7 +5383,7 @@ function updateCrime(dt) { updateBodies(dt); updateWanted(dt); updateCourt(); }
 // 不合法：單純交通違規逃逸（警政署 72.9.7 警署刑司字第 32220 號函：不得任意開槍）、沒有任何用槍原因
 function warningShot() {
   if (!GAME.running || MODAL.open || P.anim) return;
-  if (!S.onDuty) { radio('下班時間沒有配槍。', 'info'); return; }
+  if (!S.onDuty) { radio(isCop() ? '下班時間沒有配槍。' : '你沒有槍。', 'info'); return; }
   if (P.mode === 'vehicle' && !P.veh.police) { radio('開民眾的車不能鳴槍。', 'info'); return; }
   const rifle = S.weapon === 3 && P.mode === 'foot';
   if (rifle ? S.rifle <= 0 : S.ammo <= 0) { AU.click(); radio('彈匣空了！按 R 換彈匣。', 'warn'); return; }
