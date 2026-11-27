@@ -619,8 +619,15 @@ const scene = new THREE.Scene();
 /* ---------- 碰撞盒與空間格 ---------- */
 const COLS = []; const CGRID = new Map(); const CELL = 20; let colStamp = 1;
 function ckey(gx, gz) { return gx * 10007 + gz; }
-function addCol(x0, x1, z0, z1, h, tag) {
-  const c = { x0: Math.min(x0, x1), x1: Math.max(x0, x1), z0: Math.min(z0, z1), z1: Math.max(z0, z1), h: h || 12, tag: tag || '', s: 0 };
+function addCol(x0, x1, z0, z1, h, tag, cr) {
+  const c = { x0: Math.min(x0, x1), x1: Math.max(x0, x1), z0: Math.min(z0, z1), z1: Math.max(z0, z1), h: h || 12, tag: tag || '', s: 0, cr: 0 };
+  // 建築外牆是圓角：碰撞也用同樣的圓角
+  if (cr != null) c.cr = cr; else if (c.tag === 'bld') { const w = c.x1 - c.x0, d = c.z1 - c.z0; if (w > 3 && d > 3) c.cr = Math.min(2.2, w * 0.18, d * 0.18); }
+  return gridCol(c);
+}
+// 圓柱碰撞（樹幹、路燈、號誌桿）
+function addColCirc(x, z, r, h, tag) { return gridCol({ x0: x - r, x1: x + r, z0: z - r, z1: z + r, h, tag: tag || 'pole', s: 0, cr: r, circ: true }); }
+function gridCol(c) {
   COLS.push(c);
   for (let gx = Math.floor(c.x0 / CELL); gx <= Math.floor(c.x1 / CELL); gx++)
     for (let gz = Math.floor(c.z0 / CELL); gz <= Math.floor(c.z1 / CELL); gz++) {
@@ -640,22 +647,34 @@ function colsNear(x, z, r) {
 // 圓形推出碰撞，回傳是否撞到
 function collideCircle(p, r, ylow) {
   let hit = false;
-  for (const c of colsNear(p.x, p.z, r + 1)) {
-    if (ylow != null && c.h < ylow) continue;
-    const cx = clamp(p.x, c.x0, c.x1), cz = clamp(p.z, c.z0, c.z1);
-    let dx = p.x - cx, dz = p.z - cz; const d2 = dx * dx + dz * dz;
-    if (d2 < r * r) {
-      hit = true;
-      if (d2 > 1e-6) { const d = Math.sqrt(d2); p.x = cx + dx / d * r; p.z = cz + dz / d * r; }
-      else { // 在盒子裡面：推到最近的邊
+  for (let it = 0; it < 2; it++) { // 兩次：夾在兩個物體之間時也能正確推開
+    let moved = false;
+    for (const c of colsNear(p.x, p.z, r + 1)) {
+      if (ylow != null && c.h < ylow) continue;
+      const k = c.cr || 0; // 圓角半徑：先縮小盒子，再用 (r + 圓角) 推開
+      const ix0 = c.x0 + k, ix1 = c.x1 - k, iz0 = c.z0 + k, iz1 = c.z1 - k, R = r + k;
+      const cx = clamp(p.x, ix0, ix1), cz = clamp(p.z, iz0, iz1);
+      const dx = p.x - cx, dz = p.z - cz; const d2 = dx * dx + dz * dz;
+      if (d2 >= R * R) continue;
+      hit = true; moved = true;
+      if (d2 > 1e-6) { const d = Math.sqrt(d2); p.x = cx + dx / d * R; p.z = cz + dz / d * R; }
+      else { // 中心在盒子裡面：推到最近的邊
         const l = p.x - c.x0, rr = c.x1 - p.x, t = p.z - c.z0, b = c.z1 - p.z; const m = Math.min(l, rr, t, b);
         if (m === l) p.x = c.x0 - r; else if (m === rr) p.x = c.x1 + r; else if (m === t) p.z = c.z0 - r; else p.z = c.z1 + r;
       }
     }
+    if (!moved) break;
   }
   if (p.x < WORLD.x0) { p.x = WORLD.x0; hit = true; } if (p.x > WORLD.x1) { p.x = WORLD.x1; hit = true; }
   if (p.z < WORLD.z0) { p.z = WORLD.z0; hit = true; } if (p.z > WORLD.z1) { p.z = WORLD.z1; hit = true; }
   return hit;
+}
+// 射線 vs 圓（2D），回傳進入距離或 -1
+function rayCircle2(ox, oz, dx, dz, cx, cz, r) {
+  const L2 = dx * dx + dz * dz; if (L2 < 1e-12) return (ox - cx) ** 2 + (oz - cz) ** 2 <= r * r ? 0 : -1;
+  const fx = ox - cx, fz = oz - cz; const b = fx * dx + fz * dz, c = fx * fx + fz * fz - r * r;
+  if (c <= 0) return 0; const disc = b * b - L2 * c; if (disc < 0) return -1;
+  const t = (-b - Math.sqrt(disc)) / L2; return t >= 0 ? t : -1;
 }
 // 射線 vs 建築盒（3D），回傳距離
 function rayCols(ox, oy, oz, dx, dy, dz, maxT) {
@@ -676,6 +695,15 @@ function rayCols(ox, oy, oz, dx, dy, dz, maxT) {
             if (ta > t0) t0 = ta; if (tb < t1) t1 = tb; if (t0 > t1) ok = false;
           };
           sl(ox, dx, c.x0, c.x1); if (ok) sl(oy, dy, 0, c.h); if (ok) sl(oz, dz, c.z0, c.z1);
+          if (ok && c.cr) { // 圓柱或圓角：命中點落在轉角時改用圓弧判定
+            const k = c.cr, hx = ox + dx * t0, hz = oz + dz * t0;
+            const qx = c.circ ? (c.x0 + c.x1) / 2 : hx < c.x0 + k ? c.x0 + k : hx > c.x1 - k ? c.x1 - k : null;
+            const qz = c.circ ? (c.z0 + c.z1) / 2 : hz < c.z0 + k ? c.z0 + k : hz > c.z1 - k ? c.z1 - k : null;
+            if (qx != null && qz != null) {
+              const tc = rayCircle2(ox, oz, dx, dz, qx, qz, k);
+              if (tc < 0 || tc > t1) ok = false; else { const y = oy + dy * tc; if (y < 0 || y > c.h) ok = false; else t0 = Math.max(t0, tc); }
+            }
+          }
           if (ok && t0 < best && t0 >= 0) best = t0;
         }
       }
@@ -1231,7 +1259,7 @@ function fillBlock(b, type, reserve) {
 }
 function addTree(x, z, s) {
   s = s || 1;
-  addGeo('trunk', MAT.trunk, boxGeo(0.3 * s, 2.4 * s, 0.3 * s, x, 0, z));
+  addGeo('trunk', MAT.trunk, boxGeo(0.3 * s, 2.4 * s, 0.3 * s, x, 0, z)); addColCirc(x, z, 0.22 * s, 2.4 * s, 'tree');
   const g = new THREE.IcosahedronGeometry(1.6 * s, 0); g.translate(x, 3.4 * s, z); addGeo(Math.random() < .5 ? 'leaf' : 'leaf2', Math.random() < .5 ? MAT.leaf : MAT.leaf2, g);
 }
 
@@ -1280,14 +1308,14 @@ function streetFurniture() {
   }
 }
 function lampAt(x, z, facing) {
-  addGeo('pole', MAT.pole, boxGeo(0.16, 7, 0.16, x, 0, z));
+  addGeo('pole', MAT.pole, boxGeo(0.16, 7, 0.16, x, 0, z)); addColCirc(x, z, 0.14, 7);
   const dx = facing === 'w' ? -1.4 : facing === 'e' ? 1.4 : 0, dz = facing === 'n' ? -1.4 : facing === 's' ? 1.4 : 0;
   addGeo('pole', MAT.pole, boxGeo(Math.abs(dx) + 0.12, 0.12, Math.abs(dz) + 0.12, x + dx / 2, 6.9, z + dz / 2));
   addGeo('lamp', MAT.lamp, boxGeo(0.6, 0.18, 0.6, x + dx, 6.75, z + dz));
 }
 function trafficLight(x, z, axis, fx, fz) {
   // fx/fz：燈面朝向（看燈的車來的方向）
-  addGeo('pole', MAT.pole, boxGeo(0.18, 5.2, 0.18, x, 0, z));
+  addGeo('pole', MAT.pole, boxGeo(0.18, 5.2, 0.18, x, 0, z)); addColCirc(x, z, 0.15, 5.2);
   const hx = x + fx * 0, hz = z + fz * 0;
   const horiz = axis === 'ew';
   // 燈箱（橫式）
@@ -2538,6 +2566,8 @@ function updatePlayer(dt) {
     const sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
     const mx = (-sy * fz + cy * fx) * sp * dt, mz = (-cy * fz - sy * fx) * sp * dt;
     P.x += mx; P.z += mz; P.moving = L > 0.1;
+    // 行人：互相推開（不會穿過人）
+    for (const pd of PEDS) { if (!pd.alive || Math.abs(pd.x - P.x) > 1.2 || Math.abs(pd.z - P.z) > 1.2) continue; const d = dist(P.x, P.z, pd.x, pd.z), r = 0.7; if (d < r && d > 1e-4) { const k = (r - d) / d; P.x += (P.x - pd.x) * k * 0.7; P.z += (P.z - pd.z) * k * 0.7; pd.x -= (P.x - pd.x) * k * 0.3; pd.z -= (P.z - pd.z) * k * 0.3; } }
     const p = { x: P.x, z: P.z }; collideCircle(p, 0.35); P.x = p.x; P.z = p.z;
     // 車輛（擋人＋撞人）
     for (const v of TRAFFIC) {
@@ -2598,12 +2628,16 @@ function driveVehicle(dt, lookX, lookY) {
   const rate = (car ? 1.35 : 1.9) * clamp(sAbs / 7, 0, 1) * (1 - 0.55 * clamp(sAbs / sp.max, 0, 1)) * (hand ? 1.6 : 1);
   v.yaw += v.steer * rate * Math.sign(v.speed) * dt;
   const fx = -Math.sin(v.yaw), fz = -Math.cos(v.yaw);
-  v.x += fx * v.speed * dt; v.z += fz * v.speed * dt;
-  // 撞建築
-  let cx = 0, cz = 0, hit = false;
-  let ix = 0, iz = 0;
-  for (const c of v.circles()) { const p = { x: c[0], z: c[1] }; if (collideCircle(p, c[2], 0.5)) { hit = true; cx += p.x - c[0]; cz += p.z - c[1]; const pl = Math.hypot(p.x - c[0], p.z - c[1]) || 1; ix = c[0] - (p.x - c[0]) / pl * c[2]; iz = c[1] - (p.z - c[1]) / pl * c[2]; } }
-  if (hit) { v.x += cx; v.z += cz; if (sAbs > 6) { AU.bump(); damageVeh(v, (sAbs - 4) * 1.6, ix, iz); P.shake = Math.max(P.shake || 0, Math.min(0.8, sAbs / 30)); if (sAbs > 16) hurtPlayer(Math.round(sAbs * 0.6)); } v.speed *= sAbs > 6 ? -0.25 : 0.5; }
+  // 撞建築：高速時分成小步移動，避免穿過細的路燈桿或薄牆
+  const mv = Math.abs(v.speed * dt), nSub = Math.min(8, Math.max(1, Math.ceil(mv / 0.4)));
+  let hit = false, ix = 0, iz = 0;
+  for (let sub = 0; sub < nSub && !hit; sub++) {
+    v.x += fx * v.speed * dt / nSub; v.z += fz * v.speed * dt / nSub;
+    let cx = 0, cz = 0;
+    for (const c of v.circles()) { const p = { x: c[0], z: c[1] }; if (collideCircle(p, c[2], 0.5)) { hit = true; cx += p.x - c[0]; cz += p.z - c[1]; const pl = Math.hypot(p.x - c[0], p.z - c[1]) || 1; ix = c[0] - (p.x - c[0]) / pl * c[2]; iz = c[1] - (p.z - c[1]) / pl * c[2]; } }
+    if (hit) { v.x += cx; v.z += cz; }
+  }
+  if (hit) { if (sAbs > 6) { AU.bump(); damageVeh(v, (sAbs - 4) * 1.6, ix, iz); P.shake = Math.max(P.shake || 0, Math.min(0.8, sAbs / 30)); if (sAbs > 16) hurtPlayer(Math.round(sAbs * 0.6)); } v.speed *= sAbs > 6 ? -0.25 : 0.5; }
   // 撞車流
   for (const n of TRAFFIC) {
     if (n.state === 'gone' || Math.abs(n.px - v.x) > 12 || Math.abs(n.pz - v.z) > 12) continue;
