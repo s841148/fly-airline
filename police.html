@@ -225,7 +225,7 @@ body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;w
       E 互動 · P 手機 · F 上下車 · Q 喊話「警察！不要動！」 · H 警笛 · R 換彈匣 · 1 手槍 / 2 電擊槍 / 3 警棍 / 4 步槍（特勤隊）· V 揍人 · M 地圖（點地圖設導航）· N 車上電台 · B 請求支援（再按一次叫特勤隊）· G 對空鳴槍 · Esc 選單<br>
       開車：W 油門 · S 煞車/倒車 · A D 轉彎 · 空白鍵 手煞車<br>
       <b>📱 手機</b>：橫拿手機，左邊搖桿移動 / 開車，右邊滑動看四周，按鈕操作。<br>
-      <b>🗺️ 全台中地圖</b>：市區、海線（台中港、梧棲、沙鹿、清水、大甲、高美濕地）、山線（豐原、潭子、大雅、大坑、東勢）、屯區（太平、大里、霧峰、烏日、高鐵站），主要道路用真實路名，按比例縮小。按 M 開地圖，＋／－ 縮放。<br><b>🚆 台鐵、🚇 捷運</b>：走到車站入口按 E 買票，可以刷悠遊卡或買單程票，票價照現實（台鐵區間車、中捷綠線）。<br><b>🏙️ 怎麼玩</b>：開局從三個角色選一個，一開始沒有工作。用手機（P）看求職、買股票、網購；想當警察就到「大墩分局」人事室考特考，考上後每天 8:00 打卡上班、17:00 下班。回家睡覺跳到隔天。
+      <b>🗺️ 全台中地圖</b>：市區、海線（台中港、梧棲、沙鹿、清水、大甲、高美濕地）、山線（豐原、潭子、大雅、大坑、東勢）、屯區（太平、大里、霧峰、烏日、高鐵站），主要道路用真實路名，按比例縮小。按 M 開地圖，＋／－ 縮放。<br><b>🚆 台鐵、🚇 捷運</b>：走到車站入口按 E 買票，可以刷悠遊卡或買單程票，票價照現實（台鐵區間車、中捷綠線）。<br><b>💼 工作</b>：警察、外送員、計程車司機、超商店員、牛肉麵店員、消防員（含救護）。手機「求職」App 看條件和導航。<br><b>🏙️ 怎麼玩</b>：開局從三個角色選一個，一開始沒有工作。用手機（P）看求職、買股票、網購；想當警察就到「大墩分局」人事室考特考，考上後每天 8:00 打卡上班、17:00 下班。回家睡覺跳到隔天。
     </div>
     <div class="copy">© 2026 麥麥的遊戲工廠 版權所有 · 本遊戲為原創作品，地名街景為虛構重現，未經授權請勿轉載或作商業用途</div>
   </div>
@@ -277,6 +277,9 @@ const VEH_SPECS = {
   civscoot: { name: '徵用的民眾機車', kind: 'scooter', max: 24, acc: 8, price: 0, color: 0x999999 },
   stolencar: { name: '搶來的汽車', kind: 'car', max: 38, acc: 8, price: 0, color: 0x999999 },
   stolenscoot: { name: '搶來的機車', kind: 'scooter', max: 24, acc: 8, price: 0, color: 0x999999 },
+  taxicab: { name: '計程車', kind: 'car', max: 40, acc: 8, price: 0, color: 0xf7c600 },
+  firecar: { name: '消防車', kind: 'car', max: 40, acc: 8, price: 0, color: 0xc81e1e },
+  ambu: { name: '救護車', kind: 'car', max: 42, acc: 9, price: 0, color: 0xf2f2f2 },
 };
 function newState() {
   return {
@@ -922,6 +925,7 @@ function buildCity() {
   setT(-530, 400, 'dealer'); setT(-390, 100, 'hospital'); setT(-25, -180, 'market'); setT(-118, -55, 'park'); setT(-815, 50, 'lake');
   setT(-280, 100, 'bank'); setT(-655, 50, 'cityhall'); setT(-655, 150, 'opera'); setT(-730, 50, 'sogo'); setT(-390, -55, 'museum');
   setT(-280, 240, 'artmus'); setT(-815, -180, 'fengchia'); setT(-25, 250, 'nchu'); setT(-1460, -65, 'thu'); setT(75, 100, 'tra');
+  setT(-730, -55, 'firest'); setT(-25, 150, 'taxico'); setT(-390, -160, 'resto');
   setT(-2185, -1865, 'jenn'); setT(-2830, -60, 'wuqi');
   for (const [x, z] of [[-730, 240], [-530, -55], [-190, 50], [75, 250], [-2280, 85], [-2410, -360], [-2270, -1930], [-245, -1805], [550, -45], [205, 580], [-560, 1000], [-1940, 1090], [-220, -1090], [-1050, -865], [1070, -2580], [690, 920]]) setT(x, z, 'store');
   for (const b of BLOCKS) {
@@ -1039,6 +1043,32 @@ function buildLandmark(b) {
       addGeo('redbox', MAT.redbox, boxGeo(26, 8, 18, b.cx, 0, b.cz, 'world')); addCol(b.cx - 13, b.cx + 13, b.cz - 9, b.cz + 9, 8, 'bld');
       const r = new THREE.ConeGeometry(17, 5, 4); r.rotateY(Math.PI / 4); r.scale(1, 1, 0.75); r.translate(b.cx, 10.5, b.cz); addGeo('roof', MAT.roof, r);
       signBoard('大甲鎮瀾宮', { bg: '#b01010', fg: '#ffd84a', w: 512, h: 96 }, 8, 1.6, b.cx, 6.5, b.cz + 9.3, 0, 1.0); break;
+    }
+    case 'firest': {
+      const lot = lotOf(b); const x0 = lot.x0 + 4, x1 = lot.x1 - 4, z0 = lot.z0 + 4, z1 = lot.z1 - 26, cx = (x0 + x1) / 2;
+      addGeo('f_brick', MAT.f_brick, boxGeo(x1 - x0, 12, z1 - z0, cx, 0, (z0 + z1) / 2, 'facade')); addCol(x0, x1, z0, z1, 12, 'bld');
+      for (let k = 0; k < 3; k++) { const dx = x0 + 8 + k * ((x1 - x0 - 16) / 2); addGeo('redbox', MAT.redbox, boxGeo(6, 5, 0.3, dx, 0, z1 + 0.15)); }
+      signBoard('臺中市政府消防局 西屯分隊', { bg: '#b01010', fg: '#fff', w: 1024, h: 128 }, 14, 1.8, cx, 8, z1 + 0.35, 0, 0.9);
+      addGeo('lot', MAT.lot, boxGeo(lot.x1 - lot.x0, 0.22, 24, b.cx, 0, lot.z1 - 12));
+      SITES.fire = { x: cx, z: z1 + 3, desk: { x: x1 - 4, z: z1 + 1.5 }, truck: { x: x0 + 8, z: z1 + 12, yaw: Math.PI }, ambu: { x: x1 - 8, z: z1 + 12, yaw: Math.PI }, name: '消防局西屯分隊' };
+      break;
+    }
+    case 'taxico': {
+      fillBlock(b, 'old', { x0: b.cx - 22, x1: b.cx + 22, z0: b.cz - 10, z1: b.z1 });
+      addGeo('lot', MAT.lot, boxGeo(44, 0.22, (b.z1 - b.cz) - 1, b.cx, 0, (b.cz + b.z1) / 2));
+      addGeo('f_white', MAT.f_white, boxGeo(14, 4, 8, b.cx - 12, 0, b.cz - 4, 'facade')); addCol(b.cx - 19, b.cx - 5, b.cz - 8, b.cz, 4, 'bld');
+      signBoard('🚕 大墩計程車行', { bg: '#ffd800', fg: '#111', w: 512, h: 96 }, 8, 1.4, b.cx - 12, 3.3, b.cz + 0.3, 0, 0.9);
+      SITES.taxi = { x: b.cx - 12, z: b.cz + 1.6, car: { x: b.cx + 8, z: b.cz + 8, yaw: Math.PI }, name: '大墩計程車行' };
+      break;
+    }
+    case 'resto': {
+      fillBlock(b, 'mid', { x0: b.cx - 14, x1: b.cx + 14, z0: b.cz, z1: b.z1 });
+      const z1 = b.z1 - 1, cx = b.cx;
+      addGeo('store', MAT.store, boxGeo(24, 3.6, 12, cx, 0, z1 - 6, 'shop')); addGeo('f_tile', MAT.f_tile, boxGeo(24.6, 9, 12.6, cx, 3.6, z1 - 6, 'facade')); addCol(cx - 12, cx + 12, z1 - 12, z1, 12.6, 'bld');
+      signBoard('麥麥牛肉麵', { bg: '#7a1a1a', fg: '#ffd84a', w: 512, h: 128 }, 10, 2.2, cx, 5, z1 + 0.35, 0, 1.0);
+      for (let k = 0; k < 3; k++) { addGeo('counter', MAT.counter, boxGeo(1.2, 0.75, 1.2, cx - 8 + k * 8, 0.2, z1 + 3)); }
+      SITES.resto = { x: cx, z: z1 + 1.6, name: '麥麥牛肉麵' };
+      break;
     }
     case 'wuqi': fillBlock(b, 'old', null); signBoard('梧棲・朝元宮', { bg: '#b01010', fg: '#ffd84a', w: 512, h: 96 }, 6, 1.1, b.cx, 3.2, b.z1 + 0.6, 0, 0.8); break;
     default: fillBlock(b, 'mid', null);
@@ -1918,9 +1948,9 @@ function makeVehicle(kind, color, police, opts) {
   // 計程車頂燈
   if (type === 'taxi') { const tm = texMat(signTex('計程車 TAXI', { bg: '#ffd800', fg: '#111', w: 256, h: 64 }), 0.8); const sg = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.18, 0.22), tm); sg.position.set(0, a1[1] + 0.14, -(a1[0] + c1[0]) / 2); g.add(sg); }
   // 警車塗裝與警示燈
-  if (police) {
-    const side = policeDecal();
-    for (const sx of [-1, 1]) { const d = new THREE.Mesh(new THREE.PlaneGeometry(L * 0.72, 0.34), side); d.position.set(sx * (W / 2 + 0.012), 0.62, 0.05); d.rotation.y = sx * Math.PI / 2; g.add(d); }
+  if (police || opts.lightbar) {
+    if (police) { const side = policeDecal();
+    for (const sx of [-1, 1]) { const d = new THREE.Mesh(new THREE.PlaneGeometry(L * 0.72, 0.34), side); d.position.set(sx * (W / 2 + 0.012), 0.62, 0.05); d.rotation.y = sx * Math.PI / 2; g.add(d); } }
     const red = new THREE.MeshLambertMaterial({ color: 0x660000, emissive: 0xff0000, emissiveIntensity: 0 });
     const blue = new THREE.MeshLambertMaterial({ color: 0x000066, emissive: 0x0040ff, emissiveIntensity: 0 });
     const ry = a1[1] + 0.1, rz = -(a1[0] + c1[0]) / 2;
@@ -2148,8 +2178,9 @@ class PVeh {
   constructor(key, x, z, yaw, color, type) {
     this.key = key; this.spec = VEH_SPECS[key]; this.police = key === 'police' || key === 'pscooter'; this.color = color != null ? color : this.spec.color;
     this.hp = 100; this.wreck = false; this.burning = null; this.civ = key === 'civcar' || key === 'civscoot' || key === 'stolencar' || key === 'stolenscoot';
-    this.type = type || { sport: 'sport', suv: 'suv' }[key] || 'sedan';
-    const { g, parts } = makeVehicle(this.spec.kind, this.color, this.police, { type: this.type, clearGlass: true, topbox: key === 'scooter' });
+    this.em = key === 'firecar' || key === 'ambu'; this.fixed = this.em || key === 'taxicab';
+    this.type = type || { sport: 'sport', suv: 'suv', taxicab: 'taxi', firecar: 'suv', ambu: 'suv' }[key] || 'sedan';
+    const { g, parts } = makeVehicle(this.spec.kind, this.color, this.police, { type: this.type, clearGlass: true, topbox: key === 'scooter', lightbar: this.em });
     this.mesh = g; this.parts = parts; scene.add(g);
     this.x = x; this.z = z; this.yaw = yaw || 0; this.speed = 0; this.steer = 0; this.siren = false; this.flash = 0; this.home = { x, z, yaw: yaw || 0 };
     this.sync();
@@ -2172,7 +2203,7 @@ function initPlayerVehicles() {
   for (const d of SITES.dealer.display) { const sp = VEH_SPECS[d.key]; const { g } = makeVehicle(sp.kind, sp.color, false, { sport: d.key === 'sport', suv: d.key === 'suv' }); g.position.set(d.x, 0.2, d.z); g.rotation.y = d.yaw; scene.add(g); addCol(d.x - 1.6, d.x + 1.6, d.z - 1.6, d.z + 1.6, 1.4, 'low'); }
 }
 function respawnOwned() {
-  for (let k = PVEHS.length - 1; k >= 0; k--) if (!PVEHS[k].police) { if (P.veh === PVEHS[k]) continue; scene.remove(PVEHS[k].mesh); PVEHS.splice(k, 1); }
+  for (let k = PVEHS.length - 1; k >= 0; k--) if (!PVEHS[k].police && !PVEHS[k].fixed) { if (P.veh === PVEHS[k]) continue; scene.remove(PVEHS[k].mesh); PVEHS.splice(k, 1); }
   S.owned.forEach((key, n) => { if (P.veh && P.veh.key === key) return; const sp = SITES.home.park[n % SITES.home.park.length]; PVEHS.push(new PVeh(key, sp.x, sp.z, sp.yaw)); });
 }
 
@@ -2340,6 +2371,7 @@ function updateFX(dt) { for (let k = FX.length - 1; k >= 0; k--) { const f = FX[
 function fire() {
   if (!GAME.running || MODAL.open) return;
   if (P.mode !== 'foot') return;
+  if (typeof jobSpray === 'function' && jobSpray()) return;
   if (!S.onDuty) { punch(); return; }
   if (fireCD > 0 || reloadT > 0) return;
   if (S.weapon === 2) { punch(); return; }
@@ -2383,8 +2415,9 @@ function shout() {
   MIS.onShout();
 }
 function toggleSiren() {
-  if (P.mode !== 'vehicle' || !P.veh.police) return;
+  if (P.mode !== 'vehicle' || !(P.veh.police || P.veh.em)) return;
   P.veh.siren = !P.veh.siren; AU.click();
+  if (P.veh.em) return;
   if (P.veh.siren && !S.onDuty) MIS.offDutyAbuse('下班時間開啟警車警笛');
 }
 
@@ -2509,7 +2542,7 @@ function updatePlayer(dt) {
   if (P.hurtT > 6 && S.hp < 100) S.hp = Math.min(100, S.hp + dt * 2.5);
   if (S.energy <= 0) collapse();
   // 警示燈
-  for (const v of PVEHS) if (v.police) {
+  for (const v of PVEHS) if (v.police || v.em) {
     v.flash += dt;
     const on = v.siren; const ph = Math.floor(v.flash * 6) % 2;
     v.parts.red.emissiveIntensity = on && ph ? 2 : 0; v.parts.blue.emissiveIntensity = on && !ph ? 2 : 0;
@@ -2594,6 +2627,7 @@ function award(points, money, reason, level) {
   checkRank(); updateHUD(true);
 }
 function punish(level, reason) {
+  if (S.job !== 'police' || S.dismissed) { toast('bad', '⚠️ 被投訴', reason); AU.bad(); return; } // 不是警察：沒有記過，只有投訴
   const info = PEN_INFO[level]; S.pen[level]++; S.merit = Math.max(0, S.merit - info.pts);
   toast('bad', '⚠️ ' + info.n + '一次', reason); AU.bad(); radio('督察組：' + reason + '，' + info.n + '一次。', 'warn');
   addLog('👎 ' + info.n + '：' + reason);
@@ -3118,6 +3152,7 @@ function collapse() { toHospital('😵 體力透支暈倒了，被送到大墩�
 
 /* ---------- 睡覺 ---------- */
 function goSleep() {
+  if (S.working) endShift();
   if (S.onDuty) { radio('還在上班中！先回分局打卡下班。', 'info'); return; }
   if (W.stars) { MODAL.close(); radio('警察正在找你，現在回家睡覺會被堵在家裡！先甩掉警察。', 'warn'); return; }
   MODAL.close();
@@ -5735,16 +5770,16 @@ function renderPhone() {
       }).join('') + `</div>${(S.parcels || []).length ? `<p class="phnote">📦 配送中：${S.parcels.map(p => SHOP_BY[p.k].n).join('、')}</p>` : ''}`;
   } else if (A === 'job') {
     const cop = isCop();
-    const jobs = [
-      ['👮 警員（台中市政府警察局）', '日薪 ' + fmtMoney(RANKS[0].pay) + '起・週休一日', cop ? '✅ 你目前的工作' : S.dismissed ? '到大墩分局人事室重新報考' : '到大墩分局人事室報考警察特考', 'cop'],
-      ['🛵 外送員', '按趟計酬・自備機車與保溫箱', '下一批更新開放', ''],
-      ['🚕 計程車司機', '按趟計酬・需職業駕照', '下一批更新開放', ''],
-      ['🏪 超商店員', '時薪 196 元・排班制', '下一批更新開放', ''],
-      ['🍜 餐廳內外場', '時薪 196 元起', '下一批更新開放', ''],
-      ['🚒 消防員 / 🚑 救護員', '需考消防特考', '下一批更新開放', ''],
+    const rows = [
+      ['police', '👮 警員（台中市政府警察局）', '日薪 ' + fmtMoney(RANKS[0].pay) + ' 起・週休一日', '到大墩分局人事室報考警察特考', 'nav:station'],
+      ['delivery', '🛵 外送員', '按趟計酬（取餐＋里程）・要有車和保溫箱', '在手機上直接登記、上線接單', 'apply'],
+      ['taxi', '🚕 計程車司機', '跳表車資歸你・每班租車費 $600', '到大墩計程車行考執業登記', 'nav:taxi'],
+      ['clerk', '🏪 超商店員', '時薪 $' + WAGE + '（2026 最低工資）', '到任何一家麥麥超商櫃檯旁應徵', 'nav:store'],
+      ['cook', '🍜 牛肉麵店員', '時薪 $' + WAGE + '＋小費', '到麥麥牛肉麵應徵', 'nav:resto'],
+      ['fire', '🚒 消防員（含救護）', '日薪 $2,400＋出勤獎金', '到消防局西屯分隊報考', 'nav:fire'],
     ];
-    body = `<h3>💼 麥麥人力銀行</h3><p class="phnote">目前工作：<b>${cop ? RANKS[S.rank].name + (S.jobStart > S.day ? '（明天報到）' : '') : '無'}</b></p><div class="phlist">` +
-      jobs.map(j => `<div class="phrow"><div><b>${j[0]}</b><br><small>${j[1]}</small><br><small style="color:#ffd84a">${j[2]}</small></div>${j[3] && !cop ? `<div class="ar"><button class="btn g sm" data-job="${j[3]}">導航</button></div>` : ''}</div>`).join('') + '</div>';
+    const curRow = S.job ? `<div class="phrow"><div><b>目前：${JOBDEF[S.job].icon} ${jobName()}</b><br><small>${S.working ? '🟢 工作中' : '下班'}${S.job === 'delivery' ? '' : '・' + JOBDEF[S.job].how}</small></div>${S.job === 'delivery' ? `<div class="ar"><button class="btn ${S.working ? 'r' : 'g'} sm" data-jact="${S.working ? 'off' : 'on'}">${S.working ? '下線' : '上線接單'}</button></div>` : ''}</div>` : '<p class="phnote">目前沒有工作</p>';
+    body = `<h3>💼 麥麥人力銀行</h3>${curRow}<div class="phlist">` + rows.filter(r => r[0] !== S.job).map(r => `<div class="phrow"><div><b>${r[1]}</b><br><small>${r[2]}</small><br><small style="color:#ffd84a">${r[3]}</small></div><div class="ar"><button class="btn g sm" data-jact="${r[4]}">${r[4] === 'apply' ? '登記' : '導航'}</button></div></div>`).join('') + '</div>';
   } else if (A === 'msg') {
     (S.msgs || []).forEach(m => m.read = true); updatePhoneBadge();
     body = `<h3>💬 訊息</h3><div class="phlist">` + ((S.msgs || []).length ? S.msgs.map(m => `<div class="phmsg"><b>${m.from}</b> <small>第${m.day}天 ${fmtTime(m.t)}</small><div>${m.text}</div></div>`).join('') : '<p class="phnote">還沒有訊息</p>') + '</div>';
@@ -5777,13 +5812,287 @@ function renderPhone() {
     PHONE.msg = '✅ 已下單，明天早上送到家'; updateHUD(true); renderPhone();
   });
   on('[data-use]', el => { useItem(el.dataset.use); renderPhone(); });
-  on('[data-job]', () => { const st = SITES.station; setWaypoint(st.x + 7, st.z + 0.5); phClose(); toast('good', '🗺️ 已設定導航', '大墩分局人事室'); });
+  on('[data-jact]', el => {
+    const a = el.dataset.jact;
+    if (a === 'on') { startShift(); renderPhone(); return; } if (a === 'off') { endShift(); renderPhone(); return; }
+    if (a === 'apply') { phClose(); applyFor('delivery'); return; }
+    const k = a.split(':')[1]; let p;
+    if (k === 'station') p = { x: SITES.station.x + 7, z: SITES.station.z + 0.5 }; else if (k === 'taxi') p = SITES.taxi; else if (k === 'resto') p = SITES.resto; else if (k === 'fire') p = SITES.fire.desk;
+    else { const s2 = SITES.stores.slice().sort((a, b) => dist(a.cx, a.z1, P.x, P.z) - dist(b.cx, b.z1, P.x, P.z))[0]; p = { x: s2.counter.x, z: s2.counter.z }; }
+    setWaypoint(p.x, p.z); phClose(); toast('good', '🗺️ 已設定導航', '跟著路面箭頭走');
+  });
   MODAL.esc = () => { if (PHONE.app === 'home') phClose(); else { PHONE.app = PHONE.app === 'stockD' ? 'stock' : 'home'; renderPhone(); } };
 }
 function spark(arr, up, w, h) {
   w = w || 90; h = h || 30; const a = arr.slice(-30), mn = Math.min(...a), mx = Math.max(...a), r = mx - mn || 1;
   const pts = a.map((v, i) => (i / (a.length - 1) * w).toFixed(1) + ',' + (h - 2 - (v - mn) / r * (h - 4)).toFixed(1)).join(' ');
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" class="spark"><polyline points="${pts}" fill="none" stroke="${up ? '#ff5a5a' : '#3ccf6e'}" stroke-width="1.6"/></svg>`;
+}
+
+/* ================= 工作：外送、計程車、超商、餐廳、消防救護 =================
+   時薪工作依 2026 年最低工資每小時 196 元；計程車依台中市費率（起程 1,250 公尺 85 元、續程每 200 公尺 5 元、23:00～06:00 每趟加 20 元）。
+   遊戲距離是實際縮小約 7 倍，計費時換算回實際公里。 */
+const WAGE = 196;
+const JOBDEF = {
+  police: { n: '警員', icon: '👮' },
+  delivery: { n: '外送員', icon: '🛵', how: '手機「求職」App 上線接單', pay: '按趟計酬（取餐＋里程）' },
+  taxi: { n: '計程車司機', icon: '🚕', how: '大墩計程車行出車', pay: '跳表車資（台中市費率），每班租車費 $600' },
+  clerk: { n: '超商店員', icon: '🏪', how: '到超商櫃檯旁打卡', pay: '時薪 $196' },
+  cook: { n: '牛肉麵店員', icon: '🍜', how: '到麥麥牛肉麵打卡', pay: '時薪 $196＋小費' },
+  fire: { n: '消防員', icon: '🚒', how: '到消防局打卡（火警＋救護）', pay: '日薪 $2,400，出勤有獎金' },
+};
+function jobName() { return S.job === 'police' ? (S.unit === 'swat' ? '特勤 ' : '') + RANKS[S.rank].name : S.job ? JOBDEF[S.job].n : ''; }
+const JOB = { timer: 20, cust: null, custT: 0, hose: false, fireHP: 0, taxiCar: null, fireCar: null, ambuCar: null };
+function setJob(key, after) {
+  const go = () => {
+    if (S.working) endShift(true);
+    S.job = key; S.jobStart = key === 'fire' || key === 'police' ? S.day + 1 : S.day; S.jobBad = 0; S.dismissed = false;
+    if (key === 'police') { S.rank = 0; S.merit = 0; S.unit = ''; S.pen = { rep: 0, dem: 0, major: 0 }; }
+    addLog(JOBDEF[key].icon + ' 開始新工作：' + JOBDEF[key].n); AU.good();
+    toast('rank', JOBDEF[key].icon + ' 錄取：' + JOBDEF[key].n, JOBDEF[key].how); updateHUD(true); after && after();
+  };
+  if (S.job && S.job !== key) MODAL.show(`<h2>換工作？</h2><p>你現在是<b>${jobName()}</b>，要辭職改當<b>${JOBDEF[key].n}</b>嗎？</p>`, [['辭職，換工作', 'r', () => { MODAL.close(); if (S.onDuty) offDutyNow(); go(); }], ['算了', 'gray', () => MODAL.close()]]);
+  else go();
+}
+function quiz(title, bank, need, onPass) {
+  const qs = bank.slice().sort(() => Math.random() - 0.5).slice(0, 5); let k = 0, ok = 0;
+  const show = () => {
+    if (k >= qs.length) { if (ok >= need) onPass(ok); else MODAL.show(`<h2>😢 沒通過</h2><p>答對 ${ok} / 5 題，要 ${need} 題才通過。</p>`, [['好', 'gray', () => MODAL.close()]]); return; }
+    const q = qs[k]; MODAL.show(`<h2>📝 ${title}　${k + 1} / 5</h2><p style="font-size:17px">${q[0]}</p>`, q[1].map((a, i) => [a, '', () => { if (i === q[2]) { ok++; AU.click(); } else AU.bad(); k++; show(); }])); MODAL.esc = null;
+  };
+  show();
+}
+const TAXI_Q = [
+  ['台中市計程車的起程運價是？', ['1,250 公尺 85 元', '1 公里 70 元', '2 公里 100 元', '不跳表，自己喊價'], 0],
+  ['台中市計程車夜間加成時段是？', ['23:00～06:00 每趟加 20 元', '20:00 以後打八折', '沒有夜間加成', '00:00～05:00 加倍'], 0],
+  ['乘客說「不要跳表，算我便宜一點」，可以嗎？', ['可以，客人開心就好', '不行，台中市計程車一律跳表收費', '可以，但要收現金', '看心情'], 1],
+  ['台中車站前面那條大路，往西一路通到台中港的是？', ['台灣大道', '五權路', '中清路', '豐原大道'], 0],
+  ['高鐵台中站在哪一區？', ['烏日', '西屯', '北屯', '大里'], 0],
+  ['逢甲夜市在哪一區？', ['西屯', '中區', '太平', '霧峰'], 0],
+  ['從市區開往豐原，遊戲裡最直接的路是？', ['崇德路接豐原大道', '公益路', '台灣大道', '中興路'], 0],
+  ['國家歌劇院、市政府在哪一帶？', ['七期（西屯）', '豐原', '清水', '東勢'], 0],
+];
+const FIRE_Q = [
+  ['火災、救護要打幾號？', ['119', '110', '113', '1999'], 0],
+  ['看到有人倒地沒反應，CPR 的口訣是？', ['叫叫 CABD', '停看聽', '拉瞄壓掃', '一二三木頭人'], 0],
+  ['成人 CPR 胸外按壓，每分鐘大約幾下？', ['100～120 下', '30～40 下', '200 下以上', '10 下'], 0],
+  ['滅火器使用口訣？', ['拉、瞄、壓、掃', '叫、叫、C、A', '停、看、聽', '跑、跳、碰'], 0],
+  ['油鍋起火怎麼辦？', ['關火、蓋上鍋蓋，不能潑水', '馬上潑一桶水', '用電風扇吹熄', '打開窗戶等它熄'], 0],
+  ['火場有濃煙時，逃生要？', ['壓低身體，沿著牆往出口走', '站直快跑', '躲進衣櫃', '搭電梯下樓'], 0],
+];
+/* ---------- 應徵 ---------- */
+function applyFor(key) {
+  if (key === 'delivery') {
+    if (!S.owned.length) { MODAL.show('<h2>🛵 外送員</h2><p>要有自己的機車或汽車才能接單。可以到車行買一台。</p>', [['好', 'gray', () => MODAL.close()]]); return; }
+    if (!hasItem('box')) { MODAL.show('<h2>🛵 外送員</h2><p>要有外送保溫箱才能接單（手機「購物」→ 工作 → 外送保溫箱）。</p>', [['好', 'gray', () => MODAL.close()]]); return; }
+    return setJob('delivery');
+  }
+  if (key === 'taxi') return quiz('計程車執業登記測驗', TAXI_Q, 4, () => setJob('taxi', () => pushMsg('大墩計程車行', '歡迎加入車隊！到車行出車，每班租車費 $600，車資全部歸你。')));
+  if (key === 'fire') return quiz('消防人員考試', FIRE_Q, 4, () => setJob('fire', () => pushMsg('消防局西屯分隊', '恭喜錄取！明天起到分隊打卡上班，火警和救護案件都要出勤。')));
+  if (key === 'clerk' || key === 'cook') {
+    const ok = Math.random() < (hasItem('suit') ? 0.95 : 0.7);
+    if (!ok) { MODAL.show(`<h2>😅 面試沒上</h2><p>店長說：「我們再考慮看看喔。」<br><small>（穿面試西裝比較容易錄取，可以明天再來）</small></p>`, [['好', 'gray', () => MODAL.close()]]); return; }
+    MODAL.show(`<h2>🎉 面試通過！</h2><p>店長：「明天就可以來上班了，今天想先試做也可以，時薪 $${WAGE}。」</p>`, [['好！', 'g', () => { MODAL.close(); setJob(key); }]]);
+  }
+}
+/* ---------- 上下班 ---------- */
+function startShift() {
+  if (S.working) return;
+  if (S.job === 'fire' && S.jobStart > S.day) { radio('明天才開始上班喔。', 'info'); return; }
+  S.working = true; S.shiftStart = S.time; S.shiftEarn = 0; S.shiftDone = 0; S.shiftPaidMin = 0; JOB.timer = 6;
+  toast('rank', JOBDEF[S.job].icon + ' 上班打卡　' + fmtTime(S.time), JOBDEF[S.job].pay); AU.radio();
+  if (S.job === 'taxi') { S.money -= 600; txn(-600, '計程車租車費'); spawnJobCar('taxi'); }
+  if (S.job === 'fire') { spawnJobCar('fire'); radio('📻 分隊長：今天值班，有案件會用無線電通知你。消防車、救護車都停在分隊前。', 'radio'); }
+  updateHUD(true);
+}
+function endShift(silent) {
+  if (!S.working) return;
+  if (MIS.cur && MIS.cur.job) MIS.end(false);
+  const mins = ((S.time - S.shiftStart) + 1440) % 1440;
+  let pay = 0, line = '';
+  if (S.job === 'clerk' || S.job === 'cook') { pay = Math.round(S.shiftPaidMin / 60 * WAGE); line = `工作 ${Math.floor(S.shiftPaidMin / 60)} 小時 ${Math.round(S.shiftPaidMin % 60)} 分 × 時薪 $${WAGE}`; }
+  if (S.job === 'fire') { pay = mins >= 360 ? 2400 : Math.round(2400 * mins / 480); line = `值班 ${Math.floor(mins / 60)} 小時`; }
+  if (pay) { S.money += pay; txn(pay, JOBDEF[S.job].n + '薪水'); }
+  const total = pay + (S.shiftEarn || 0);
+  S.working = false;
+  if (JOB.taxiCar) { removeJobCar('taxiCar'); }
+  if (!silent) toast('good', '🕔 下班　今天賺了 ' + fmtMoney(total), (line ? line + '・' : '') + '完成 ' + (S.shiftDone || 0) + ' 件');
+  addLog(JOBDEF[S.job].icon + ' 下班，今天賺 ' + fmtMoney(total));
+  updateHUD(true); saveGame();
+}
+function spawnJobCar(kind) {
+  if (kind === 'taxi') { const c = SITES.taxi.car; if (JOB.taxiCar) removeJobCar('taxiCar'); JOB.taxiCar = new PVeh('taxicab', c.x, c.z, c.yaw); PVEHS.push(JOB.taxiCar); }
+  if (kind === 'fire') {
+    if (!JOB.fireCar) { const t = SITES.fire.truck; JOB.fireCar = new PVeh('firecar', t.x, t.z, t.yaw); PVEHS.push(JOB.fireCar); } else if (JOB.fireCar.wreck || JOB.fireCar.hp < 60) restoreVeh(JOB.fireCar);
+    if (!JOB.ambuCar) { const a = SITES.fire.ambu; JOB.ambuCar = new PVeh('ambu', a.x, a.z, a.yaw); PVEHS.push(JOB.ambuCar); } else if (JOB.ambuCar.wreck || JOB.ambuCar.hp < 60) restoreVeh(JOB.ambuCar);
+  }
+}
+function removeJobCar(k) { const v = JOB[k]; if (!v) return; if (P.veh === v) { P.mode = 'foot'; P.veh = null; $('speedo').classList.add('hidden'); } scene.remove(v.mesh); const i = PVEHS.indexOf(v); if (i >= 0) PVEHS.splice(i, 1); JOB[k] = null; }
+/* ---------- 工作地點的互動 ---------- */
+function initJobInteracts() {
+  const st = SITES;
+  for (const s of st.stores) STATIC_INTERACT.push({ x: s.counter.x - 2.4, z: s.counter.z, r: 1.8, label: () => S.job === 'clerk' && S.jobSite === s.name ? (S.working ? '下班打卡' : '店員上班打卡') : S.job === 'clerk' ? '（你在別家分店上班）' : '應徵超商店員', act: () => { if (S.job === 'clerk' && S.jobSite === s.name) return S.working ? endShift() : startShift(); if (S.job === 'clerk') return; applyFor('clerk'); S.jobSite = s.name; } });
+  STATIC_INTERACT.push({ x: st.resto.x + 4, z: st.resto.z, r: 2.4, label: () => S.job === 'cook' ? (S.working ? '下班打卡' : '牛肉麵店上班打卡') : '應徵牛肉麵店員', act: () => S.job === 'cook' ? (S.working ? endShift() : startShift()) : applyFor('cook') });
+  STATIC_INTERACT.push({ x: st.taxi.x, z: st.taxi.z, r: 2.6, label: () => S.job === 'taxi' ? (S.working ? '收班（還車）' : '出車（租車費 $600）') : '大墩計程車行：登記當司機', act: () => S.job === 'taxi' ? (S.working ? endShift() : startShift()) : applyFor('taxi') });
+  STATIC_INTERACT.push({ x: st.fire.desk.x, z: st.fire.desk.z, r: 2.6, label: () => S.job === 'fire' ? (S.working ? '下班打卡' : '消防員上班打卡') : '消防局：報考消防人員', act: () => S.job === 'fire' ? (S.working ? endShift() : startShift()) : applyFor('fire') });
+  // 牛肉麵店的出餐檯
+  STATIC_INTERACT.push({ x: st.resto.x - 4, z: st.resto.z, r: 2.2, label: () => JOB.order ? '出餐：' + JOB.order.name : '（還沒有客人點餐）', act: () => JOB.order && cookGame() });
+}
+/* ---------- 各工作的派案 ---------- */
+function updateJobs(dt) {
+  if (!S.working) return;
+  if (JOB.hose && INP.fireHeld) { JOB.sprayT = (JOB.sprayT || 0) - dt; if (JOB.sprayT <= 0) { JOB.sprayT = 0.08; jobSpray(); } }
+  // 時薪工作：人要在店裡才算工時
+  if (S.job === 'clerk' || S.job === 'cook') {
+    const site = S.job === 'clerk' ? SITES.stores.find(s => s.name === S.jobSite) : SITES.resto;
+    if (site && dist(P.x, P.z, site.cx || site.x, site.z1 || site.z) < 30) S.shiftPaidMin += dt * GAME.tscale;
+    if (S.shiftPaidMin >= 8 * 60 && !S._ot) { S._ot = 1; radio('店長：八小時到了，可以下班囉！', 'info'); }
+    JOB.timer -= dt;
+    if (S.job === 'clerk' && !JOB.cust && JOB.timer <= 0) spawnCustomer(site);
+    if (S.job === 'cook' && !JOB.order && JOB.timer <= 0) newOrder();
+    if (JOB.cust) { JOB.custT -= dt; if (JOB.custT <= 0) { say(JOB.cust, '等好久，不買了！', {}); removeHuman(JOB.cust); JOB.cust = null; jobBad('客人等太久走掉了'); JOB.timer = rand(15, 30); } }
+    if (JOB.order) { JOB.order.t -= dt; if (JOB.order.t <= 0) { JOB.order = null; jobBad('客人等不到麵，生氣離開'); JOB.timer = rand(15, 30); } }
+    return;
+  }
+  if (MIS.cur) return;
+  JOB.timer -= dt; if (JOB.timer > 0) return;
+  JOB.timer = rand(10, 25);
+  if (S.job === 'delivery') MIS.start(jobDelivery());
+  else if (S.job === 'taxi' && P.mode === 'vehicle' && P.veh === JOB.taxiCar) MIS.start(jobTaxi());
+  else if (S.job === 'fire') MIS.start(Math.random() < 0.6 ? jobEMS() : jobFire());
+}
+function jobBad(reason) { S.jobBad = (S.jobBad || 0) + 1; toast('bad', '😠 ' + reason, '今天被抱怨 ' + S.jobBad + ' 次'); AU.bad(); if (S.jobBad >= 5) { endShift(true); MODAL.show(`<h2>📄 被解雇了</h2><p>店長：「你今天被客人抱怨太多次了……明天不用來了。」</p>`, [['好吧', 'gray', () => MODAL.close()]]); addLog('被' + JOBDEF[S.job].n + '的工作解雇'); S.job = ''; updateHUD(true); } }
+function jobPay(amount, why) { S.money += amount; S.shiftEarn = (S.shiftEarn || 0) + amount; S.shiftDone = (S.shiftDone || 0) + 1; txn(amount, why); AU.good(); updateHUD(true); }
+// 超商：結帳心算
+const GOODS = [['御飯糰', 35], ['茶葉蛋', 13], ['拿鐵', 55], ['礦泉水', 20], ['便當', 89], ['洋芋片', 39], ['泡麵', 45], ['報紙', 15], ['口香糖', 25], ['衛生紙', 99]];
+function spawnCustomer(site) {
+  const h = spawnHuman({ data: { role: 'civ' } }, site.counter.x + rand(-1, 1), site.counter.z + 1.4, Math.PI); h.pose = 'idle'; h.yaw = Math.PI;
+  JOB.cust = h; JOB.custT = 60; say(h, pick(['你好，結帳！', '麻煩結帳～', '這些多少錢？']), {});
+}
+function clerkGame() {
+  const items = []; const n = randi(2, 4); for (let k = 0; k < n; k++) items.push(pick(GOODS));
+  const total = items.reduce((a, b) => a + b[1], 0);
+  const opts = [total, total + pick([5, 10, -10, 20]), total - pick([5, 13, 2])].sort(() => Math.random() - 0.5);
+  MODAL.show(`<h2>🏪 結帳</h2><p>${items.map(i => i[0] + ' $' + i[1]).join('、')}</p><p>總共多少？</p>`, opts.map(v => ['$ ' + v, '', () => {
+    MODAL.close(); const ok = v === total;
+    if (ok) { say(JOB.cust, pick(['謝謝！', '掰掰～']), {}); S.shiftDone = (S.shiftDone || 0) + 1; AU.good(); } else { say(JOB.cust, '欸，你算錯了吧？', {}); jobBad('結帳算錯錢'); }
+    removeHuman(JOB.cust); JOB.cust = null; JOB.timer = rand(20, 45);
+  }]));
+}
+// 牛肉麵：照順序出餐
+const BOWLS = [{ name: '紅燒牛肉麵', steps: ['碗', '麵', '紅燒湯', '牛肉', '蔥花'] }, { name: '清燉牛肉麵', steps: ['碗', '麵', '清燉湯', '牛肉', '香菜'] }, { name: '牛肉湯餃', steps: ['碗', '水餃', '紅燒湯', '牛肉'] }, { name: '番茄牛肉麵', steps: ['碗', '麵', '番茄湯', '牛肉', '蔥花'] }];
+function newOrder() { JOB.order = Object.assign({ t: 70 }, pick(BOWLS)); radio('🍜 客人點餐：' + JOB.order.name + '（到出餐檯按 E）', 'info'); AU.click(); }
+function cookGame() {
+  const o = JOB.order; const all = ['碗', '麵', '水餃', '紅燒湯', '清燉湯', '番茄湯', '牛肉', '蔥花', '香菜']; let k = 0;
+  const show = () => {
+    MODAL.show(`<h2>🍜 ${o.name}</h2><p>照順序放：${o.steps.map((s, i) => i < k ? '✅' + s : s).join(' → ')}</p>`, all.map(a => [a, '', () => {
+      if (a === o.steps[k]) { k++; AU.click(); if (k >= o.steps.length) { MODAL.close(); const tip = Math.random() < 0.4 ? randi(10, 50) : 0; if (tip) jobPay(tip, '牛肉麵店小費'); else { S.shiftDone = (S.shiftDone || 0) + 1; } toast('good', '🍜 出餐完成！', tip ? '客人給小費 $' + tip : '客人吃得很開心'); JOB.order = null; JOB.timer = rand(20, 40); return; } show(); }
+      else { AU.bad(); MODAL.close(); JOB.order = null; jobBad('做錯餐點（' + o.name + '）'); JOB.timer = rand(15, 30); }
+    }])); MODAL.esc = () => MODAL.close();
+  };
+  show();
+}
+// 外送
+function jobDelivery() {
+  const shops = [...SITES.stores.map(s => ({ x: s.door.x, z: s.door.z, n: s.name })), ...SITES.market.stalls.slice(0, 4).map(s => ({ x: s.x, z: s.z, n: '一中街 ' + s.food.n })), { x: SITES.resto.x, z: SITES.resto.z, n: '麥麥牛肉麵' }].filter(p => dist(p.x, p.z, P.x, P.z) < 700);
+  const shop = shops.length ? pick(shops) : { x: SITES.resto.x, z: SITES.resto.z, n: '麥麥牛肉麵' };
+  const sp = sidewalkSpot(80, 450, ['old', 'mid', 'res', 'tower', 'town']); const drop = { x: sp.x, z: sp.z };
+  const realKm = (dist(P.x, P.z, shop.x, shop.z) + dist(shop.x, shop.z, drop.x, drop.z)) * 7 / 1000;
+  const fee = Math.round(40 + realKm * 8);
+  let st = 'pick', t0 = 0; const limit = 60 + realKm * 25;
+  const m = {
+    job: true, type: 'job', icon: '🛵', title: '外送訂單',
+    radio: `新訂單：${shop.n} → ${nearCross(drop.x, drop.z)}（約 ${realKm.toFixed(1)} 公里，預估 $${fee}）`,
+    target: () => st === 'pick' ? shop : drop,
+    obj: () => (st === 'pick' ? '到「' + shop.n + '」取餐' : '送到 ' + nearCross(drop.x, drop.z) + ' 附近') + `<br><small>剩 ${Math.max(0, Math.round(limit - t0))} 秒・$${fee}</small>`,
+    update(dt) { t0 += dt; },
+    interacts() {
+      if (P.mode !== 'foot') return [];
+      if (st === 'pick') return [{ x: shop.x, z: shop.z, r: 3, label: '取餐', act: () => { st = 'drop'; AU.click(); toast('good', '📦 取到餐了', '送到 ' + nearCross(drop.x, drop.z)); } }];
+      return [{ x: drop.x, z: drop.z, r: 3, label: '送達', act: () => { const late = t0 > limit; const tip = !late && Math.random() < 0.35 ? randi(10, 40) : 0; const pay = (late ? Math.round(fee * 0.7) : fee) + tip; jobPay(pay, '外送：' + shop.n); if (late) jobBad('外送遲到，客人給一星'); MIS.end(true, '✅ 送達！賺 ' + fmtMoney(pay) + (tip ? '（含小費 $' + tip + '）' : '')); } }];
+    },
+  };
+  return m;
+}
+// 計程車
+function taxiFare(realM, night) { return 85 + Math.max(0, Math.ceil((realM - 1250) / 200)) * 5 + (night ? 20 : 0); }
+function jobTaxi() {
+  const sp = sidewalkSpot(40, 220, ['old', 'mid', 'res', 'tower', 'town']);
+  const pax = spawnAI({}, sp.x, sp.z, 0, { role: 'civ' }); pax.state = 'idle'; pax.pose = 'hands';
+  say(pax, '計程車！', {});
+  const dest = sidewalkSpot(250, 900, ['old', 'mid', 'res', 'tower', 'town']);
+  let st = 'pick', meter = 0, lx = 0, lz = 0; const night = S.time >= 23 * 60 || S.time < 6 * 60;
+  const m = {
+    job: true, type: 'job', icon: '🚕', title: '載客',
+    radio: '有客人在 ' + nearCross(sp.x, sp.z) + ' 招車',
+    target: () => st === 'pick' ? { x: pax.x, z: pax.z } : dest,
+    obj: () => st === 'pick' ? '開到招手的乘客旁邊停下來' : `載客到 ${nearCross(dest.x, dest.z)}<br><small>🧾 跳表 $${taxiFare(meter, night)}（${(meter / 1000).toFixed(1)} 公里）</small>`,
+    update(dt) {
+      const v = JOB.taxiCar; if (!v) return MIS.end(false);
+      if (st === 'pick') { if (P.veh === v && dist(v.x, v.z, pax.x, pax.z) < 7 && Math.abs(v.speed) < 1.5) { st = 'ride'; removeHuman(pax); lx = v.x; lz = v.z; say(v, '去' + districtAt(dest.x, dest.z) + '，麻煩了！', {}); AU.click(); } return; }
+      meter += dist(v.x, v.z, lx, lz) * 7; lx = v.x; lz = v.z;
+      if (dist(v.x, v.z, dest.x, dest.z) < 10 && Math.abs(v.speed) < 1.5) { const fare = taxiFare(meter, night); jobPay(fare, '計程車車資'); MIS.end(true, '🚕 到了！收車資 ' + fmtMoney(fare) + (night ? '（含夜間加成 $20）' : '')); }
+    },
+    cleanup() { if (st === 'pick') removeHuman(pax); },
+  };
+  return m;
+}
+// 消防：救護
+function jobEMS() {
+  const sp = sidewalkSpot(120, 600, ['old', 'mid', 'res', 'tower', 'town']);
+  const pt = spawnAI({}, sp.x, sp.z, 0, { role: 'civ' }); pt.state = 'down'; pt.pose = 'down';
+  const fam = spawnAI({}, sp.x + 1.5, sp.z + 0.5, 0, { role: 'civ' }); fam.state = 'idle'; fam.pose = 'hands';
+  let st = 'go';
+  const m = {
+    job: true, type: 'job', icon: '🚑', title: '119 救護案件',
+    radio: '📻 119 派遣：' + nearCross(sp.x, sp.z) + '有民眾倒地、沒有反應，請救護車出勤！',
+    target: () => st === 'go' ? sp : st === 'treat' ? sp : SITES.hospital,
+    obj: () => st === 'go' ? '開救護車（鳴笛 H）到現場' : st === 'treat' ? '下車急救病人' : '送到醫院急診',
+    update() { if (st === 'go' && dist(P.x, P.z, sp.x, sp.z) < 25) { st = 'treat'; say(fam, '快救救他！', {}); } if (st === 'hosp' && P.veh === JOB.ambuCar && dist(P.x, P.z, SITES.hospital.x, SITES.hospital.z) < 25) { jobPay(800, '救護出勤獎金'); MIS.end(true, '🏥 病人已送達急診，救護任務完成！'); } },
+    interacts() {
+      if (st !== 'treat' || P.mode !== 'foot') return [];
+      return [{ x: pt.x, z: pt.z, r: 2.4, label: '急救病人', act: () => quiz('急救處置', [
+        ['病人沒有反應，第一步先？', ['拍肩呼叫，確認意識', '先拍照', '把他扶起來走路', '餵他喝水'], 0],
+        ['確認沒有呼吸後，要？', ['立刻胸外按壓 CPR，旁人去拿 AED', '等他自己醒', '讓他趴著', '用冰水潑醒'], 0],
+        ['胸外按壓的位置？', ['兩乳頭連線中點（胸骨下半段）', '肚子', '脖子', '肩膀'], 0],
+        ['AED 到了以後？', ['開機，照語音指示貼片、分析、電擊', '先收起來', '只能醫生用', '放在旁邊不用'], 0],
+        ['病人恢復呼吸後？', ['持續觀察，送醫', '不用送醫', '馬上讓他回家', '叫他自己搭公車'], 0],
+      ], 3, () => { MODAL.close(); st = 'hosp'; removeHuman(pt); removeHuman(fam); toast('good', '💓 病人恢復心跳！', '抬上救護車，送醫院急診'); }) }];
+    },
+    cleanup() { if (pt.P.g.parent) removeHuman(pt); if (fam.P.g.parent) removeHuman(fam); },
+  };
+  return m;
+}
+// 消防：火警（拿水線對準火源開槍鍵灌救）
+function jobFire() {
+  const b = pick(BLOCKS.filter(q => ['old', 'mid', 'res', 'town'].includes(q.type) && (d => d > 150 && d < 650)(dist(q.cx, q.cz, P.x, P.z)))) || pick(BLOCKS.filter(q => q.type === 'mid'));
+  const fx = b.cx + rand(-12, 12), fz = b.z1 - 3, fy = rand(5, 9); JOB.fireHP = 1; JOB.firePt = { x: fx, y: fy, z: fz };
+  let st = 'go';
+  const m = {
+    job: true, type: 'job', icon: '🔥', title: '119 火警',
+    radio: '📻 119 派遣：' + nearCross(fx, fz) + '民宅火警，消防車立即出勤！',
+    target: () => ({ x: fx, z: b.z1 + 3 }),
+    obj: () => st === 'go' ? '開消防車（鳴笛 H）到火場' : `下車，對準火源按住開槍鍵灌救<br><small>火勢：${Math.round(JOB.fireHP * 100)}%</small>`,
+    update(dt) {
+      if (JOB.fireHP > 0 && dist(P.x, P.z, fx, fz) < 200) { if (Math.random() < dt * 14 * JOB.fireHP) puff(fx + rand(-3, 3), fy + rand(-1, 2), fz + rand(0, 1), 'fire'); if (Math.random() < dt * 10) puff(fx + rand(-3, 3), fy + 2, fz, 'black'); }
+      if (st === 'go' && dist(P.x, P.z, fx, fz) < 40) { st = 'fight'; JOB.hose = true; radio('到場！下車拿水線，對準火源按住開槍鍵（手機按開槍）灌救。', 'info'); }
+      if (st === 'fight' && JOB.fireHP <= 0) { JOB.hose = false; jobPay(1500, '火警出勤獎金'); MIS.end(true, '🧯 火勢撲滅，收隊！'); }
+    },
+    cleanup() { JOB.hose = false; JOB.firePt = null; },
+  };
+  return m;
+}
+// 灌救：開槍鍵＝噴水
+function jobSpray() {
+  if (!S.working || S.job !== 'fire' || !JOB.hose || !JOB.firePt) return false;
+  const f = JOB.firePt; const d = dist(P.x, P.z, f.x, f.z);
+  const o = camera.getWorldPosition(new THREE.Vector3()); const dir = camera.getWorldDirection(new THREE.Vector3());
+  const end = o.clone().add(dir.clone().multiplyScalar(Math.min(28, d + 2)));
+  lineFX(o.clone().add(new THREE.Vector3(0, -0.4, 0)), end, 0x8fd0ff, 0.25);
+  const to = new THREE.Vector3(f.x - o.x, f.y - o.y, f.z - o.z).normalize();
+  if (d < 30 && to.dot(dir) > 0.92) { JOB.fireHP = Math.max(0, JOB.fireHP - 0.035); puff(f.x + rand(-2, 2), f.y, f.z, 'black'); }
+  AU.noiseBurst && AU.noiseBurst(0.12, 0.05, 1200, 1);
+  return true;
 }
 
 /* ================= 介面 ================= */
@@ -5814,14 +6123,14 @@ function updateHUD(force) {
   $('clock').textContent = fmtTime(S.time) + (isNight() ? ' 🌙' : ' ☀️');
   $('dateline').textContent = '第 ' + S.day + ' 天（週' + WEEK[weekday(S.day)] + '）' + (isWorkday(S.day) ? '' : ' 休假');
   const cop = S.job === 'police' && !S.dismissed;
-  const du = $('duty'); du.textContent = S.onDuty ? '執勤中' : cop ? '下班' : '無業'; du.className = 'duty ' + (S.onDuty ? 'on' : 'off');
-  $('rank').textContent = (S.name ? S.name + '・' : '') + (S.dismissed ? '已免職' : !cop ? '找工作中' : (S.unit === 'swat' ? '特勤 ' : '') + RANKS[S.rank].name);
+  const du = $('duty'); du.textContent = S.onDuty ? '執勤中' : S.working ? '工作中' : S.job && !S.dismissed ? '下班' : '無業'; du.className = 'duty ' + (S.onDuty || S.working ? 'on' : 'off');
+  $('rank').textContent = (S.name ? S.name + '・' : '') + (S.dismissed ? '已免職' : S.job ? jobName() : '找工作中');
   const nx = RANKS[S.rank + 1]; $('merit').parentElement.style.display = cop ? '' : 'none';
   $('merit').textContent = S.merit + (nx ? ' / ' + nx.need + '（升' + nx.name + '）' : '（最高職等）');
   $('money').textContent = fmtMoney(S.money);
   $('hpbar').style.width = clamp(S.hp, 0, 100) + '%'; $('enbar').style.width = clamp(S.energy, 0, 100) + '%';
-  $('weap').textContent = !S.onDuty ? (IS_TOUCH ? '👊 便服・空手' : '👊 便服・空手（V 揍人）') : P.mode === 'vehicle' ? (P.veh.police ? '🚓 ' + P.veh.spec.name : '🚗 ' + P.veh.spec.name) : S.weapon === 0 ? `🔫 手槍 ${S.ammo} / ${S.reserve}${reloadT > 0 ? ' 換彈中…' : ''}` : S.weapon === 1 ? `⚡ 電擊槍 ${S.taser} 發` : S.weapon === 2 ? '🏏 警棍（點擊揮擊）' : `🎯 T91 步槍 ${S.rifle} / ${S.rifleRes}${reloadT > 0 ? ' 換彈中…' : ''}`;
-  if (IS_TOUCH) for (const id of ['tBackup', 'tWarn', 'tAim', 'tWeap', 'tRel', 'tFire']) { const el = $(id); if (el) el.style.display = S.onDuty ? '' : 'none'; }
+  $('weap').textContent = JOB.hose && P.mode === 'foot' ? '🧯 水線（按住開槍鍵噴水）' : !S.onDuty ? (IS_TOUCH ? '👊 便服・空手' : '👊 便服・空手（V 揍人）') : P.mode === 'vehicle' ? (P.veh.police ? '🚓 ' + P.veh.spec.name : '🚗 ' + P.veh.spec.name) : S.weapon === 0 ? `🔫 手槍 ${S.ammo} / ${S.reserve}${reloadT > 0 ? ' 換彈中…' : ''}` : S.weapon === 1 ? `⚡ 電擊槍 ${S.taser} 發` : S.weapon === 2 ? '🏏 警棍（點擊揮擊）' : `🎯 T91 步槍 ${S.rifle} / ${S.rifleRes}${reloadT > 0 ? ' 換彈中…' : ''}`;
+  if (IS_TOUCH) for (const id of ['tBackup', 'tWarn', 'tAim', 'tWeap', 'tRel', 'tFire']) { const el = $(id); if (el) el.style.display = S.onDuty || (id === 'tFire' && JOB.hose) ? '' : 'none'; }
   if (IS_TOUCH && $('tSiren')) $('tSiren').style.display = S.onDuty || (P.mode === 'vehicle' && P.veh && P.veh.police) ? '' : 'none';
   $('tired').style.opacity = S.energy < 15 ? 0.7 : S.energy < 30 ? 0.3 : 0;
   $('cross').style.display = S.onDuty && P.mode === 'foot' ? 'block' : 'none';
@@ -5832,8 +6141,9 @@ function findInteract() {
   if (MODAL.open) return null;
   const inVeh = P.mode === 'vehicle';
   let best = null, bd = 1e9;
-  const list = STATIC_INTERACT.concat(MIS.interacts(), friendInteracts());
-  for (const it of list) { if (inVeh && !it.veh) continue; const d = dist(P.x, P.z, it.x, it.z); const r = inVeh ? it.r + 8 : it.r; if (d < r && d < bd) { bd = d; best = it; } }
+  const mi = MIS.interacts(); const list = STATIC_INTERACT.concat(mi, friendInteracts(), JOB.cust ? [{ x: JOB.cust.x, z: JOB.cust.z, r: 2.8, label: '幫客人結帳', act: clerkGame }] : []);
+  const pri = new Set(mi); // 任務的互動優先
+  for (const it of list) { if (inVeh && !it.veh) continue; const d = dist(P.x, P.z, it.x, it.z) - (pri.has(it) ? 1.5 : 0); const r = inVeh ? it.r + 8 : it.r; if (d < r && d < bd) { bd = d; best = it; } }
   if (!best && !inVeh) { const pd = nearestChatPed(); if (pd) best = { x: pd.x, z: pd.z, r: 2.1, label: '和路人聊天', act: () => chatDialog(pd) }; }
   return best;
 }
@@ -6110,7 +6420,7 @@ function loop(now) {
     for (let k = MHUMANS.length - 1; k >= 0; k--) { const h = MHUMANS[k]; if (h.role === 'robber' || h.role === 'clerk' || h.ai) continue;
       if (h.walk) { h.x += h.walk.vx * dt; h.z += h.walk.vz * dt; h.P.g.rotation.y = Math.atan2(h.walk.vx, h.walk.vz); h.walk.t -= dt; if (h.walk.t <= 0) { removeHuman(h); continue; } }
       posePerson(h.P, h.pose || 'idle', dt, 1.6); h.P.g.position.set(h.x, 0.2, h.z); }
-    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateGarbageMusic(); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt);
+    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateGarbageMusic(); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); updateJobs(dt);
   } else AU.update(false, 0, false);
   frame++;
   updateSky();
@@ -6122,11 +6432,11 @@ function loop(now) {
 }
 
 // 測試用：快速模擬（不畫圖）
-function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); } }
+function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); updateJobs(dt); } }
 
 /* ---------- 開始 ---------- */
 function startGame(fresh) {
-  SITES.home = SITES.homes[S.char || 'a'] || SITES.homes.a;
+  SITES.home = SITES.homes[S.char || 'a'] || SITES.homes.a; S.working = false;
   initMarket(); updatePhoneBadge();
   $('intro').classList.add('hidden'); $('hud').classList.remove('hidden');
   if (IS_TOUCH) initTouch();
@@ -6154,7 +6464,7 @@ MIS.update = function (dt) {
 function boot() {
   if (!window.THREE) { $('loading').textContent = '⚠️ 3D 引擎載入失敗，請確認網路連線後重新整理。'; return; }
   try {
-    buildCity(); buildCams(); buildCoast(); buildTransit(); buildMapImage(); initPlayerVehicles(); initStaticInteracts();
+    buildCity(); buildCams(); buildCoast(); buildTransit(); buildMapImage(); initPlayerVehicles(); initStaticInteracts(); initJobInteracts();
   } catch (e) { $('loading').textContent = '⚠️ 載入錯誤：' + e.message; console.error(e); return; }
   P.x = SITES.home.x; P.z = SITES.home.z + 1.5; P.yaw = Math.PI;
   camera.position.set(SITES.station.x - 60, 40, SITES.station.z + 80); camera.lookAt(SITES.station.x, 0, SITES.station.z);
