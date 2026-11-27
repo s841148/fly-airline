@@ -225,7 +225,7 @@ body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;w
       E 互動 · P 手機 · F 上下車 · Q 喊話「警察！不要動！」 · H 警笛 · R 換彈匣 · 1 手槍 / 2 電擊槍 / 3 警棍 / 4 步槍（特勤隊）· V 揍人 · M 地圖（點地圖設導航）· N 車上電台 · B 請求支援（再按一次叫特勤隊）· G 對空鳴槍 · Esc 選單<br>
       開車：W 油門 · S 煞車/倒車 · A D 轉彎 · 空白鍵 手煞車<br>
       <b>📱 手機</b>：橫拿手機，左邊搖桿移動 / 開車，右邊滑動看四周，按鈕操作。<br>
-      <b>🗺️ 全台中地圖</b>：市區、海線（台中港、梧棲、沙鹿、清水、大甲、高美濕地）、山線（豐原、潭子、大雅、大坑、東勢）、屯區（太平、大里、霧峰、烏日、高鐵站），主要道路用真實路名，按比例縮小。按 M 開地圖，＋／－ 縮放。<br><b>🏙️ 怎麼玩</b>：開局從三個角色選一個，一開始沒有工作。用手機（P）看求職、買股票、網購；想當警察就到「大墩分局」人事室考特考，考上後每天 8:00 打卡上班、17:00 下班。回家睡覺跳到隔天。
+      <b>🗺️ 全台中地圖</b>：市區、海線（台中港、梧棲、沙鹿、清水、大甲、高美濕地）、山線（豐原、潭子、大雅、大坑、東勢）、屯區（太平、大里、霧峰、烏日、高鐵站），主要道路用真實路名，按比例縮小。按 M 開地圖，＋／－ 縮放。<br><b>🚆 台鐵、🚇 捷運</b>：走到車站入口按 E 買票，可以刷悠遊卡或買單程票，票價照現實（台鐵區間車、中捷綠線）。<br><b>🏙️ 怎麼玩</b>：開局從三個角色選一個，一開始沒有工作。用手機（P）看求職、買股票、網購；想當警察就到「大墩分局」人事室考特考，考上後每天 8:00 打卡上班、17:00 下班。回家睡覺跳到隔天。
     </div>
     <div class="copy">© 2026 麥麥的遊戲工廠 版權所有 · 本遊戲為原創作品，地名街景為虛構重現，未經授權請勿轉載或作商業用途</div>
   </div>
@@ -567,6 +567,47 @@ const ADJ = new Map(), NODES = [], EDGES = [];
 function neighbors(i, j) { return ADJ.get(NKEY(i, j)) || []; }
 function nodeDeg(i, j) { return neighbors(i, j).length; }
 function speedLimitName(n) { return n === '國道1號' ? 100 : ['台灣大道', '文心路', '環中路', '五權西路', '中清路', '豐勢路', '臨港路'].includes(n) ? 60 : 50; }
+
+/* ---------- 軌道：台鐵山線、海線（高架）、台中捷運綠線 ---------- */
+const RAIL = {
+  tram: {
+    name: '台鐵山線', kind: 'tra', color: '#3a6fd8', w: 11, h: 8,
+    pts: [[-262, -1990], [-262, -1790], [-262, -1100], [0, -505], [95, -120], [95, 60], [-356, 600], [-560, 880], [-720, 990], [-830, 1170]],
+    st: [['豐原', -262, -1790], ['潭子', -262, -1100], ['太原', 0, -505], ['台中', 95, 60], ['大慶', -356, 600], ['烏日', -560, 880], ['新烏日', -720, 990]],
+  },
+  trac: {
+    name: '台鐵海線', kind: 'tra', color: '#3a6fd8', w: 11, h: 8,
+    pts: [[-2265, -2150], [-2265, -1893], [-2265, -378], [-2265, 78], [-2265, 700], [-1940, 1100], [-1860, 1200]],
+    st: [['大甲', -2265, -1893], ['清水', -2265, -378], ['沙鹿', -2265, 78], ['龍井', -2265, 700], ['大肚', -1940, 1100]],
+  },
+  mrt: {
+    name: '台中捷運綠線', kind: 'mrt', color: '#3ab34a', w: 8, h: 10, realKm: 16.71,
+    pts: [[40, -700], [-30, -620], [-80, -540], [-140, -400], [-290, -400], [-620, -400], [-620, -330], [-620, -230], [-620, -110], [-620, 105], [-620, 190], [-620, 280], [-620, 360], [-620, 440], [-480, 440], [-356, 560], [-420, 690], [-490, 790], [-560, 880], [-705, 905]],
+    st: [['北屯總站', 40, -700], ['舊社', -30, -620], ['松竹', -80, -540], ['四維國小', -140, -400], ['文心崇德', -290, -400], ['文心中清', -620, -330], ['文華高中', -620, -230], ['文心櫻花', -620, -110], ['市政府', -620, 105], ['水安宮', -620, 190], ['文心森林公園', -620, 280], ['南屯', -620, 360], ['豐樂公園', -480, 440], ['大慶', -356, 560], ['九張犁', -420, 690], ['九德', -490, 790], ['烏日', -560, 880], ['高鐵臺中站', -705, 905]],
+  },
+};
+// 沿線里程（遊戲公尺）
+for (const L of Object.values(RAIL)) {
+  L.cum = [0]; for (let k = 1; k < L.pts.length; k++) L.cum.push(L.cum[k - 1] + dist(L.pts[k - 1][0], L.pts[k - 1][1], L.pts[k][0], L.pts[k][1]));
+  const along = (x, z) => { let best = 1e9, s = 0; for (let k = 1; k < L.pts.length; k++) { const [ax, az] = L.pts[k - 1], [bx, bz] = L.pts[k]; const dx = bx - ax, dz = bz - az, l2 = dx * dx + dz * dz; const t = clamp(((x - ax) * dx + (z - az) * dz) / l2, 0, 1); const d = dist(x, z, ax + dx * t, az + dz * t); if (d < best) { best = d; s = L.cum[k - 1] + t * Math.sqrt(l2); } } return s; };
+  L.stations = L.st.map(([n, x, z]) => ({ n, x, z, s: along(x, z), line: L }));
+  const s0 = L.stations[0].s, s1 = L.stations[L.stations.length - 1].s;
+  L.kmPerM = L.realKm ? L.realKm / (s1 - s0) : 7 / 1000; // 換算成實際公里（地圖縮小約 7 倍）
+}
+function railPointAt(L, s) { s = clamp(s, 0, L.cum[L.cum.length - 1]); for (let k = 1; k < L.pts.length; k++) if (s <= L.cum[k] || k === L.pts.length - 1) { const t = (s - L.cum[k - 1]) / ((L.cum[k] - L.cum[k - 1]) || 1); const [ax, az] = L.pts[k - 1], [bx, bz] = L.pts[k]; return { x: ax + (bx - ax) * t, z: az + (bz - az) * t, yaw: Math.atan2(-(bx - ax), -(bz - az)) }; } }
+// 建築避開軌道走廊
+function inRailCorridor(x0, x1, z0, z1) {
+  for (const L of Object.values(RAIL)) for (let k = 1; k < L.pts.length; k++) {
+    const [ax, az] = L.pts[k - 1], [bx, bz] = L.pts[k]; const r = L.w / 2 + 3;
+    // 線段 vs 矩形：取樣
+    const n = Math.ceil(dist(ax, az, bx, bz) / 4);
+    for (let q = 0; q <= n; q++) { const x = ax + (bx - ax) * q / n, z = az + (bz - az) * q / n; if (x > x0 - r && x < x1 + r && z > z0 - r && z < z1 + r) return true; }
+  }
+  return false;
+}
+// 票價
+function traFare(km) { km = Math.max(km, 10); return Math.round(km <= 50 ? km * 2.18 : 50 * 2.18 + (km - 50) * 1.92); }
+function mrtFare(km) { return km <= 5 ? 20 : Math.min(50, 20 + 5 * Math.ceil((km - 5) / 2 - 1e-9)); }
 
 /* ================= 城市：仿台中 ================= */
 const scene = new THREE.Scene();
@@ -1068,6 +1109,7 @@ function laneMarks(axis, c, w, a, b, ca, cb) {
 
 /* ---------- 一般建築 ---------- */
 function building(x0, x1, z0, z1, h, style, lot, signs) {
+  if (inRailCorridor(x0, x1, z0, z1)) return; // 鐵路／捷運高架下方不蓋房子
   const w = x1 - x0, d = z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
   const fm = { old: MAT.f_old, white: MAT.f_white, glass: MAT.f_glass, dark: MAT.f_dark, brick: MAT.f_brick, tile: MAT.f_tile }[style];
   const shopBase = (style === 'old' || style === 'tile' || style === 'brick' || style === 'white') && h < 40;
@@ -4808,6 +4850,144 @@ function updateSirenYield(dt) {
   }
 }
 
+/* ================= 大眾運輸：台鐵、台中捷運（要付錢） =================
+   台鐵區間車：2025/6/23 新票價，50 公里內每公里 2.18 元、未滿 10 公里以 10 公里計（最低 22 元）
+   台中捷運綠線：5 公里內 20 元，之後每 2 公里加 5 元，最高 50 元；營運 06:00～24:00 */
+const TRAINS = [];
+function onRoad(x, z, m) {
+  for (const e of EDGES) { const ax = XR[e.a[0]], az = ZR[e.a[1]], bx = XR[e.b[0]], bz = ZR[e.b[1]]; const hw = e.w / 2 + (m || 0); if (e.ax === 'ew' ? (x > ax - 2 && x < bx + 2 && Math.abs(z - az) < hw) : (z > az - 2 && z < bz + 2 && Math.abs(x - ax) < hw)) return e; }
+  return null;
+}
+function buildTransit() {
+  const concrete = new THREE.MeshLambertMaterial({ color: 0xb8b4aa });
+  const railM = new THREE.MeshLambertMaterial({ color: 0x5a524a });
+  MAT.concrete = concrete;
+  for (const L of Object.values(RAIL)) {
+    const H = L.h, W = L.w;
+    // 高架橋面＋護欄
+    for (let k = 1; k < L.pts.length; k++) {
+      const [ax, az] = L.pts[k - 1], [bx, bz] = L.pts[k]; const len = dist(ax, az, bx, bz), yaw = Math.atan2(bx - ax, bz - az);
+      const mk = (w, h, y, off, mat, key) => { const g = new THREE.BoxGeometry(w, h, len + (off === 0 ? 1 : 0)); g.rotateY(yaw); g.translate((ax + bx) / 2 + Math.cos(yaw) * off, y + h / 2, (az + bz) / 2 - Math.sin(yaw) * off); addGeo(key, mat, g); };
+      mk(W, 1.2, H - 1.2, 0, concrete, 'concrete');
+      mk(0.3, 1.1, H, W / 2 - 0.15, concrete, 'concrete'); mk(0.3, 1.1, H, -W / 2 + 0.15, concrete, 'concrete');
+      for (const o of L.kind === 'tra' ? [-2.6, -1.4, 1.4, 2.6] : [-1.4, 1.4]) mk(0.15, 0.2, H, o, railM, 'rail');
+      // 橋墩（避開車道與路口）
+      for (let t = 0; t < len; t += 30) {
+        const x = ax + (bx - ax) * t / len, z = az + (bz - az) * t / len;
+        const e = onRoad(x, z, 0.5); if (e) { const c = e.ax === 'ew' ? ZR[e.a[1]] : XR[e.a[0]], off = e.ax === 'ew' ? Math.abs(z - c) : Math.abs(x - c); if (off > 1.5 || e.w < 18) continue; if (NODES.some(([i, j]) => Math.abs(x - XR[i]) < vW(i) / 2 + 2 && Math.abs(z - ZR[j]) < hW(j) / 2 + 2)) continue; }
+        addGeo('concrete', concrete, boxGeo(1.6, H - 1.2, 1.6, x, 0, z)); addCol(x - 0.8, x + 0.8, z - 0.8, z + 0.8, H - 1.2, 'bld');
+      }
+    }
+    // 車站：高架月台＋地面售票口
+    for (const S of L.stations) {
+      const p = railPointAt(L, S.s);
+      const len = L.kind === 'tra' ? 70 : 46, pw = W + 8;
+      const dir = { x: -Math.sin(p.yaw), z: -Math.cos(p.yaw) };
+      const g = new THREE.BoxGeometry(pw, 1.2, len); g.rotateY(Math.atan2(dir.x, dir.z)); g.translate(p.x, H - 1.2, p.z); addGeo('concrete', concrete, g);
+      const r = new THREE.BoxGeometry(pw + 1, 0.4, len); r.rotateY(Math.atan2(dir.x, dir.z)); r.translate(p.x, H + 4.2, p.z); addGeo('roof', MAT.roof, r);
+      for (const sd of [-1, 1]) for (const t of [-len / 2 + 2, len / 2 - 2]) { const x = p.x + dir.x * t + dir.z * sd * pw / 2, z = p.z + dir.z * t - dir.x * sd * pw / 2; addGeo('pole', MAT.pole, boxGeo(0.3, 4.2, 0.3, x, H, z)); }
+      const label = (L.kind === 'tra' ? '台鐵 ' : '中捷 ') + S.n + (S.n.endsWith('站') ? '' : '站');
+      const sg = signBoard(label, L.kind === 'tra' ? { bg: '#1d3f8f', fg: '#fff', w: 512, h: 96 } : { bg: '#2f9a3a', fg: '#fff', w: 512, h: 96 }, 8, 1.4, p.x + dir.z * (pw / 2 + 0.3), H + 2.6, p.z - dir.x * (pw / 2 + 0.3), Math.atan2(dir.z, -dir.x), 0.9);
+      // 地面入口：放在最近的人行道上
+      let ex = p.x + dir.z * (pw / 2 + 3), ez = p.z - dir.x * (pw / 2 + 3);
+      const e = nearestRoad(p.x, p.z);
+      if (e && dist(e.px, e.pz, p.x, p.z) < 60) {
+        const ax = XR[e.a[0]], az = ZR[e.a[1]], bx = XR[e.b[0]], bz = ZR[e.b[1]], horiz = az === bz, w = horiz ? hW(e.a[1]) : vW(e.a[0]);
+        if (horiz) { ex = clamp(p.x, Math.min(ax, bx) + 16, Math.max(ax, bx) - 16); ez = az + Math.sign(p.z - az || 1) * (w / 2 + 2.4); } else { ez = clamp(p.z, Math.min(az, bz) + 16, Math.max(az, bz) - 16); ex = ax + Math.sign(p.x - ax || 1) * (w / 2 + 2.4); }
+      }
+      for (let q = 0; q < 4 && STATIC_INTERACT.some(o => o.station && dist(o.x, o.z, ex, ez) < 7); q++) { const e2 = nearestRoad(ex, ez); if (e2 && e2.a[1] === e2.b[1]) ex += 9; else ez += 9; }
+      addGeo(L.kind === 'tra' ? 'f_white' : 'f_glass', L.kind === 'tra' ? MAT.f_white : MAT.f_glass, boxGeo(3.6, 3, 2.4, ex, 0.18, ez, 'facade'));
+      addGeo('roof', MAT.roof, boxGeo(4.2, 0.3, 3, ex, 3.18, ez));
+      for (const ry of [0, Math.PI / 2]) signBoard(label, L.kind === 'tra' ? { bg: '#1d3f8f', fg: '#fff', w: 512, h: 96 } : { bg: '#2f9a3a', fg: '#fff', w: 512, h: 96 }, 3.4, 0.7, ex, 3.8, ez, ry, 0.9);
+      S.ex = ex; S.ez = ez; S.label = label;
+      STATIC_INTERACT.push({ station: true, x: ex, z: ez, r: 3.4, label: () => label + '：買票搭車', act: () => stationMenu(S) });
+    }
+    // 列車：每條線兩列，來回跑
+    for (let n = 0; n < 2; n++) {
+      const tr = makeTrain(L); scene.add(tr.g); tr.s = L.stations[n ? L.stations.length - 1 : 0].s; tr.dir = n ? -1 : 1; tr.dwell = rand(0, 8); tr.L = L; TRAINS.push(tr);
+    }
+  }
+  flushMerges();
+}
+function makeTrain(L) {
+  const g = new THREE.Group();
+  const cars = L.kind === 'tra' ? 4 : 2, cl = L.kind === 'tra' ? 20 : 21, w = L.kind === 'tra' ? 3 : 2.9;
+  const body = new THREE.MeshLambertMaterial({ color: L.kind === 'tra' ? 0xf2f2f2 : 0xf4f6f2 });
+  const stripe = new THREE.MeshLambertMaterial({ color: L.kind === 'tra' ? 0x2a52c8 : 0x3ab34a });
+  const win = new THREE.MeshLambertMaterial({ color: 0x1a2533, emissive: 0x334455, emissiveIntensity: 0.4 });
+  const parts = [];
+  for (let c = 0; c < cars; c++) {
+    const z = (c - (cars - 1) / 2) * (cl + 0.6);
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w, 3.4, cl), body); b.position.set(0, 2, z); g.add(b);
+    const s = new THREE.Mesh(new THREE.BoxGeometry(w + 0.05, 0.35, cl), stripe); s.position.set(0, 1.1, z); g.add(s);
+    const wd = new THREE.Mesh(new THREE.BoxGeometry(w + 0.06, 0.9, cl - 2), win); wd.position.set(0, 2.5, z); g.add(wd);
+  }
+  return { g, len: cars * (cl + 0.6) };
+}
+function updateTrains(dt) {
+  for (const T of TRAINS) {
+    const L = T.L, st = L.stations, s0 = st[0].s, s1 = st[st.length - 1].s;
+    if (T.dwell > 0) T.dwell -= dt;
+    else {
+      const sp = L.kind === 'tra' ? 22 : 16;
+      const next = T.dir > 0 ? st.find(q => q.s > T.s + 0.5) : st.slice().reverse().find(q => q.s < T.s - 0.5);
+      const tgt = next ? next.s : (T.dir > 0 ? s1 : s0); const rem = Math.abs(tgt - T.s);
+      const v = Math.min(sp, 2 + rem * 0.45);
+      T.s += T.dir * Math.min(rem, v * dt);
+      if (Math.abs(tgt - T.s) < 0.3) { T.dwell = L.kind === 'tra' ? 14 : 10; if (!next || tgt === s1 || tgt === s0) { if ((T.dir > 0 && tgt >= s1 - 0.5) || (T.dir < 0 && tgt <= s0 + 0.5)) T.dir *= -1; } }
+    }
+    const p = railPointAt(L, T.s); T.g.position.set(p.x, L.h, p.z); T.g.rotation.y = p.yaw;
+    T.g.visible = dist(p.x, p.z, P.x, P.z) < 650;
+  }
+}
+/* ---------- 搭車 ---------- */
+function serviceOpen(L) { const t = S.time; return L.kind === 'mrt' ? t >= 6 * 60 : t >= 5 * 60 + 30; }
+function stationMenu(S0) {
+  const L = S0.line;
+  S.card = S.card || 0; S.hasCard = !!S.hasCard;
+  if (W && W.stars) { radio('站務員正在盯著你看……警察在車站盤查通緝犯，現在進站會被抓！', 'warn'); return; }
+  if (S.onDuty) { radio('執勤中不能搭車離開，先下班吧。', 'info'); return; }
+  const open = serviceOpen(L);
+  const dests = L.stations.filter(q => q !== S0).map(q => {
+    const km = Math.abs(q.s - S0.s) * L.kmPerM, fare = L.kind === 'tra' ? traFare(km) : mrtFare(km);
+    const mins = Math.round(km / (L.kind === 'tra' ? 55 : 32) * 60) + (L.kind === 'tra' ? 6 : 4);
+    return { q, km, fare, mins };
+  });
+  const transfer = L.kind === 'tra' ? { '大慶': '可轉乘中捷', '烏日': '可轉乘中捷', '新烏日': '可轉乘中捷、高鐵' } : { '大慶': '可轉乘台鐵', '烏日': '可轉乘台鐵', '高鐵臺中站': '可轉乘台鐵新烏日站、高鐵' };
+  MODAL.custom(() => {
+    $('mbox').innerHTML = `<h2>${L.kind === 'tra' ? '🚆' : '🚇'} ${S0.label}</h2>
+      <p>${L.name}・${open ? (L.kind === 'tra' ? '區間車' : '每 5～8 分鐘一班') : '<b style="color:#ff8a7a">已經收班了（' + (L.kind === 'mrt' ? '06:00' : '05:30') + ' 首班）</b>'}</p>
+      <p>💳 悠遊卡：${S.hasCard ? '餘額 <b>' + fmtMoney(S.card) + '</b>' : '還沒有'}　💵 現金 ${fmtMoney(S.money)}</p>
+      <div class="phlist" style="max-height:44vh;overflow:auto">${dests.map((d, k) => `<div class="phrow" data-d="${k}"><div><b>${d.q.n}</b>${transfer[d.q.n] ? ' <small>' + transfer[d.q.n] + '</small>' : ''}<br><small>約 ${d.km.toFixed(1)} 公里・${d.mins} 分鐘</small></div><div class="ar"><b>${fmtMoney(d.fare)}</b></div></div>`).join('')}</div>
+      <p class="phnote">${L.kind === 'tra' ? '台鐵區間車：未滿 10 公里以 10 公里計，50 公里內每公里 2.18 元。' : '中捷綠線：5 公里內 20 元，之後每 2 公里加 5 元，最高 50 元。'}</p>
+      <div class="btns">${S.hasCard ? `<button class="btn" id="tkTop">💳 加值 $500</button>` : `<button class="btn" id="tkCard">💳 買悠遊卡（$100）</button>`}<button class="btn gray" id="tkX">離開</button></div>`;
+    $('mbox').querySelectorAll('[data-d]').forEach(el => el.onclick = () => { AU.click(); if (!open) { radio('已經收班了，等首班車吧。', 'info'); return; } rideTo(S0, dests[+el.dataset.d]); });
+    $('tkX').onclick = () => MODAL.close();
+    if ($('tkCard')) $('tkCard').onclick = () => { if (S.money < 100) { radio('錢不夠。', 'warn'); return; } S.money -= 100; txn(-100, '買悠遊卡'); S.hasCard = true; S.card = 0; AU.good(); stationMenu(S0); };
+    MODAL.esc = () => MODAL.close();
+    if ($('tkTop')) $('tkTop').onclick = () => { if (S.money < 500) { radio('現金不夠加值。', 'warn'); return; } S.money -= 500; S.card += 500; txn(-500, '悠遊卡加值'); AU.good(); stationMenu(S0); };
+  });
+}
+function rideTo(S0, d) {
+  const L = S0.line;
+  const pay = () => {
+    if (S.hasCard && S.card >= d.fare) { S.card -= d.fare; return '💳 刷悠遊卡 ' + fmtMoney(d.fare) + '（餘額 ' + fmtMoney(S.card) + '）'; }
+    if (S.money >= d.fare) { S.money -= d.fare; txn(-d.fare, (L.kind === 'tra' ? '台鐵 ' : '中捷 ') + S0.n + '→' + d.q.n + ' 單程票'); return '🎫 買單程票 ' + fmtMoney(d.fare); }
+    return null;
+  };
+  if (P.mode === 'vehicle') { MODAL.close(); radio('先下車才能進站。', 'info'); return; }
+  const how = pay(); if (!how) { radio('悠遊卡餘額和現金都不夠買票。', 'warn'); return; }
+  MODAL.close(); AU.good();
+  fadeTo(L.kind === 'tra' ? '🚆 搭' + L.name + '區間車 → ' + d.q.n : '🚇 搭中捷綠線 → ' + d.q.n, () => {
+    S.time += d.mins; while (S.time >= 1440) { S.time -= 1440; S.day++; S.workedToday = false; }
+    P.x = d.q.ex; P.z = d.q.ez; P.mode = 'foot'; P.veh = null; P.yaw += Math.PI;
+    S.energy = Math.max(0, S.energy - d.mins * 0.03);
+    updateHUD(true);
+    setTimeout(() => toast('good', (L.kind === 'tra' ? '🚆 ' : '🚇 ') + '到站：' + d.q.n, how + '・搭了 ' + d.mins + ' 分鐘'), 600);
+    addLog((L.kind === 'tra' ? '🚆 ' : '🚇 ') + S0.n + ' → ' + d.q.n + '（' + fmtMoney(d.fare) + '）');
+  });
+}
+
 /* ================= 傷亡、通緝（GTA 星等）、法院判決、維安特勤隊 ================= */
 
 /* ---------- 法條（中華民國刑法、警察人員人事條例、警械使用條例） ---------- */
@@ -5570,7 +5750,7 @@ function renderPhone() {
     body = `<h3>💬 訊息</h3><div class="phlist">` + ((S.msgs || []).length ? S.msgs.map(m => `<div class="phmsg"><b>${m.from}</b> <small>第${m.day}天 ${fmtTime(m.t)}</small><div>${m.text}</div></div>`).join('') : '<p class="phnote">還沒有訊息</p>') + '</div>';
   } else if (A === 'bank') {
     const sv = stockValue();
-    body = `<h3>🏦 麥麥商業銀行</h3><div class="phkv col"><span>存款　<b>${fmtMoney(S.money)}</b></span><span>股票市值　<b>${fmtMoney(sv)}</b></span><span>總資產　<b>${fmtMoney(S.money + sv)}</b></span></div>
+    body = `<h3>🏦 麥麥商業銀行</h3><div class="phkv col"><span>存款　<b>${fmtMoney(S.money)}</b></span><span>股票市值　<b>${fmtMoney(sv)}</b></span><span>💳 悠遊卡　<b>${S.hasCard ? fmtMoney(S.card || 0) : '沒有'}</b></span><span>總資產　<b>${fmtMoney(S.money + sv + (S.card || 0))}</b></span></div>
       <h4>最近交易</h4><div class="phlist">` + ((S.tx || []).length ? S.tx.map(t => `<div class="phrow"><div><small>第${t.d}天 ${fmtTime(t.t)}</small><br>${t.s}</div><div class="ar ${t.a >= 0 ? 'up' : 'dn'}"><b>${t.a >= 0 ? '+' : ''}${t.a.toLocaleString()}</b></div></div>`).join('') : '<p class="phnote">沒有交易紀錄</p>') + '</div>';
   } else if (A === 'bag') {
     const inv = Object.entries(S.inv || {});
@@ -5755,6 +5935,12 @@ function buildMapImage() {
     g.fillStyle = e.name === '國道1號' ? '#f0b040' : e.w >= 18 ? '#f4e6a8' : '#e8e4d8';
     if (e.ax === 'ew') g.fillRect(T(ax), U(az) - w / 2, (bx - ax) * MAP_RES, w); else g.fillRect(T(ax) - w / 2, U(az), w, (bz - az) * MAP_RES);
   }
+  // 軌道
+  for (const L of Object.values(RAIL)) {
+    g.strokeStyle = L.kind === 'mrt' ? '#2f9a3a' : '#222'; g.lineWidth = L.kind === 'mrt' ? 5 : 4; g.setLineDash(L.kind === 'mrt' ? [] : [10, 6]);
+    g.beginPath(); L.pts.forEach(([x, z], k) => k ? g.lineTo(T(x), U(z)) : g.moveTo(T(x), U(z))); g.stroke(); g.setLineDash([]);
+    for (const st of L.stations) { g.fillStyle = '#fff'; g.strokeStyle = L.kind === 'mrt' ? '#2f9a3a' : '#1d3f8f'; g.lineWidth = 2; g.beginPath(); g.arc(T(st.x), U(st.z), 4.5, 0, 7); g.fill(); g.stroke(); }
+  }
   MAPIMG = c;
 }
 // 路名、地名（畫在地圖上，依縮放顯示）
@@ -5773,6 +5959,7 @@ function drawMapLabels(g, X, Z, sc, big) {
 const ICONS = () => [
   [SITES.station, '👮', '大墩分局'], [SITES.cga, '⚓', '海巡隊'], [SITES.tra, '🚉', '台中車站'], [SITES.hsr, '🚄', '高鐵台中站'], [SITES.home, '🏠', '我家'], [SITES.market, '🏮', '一中街夜市'], [SITES.dealer, '🚘', '車行'], [SITES.hospital, '🏥', '醫院'], [SITES.bank, '🏦', '銀行'],
   ...SITES.stores.map(s => [s, '🏪', '超商']),
+  ...Object.values(RAIL).flatMap(L => L.stations.map(st => [{ x: st.ex != null ? st.ex : st.x, z: st.ez != null ? st.ez : st.z }, L.kind === 'mrt' ? 'Ⓜ️' : '🚉', st.label || st.n])),
 ];
 function drawMini() {
   const c = $('mini'), g = c.getContext('2d'), W = c.width, sc = 0.62;
@@ -5923,7 +6110,7 @@ function loop(now) {
     for (let k = MHUMANS.length - 1; k >= 0; k--) { const h = MHUMANS[k]; if (h.role === 'robber' || h.role === 'clerk' || h.ai) continue;
       if (h.walk) { h.x += h.walk.vx * dt; h.z += h.walk.vz * dt; h.P.g.rotation.y = Math.atan2(h.walk.vx, h.walk.vz); h.walk.t -= dt; if (h.walk.t <= 0) { removeHuman(h); continue; } }
       posePerson(h.P, h.pose || 'idle', dt, 1.6); h.P.g.position.set(h.x, 0.2, h.z); }
-    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateGarbageMusic(); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt);
+    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateGarbageMusic(); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt);
   } else AU.update(false, 0, false);
   frame++;
   updateSky();
@@ -5935,7 +6122,7 @@ function loop(now) {
 }
 
 // 測試用：快速模擬（不畫圖）
-function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); } }
+function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); } }
 
 /* ---------- 開始 ---------- */
 function startGame(fresh) {
@@ -5967,7 +6154,7 @@ MIS.update = function (dt) {
 function boot() {
   if (!window.THREE) { $('loading').textContent = '⚠️ 3D 引擎載入失敗，請確認網路連線後重新整理。'; return; }
   try {
-    buildCity(); buildCams(); buildCoast(); buildMapImage(); initPlayerVehicles(); initStaticInteracts();
+    buildCity(); buildCams(); buildCoast(); buildTransit(); buildMapImage(); initPlayerVehicles(); initStaticInteracts();
   } catch (e) { $('loading').textContent = '⚠️ 載入錯誤：' + e.message; console.error(e); return; }
   P.x = SITES.home.x; P.z = SITES.home.z + 1.5; P.yaw = Math.PI;
   camera.position.set(SITES.station.x - 60, 40, SITES.station.z + 80); camera.lookAt(SITES.station.x, 0, SITES.station.z);
