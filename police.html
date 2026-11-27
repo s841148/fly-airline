@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  台中警察日常
+  台中日常生活
   © 2026 麥麥的遊戲工廠. All rights reserved.
   使用條款：本遊戲僅供個人免費遊玩，未經麥麥的遊戲工廠同意，不得複製、修改、轉載或用於商業用途。
 -->
@@ -10,7 +10,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="copyright" content="© 2026 麥麥的遊戲工廠">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>台中警察日常 · 麥麥的遊戲工廠</title>
+<title>台中日常生活 · 麥麥的遊戲工廠</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;overflow:hidden;background:#000;font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;color:#fff;user-select:none;-webkit-user-select:none;touch-action:none}
@@ -116,6 +116,42 @@ body.touch #prompt{bottom:calc(6px + 80px);font-size:15px}
 body.touch #pursuit{bottom:auto;top:96px}
 body.touch #radio{width:min(300px,36vw)}
 body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;width:auto;max-width:34vw;white-space:nowrap}body.touch #navbox br{display:none}body.touch #navbox small{margin-left:6px}
+
+/* 選角 */
+.chgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.chcard{background:#1a2440;border:2px solid #34508f;border-radius:12px;padding:10px;cursor:pointer;font-size:13px;line-height:1.45}
+.chcard:hover{border-color:#ffd84a;background:#22305a}.chcard .chi{font-size:40px;text-align:center}.chcard b{font-size:17px;display:block;text-align:center}
+.chcard .chm{text-align:center;color:#9fb3d9}.chcard p{margin:6px 0;color:#d5def0}.chcard .chs{color:#ffd84a}
+@media (max-width:700px),(max-height:500px){.chgrid{grid-template-columns:1fr}.chcard p{display:none}.chcard{display:flex;gap:10px;align-items:center}.chcard .chi{font-size:28px}}
+/* 手機 */
+.box.phone{width:auto;background:transparent;border:0;box-shadow:none;padding:0;overflow:visible;display:flex;align-items:center;gap:10px}
+.phframe{width:min(330px,80vw);height:min(640px,94vh);background:#0d1220;border:3px solid #444c5c;border-radius:30px;box-shadow:0 20px 60px rgba(0,0,0,.7);display:flex;flex-direction:column;overflow:hidden;position:relative}
+.phtop{display:flex;justify-content:space-between;padding:8px 18px 2px;font-size:12px;color:#cfd8ea}
+.phback{background:none;border:0;color:#7fb2ff;font-size:15px;text-align:left;padding:2px 14px;cursor:pointer}
+.phbody{flex:1;overflow:auto;padding:4px 12px 10px;color:#e8eefb;font-size:13px;position:relative}
+.phbody h3{margin:4px 0 8px;font-size:17px}.phbody h3 small{font-size:11px;color:#9fb3d9;font-weight:normal}.phbody h4{margin:10px 0 4px}
+.phhome{height:22px;border:0;background:none;cursor:pointer;position:relative}.phhome:after{content:'';position:absolute;left:50%;top:8px;width:110px;height:5px;margin-left:-55px;border-radius:3px;background:#6b7385}
+.phx{align-self:flex-start}
+.phwall{background:linear-gradient(160deg,#2a4b8f,#6a3d8f 60%,#c0577a);margin:-4px -12px -10px;padding:14px 12px;min-height:100%;box-sizing:border-box}
+.phclock{font-size:46px;text-align:center;font-weight:200}.phdate{text-align:center;margin-bottom:16px;color:#e6e6ff}
+.phgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 6px}
+.phapp{background:none;border:0;color:#fff;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;position:relative}
+.phapp span{font-size:24px;width:48px;height:48px;border-radius:13px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
+.phapp i,.phbadge{position:absolute;top:-4px;right:6px;background:#ff3b30;color:#fff;font-style:normal;font-size:10px;border-radius:9px;padding:1px 5px}
+.phbadge{top:-2px;right:-2px}
+.phbal{margin-top:22px;text-align:center;background:rgba(0,0,0,.25);border-radius:12px;padding:8px}
+.phlist{display:flex;flex-direction:column;gap:6px}
+.phrow{display:flex;justify-content:space-between;align-items:center;gap:6px;background:#172038;border-radius:10px;padding:7px 9px;cursor:pointer}
+.phrow small{color:#9fb3d9}.ar{text-align:right;white-space:nowrap}.up{color:#ff6a6a!important}.dn{color:#3ccf6e!important}
+.phbig{font-size:28px;font-weight:bold;margin:4px 0}.phbig small{font-size:13px}
+.phkv{display:flex;justify-content:space-between;gap:6px;font-size:12px;color:#cfd8ea;margin:6px 0;flex-wrap:wrap}.phkv.col{flex-direction:column;font-size:15px}
+.phqty{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin:8px 0}.phqty .btn,.btn.sm{padding:4px 8px;font-size:12px}
+.phbtns{display:flex;gap:10px}.phbtns .btn{flex:1;font-size:16px}
+.phnote{color:#9fb3d9;font-size:11.5px;margin:6px 0}
+.phtabs{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}.phtabs button{background:#172038;border:1px solid #34508f;color:#cfd8ea;border-radius:14px;padding:3px 10px;cursor:pointer;font-size:12px}.phtabs .on{background:#3d6fd6;color:#fff}
+.phmsg{background:#172038;border-radius:10px;padding:7px 9px}.phmsg small{color:#9fb3d9}
+.phtoast{position:sticky;bottom:0;background:#ffd84a;color:#111;border-radius:10px;padding:6px 10px;margin-top:8px;font-weight:bold;text-align:center}
+.spark{display:block}
 </style>
 </head>
 <body>
@@ -162,6 +198,7 @@ body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;w
   <button class="tb" id="tBackup" style="left:calc(3vw + 155px);bottom:calc(5vh + 172px);background:rgba(190,40,40,.55)">🆘<small>請求支援</small></button>
   <button class="tb" id="tPunch" style="right:35vw;bottom:44vh">👊<small>揍人</small></button>
   <button class="tb" id="tRadio" style="right:25vw;bottom:26vh">📻<small>電台</small></button>
+  <button class="tb" id="tPhone" style="right:calc(10px + 236px);top:10px;width:46px;height:46px;font-size:18px;position:absolute">📱<i id="phBadge" class="phbadge" style="display:none">0</i></button>
   <button class="tb" id="tMenu" style="right:calc(10px + 180px);top:66px;width:46px;height:46px;font-size:18px">☰</button>
 </div>
 
@@ -172,11 +209,11 @@ body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;w
 
 <div id="intro">
   <div class="in">
-    <div style="font-size:54px">🚓</div>
-    <h1>台中<span>警察</span>日常</h1>
-    <div class="sub">3D 第一人稱 · 打卡上班巡邏、攔檢、處理搶案，下班過自己的生活</div>
+    <div style="font-size:54px">🏙️</div>
+    <h1>台中<span>日常</span>生活</h1>
+    <div class="sub">3D 第一人稱 · 選一個角色在台中過日子：找工作、當警察、玩股票、網購、開車亂逛</div>
     <div id="introBtns" class="hidden">
-      <button class="btn g" id="bNew">▶ 新的警察生涯</button>
+      <button class="btn g" id="bNew">▶ 開始新的人生</button>
       <button class="btn" id="bCont">⏯ 繼續遊戲</button>
       <div class="opts">難度：
         <select id="diffSel"><option value="0">簡單（搶匪比較會投降）</option><option value="1" selected>普通（真實但不會太難）</option><option value="2">真實（中槍很痛）</option></select>
@@ -185,10 +222,10 @@ body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;w
     <div id="loading">載入中…</div>
     <div class="help">
       <b>🖥 電腦操作</b>：點畫面鎖定滑鼠 · WASD 移動 · 滑鼠看 · 左鍵開槍 · 右鍵瞄準 · Shift 跑步<br>
-      E 互動 · F 上下車 · Q 喊話「警察！不要動！」 · H 警笛 · R 換彈匣 · 1 手槍 / 2 電擊槍 / 3 警棍 / 4 步槍（特勤隊）· V 揍人 · M 地圖（點地圖設導航）· N 車上電台 · B 請求支援（再按一次叫特勤隊）· G 對空鳴槍 · Esc 選單<br>
+      E 互動 · P 手機 · F 上下車 · Q 喊話「警察！不要動！」 · H 警笛 · R 換彈匣 · 1 手槍 / 2 電擊槍 / 3 警棍 / 4 步槍（特勤隊）· V 揍人 · M 地圖（點地圖設導航）· N 車上電台 · B 請求支援（再按一次叫特勤隊）· G 對空鳴槍 · Esc 選單<br>
       開車：W 油門 · S 煞車/倒車 · A D 轉彎 · 空白鍵 手煞車<br>
       <b>📱 手機</b>：橫拿手機，左邊搖桿移動 / 開車，右邊滑動看四周，按鈕操作。<br>
-      <b>👮 一天的流程</b>：早上 8:00 前到「大墩分局」打卡上班（領槍、開警車）→ 聽無線電派案 → 17:00 後回分局打卡下班 → 下班可以騎車亂逛、吃夜市、買車，回家睡覺到隔天。週日放假。
+      <b>🏙️ 怎麼玩</b>：開局從三個角色選一個，一開始沒有工作。用手機（P）看求職、買股票、網購；想當警察就到「大墩分局」人事室考特考，考上後每天 8:00 打卡上班、17:00 下班。回家睡覺跳到隔天。
     </div>
     <div class="copy">© 2026 麥麥的遊戲工廠 版權所有 · 本遊戲為原創作品，地名街景為虛構重現，未經授權請勿轉載或作商業用途</div>
   </div>
@@ -197,7 +234,7 @@ body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;w
 <script>if(!window.THREE){document.getElementById('loading').textContent='⚠️ 3D 引擎載入失敗，請確認網路連線後重新整理。';}</script>
 <script>
 'use strict';
-/* ============ 台中警察日常 · © 2026 麥麥的遊戲工廠 ============ */
+/* ============ 台中日常生活 · © 2026 麥麥的遊戲工廠 ============ */
 const $ = id => document.getElementById(id);
 const rand = (a, b) => a + Math.random() * (b - a);
 const randi = (a, b) => Math.floor(rand(a, b + 1));
@@ -248,10 +285,11 @@ function newState() {
     pen: { rep: 0, dem: 0, major: 0 }, award: { com: 0, mer: 0 },
     stats: { tickets: 0, arrests: 0, robbery: 0, patrol: 0, check: 0, days: 0 },
     owned: ['scooter'], log: [], diff: 1, absentChecked: 0,
+    char: 'a', name: '', job: '', jobStart: 0, msgs: [], tx: [], inv: {}, keep: [], furn: [], parcels: [], hold: {}, met: {}, news: [], rentDue: 0,
   };
 }
 let S = newState();
-const SAVE_KEY = 'mmPolice_v1';
+const SAVE_KEY = 'mmTaichungLife_v1';
 function saveGame() { safeSet(SAVE_KEY, JSON.stringify(S)); }
 function loadGame() { try { const t = safeGet(SAVE_KEY); if (!t) return null; const o = JSON.parse(t); return Object.assign(newState(), o); } catch (e) { return null; } }
 
@@ -609,7 +647,7 @@ function signBoard(text, opt, w, h, x, y, z, ry, night) {
 
 /* ---------- 區塊 ---------- */
 const BLOCKS = [];
-const SITES = { stores: [], bank: null, station: null, home: null, dealer: null, hospital: null, market: null };
+const SITES = { stores: [], bank: null, station: null, home: null, homes: {}, dealer: null, hospital: null, market: null };
 const PATROL_BOXES = [];
 const CHECK_SITES = [];
 const STATIC_INTERACT = []; // {x,z,r,label(),ok(),act()}
@@ -662,7 +700,7 @@ function buildCity() {
     addGeo('walk', MAT.walk, boxGeo(b.x1 - b.x0, 0.18, b.z1 - b.z0, b.cx, 0, b.cz, 'world'));
   }
   const bk = (x, z) => blockAtXZ(x, z);
-  bk(40, 40).type = 'station'; bk(-280, 200).type = 'home'; bk(120, 200).type = 'dealer'; bk(-120, -200).type = 'hospital';
+  bk(40, 40).type = 'station'; bk(-280, 200).type = 'home'; bk(200, 200).type = 'home_b'; bk(-200, -40).type = 'home_c'; bk(120, 200).type = 'dealer'; bk(-120, -200).type = 'hospital';
   bk(-280, -120).type = 'market'; bk(-40, -200).type = 'park'; bk(280, -120).type = 'lake'; bk(-40, -40).type = 'bank';
   [[-120, 120], [120, -40], [280, 120], [-200, 200], [200, 280]].forEach(([x, z]) => bk(x, z).type = 'store');
   for (const b of BLOCKS) {
@@ -676,7 +714,9 @@ function buildCity() {
   for (const b of BLOCKS) {
     switch (b.type) {
       case 'station': buildStation(b); break;
-      case 'home': buildHome(b); break;
+      case 'home': buildHome(b, 'a'); break;
+      case 'home_b': buildHome(b, 'b'); break;
+      case 'home_c': buildHome(b, 'c'); break;
       case 'dealer': buildDealer(b); break;
       case 'hospital': buildHospital(b); break;
       case 'market': buildMarket(b); break;
@@ -890,16 +930,23 @@ function buildStation(b) {
   for (let k = 0; k < 6; k++) addGeo('mwhite', MAT.white, flatQuad(lot.x0 + 8 + k * 6, lot.z0 + 8, lot.x0 + 8.15 + k * 6, lot.z0 + 14, 0.22));
   SITES.station = { x: cx, z: z0 - 2.5, door: { x: cx, z: z0 - 1.5 }, car: { x: lot.x0 + 11, z: lot.z0 + 11, yaw: 0 }, scooter: { x: lot.x0 + 23, z: lot.z0 + 11, yaw: 0 }, lot: { x0: lot.x0, x1: lot.x1, z0: lot.z0, z1: lot.z0 + 30 }, name: '大墩分局' };
 }
-function buildHome(b) {
+const HOME_CFG = {
+  a: { sign: '大墩華廈', name: '大墩華廈', floors: 12, style: 'tile', inset: 10 },
+  b: { sign: '王宅', name: '王家透天厝', floors: 4, style: 'old', inset: 22 },
+  c: { sign: '幸福套房出租', name: '幸福套房', floors: 7, style: 'brick', inset: 16 },
+};
+function buildHome(b, key) {
+  key = key || 'a'; const C = HOME_CFG[key];
   const lot = lotOf(b);
-  const x0 = lot.x0 + 10, x1 = lot.x1 - 10, z0 = lot.z0 + 6, z1 = lot.z1 - 16;
-  building(x0, x1, z0, z1, 12 * 3.2, 'tile', lot, false);
+  const x0 = lot.x0 + C.inset, x1 = lot.x1 - C.inset, z0 = lot.z0 + 6, z1 = lot.z1 - 16;
+  building(x0, x1, z0, z1, C.floors * 3.2, C.style, lot, false);
   const cx = (x0 + x1) / 2;
-  signBoard('大墩華廈', { bg: '#3a2a1a', fg: '#ffd890', w: 512, h: 128 }, 6, 1.5, cx, 4.4, z1 + 0.35, 0, 0.9);
+  signBoard(C.sign, { bg: '#3a2a1a', fg: '#ffd890', w: 512, h: 128 }, 6, 1.5, cx, 4.4, z1 + 0.35, 0, 0.9);
   addGeo('lot', MAT.lot, boxGeo(x1 - x0 + 8, 0.2, 13, cx, 0, z1 + 7.5));
   addGeo('dark', MAT.dark, boxGeo(2.4, 2.6, 0.2, cx, 0.2, z1 + 0.35)); // 大門
   fillBlock(b, 'res', { x0: x0 - 4, x1: x1 + 4, z0: z0 - 4, z1: z1 + 16 });
-  SITES.home = { x: cx, z: z1 + 1.5, door: { x: cx, z: z1 + 1.2 }, park: [{ x: cx - 8, z: z1 + 8, yaw: Math.PI }, { x: cx - 3, z: z1 + 8, yaw: Math.PI }, { x: cx + 3, z: z1 + 8, yaw: Math.PI }, { x: cx + 9, z: z1 + 8, yaw: Math.PI }], name: '家（大墩華廈）' };
+  SITES.homes[key] = { key, x: cx, z: z1 + 1.5, door: { x: cx, z: z1 + 1.2 }, park: [{ x: cx - 8, z: z1 + 8, yaw: Math.PI }, { x: cx - 3, z: z1 + 8, yaw: Math.PI }, { x: cx + 3, z: z1 + 8, yaw: Math.PI }, { x: cx + 9, z: z1 + 8, yaw: Math.PI }], name: '家（' + C.name + '）', short: C.name };
+  if (key === 'a') SITES.home = SITES.homes.a;
 }
 function buildDealer(b) {
   const lot = lotOf(b);
@@ -1806,6 +1853,7 @@ addEventListener('keydown', e => {
     case 'Digit3': setWeapon(2); break;
     case 'Digit4': setWeapon(3); break;
     case 'KeyM': toggleMap(); break;
+    case 'KeyP': openPhone(); break;
     case 'KeyN': RADIO.cycle(); break;
     case 'KeyB': requestBackup(); break;
     case 'KeyG': warningShot(); break;
@@ -1843,7 +1891,7 @@ function initTouch() {
   tap('tFire', () => { INP.fireHeld = true; fire(); }, () => { INP.fireHeld = false; });
   tap('tAct', doInteract); tap('tCar', toggleVehicle); tap('tShout', shout); tap('tPunch', punch); tap('tSiren', toggleSiren); tap('tRel', reload);
   tap('tWeap', () => { const L = S.unit === 'swat' ? [3, 0, 1, 2] : [0, 1, 2]; setWeapon(L[(L.indexOf(S.weapon) + 1) % L.length]); }); tap('tRun', () => { INP.run = true; }, () => { INP.run = false; });
-  tap('tMap', toggleMap); tap('tMenu', openPause); tap('tRadio', () => RADIO.cycle()); tap('tBackup', requestBackup); tap('tWarn', warningShot); tap('tAim', () => { INP.aim = !INP.aim; $('tAim').style.background = INP.aim ? 'rgba(255,216,74,.7)' : ''; });
+  tap('tMap', toggleMap); tap('tPhone', () => openPhone()); tap('tMenu', openPause); tap('tRadio', () => RADIO.cycle()); tap('tBackup', requestBackup); tap('tWarn', warningShot); tap('tAim', () => { INP.aim = !INP.aim; $('tAim').style.background = INP.aim ? 'rgba(255,216,74,.7)' : ''; });
 }
 
 /* ---------- 第一人稱手與槍 ---------- */
@@ -2114,7 +2162,7 @@ function updatePlayer(dt) {
     driveVehicle(dt, lookX, lookY);
   }
   // 體力
-  S.energy = clamp(S.energy - dt * GAME.tscale * (P.run ? 0.2 : 0.085), 0, 100);
+  S.energy = clamp(S.energy - dt * GAME.tscale * (P.run ? (hasItem('shoes') ? 0.12 : 0.2) : 0.085), 0, Math.max(100, S.energy));
   if (P.hurtT > 6 && S.hp < 100) S.hp = Math.min(100, S.hp + dt * 2.5);
   if (S.energy <= 0) collapse();
   // 警示燈
@@ -2661,6 +2709,7 @@ function clockIn() {
   if (S.onDuty) return;
   if (W.stars) { arrestPlayer('你一進分局就被同事認出來，當場逮捕'); return; }
   if (S.dismissed) { radio('你已經被免職了，不能打卡。到分局「人事室」可以重新報考警察。', 'warn'); return; }
+  if (S.job !== 'police') { radio('你不是這裡的員警喔。想當警察，到右邊「人事室」報考警察特考。', 'info'); return; }
   const late = isWorkday(S.day) && !S.workedToday && S.time > 8 * 60 + 30;
   if (TLAW.chase) endCop();
   S.onDuty = true; S.clockIn = S.time; S.workedToday = true;
@@ -2688,7 +2737,7 @@ function clockOut() {
   if (P.mode === 'vehicle') { if (Math.abs(P.veh.speed) > 3) { radio('先把車停好再打卡。', 'info'); return; } P.veh.speed = 0; P.veh.siren = false; toggleVehicle(); setTimeout(() => { if (!P.anim && P.mode === 'foot') clockOut(); }, 1400); return; }
   const doOut = (extraPen) => {
     if (MIS.cur) { if (S.time >= 16 * 60 + 30) { addLog('下班交接勤務：' + MIS.cur.title); MIS.end(true, '勤務指揮中心：收到，' + MIS.cur.title + '交接給夜班同仁，辛苦了。'); } else MIS.cancel(); }
-    const p = payToday(); S.money += p.pay; S.stats.days++;
+    const p = payToday(); S.money += p.pay; txn(p.pay, '大墩分局薪水'); S.stats.days++;
     offDutyNow();
     if (extraPen) { POLICE_CAR.reset(); POLICE_SCOOT.reset(); punish('rep', extraPen); }
     toast('good', '🕔 打卡下班　薪水 ' + fmtMoney(p.pay), '今天工作 ' + Math.floor(p.mins / 60) + ' 小時 ' + Math.round(p.mins % 60) + ' 分' + (p.ot > 0 ? '（含加班 ' + Math.round(p.ot) + ' 分）' : ''));
@@ -2735,18 +2784,19 @@ function goSleep() {
       if (S.time < 12 * 60) S.time = 12 * 60; checkAbsent();
       S.day++; S.workedToday = false;
     }
-    S.time = target; S.energy = 100; S.hp = 100;
+    S.time = target; S.energy = hasItem('bed') ? 120 : 100; S.hp = 100; S.mkMin = null;
     const wrecked = PVEHS.filter(v => !v.police && !v.civ && (v.wreck || v.hp < 100)).length;
     if (wrecked) { S.money -= wrecked * 3000; setTimeout(() => radio('🔧 你的車已經送修好了，修車費 ' + fmtMoney(wrecked * 3000) + '。', 'info'), 1500); }
     respawnOwned(); for (const pv of [POLICE_CAR, POLICE_SCOOT]) if (pv.wreck || pv.hp < 100) restoreVeh(pv); POLICE_CAR.reset(); POLICE_SCOOT.reset();
     const h = SITES.home; P.x = h.x; P.z = h.z + 1.5; P.yaw = Math.PI; P.pitch = 0;
     saveGame();
     setTimeout(() => deliverMail(), 3600);
-    setTimeout(() => { toast('rank', '☀️ 第 ' + S.day + ' 天（週' + WEEK[weekday(S.day)] + '）早上 07:00', isWorkday(S.day) ? '08:00 要到大墩分局打卡上班（08:30 後算遲到）' : '今天週日放假！'); }, 700);
+    setTimeout(() => { toast('rank', '☀️ 第 ' + S.day + ' 天（週' + WEEK[weekday(S.day)] + '）早上 07:00', S.job !== 'police' || S.dismissed ? '還沒有工作，可以拿手機（P）看看求職 App' : isWorkday(S.day) ? '08:00 要到大墩分局打卡上班（08:30 後算遲到）' : '今天週日放假！'); morningLife(); }, 700);
   });
 }
 function checkAbsent() {
   if (S.absentChecked === S.day) return; S.absentChecked = S.day;
+  if (S.job !== 'police' || S.dismissed || S.jobStart > S.day) return;
   if (isWorkday(S.day) && !S.workedToday && !S.onDuty) punish('dem', '無故曠職（中午 12:00 前沒有到班）');
 }
 
@@ -2785,7 +2835,7 @@ function dealerMenu() {
       `<p style="color:#9fb3d9;font-size:12px">提示：每次任務都有績效獎金，存錢就能買車。</p><div class="btns"><button class="btn gray" id="mclose">離開</button></div>`;
     $('mbox').querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
       const k = b.dataset.k, v = VEH_SPECS[k]; if (S.money < v.price) return;
-      S.money -= v.price; S.owned.push(k); respawnOwned(); AU.good(); toast('good', '🎉 買到 ' + v.name + '！', '已經停在你家（大墩華廈）樓下'); addLog('買了 ' + v.name); saveGame(); render();
+      S.money -= v.price; S.owned.push(k); respawnOwned(); AU.good(); toast('good', '🎉 買到 ' + v.name + '！', '已經停在你家（' + SITES.home.short + '）樓下'); addLog('買了 ' + v.name); saveGame(); render();
     });
     $('mclose').onclick = () => MODAL.close();
   };
@@ -2793,10 +2843,10 @@ function dealerMenu() {
 }
 function initStaticInteracts() {
   const st = SITES.station, home = SITES.home;
-  STATIC_INTERACT.push({ x: st.x, z: st.z, r: 4, veh: true, label: () => S.onDuty ? '打卡下班' : '打卡上班（領槍、換制服）', act: () => S.onDuty ? clockOut() : clockIn() });
+  STATIC_INTERACT.push({ x: st.x, z: st.z, r: 4, veh: true, label: () => S.onDuty ? '打卡下班' : S.job === 'police' && !S.dismissed ? '打卡上班（領槍、換制服）' : '大墩分局（洽公）', act: () => S.onDuty ? clockOut() : clockIn() });
   signBoard('🚓 車輛調度', { bg: '#0b3d91', fg: '#fff', w: 256, h: 64 }, 1.6, 0.4, st.x - 7, 2.2, st.z + 1.4, 0, 0.6);
   signBoard('🛡️ 人事室', { bg: '#1d2126', fg: '#fff', w: 256, h: 64 }, 1.6, 0.4, st.x + 7, 2.2, st.z + 1.4, 0, 0.6);
-  STATIC_INTERACT.push({ x: st.x + 7, z: st.z + 0.5, r: 2.6, label: () => S.dismissed ? '人事室：重新報考警察' : S.unit === 'swat' ? '人事室：維安特勤隊（調回分局）' : '人事室：申請調任維安特勤隊', act: swatTransferMenu });
+  STATIC_INTERACT.push({ x: st.x + 7, z: st.z + 0.5, r: 2.6, label: () => S.dismissed ? '人事室：重新報考警察' : S.job !== 'police' ? '人事室：報考警察特考' : S.unit === 'swat' ? '人事室：維安特勤隊（調回分局）' : '人事室：申請調任維安特勤隊', act: swatTransferMenu });
   STATIC_INTERACT.push({
     x: st.x - 7, z: st.z + 0.5, r: 2.6, label: () => { const bad = [POLICE_CAR, POLICE_SCOOT].some(pv => pv.wreck || pv.hp < 100 || dist(pv.x, pv.z, pv.home.x, pv.home.z) > 60); return bad ? '車輛調度：申請新警車' : '車輛調度（警車狀況良好）'; },
     act: () => {
@@ -2807,9 +2857,10 @@ function initStaticInteracts() {
         [['📝 送出申請', 'g', () => { MODAL.close(); for (const pv of bad) restoreVeh(pv); AU.radio(); radio('📻 車輛調度：「已核准！新的' + bad.map(pv => pv.spec.name).join('、') + '停在分局前面了。」', 'radio'); addLog('申請新警車'); }], ['算了', 'gray', () => MODAL.close()]]);
     }
   });
-  STATIC_INTERACT.push({
-    x: home.door.x, z: home.door.z, r: 2.6, label: () => '回家', act: () => {
-      MODAL.show(`<h2>🏠 我家（大墩華廈）</h2><p>現在 ${fmtTime(S.time)}　❤️ ${Math.round(S.hp)}　⚡ ${Math.round(S.energy)}</p>`,
+  for (const hm of Object.values(SITES.homes)) STATIC_INTERACT.push({
+    x: hm.door.x, z: hm.door.z, r: 2.6, label: () => SITES.home === hm ? '回家' : hm.short + '（別人家）', act: () => {
+      if (SITES.home !== hm) { radio('這不是你家，按門鈴沒人應。', 'info'); return; }
+      MODAL.show(`<h2>🏠 我家（${hm.short}）</h2><p>現在 ${fmtTime(S.time)}　❤️ ${Math.round(S.hp)}　⚡ ${Math.round(S.energy)}</p>${homeExtraHTML()}`,
         [['😴 睡覺到明天早上', 'g', goSleep], ['💾 存檔', '', () => { saveGame(); MODAL.close(); toast('good', '💾 已存檔', ''); }], ['出門', 'gray', () => MODAL.close()]]);
     }
   });
@@ -3447,7 +3498,7 @@ function findPath(sx, sz, tx, tz) {
   // 去掉重複點
   return pts.filter((p, n) => n === 0 || Math.hypot(p[0] - pts[n - 1][0], p[1] - pts[n - 1][1]) > 0.5);
 }
-function guideActive() { return !MIS.cur && !S.onDuty && isWorkday(S.day) && !S.workedToday && S.time > 6 * 60 && S.time < 12 * 60; }
+function guideActive() { return isCop() && S.jobStart <= S.day && !MIS.cur && !S.onDuty && isWorkday(S.day) && !S.workedToday && S.time > 6 * 60 && S.time < 12 * 60; }
 function navTarget() {
   if (NAV.way) return { x: NAV.way.x, z: NAV.way.z, color: '#c060ff', name: '自訂目的地' };
   const tg = MIS.cur && MIS.cur.target && MIS.cur.target();
@@ -3643,7 +3694,7 @@ const RADIO = {
     this.filter = AU.ctx.createBiquadFilter(); this.filter.type = 'lowpass'; this.filter.frequency.value = 2400; this.filter.connect(this.gain);
   },
   cycle() {
-    if (P.mode !== 'vehicle') { radio('上車才能聽電台。', 'info'); return; }
+    if (P.mode !== 'vehicle' && !hasItem('earbud')) { radio('上車才能聽電台（買藍牙耳機就能走路聽）。', 'info'); return; }
     AU.init(); this.init(); if (!this.gain) return;
     this.idx = (this.idx + 1) % STATIONS.length; this.start();
     showBubble(STATIONS[this.idx].name); $('tRadio') && ($('tRadio').style.background = this.idx ? 'rgba(160,60,255,.6)' : '');
@@ -4478,15 +4529,16 @@ function courtJudge(codes, ctx, intro) {
     const days = list.reduce((a, c) => a + sentenceDays(c), 0), fine = days * 1000;
     html += `<p>${list.length > 1 ? '數罪併罰，' : ''}合計 ${days} 日，依刑法第 41 條以新臺幣 1,000 元折算 1 日易科罰金：<b>${fmtMoney(fine)}</b>。</p>`;
     if (S.money < fine) html += `<p><small>存款不足，不足的部分先欠著（存款變成負的）。</small></p>`;
-    html += `<p><small>易科罰金不在《警察人員人事條例》第 31 條第 1 項第 4 款免職範圍，但機關仍會依規定懲處。</small></p>`;
-    after = () => { S.money -= fine; addLog('⚖️ 判決：' + list.map(c => c.n).join('、') + '，易科罰金 ' + fine); if (ctx === 'arrest') punish('dem', '下班時間犯' + list.map(c => c.n).join('、') + '（判決有罪）'); updateHUD(true); };
+    const cop = S.job === 'police' && !S.dismissed;
+    if (cop) html += `<p><small>易科罰金不在《警察人員人事條例》第 31 條第 1 項第 4 款免職範圍，但機關仍會依規定懲處。</small></p>`;
+    after = () => { S.money -= fine; addLog('⚖️ 判決：' + list.map(c => c.n).join('、') + '，易科罰金 ' + fine); if (ctx === 'arrest' && cop) punish('dem', '下班時間犯' + list.map(c => c.n).join('、') + '（判決有罪）'); updateHUD(true); };
   } else {
     let yrs = 0; for (const c of list) yrs += c.sent.years || (sentenceDays(c) / 365); yrs = Math.min(30, Math.round(yrs * 10) / 10);
     const gameDays = Math.max(3, Math.round(yrs * 2));
     const rob = list.some(c => c.robbery);
     html += `<p>${list.length > 1 ? '數罪併罰（刑法第 51 條，最多 30 年），' : ''}應執行有期徒刑 <b>${yrs} 年</b>，入監服刑，不得易科罰金。</p>
-      <p>🚫 依《警察人員人事條例》第 31 條第 1 項${rob ? '第 3 款（犯強盜罪經有罪判決確定）' : '第 4 款（經處有期徒刑以上之刑確定，未准易科罰金）'}，<b>予以免職</b>。</p>
-      <p><small>遊戲中刑期壓縮成 ${gameDays} 天（1 年 ≈ 2 天）。出獄後可以重新報考警察，存款和自己的車會保留。</small></p>`;
+      ${S.job === 'police' && !S.dismissed ? `<p>🚫 依《警察人員人事條例》第 31 條第 1 項${rob ? '第 3 款（犯強盜罪經有罪判決確定）' : '第 4 款（經處有期徒刑以上之刑確定，未准易科罰金）'}，<b>予以免職</b>。</p>` : ''}
+      <p><small>遊戲中刑期壓縮成 ${gameDays} 天（1 年 ≈ 2 天）。出獄後存款和自己的車會保留${S.job === 'police' ? '，可以重新報考警察' : ''}。</small></p>`;
     after = () => serveTime(gameDays, yrs, list);
   }
   COURTQ.push({ html, after, btn: prison ? '入監服刑' : '繳納罰金' });
@@ -4497,7 +4549,8 @@ function serveTime(gameDays, yrs, list) {
   fadeTo('🔒 入監服刑中…（' + yrs + ' 年）', () => {
     S.day += gameDays; S.time = 9 * 60; S.workedToday = false; S.absentChecked = S.day; S.hp = 100; S.energy = 100;
     S.rank = 0; S.merit = 0; S.pen = { rep: 0, dem: 0, major: 0 }; S.award = { com: 0, mer: 0 }; S.unit = '';
-    S.dismissed = true;
+    if (S.job === 'police') S.dismissed = true;
+    S.job = ''; S.jobStart = 0;
     addLog('🔒 ' + list.map(c => c.n).join('、') + '，判刑 ' + yrs + ' 年，免職');
     respawnOwned(); POLICE_CAR.reset(); POLICE_SCOOT.reset();
     const h = SITES.home; P.x = h.x; P.z = h.z + 1.5; P.yaw = Math.PI; P.pitch = 0; P.mode = 'foot';
@@ -4784,6 +4837,7 @@ function maybeSWAT(m) {
 }
 function swatTransferMenu() {
   if (S.dismissed) return rejoinMenu();
+  if (S.job !== 'police') return copExamMenu();
   if (S.unit === 'swat') {
     MODAL.show(`<h2>🛡️ 維安特勤隊</h2><p>你目前是特勤隊員：只接重大案件（持槍搶案、毒品攻堅、通緝要犯），配發 T91 步槍，日薪加給 25%。</p>`,
       [['調回分局（一般勤務）', '', () => { S.unit = ''; MODAL.close(); addLog('調回大墩分局一般勤務'); toast('rank', '👮 調回分局', '恢復一般巡邏勤務'); updateHUD(true); }], ['繼續待在特勤隊', 'g', () => MODAL.close()]]);
@@ -4798,7 +4852,7 @@ function swatTransferMenu() {
 }
 function rejoinMenu() {
   MODAL.show(`<h2>📝 重新報考警察</h2><p>你之前因刑事判決被免職。已服刑完畢，可以重新參加警察特考，從警員重新開始。</p>`,
-    [['報考（$3,000 報名費與訓練）', 'g', () => { if (S.money < 3000) { radio('錢不夠喔。', 'warn'); return; } S.money -= 3000; S.dismissed = false; MODAL.close(); addLog('重新考上警察'); toast('rank', '👮 重新考上警察！', '從警員開始，好好幹'); updateHUD(true); }], ['算了', 'gray', () => MODAL.close()]]);
+    [['報考（$3,000 報名費與訓練）', 'g', () => { if (S.money < 3000) { radio('錢不夠喔。', 'warn'); return; } S.money -= 3000; S.dismissed = false; S.job = 'police'; MODAL.close(); addLog('重新考上警察'); toast('rank', '👮 重新考上警察！', '從警員開始，好好幹'); updateHUD(true); }], ['算了', 'gray', () => MODAL.close()]]);
 }
 
 function updateCrime(dt) { updateBodies(dt); updateWanted(dt); updateCourt(); }
@@ -4849,6 +4903,403 @@ function warningShot() {
   updateHUD(true);
 }
 
+/* ================= 台中日常生活：角色、無業開局、警察特考 ================= */
+const CHARS = {
+  a: {
+    name: '林志明', age: 24, sex: '男', icon: '🧑', home: 'a', money: 30000, owned: ['scooter'],
+    look: { fem: false, shirt: 0x3b6fb6, pants: 0x2b2b30, skin: 0xe8b98f },
+    bio: '剛退伍的年輕人。住在爸媽留下來的大墩華廈，樓下有一台白牌機車。想找一份穩定的工作，但還不知道要做什麼。',
+    start: '退伍第一天。爸媽出國工作前把房子留給你，存款三萬，機車一台。先出去走走，用手機看看有什麼工作吧！',
+    hang: [{ from: 9, to: 17, site: 'dealer', pose: 'idle', say: '在看新機車' }, { from: 17, to: 23, site: 'market', pose: 'idle', say: '在夜市吃東西' }],
+    lines: ['退伍之後整天在家打電動，我媽一直念我去找工作…', '我在考慮要不要去考警察，聽說福利不錯。', '你有在玩股票嗎？我朋友說台麥電會漲到天上去。', '一中街那家雞排超好吃，你一定要去。'],
+  },
+  b: {
+    name: '王建國', age: 52, sex: '男', icon: '👨‍🦳', home: 'b', money: 150000, owned: ['usedcar'],
+    look: { fem: false, elder: false, shirt: 0x7a6a55, pants: 0x3a3a3a, skin: 0xd9a47a },
+    bio: '在工業區做了二十幾年的工廠工程師，工廠關廠被裁員。住在老透天厝，有一台開了十年的二手轎車，存款不少但要養家。',
+    start: '被裁員後第一天早上。老婆還不知道你沒工作了，每天照樣出門「上班」。存款十五萬、舊轎車一台。得趕快找到新工作……',
+    hang: [{ from: 8, to: 12, site: 'park', pose: 'sit', say: '坐在公園長椅上發呆' }, { from: 12, to: 18, site: 'bank', pose: 'idle', say: '在銀行看股票' }, { from: 18, to: 22, site: 'market', pose: 'idle', say: '在夜市買晚餐' }],
+    lines: ['唉，做了二十幾年，一張公文就把我請走了。', '我老婆還不知道我被裁員，每天還是穿襯衫出門…', '年紀大了不好找工作，開計程車好像也不錯。', '股票我玩了三十年，記住：不要借錢買股票！'],
+  },
+  c: {
+    name: '黃雅婷', age: 22, sex: '女', icon: '👩', home: 'c', money: 9000, owned: [], rent: 6500,
+    look: { fem: true, shirt: 0xd9667a, pants: 0x34405a, skin: 0xf0c4a0 },
+    bio: '花蓮人，大學剛畢業，一個人來台中打拚。租在中區的小套房，每個月房租 6,500 元，沒有車，存款只剩九千。',
+    start: '搬來台中的第一天。套房很小但很溫馨，房租每 30 天要繳 6,500 元。沒有車只能走路（之後可以搭公車、捷運）。存款九千，要省著用！',
+    hang: [{ from: 10, to: 17, site: 'store', pose: 'idle', say: '在超商看徵人啟事' }, { from: 17, to: 22, site: 'market', pose: 'idle', say: '在夜市逛街' }],
+    lines: ['台中好大喔，我還在迷路中😅', '我想找超商或咖啡廳的工作，先求有再求好。', '花蓮的海比台中漂亮，但台中的東西比較好吃！', '房租好貴…這個月要省一點了。'],
+  },
+};
+function myChar() { return CHARS[S.char || 'a']; }
+function isCop() { return S.job === 'police' && !S.dismissed; }
+
+/* ---------- 開局選角 ---------- */
+function charSelect(onPick) {
+  const card = (k) => {
+    const c = CHARS[k];
+    return `<div class="chcard" data-k="${k}"><div class="chi">${c.icon}</div><b>${c.name}</b><div class="chm">${c.sex}・${c.age} 歲</div>
+      <p>${c.bio}</p><div class="chs">💰 ${fmtMoney(c.money)}　${c.owned.length ? '🚗 ' + c.owned.map(o => VEH_SPECS[o].name).join('、') : '🚶 沒有車'}</div></div>`;
+  };
+  $('modal').style.zIndex = 60;
+  MODAL.custom(() => {
+    $('mbox').innerHTML = `<h2>👤 選擇你的角色</h2><p style="color:#9fb3d9;margin:4px 0 10px">三個人都住在台中，一開始都沒有工作。你選一個人玩，另外兩個人會在城裡遇到。</p>
+      <div class="chgrid">${['a', 'b', 'c'].map(card).join('')}</div><div class="btns"><button class="btn gray" id="chBack">返回</button></div>`;
+    $('mbox').querySelectorAll('.chcard').forEach(el => el.onclick = () => { AU.click(); onPick(el.dataset.k); });
+    $('chBack').onclick = () => { MODAL.close(); $('modal').style.zIndex = ''; };
+  });
+}
+function applyChar(k) {
+  $('modal').style.zIndex = '';
+  const c = CHARS[k];
+  S.char = k; S.name = c.name; S.money = c.money; S.owned = c.owned.slice(); S.job = ''; S.jobStart = 0;
+  S.rentDue = c.rent ? 30 : 0;
+  S.msgs = [{ from: '媽媽', text: k === 'c' ? '妹妹，到台中了嗎？一個人在外面要照顧好自己，錢不夠要說喔。' : k === 'b' ? '建國，你最近怎麼都早早出門？工作還順利嗎？' : '志明，房子交給你了，記得繳管理費，趕快找工作喔！', day: 1, t: 7 * 60, read: false }];
+}
+function startLifeIntro() {
+  const c = myChar(), h = SITES.home;
+  MODAL.show(`<h2>${c.icon} ${c.name}</h2><p>${c.start}</p>
+    <p>🏠 你現在在家（${h.short}）門口。<br>📱 按 <b>P</b>（手機按右上 📱）打開手機：看求職、買股票、網購、看訊息。<br>👮 想當警察？到「大墩分局」的人事室報考警察特考。</p>`,
+    [['出門 🚶', 'g', () => { MODAL.close(); if (!IS_TOUCH) canvas.requestPointerLock && canvas.requestPointerLock(); }]]);
+}
+function homeExtraHTML() {
+  const inv = S.inv || {}, furn = (S.furn || []).map(k => SHOP_BY[k] ? SHOP_BY[k].n : k);
+  return (furn.length ? `<p>🛋️ 家裡：${furn.join('、')}</p>` : '') + (S.rentDue ? `<p>🧾 房租 ${fmtMoney(myChar().rent)}，還有 ${Math.max(0, S.rentDue - S.day)} 天要繳</p>` : '');
+}
+// 每天早上：房租、包裹、角色訊息
+function morningLife() {
+  const c = myChar();
+  if (c.rent && S.rentDue && S.day >= S.rentDue) {
+    S.money -= c.rent; S.rentDue += 30; txn(-c.rent, '房租（幸福套房）');
+    pushMsg('房東陳太太', '黃小姐，這個月房租 ' + fmtMoney(c.rent) + ' 已經從你帳戶扣款囉，謝謝！');
+  }
+  if (S.parcels && S.parcels.length) {
+    const got = S.parcels.filter(p => p.day <= S.day); S.parcels = S.parcels.filter(p => p.day > S.day);
+    for (const p of got) receiveItem(p.k, p.q);
+    if (got.length) pushMsg('麥麥購物', '📦 你的包裹已送達：' + got.map(p => SHOP_BY[p.k].n + (p.q > 1 ? '×' + p.q : '')).join('、') + '。');
+  }
+  for (const k of Object.keys(S.met || {})) if (Math.random() < 0.18) pushMsg(CHARS[k].name, pick(CHARS[k].lines));
+  if (S.job !== 'police' && S.day === 2) pushMsg('麥麥人力銀行', '你的履歷還沒填完喔！打開「求職」App 看看最新職缺。');
+}
+
+/* ---------- 警察特考 ---------- */
+const COP_Q = [
+  ['報案（警察）電話是幾號？', ['110', '119', '113', '165'], 0],
+  ['火災、救護車要打哪支電話？', ['110', '119', '1999', '112'], 1],
+  ['開車吐氣酒精濃度達每公升多少毫克以上，就構成刑法「不能安全駕駛罪」？', ['0.15', '0.25', '0.5', '0.8'], 1],
+  ['開車超速未滿 10 公里，依處罰細則通常怎麼處理？', ['直接吊扣駕照', '勸導、不舉發', '罰 6,000 元', '移送法辦'], 1],
+  ['駕駛「單純交通違規」被攔查後開車逃跑，警察可以開槍嗎？', ['可以，直接射擊輪胎', '可以，對空鳴槍', '不行，單純交通違規不得任意開槍', '看心情'], 2],
+  ['警察使用槍械之後，依《警械使用條例》應該怎麼做？', ['不用說', '把子彈撿回來就好', '立刻報告長官', '寫在臉書'], 2],
+  ['刑法「強盜罪」的法定刑是？', ['拘役', '6 月以下有期徒刑', '5 年以上有期徒刑', '罰金 1 萬元'], 2],
+  ['汽車駕駛人拒絕停車受檢，依道交條例第 60 條罰多少？', ['600～1,800 元', '10,000～30,000 元', '50 萬元', '不罰'], 1],
+  ['騎機車沒戴安全帽，最可能的處分是？', ['罰鍰', '坐牢', '吊銷身分證', '沒收機車'], 0],
+  ['路口看到紅燈，下面哪個做法正確？', ['加速衝過去', '停在停止線前', '按喇叭', '開到人行道繞過去'], 1],
+];
+function copExamMenu() {
+  MODAL.show(`<h2>📝 報考警察特考（大墩分局人事室）</h2>
+    <p>筆試 5 題，答對 4 題以上就錄取。錄取後完成受訓，<b>隔天</b>起分發大墩分局當<b>警員</b>，每天 08:00 打卡上班。</p>
+    <p>報名費 ${fmtMoney(1500)}</p><p><small>（現實中要考「一般警察特考」再受訓 1～2 年，遊戲裡簡化成筆試＋直接分發）</small></p>`,
+    [['✍️ 報名考試', 'g', () => { if (S.money < 1500) { radio('錢不夠報名費喔。', 'warn'); return; } S.money -= 1500; txn(-1500, '警察特考報名費'); runCopExam(); }], ['再想想', 'gray', () => MODAL.close()]]);
+}
+function runCopExam() {
+  const qs = COP_Q.slice().sort(() => Math.random() - 0.5).slice(0, 5);
+  let k = 0, ok = 0;
+  const show = () => {
+    if (k >= qs.length) {
+      if (ok >= 4) {
+        S.job = 'police'; S.jobStart = S.day + 1; S.rank = 0; S.merit = 0; S.dismissed = false; S.unit = '';
+        S.pen = { rep: 0, dem: 0, major: 0 }; S.workedToday = true; S.absentChecked = S.day;
+        addLog('👮 考上警察，明天起到大墩分局報到');
+        pushMsg('大墩分局人事室', '恭喜錄取！明天早上 08:00 到大墩分局打卡報到，08:30 後算遲到。');
+        MODAL.show(`<h2>🎉 錄取！</h2><p>答對 ${ok} / 5 題。</p><p>恭喜你成為台中市政府警察局的<b>警員</b>！<br>明天早上 08:00 前到大墩分局打卡上班（週日放假）。</p>`, [['太好了！', 'g', () => { MODAL.close(); updateHUD(true); }]]);
+        AU.good(); toast('rank', '👮 考上警察！', '明天 08:00 到大墩分局報到');
+      } else MODAL.show(`<h2>😢 沒考上</h2><p>答對 ${ok} / 5 題，要答對 4 題才錄取。可以再報名一次。</p>`, [['好', 'gray', () => MODAL.close()]]);
+      updateHUD(true); return;
+    }
+    const q = qs[k];
+    MODAL.show(`<h2>📝 第 ${k + 1} / 5 題</h2><p style="font-size:17px">${q[0]}</p>`, q[1].map((a, i) => [a, '', () => { if (i === q[2]) { ok++; AU.click(); } else AU.bad(); k++; show(); }]));
+    MODAL.esc = null;
+  };
+  show();
+}
+
+/* ---------- 交易紀錄、訊息 ---------- */
+function txn(amount, desc) { S.tx = S.tx || []; S.tx.unshift({ d: S.day, t: S.time, a: Math.round(amount), s: desc }); S.tx = S.tx.slice(0, 40); }
+function pushMsg(from, text) { S.msgs = S.msgs || []; S.msgs.unshift({ from, text, day: S.day, t: S.time, read: false }); S.msgs = S.msgs.slice(0, 60); updatePhoneBadge(); if (GAME.running) toast('good', '💬 ' + from, text.length > 26 ? text.slice(0, 26) + '…' : text); }
+function updatePhoneBadge() { const n = (S.msgs || []).filter(m => !m.read).length; const b = $('phBadge'); if (b) { b.textContent = n; b.style.display = n ? '' : 'none'; } }
+
+/* ---------- 另外兩個角色（城裡會遇到） ---------- */
+const FRIENDS = {};
+function friendSpot(k) {
+  const c = CHARS[k], hr = S.time / 60;
+  const slot = c.hang.find(s => hr >= s.from && hr < s.to);
+  if (!slot) return null;
+  let p;
+  if (slot.site === 'store') { const st = SITES.stores[0]; p = { x: st.door.x + 2.5, z: st.door.z + 2.2 }; }
+  else if (slot.site === 'bank') p = { x: SITES.bank.door.x - 3, z: SITES.bank.door.z + 2.5 };
+  else if (slot.site === 'park') { const b = blockAtXZ(-40, -200); p = { x: b.cx + 6, z: b.cz + 4 }; }
+  else if (slot.site === 'market') { const s = SITES.market.stalls[k === 'a' ? 1 : k === 'b' ? 4 : 7] || SITES.market.stalls[0]; p = { x: s.x + 1.8, z: s.z + 1.2 }; }
+  else { const s = SITES[slot.site]; p = { x: s.x + 3, z: s.z + 3 }; }
+  return Object.assign(p, { slot });
+}
+function updateFriends(dt) {
+  for (const k of ['a', 'b', 'c']) {
+    if (k === (S.char || 'a')) continue;
+    const sp = friendSpot(k); let f = FRIENDS[k];
+    if (f && (f.dead || !sp || dist(f.x, f.z, sp.x, sp.z) > 6 || dist(P.x, P.z, f.x, f.z) > 160)) { if (!f.dead || dist(P.x, P.z, f.x, f.z) > 60) { removeHuman(f); delete FRIENDS[k]; f = null; } }
+    if (!f && sp && dist(P.x, P.z, sp.x, sp.z) < 140) {
+      const c = CHARS[k];
+      f = FRIENDS[k] = spawnHuman(Object.assign({}, c.look, { data: { role: 'civ', friend: k, name: c.name, fem: c.look.fem } }), sp.x, sp.z, 0);
+      f.pose = sp.slot.pose === 'sit' ? 'sit' : 'idle';
+    }
+    if (f && !f.dead && f.state === 'idle') {
+      const d = dist(P.x, P.z, f.x, f.z);
+      if (d < 8) f.yaw = Math.atan2(P.x - f.x, P.z - f.z);
+      f.P.g.rotation.y = f.yaw;
+      if (d < 6 && !f.greeted) { f.greeted = true; say(f, S.met && S.met[k] ? '嘿，又遇到你了！' : '你好～', { fem: CHARS[k].look.fem }); }
+    }
+  }
+}
+function friendInteracts() {
+  const L = [];
+  for (const k of Object.keys(FRIENDS)) {
+    const f = FRIENDS[k]; if (!f || f.dead || f.state !== 'idle') continue;
+    L.push({ x: f.x, z: f.z, r: 2.2, label: '和' + CHARS[k].name + '聊天', act: () => friendChat(k) });
+  }
+  return L;
+}
+function friendChat(k) {
+  const c = CHARS[k], f = FRIENDS[k]; S.met = S.met || {};
+  const first = !S.met[k];
+  if (first) {
+    S.met[k] = S.day;
+    const intro = k === 'a' ? '我叫林志明，剛退伍，住在大墩華廈那邊。也在找工作中，哈哈。' : k === 'b' ? '我姓王，王建國。之前在工廠當工程師…現在嘛，在「休息」啦。' : '我叫黃雅婷，從花蓮來的，剛搬到台中。你是本地人嗎？';
+    say(f, intro, { fem: c.look.fem });
+    MODAL.show(`<h2>${c.icon} ${c.name}</h2><p>「${intro}」</p><p>你們聊了一下，互相加了 LINE。之後他會在手機「訊息」裡傳訊息給你。</p>`, [['好啊！', 'g', () => MODAL.close()]]);
+    pushMsg(c.name, k === 'c' ? '剛剛很高興認識你！以後有好吃的要揪我喔😊' : '剛剛聊得很開心，有空再約！');
+    return;
+  }
+  const line = pick(c.lines);
+  say(f, line, { fem: c.look.fem });
+  MODAL.show(`<h2>${c.icon} ${c.name}</h2><p>「${line}」</p>`, [['掰掰', 'gray', () => MODAL.close()]]);
+}
+
+/* ================= 遊戲手機：股票、購物、求職、訊息、銀行、背包 ================= */
+// 股票：虛構公司，規則照台股（9:00～13:30、週一到週五、漲跌幅 10%、手續費 0.1425%、證交稅股票 0.3% / ETF 0.1%）
+const STOCKS = [
+  { c: '2330', n: '台麥電', p: 1050, v: 0.022, d: 0.0006, sec: '半導體' },
+  { c: '2317', n: '鴻麥精密', p: 182, v: 0.02, d: 0.0003, sec: '電子代工' },
+  { c: '2454', n: '聯麥科', p: 1240, v: 0.025, d: 0.0004, sec: 'IC 設計' },
+  { c: '2412', n: '中華麥訊', p: 126, v: 0.006, d: 0.0001, sec: '電信' },
+  { c: '2603', n: '長麥海運', p: 190, v: 0.032, d: 0, sec: '航運' },
+  { c: '2881', n: '麥邦金', p: 92, v: 0.012, d: 0.0002, sec: '金融' },
+  { c: '1216', n: '統麥', p: 81, v: 0.01, d: 0.0002, sec: '食品' },
+  { c: '1590', n: '大墩精機', p: 720, v: 0.026, d: 0.0003, sec: '機械（台中）' },
+  { c: '0050', n: '麥麥台灣50', p: 192, v: 0.012, d: 0.0004, sec: 'ETF', etf: true },
+  { c: '00631L', n: '麥麥台灣50正2', p: 235, v: 0.024, d: 0.0007, sec: '槓桿 ETF', etf: true },
+];
+function tick(p) { return p < 10 ? 0.01 : p < 50 ? 0.05 : p < 100 ? 0.1 : p < 500 ? 0.5 : p < 1000 ? 1 : 5; }
+function roundTick(p) { const t = tick(p); return Math.round(Math.round(p / t) * t * 100) / 100; }
+function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function marketOpenNow() { const wd = weekday(S.day); return wd <= 4 && S.time >= 9 * 60 && S.time < 13 * 60 + 30; }
+function initMarket() {
+  if (S.mk && S.mk.length === STOCKS.length) return;
+  S.mk = STOCKS.map(s => {
+    // 先產生過去 60 天的收盤價
+    const h = [s.p]; let p = s.p;
+    for (let i = 0; i < 59; i++) { p = roundTick(p * Math.exp(gauss() * s.v - s.d)); h.unshift(p); } // 往回推 59 天
+    const last = h[h.length - 1];
+    return { c: s.c, p: last, prev: last, open: last, hist: h.slice(-60), ev: 0 };
+  });
+  S.mkDay = S.day; S.hold = S.hold || {};
+}
+function updateMarket(dt) {
+  if (!S.mk) return;
+  // 換日：產生跳過的交易日收盤
+  while (S.mkDay < S.day) { if (weekday(S.mkDay) <= 4 && S.mkClosed !== S.mkDay) closeDay(S.mkOpened !== S.mkDay); S.mkClosed = S.mkDay; S.mkDay++; }
+  if (weekday(S.day) <= 4 && S.time >= 13 * 60 + 30 && S.mkClosed !== S.day) { closeDay(S.mkOpened !== S.day); S.mkClosed = S.day; }
+  if (!marketOpenNow()) return;
+  S.mkOpened = S.day;
+  // 每過 1 遊戲分鐘跳一次價
+  if (S.mkMin == null || S.mkMin > S.time) S.mkMin = S.time;
+  const steps = Math.floor(S.time - S.mkMin); if (steps < 1) return; S.mkMin += steps;
+  for (let k = 0; k < S.mk.length; k++) {
+    const m = S.mk[k], s = STOCKS[k];
+    const sig = s.v * Math.sqrt(steps / 270);
+    let p = m.p * Math.exp(gauss() * sig + (s.d + m.ev) * steps / 270);
+    p = clamp(p, m.prev * 0.9, m.prev * 1.1); m.p = roundTick(p);
+  }
+}
+function closeDay(simulate) {
+  for (let k = 0; k < S.mk.length; k++) {
+    const m = S.mk[k], s = STOCKS[k];
+    if (simulate) { let p = m.p * Math.exp(gauss() * s.v + s.d + m.ev); m.p = roundTick(clamp(p, m.prev * 0.9, m.prev * 1.1)); }
+    m.hist.push(m.p); m.hist = m.hist.slice(-60); m.prev = m.p; m.ev *= 0.5;
+  }
+  // 偶爾有新聞
+  if (Math.random() < 0.3) {
+    const k = randi(0, STOCKS.length - 3), s = STOCKS[k], good = Math.random() < 0.55;
+    S.mk[k].ev = (good ? 1 : -1) * s.v * 0.6;
+    S.news = S.news || []; S.news.unshift({ d: S.mkDay, t: (good ? '📈 ' : '📉 ') + s.n + '（' + s.c + '）' + (good ? pick(['法說會報喜，外資喊買', '接獲大單，營收創新高', '傳出漲價消息']) : pick(['營收不如預期', '外資大賣', '傳出砍單消息'])) });
+    S.news = S.news.slice(0, 12);
+  }
+}
+function stockFee(amount) { return Math.max(20, Math.floor(amount * 0.001425)); }
+function buyStock(k, qty) {
+  const m = S.mk[k], s = STOCKS[k];
+  if (!marketOpenNow()) return '現在沒開盤（週一到週五 09:00～13:30）';
+  const amt = Math.round(m.p * qty), fee = stockFee(amt);
+  if (S.money < amt + fee) return '錢不夠（需要 ' + fmtMoney(amt + fee) + '）';
+  S.money -= amt + fee; const h = S.hold[s.c] || { q: 0, cost: 0 };
+  h.cost += amt + fee; h.q += qty; S.hold[s.c] = h;
+  txn(-(amt + fee), '買進 ' + s.n + ' ' + qty + ' 股（含手續費 ' + fee + '）'); AU.good(); return '';
+}
+function sellStock(k, qty) {
+  const m = S.mk[k], s = STOCKS[k], h = S.hold[s.c];
+  if (!marketOpenNow()) return '現在沒開盤（週一到週五 09:00～13:30）';
+  if (!h || h.q < qty) return '持股不夠';
+  const amt = Math.round(m.p * qty), fee = stockFee(amt), tax = Math.floor(amt * (s.etf ? 0.001 : 0.003));
+  const costPart = h.cost * qty / h.q; h.cost -= costPart; h.q -= qty; if (!h.q) delete S.hold[s.c];
+  S.money += amt - fee - tax; const pl = amt - fee - tax - costPart;
+  txn(amt - fee - tax, '賣出 ' + s.n + ' ' + qty + ' 股（手續費 ' + fee + '、證交稅 ' + tax + '）');
+  addLog((pl >= 0 ? '📈 ' : '📉 ') + '賣出 ' + s.n + '，' + (pl >= 0 ? '賺 ' : '賠 ') + fmtMoney(Math.abs(pl)));
+  AU.good(); return '';
+}
+function stockValue() { let v = 0; if (!S.mk) return 0; for (const [c, h] of Object.entries(S.hold || {})) { const k = STOCKS.findIndex(s => s.c === c); if (k >= 0) v += S.mk[k].p * h.q; } return v; }
+
+// 購物（隔天早上送到家；家具放家裡）
+const SHOP = [
+  { k: 'noodle', n: '🍜 泡麵（5 入）', p: 189, cat: '食品', use: { hp: 15, en: 15 }, q: 5, desc: '吃一包：生命 +15、體力 +15' },
+  { k: 'dumpl', n: '🥟 冷凍水餃（50 顆）', p: 199, cat: '食品', use: { hp: 30, en: 25 }, q: 3, desc: '吃一份：生命 +30、體力 +25' },
+  { k: 'energy', n: '⚡ 能量飲料（6 罐）', p: 279, cat: '食品', use: { en: 40 }, q: 6, desc: '喝一罐：體力 +40' },
+  { k: 'aid', n: '🩹 急救包', p: 299, cat: '生活', use: { hp: 60 }, q: 1, desc: '用一個：生命 +60' },
+  { k: 'tissue', n: '🧻 衛生紙（一串）', p: 299, cat: '生活', furn: true, desc: '家裡要有的東西' },
+  { k: 'rain', n: '🌂 輕便雨衣', p: 120, cat: '生活', keep: true, desc: '下雨天騎車用' },
+  { k: 'shoes', n: '👟 慢跑鞋', p: 1990, cat: '服飾', keep: true, desc: '跑步比較不累（體力消耗 -40%）' },
+  { k: 'suit', n: '👔 面試西裝', p: 3990, cat: '服飾', keep: true, desc: '應徵工作時比較容易錄取（之後開放的工作）' },
+  { k: 'earbud', n: '🎧 藍牙耳機', p: 1290, cat: '3C', keep: true, desc: '走路也能聽電台（N 換台）' },
+  { k: 'bank', n: '🔋 行動電源', p: 690, cat: '3C', keep: true, desc: '手機不怕沒電' },
+  { k: 'sofa', n: '🛋️ 三人座沙發', p: 8900, cat: '家具', furn: true, desc: '放在家裡' },
+  { k: 'tv', n: '📺 55 吋電視', p: 15900, cat: '家具', furn: true, desc: '在家可以看新聞' },
+  { k: 'bed', n: '🛏️ 獨立筒床墊', p: 12000, cat: '家具', furn: true, desc: '睡得好：起床後體力上限多 20（一天內）' },
+  { k: 'box', n: '🎒 外送保溫箱', p: 1200, cat: '工作', keep: true, desc: '當外送員要用的（之後開放）' },
+];
+const SHOP_BY = {}; SHOP.forEach(i => SHOP_BY[i.k] = i);
+function receiveItem(k, q) {
+  const it = SHOP_BY[k]; if (!it) return;
+  if (it.furn) { S.furn = S.furn || []; if (!S.furn.includes(k)) S.furn.push(k); }
+  else if (it.keep) { S.keep = S.keep || []; if (!S.keep.includes(k)) S.keep.push(k); }
+  else { S.inv = S.inv || {}; S.inv[k] = (S.inv[k] || 0) + (it.q || 1) * (q || 1); }
+}
+function hasItem(k) { return (S.keep || []).includes(k) || (S.furn || []).includes(k); }
+function useItem(k) {
+  const it = SHOP_BY[k]; if (!it || !S.inv || !S.inv[k]) return;
+  S.inv[k]--; if (!S.inv[k]) delete S.inv[k];
+  if (it.use.hp) S.hp = Math.min(100, S.hp + it.use.hp); if (it.use.en) S.energy = Math.min(120, S.energy + it.use.en);
+  AU.good(); updateHUD(true);
+}
+
+/* ---------- 手機畫面 ---------- */
+const PHONE = { app: 'home', sel: 0, qty: 1000, cat: '食品', msg: '' };
+const APPS = [
+  ['stock', '📈', '股票'], ['shop', '🛒', '購物'], ['job', '💼', '求職'], ['map', '🗺️', '地圖'],
+  ['msg', '💬', '訊息'], ['bank', '🏦', '銀行'], ['bag', '🎒', '背包'], ['news', '📰', '新聞'],
+];
+function openPhone(app) {
+  if (!GAME.running || MODAL.open) return;
+  initMarket(); PHONE.app = app || 'home'; PHONE.msg = '';
+  MODAL.custom(renderPhone); $('mbox').classList.add('phone');
+}
+function phClose() { MODAL.close(); }
+function renderPhone() {
+  const B = $('mbox'); B.className = 'box phone';
+  const top = `<div class="phtop"><span>${fmtTime(S.time)}</span><span>📶 🔋</span></div>`;
+  const back = PHONE.app !== 'home' ? `<button class="phback" id="phBack">‹ 返回</button>` : '';
+  let body = '';
+  const A = PHONE.app;
+  if (A === 'home') {
+    const unread = (S.msgs || []).filter(m => !m.read).length;
+    body = `<div class="phwall"><div class="phclock">${fmtTime(S.time)}</div><div class="phdate">第 ${S.day} 天・週${WEEK[weekday(S.day)]}</div>
+      <div class="phgrid">${APPS.map(a => `<button class="phapp" data-app="${a[0]}"><span>${a[1]}</span>${a[2]}${a[0] === 'msg' && unread ? `<i>${unread}</i>` : ''}</button>`).join('')}</div>
+      <div class="phbal">💰 存款 ${fmtMoney(S.money)}</div></div>`;
+  } else if (A === 'stock') {
+    const open = marketOpenNow();
+    body = `<h3>📈 麥麥證券 <small>${open ? '🟢 開盤中' : '🔴 收盤'}</small></h3><div class="phlist">` + STOCKS.map((s, k) => {
+      const m = S.mk[k], ch = (m.p - m.prev) / m.prev * 100, h = (S.hold || {})[s.c];
+      return `<div class="phrow" data-st="${k}"><div><b>${s.n}</b> <small>${s.c}</small>${h ? `<br><small>持有 ${h.q} 股</small>` : ''}</div>
+        ${spark(m.hist.concat([m.p]), ch >= 0)}<div class="ar"><b>${m.p}</b><br><small class="${ch >= 0 ? 'up' : 'dn'}">${ch >= 0 ? '▲' : '▼'}${Math.abs(ch).toFixed(2)}%</small></div></div>`;
+    }).join('') + `</div><p class="phnote">台股紅漲綠跌。開盤：週一～五 09:00～13:30，漲跌幅 10%。</p>`;
+  } else if (A === 'stockD') {
+    const k = PHONE.sel, s = STOCKS[k], m = S.mk[k], h = (S.hold || {})[s.c], ch = (m.p - m.prev) / m.prev * 100;
+    const amt = m.p * PHONE.qty, fee = stockFee(amt);
+    const pl = h ? m.p * h.q - h.cost : 0;
+    body = `<h3>${s.n} <small>${s.c}・${s.sec}</small></h3>
+      <div class="phbig ${ch >= 0 ? 'up' : 'dn'}">${m.p} <small>${ch >= 0 ? '▲' : '▼'}${(m.p - m.prev).toFixed(2)}（${ch.toFixed(2)}%）</small></div>
+      ${spark(m.hist.concat([m.p]), ch >= 0, 300, 90)}
+      <div class="phkv"><span>昨收 ${m.prev}</span><span>漲停 ${roundTick(m.prev * 1.1)}</span><span>跌停 ${roundTick(m.prev * 0.9)}</span></div>
+      ${h ? `<div class="phkv"><span>持有 ${h.q} 股</span><span>均價 ${(h.cost / h.q).toFixed(2)}</span><span class="${pl >= 0 ? 'up' : 'dn'}">損益 ${pl >= 0 ? '+' : ''}${Math.round(pl).toLocaleString()}</span></div>` : ''}
+      <div class="phqty">股數：${[1, 10, 100, 1000].map(q => `<button class="btn ${PHONE.qty === q ? 'g' : ''}" data-q="${q}">${q === 1000 ? '1 張' : q + ' 股'}</button>`).join('')}</div>
+      <p class="phnote">${PHONE.qty} 股 ≈ ${fmtMoney(amt)}，手續費 ${fee}${s.etf ? '，賣出證交稅 0.1%' : '，賣出證交稅 0.3%'}</p>
+      <div class="phbtns"><button class="btn r" id="phBuy">買進</button><button class="btn g" id="phSell">賣出</button></div>`;
+  } else if (A === 'shop') {
+    const cats = [...new Set(SHOP.map(i => i.cat))];
+    body = `<h3>🛒 麥麥購物 <small>今天下單、明天早上送到家</small></h3><div class="phtabs">${cats.map(c => `<button class="${c === PHONE.cat ? 'on' : ''}" data-cat="${c}">${c}</button>`).join('')}</div><div class="phlist">` +
+      SHOP.filter(i => i.cat === PHONE.cat).map(i => {
+        const own = hasItem(i.k);
+        return `<div class="phrow"><div><b>${i.n}</b><br><small>${i.desc}</small></div><div class="ar"><b>${fmtMoney(i.p)}</b><br>${own ? '<small>已擁有</small>' : `<button class="btn g sm" data-buy="${i.k}">購買</button>`}</div></div>`;
+      }).join('') + `</div>${(S.parcels || []).length ? `<p class="phnote">📦 配送中：${S.parcels.map(p => SHOP_BY[p.k].n).join('、')}</p>` : ''}`;
+  } else if (A === 'job') {
+    const cop = isCop();
+    const jobs = [
+      ['👮 警員（台中市政府警察局）', '日薪 ' + fmtMoney(RANKS[0].pay) + '起・週休一日', cop ? '✅ 你目前的工作' : S.dismissed ? '到大墩分局人事室重新報考' : '到大墩分局人事室報考警察特考', 'cop'],
+      ['🛵 外送員', '按趟計酬・自備機車與保溫箱', '下一批更新開放', ''],
+      ['🚕 計程車司機', '按趟計酬・需職業駕照', '下一批更新開放', ''],
+      ['🏪 超商店員', '時薪 196 元・排班制', '下一批更新開放', ''],
+      ['🍜 餐廳內外場', '時薪 196 元起', '下一批更新開放', ''],
+      ['🚒 消防員 / 🚑 救護員', '需考消防特考', '下一批更新開放', ''],
+    ];
+    body = `<h3>💼 麥麥人力銀行</h3><p class="phnote">目前工作：<b>${cop ? RANKS[S.rank].name + (S.jobStart > S.day ? '（明天報到）' : '') : '無'}</b></p><div class="phlist">` +
+      jobs.map(j => `<div class="phrow"><div><b>${j[0]}</b><br><small>${j[1]}</small><br><small style="color:#ffd84a">${j[2]}</small></div>${j[3] && !cop ? `<div class="ar"><button class="btn g sm" data-job="${j[3]}">導航</button></div>` : ''}</div>`).join('') + '</div>';
+  } else if (A === 'msg') {
+    (S.msgs || []).forEach(m => m.read = true); updatePhoneBadge();
+    body = `<h3>💬 訊息</h3><div class="phlist">` + ((S.msgs || []).length ? S.msgs.map(m => `<div class="phmsg"><b>${m.from}</b> <small>第${m.day}天 ${fmtTime(m.t)}</small><div>${m.text}</div></div>`).join('') : '<p class="phnote">還沒有訊息</p>') + '</div>';
+  } else if (A === 'bank') {
+    const sv = stockValue();
+    body = `<h3>🏦 麥麥商業銀行</h3><div class="phkv col"><span>存款　<b>${fmtMoney(S.money)}</b></span><span>股票市值　<b>${fmtMoney(sv)}</b></span><span>總資產　<b>${fmtMoney(S.money + sv)}</b></span></div>
+      <h4>最近交易</h4><div class="phlist">` + ((S.tx || []).length ? S.tx.map(t => `<div class="phrow"><div><small>第${t.d}天 ${fmtTime(t.t)}</small><br>${t.s}</div><div class="ar ${t.a >= 0 ? 'up' : 'dn'}"><b>${t.a >= 0 ? '+' : ''}${t.a.toLocaleString()}</b></div></div>`).join('') : '<p class="phnote">沒有交易紀錄</p>') + '</div>';
+  } else if (A === 'bag') {
+    const inv = Object.entries(S.inv || {});
+    body = `<h3>🎒 背包</h3><div class="phlist">` + (inv.length ? inv.map(([k, q]) => `<div class="phrow"><div><b>${SHOP_BY[k].n}</b> ×${q}<br><small>${SHOP_BY[k].desc}</small></div><div class="ar"><button class="btn g sm" data-use="${k}">使用</button></div></div>`).join('') : '<p class="phnote">背包是空的，可以去「購物」買東西</p>') +
+      ((S.keep || []).length ? `<h4>隨身物品</h4><p>${S.keep.map(k => SHOP_BY[k].n).join('、')}</p>` : '') + '</div>';
+  } else if (A === 'news') {
+    body = `<h3>📰 麥麥新聞</h3><div class="phlist">` + ((S.news || []).length ? S.news.map(n => `<div class="phmsg"><small>第${n.d}天</small><div>${n.t}</div></div>`).join('') : '<p class="phnote">今天沒有大新聞</p>') + '</div>';
+  }
+  B.innerHTML = `<div class="phframe">${top}${back}<div class="phbody">${body}${PHONE.msg ? `<div class="phtoast">${PHONE.msg}</div>` : ''}</div><button class="phhome" id="phHome"></button></div><button class="btn gray phx" id="phX">✕</button>`;
+  const on = (sel, fn) => B.querySelectorAll(sel).forEach(el => el.onclick = (e) => { AU.click(); fn(el, e); });
+  on('#phX', () => phClose());
+  on('#phHome', () => { if (PHONE.app === 'home') phClose(); else { PHONE.app = 'home'; PHONE.msg = ''; renderPhone(); } });
+  on('#phBack', () => { PHONE.app = PHONE.app === 'stockD' ? 'stock' : 'home'; PHONE.msg = ''; renderPhone(); });
+  on('[data-app]', el => { const a = el.dataset.app; if (a === 'map') { phClose(); toggleMap(); return; } PHONE.app = a; PHONE.msg = ''; renderPhone(); });
+  on('[data-st]', el => { PHONE.sel = +el.dataset.st; PHONE.app = 'stockD'; renderPhone(); });
+  on('[data-q]', el => { PHONE.qty = +el.dataset.q; renderPhone(); });
+  on('#phBuy', () => { PHONE.msg = buyStock(PHONE.sel, PHONE.qty) || '✅ 買進成功'; updateHUD(true); renderPhone(); });
+  on('#phSell', () => { PHONE.msg = sellStock(PHONE.sel, PHONE.qty) || '✅ 賣出成功'; updateHUD(true); renderPhone(); });
+  on('[data-cat]', el => { PHONE.cat = el.dataset.cat; renderPhone(); });
+  on('[data-buy]', el => {
+    const it = SHOP_BY[el.dataset.buy];
+    if (S.money < it.p) { PHONE.msg = '錢不夠喔'; renderPhone(); return; }
+    S.money -= it.p; txn(-it.p, '麥麥購物：' + it.n); S.parcels = S.parcels || []; S.parcels.push({ k: it.k, q: 1, day: S.day + 1 });
+    PHONE.msg = '✅ 已下單，明天早上送到家'; updateHUD(true); renderPhone();
+  });
+  on('[data-use]', el => { useItem(el.dataset.use); renderPhone(); });
+  on('[data-job]', () => { const st = SITES.station; setWaypoint(st.x + 7, st.z + 0.5); phClose(); toast('good', '🗺️ 已設定導航', '大墩分局人事室'); });
+  MODAL.esc = () => { if (PHONE.app === 'home') phClose(); else { PHONE.app = PHONE.app === 'stockD' ? 'stock' : 'home'; renderPhone(); } };
+}
+function spark(arr, up, w, h) {
+  w = w || 90; h = h || 30; const a = arr.slice(-30), mn = Math.min(...a), mx = Math.max(...a), r = mx - mn || 1;
+  const pts = a.map((v, i) => (i / (a.length - 1) * w).toFixed(1) + ',' + (h - 2 - (v - mn) / r * (h - 4)).toFixed(1)).join(' ');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" class="spark"><polyline points="${pts}" fill="none" stroke="${up ? '#ff5a5a' : '#3ccf6e'}" stroke-width="1.6"/></svg>`;
+}
+
 /* ================= 介面 ================= */
 const GAME = { running: false, tscale: 1, mapOpen: false };
 function radio(msg, type) {
@@ -4876,12 +5327,16 @@ function updateHUD(force) {
   hudT -= 1; if (!force && hudT > 0) return; hudT = 10;
   $('clock').textContent = fmtTime(S.time) + (isNight() ? ' 🌙' : ' ☀️');
   $('dateline').textContent = '第 ' + S.day + ' 天（週' + WEEK[weekday(S.day)] + '）' + (isWorkday(S.day) ? '' : ' 休假');
-  const du = $('duty'); du.textContent = S.onDuty ? '執勤中' : '下班'; du.className = 'duty ' + (S.onDuty ? 'on' : 'off');
-  $('rank').textContent = S.dismissed ? '已免職' : (S.unit === 'swat' ? '特勤 ' : '') + RANKS[S.rank].name;
-  const nx = RANKS[S.rank + 1]; $('merit').textContent = S.merit + (nx ? ' / ' + nx.need + '（升' + nx.name + '）' : '（最高職等）');
+  const cop = S.job === 'police' && !S.dismissed;
+  const du = $('duty'); du.textContent = S.onDuty ? '執勤中' : cop ? '下班' : '無業'; du.className = 'duty ' + (S.onDuty ? 'on' : 'off');
+  $('rank').textContent = (S.name ? S.name + '・' : '') + (S.dismissed ? '已免職' : !cop ? '找工作中' : (S.unit === 'swat' ? '特勤 ' : '') + RANKS[S.rank].name);
+  const nx = RANKS[S.rank + 1]; $('merit').parentElement.style.display = cop ? '' : 'none';
+  $('merit').textContent = S.merit + (nx ? ' / ' + nx.need + '（升' + nx.name + '）' : '（最高職等）');
   $('money').textContent = fmtMoney(S.money);
   $('hpbar').style.width = clamp(S.hp, 0, 100) + '%'; $('enbar').style.width = clamp(S.energy, 0, 100) + '%';
   $('weap').textContent = !S.onDuty ? (IS_TOUCH ? '👊 便服・空手' : '👊 便服・空手（V 揍人）') : P.mode === 'vehicle' ? (P.veh.police ? '🚓 ' + P.veh.spec.name : '🚗 ' + P.veh.spec.name) : S.weapon === 0 ? `🔫 手槍 ${S.ammo} / ${S.reserve}${reloadT > 0 ? ' 換彈中…' : ''}` : S.weapon === 1 ? `⚡ 電擊槍 ${S.taser} 發` : S.weapon === 2 ? '🏏 警棍（點擊揮擊）' : `🎯 T91 步槍 ${S.rifle} / ${S.rifleRes}${reloadT > 0 ? ' 換彈中…' : ''}`;
+  if (IS_TOUCH) for (const id of ['tBackup', 'tWarn', 'tAim', 'tWeap', 'tRel', 'tFire']) { const el = $(id); if (el) el.style.display = S.onDuty ? '' : 'none'; }
+  if (IS_TOUCH && $('tSiren')) $('tSiren').style.display = S.onDuty || (P.mode === 'vehicle' && P.veh && P.veh.police) ? '' : 'none';
   $('tired').style.opacity = S.energy < 15 ? 0.7 : S.energy < 30 ? 0.3 : 0;
   $('cross').style.display = S.onDuty && P.mode === 'foot' ? 'block' : 'none';
 }
@@ -4891,7 +5346,7 @@ function findInteract() {
   if (MODAL.open) return null;
   const inVeh = P.mode === 'vehicle';
   let best = null, bd = 1e9;
-  const list = STATIC_INTERACT.concat(MIS.interacts());
+  const list = STATIC_INTERACT.concat(MIS.interacts(), friendInteracts());
   for (const it of list) { if (inVeh && !it.veh) continue; const d = dist(P.x, P.z, it.x, it.z); const r = inVeh ? it.r + 8 : it.r; if (d < r && d < bd) { bd = d; best = it; } }
   if (!best && !inVeh) { const pd = nearestChatPed(); if (pd) best = { x: pd.x, z: pd.z, r: 2.1, label: '和路人聊天', act: () => chatDialog(pd) }; }
   return best;
@@ -4915,13 +5370,14 @@ const MODAL = {
     this.esc = buttons && buttons.length ? buttons[buttons.length - 1][2] : () => this.close();
   },
   custom(render) { this.open = true; releasePointer(); $('modal').classList.remove('hidden'); this.esc = null; render(); },
-  close() { this.open = false; $('modal').classList.add('hidden'); if (!IS_TOUCH && GAME.running && !GAME.mapOpen) { try { canvas.requestPointerLock && canvas.requestPointerLock(); } catch (e) { } } },
+  close() { this.open = false; $('modal').classList.add('hidden'); $('mbox').className = 'box'; if (!IS_TOUCH && GAME.running && !GAME.mapOpen) { try { canvas.requestPointerLock && canvas.requestPointerLock(); } catch (e) { } } },
   escape() { if (this.esc) this.esc(); },
 };
 function openPause() {
   if (!GAME.running || MODAL.open) return;
   const online = /^https?:$/.test(location.protocol);
-  MODAL.show(`<h2>⏸ 暫停</h2><p>${RANKS[S.rank].name}・考績 ${S.merit}・存款 ${fmtMoney(S.money)}</p>`, [
+  MODAL.show(`<h2>⏸ 暫停</h2><p>${S.name || ''}・${isCop() ? RANKS[S.rank].name + '・考績 ' + S.merit : '無業'}・存款 ${fmtMoney(S.money)}</p>`, [
+    ['📱 手機', '', () => { MODAL.close(); openPhone(); }],
     ['▶ 繼續', 'g', () => { MODAL.close(); }],
     ['📋 考績與紀錄', '', showRecord],
     ...(MIS.cur ? [['❌ 放棄目前勤務（考績 -5）', 'r', () => { MIS.cancel(); MODAL.close(); }]] : []),
@@ -5127,7 +5583,7 @@ function loop(now) {
     for (let k = MHUMANS.length - 1; k >= 0; k--) { const h = MHUMANS[k]; if (h.role === 'robber' || h.role === 'clerk' || h.ai) continue;
       if (h.walk) { h.x += h.walk.vx * dt; h.z += h.walk.vz * dt; h.P.g.rotation.y = Math.atan2(h.walk.vx, h.walk.vz); h.walk.t -= dt; if (h.walk.t <= 0) { removeHuman(h); continue; } }
       posePerson(h.P, h.pose || 'idle', dt, 1.6); h.P.g.position.set(h.x, 0.2, h.z); }
-    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateGarbageMusic(); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt);
+    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateGarbageMusic(); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt);
   } else AU.update(false, 0, false);
   frame++;
   updateSky();
@@ -5139,26 +5595,23 @@ function loop(now) {
 }
 
 // 測試用：快速模擬（不畫圖）
-function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); } }
+function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); } }
 
 /* ---------- 開始 ---------- */
 function startGame(fresh) {
-  if (fresh) { S = newState(); S.diff = +$('diffSel').value; }
+  SITES.home = SITES.homes[S.char || 'a'] || SITES.homes.a;
+  initMarket(); updatePhoneBadge();
   $('intro').classList.add('hidden'); $('hud').classList.remove('hidden');
   if (IS_TOUCH) initTouch();
   const h = SITES.home; P.x = h.x; P.z = h.z + 1.5; P.yaw = Math.PI; P.pitch = 0; P.mode = 'foot';
   if (S.onDuty) { const st = SITES.station; P.x = st.x; P.z = st.z - 2; P.yaw = Math.PI; }
   respawnOwned();
   initTraffic(); initPeds();
+  camera.position.set(P.x, 1.65, P.z); camera.rotation.set(0, P.yaw, 0, 'YXZ');
   GAME.running = true; AU.init();
   updateHUD(true);
-  if (fresh) {
-    MODAL.show(`<h2>👮 歡迎加入台中市政府警察局！</h2>
-      <p>你是剛從警察學校畢業的新進<b>警員</b>，分發到<b>大墩分局</b>。</p>
-      <p>🏠 你現在在家（大墩華廈）門口，樓下停著你的機車。<br>🕗 08:00 前要到分局打卡上班（小地圖上的 👮，黃色光柱會帶路）。<br>🛵 走到機車旁按 <b>F</b>（手機按 🚗）騎車。</p>
-      <p style="color:#9fb3d9">把每件勤務處理好、依法行政，考績好就能一路升到分局長！</p>`, [['出門上班 🚓', 'g', () => { MODAL.close(); if (!IS_TOUCH) canvas.requestPointerLock && canvas.requestPointerLock(); }]]);
-    STARTGUIDE.on = true;
-  } else toast('rank', '歡迎回來，' + RANKS[S.rank].name, '第 ' + S.day + ' 天 ' + fmtTime(S.time));
+  if (fresh) { startLifeIntro(); STARTGUIDE.on = false;
+  } else toast('rank', '歡迎回來，' + (S.name || '') , '第 ' + S.day + ' 天 ' + fmtTime(S.time));
 }
 // 新手導引：上班前的黃色光柱指向分局
 const STARTGUIDE = { on: false };
@@ -5181,7 +5634,7 @@ function boot() {
   $('loading').classList.add('hidden'); $('introBtns').classList.remove('hidden');
   const sv = loadGame();
   if (!sv) $('bCont').classList.add('hidden');
-  $('bNew').onclick = () => { if (sv && !confirm('要開始新的警察生涯嗎？舊的存檔會被覆蓋。')) return; startGame(true); };
+  $('bNew').onclick = () => { if (sv && !window.__autoChar && !confirm('要開始新的人生嗎？舊的存檔會被覆蓋。')) return; const go = k => { MODAL.close(); S = newState(); S.diff = +$('diffSel').value; applyChar(k); if (window.__testCop) { S.job = 'police'; } startGame(true); }; if (window.__autoChar) go(window.__autoChar); else charSelect(go); };
   $('bCont').onclick = () => { S = sv; startGame(false); };
   requestAnimationFrame(loop);
 }
