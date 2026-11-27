@@ -715,7 +715,40 @@ function flushMerges() {
   for (const k in MERGE) { const e = MERGE[k]; if (!e.geos.length) continue; const mesh = new THREE.Mesh(mergeGeos(e.geos), e.mat); mesh.matrixAutoUpdate = false; mesh.updateMatrix(); scene.add(mesh); e.geos = []; }
 }
 // 盒子：x,z 中心、y 底部
+// 圓角建築：四個直角改成圓弧，屋頂邊緣倒角
+function roundBoxGeo(w, h, d, x, y, z, fl, cham) {
+  const r = Math.min(2.2, w * 0.18, d * 0.18), SEG = 3, ring = [];
+  const hw = w / 2 - r, hd = d / 2 - r;
+  const cs = [[hw, hd, 0], [-hw, hd, Math.PI / 2], [-hw, -hd, Math.PI], [hw, -hd, Math.PI * 1.5]];
+  for (const [cx, cz, a0] of cs) for (let k = 0; k <= SEG; k++) { const a = a0 + k / SEG * Math.PI / 2; ring.push([cx, cz, Math.cos(a), Math.sin(a)]); }
+  const N = ring.length, pos = [], nor = [], uv = [];
+  const cm = cham ? Math.min(0.6, r * 0.5, h * 0.1) : 0, hw0 = h - cm;
+  const P = (k, rr, yy) => [x + ring[k][0] + ring[k][2] * rr, y + yy, z + ring[k][1] + ring[k][3] * rr];
+  const len = []; let acc = 0;
+  for (let k = 0; k <= N; k++) { len.push(acc); const a = ring[k % N], b = ring[(k + 1) % N]; acc += Math.hypot(a[0] + a[2] * r - b[0] - b[2] * r, a[1] + a[3] * r - b[1] - b[3] * r); }
+  const push = (p, n, u, v) => { pos.push(...p); nor.push(...n); uv.push(u, v); };
+  for (let k = 0; k < N; k++) {
+    const j = (k + 1) % N, na = [ring[k][2], 0, ring[k][3]], nb = [ring[j][2], 0, ring[j][3]];
+    const ua = len[k] / 16, ub = len[k + 1] / 16, vt = hw0 / fl;
+    const a0 = P(k, r, 0), b0 = P(j, r, 0), a1 = P(k, r, hw0), b1 = P(j, r, hw0);
+    push(a0, na, ua, 0); push(b0, nb, ub, 0); push(b1, nb, ub, vt); push(a0, na, ua, 0); push(b1, nb, ub, vt); push(a1, na, ua, vt);
+    if (cm) {
+      const a2 = P(k, r - cm, h), b2 = P(j, r - cm, h), s2 = Math.SQRT1_2;
+      const ca = [na[0] * s2, s2, na[2] * s2], cb = [nb[0] * s2, s2, nb[2] * s2];
+      push(a1, ca, 0.01, 0.01); push(b1, cb, 0.01, 0.01); push(b2, cb, 0.01, 0.01); push(a1, ca, 0.01, 0.01); push(b2, cb, 0.01, 0.01); push(a2, ca, 0.01, 0.01);
+    }
+    const c = [x, y + h, z];
+    push(c, [0, 1, 0], 0.01, 0.01); push(P(j, r - cm, h), [0, 1, 0], 0.01, 0.01); push(P(k, r - cm, h), [0, 1, 0], 0.01, 0.01);
+  }
+  // 反轉三角形繞向（讓外側是正面）
+  const sw = (arr, n) => { for (let t = 0; t < arr.length; t += 3 * n) for (let c = 0; c < n; c++) { const a = t + n + c, b = t + 2 * n + c; const tmp = arr[a]; arr[a] = arr[b]; arr[b] = tmp; } };
+  sw(pos, 3); sw(nor, 3); sw(uv, 2);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  return g;
+}
 function boxGeo(w, h, d, x, y, z, uv) {
+  if ((uv === 'facade' || uv === 'shop') && w > 3 && d > 3) return roundBoxGeo(w, h, d, x, y, z, uv === 'shop' ? h : 12.8, uv === 'facade');
   const g = new THREE.BoxGeometry(w, h, d);
   const a = g.attributes.uv;
   if (uv === 'facade') {
@@ -5857,7 +5890,7 @@ function setJob(key, after) {
 function quiz(title, bank, need, onPass) {
   const qs = bank.slice().sort(() => Math.random() - 0.5).slice(0, 5); let k = 0, ok = 0;
   const show = () => {
-    if (k >= qs.length) { if (ok >= need) onPass(ok); else MODAL.show(`<h2>😢 沒通過</h2><p>答對 ${ok} / 5 題，要 ${need} 題才通過。</p>`, [['好', 'gray', () => MODAL.close()]]); return; }
+    if (k >= qs.length) { if (ok >= need) { MODAL.close(); onPass(ok); } else MODAL.show(`<h2>😢 沒通過</h2><p>答對 ${ok} / 5 題，要 ${need} 題才通過。</p>`, [['好', 'gray', () => MODAL.close()]]); return; }
     const q = qs[k]; MODAL.show(`<h2>📝 ${title}　${k + 1} / 5</h2><p style="font-size:17px">${q[0]}</p>`, q[1].map((a, i) => [a, '', () => { if (i === q[2]) { ok++; AU.click(); } else AU.bad(); k++; show(); }])); MODAL.esc = null;
   };
   show();
