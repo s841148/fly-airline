@@ -152,6 +152,9 @@ body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;w
 .phmsg{background:#172038;border-radius:10px;padding:7px 9px}.phmsg small{color:#9fb3d9}
 .phtoast{position:sticky;bottom:0;background:#ffd84a;color:#111;border-radius:10px;padding:6px 10px;margin-top:8px;font-weight:bold;text-align:center}
 .spark{display:block}
+.box.phone.pc .phframe{width:min(820px,94vw);height:min(540px,90vh);border-radius:8px;border:12px solid #1c1f26;border-bottom-width:26px}
+.box.phone.pc .phgrid{grid-template-columns:repeat(8,1fr)}.box.phone.pc .phhome{display:none}.box.phone.pc .phbody{font-size:14px}
+.pctitle{font-size:14px;color:#fff;opacity:.85;margin-bottom:4px}.box.phone.pc .phclock{font-size:34px}
 </style>
 </head>
 <body>
@@ -665,6 +668,7 @@ function collideCircle(p, r, ylow) {
     }
     if (!moved) break;
   }
+  if (p.z > WORLD.z1 + 100) return hit; // 室內空間
   if (p.x < WORLD.x0) { p.x = WORLD.x0; hit = true; } if (p.x > WORLD.x1) { p.x = WORLD.x1; hit = true; }
   if (p.z < WORLD.z0) { p.z = WORLD.z0; hit = true; } if (p.z > WORLD.z1) { p.z = WORLD.z1; hit = true; }
   return hit;
@@ -1807,6 +1811,7 @@ function initTraffic() {
   for (const t of ['bus', 'bus', 'garbage', 'ambulance', 'fire', 'cga']) { const v = new NPCVeh('car', t); const r = randomSegNear(P.x, P.z, 40, 190) || anySeg(); v.place(...r); TRAFFIC.push(v); }
 }
 function updateTraffic(dt) {
+  if (P.inside) return;
   for (const v of TRAFFIC) {
     v.update(dt);
     if ((v.state === 'drive' || v.state === 'broken') && !v.flag && dist(v.x, v.z, P.x, P.z) > (v.cop ? 260 : 210)) { const r = randomSegNear(P.x, P.z, 90, 190); if (r) v.place(...r); }
@@ -1868,6 +1873,7 @@ function initPeds() {
   for (let k = 0; k < n; k++) { const pd = new Ped(); PEDS.push(pd); pd.recycle(); }
 }
 function updatePeds(dt) {
+  if (P.inside) return;
   for (const pd of PEDS) {
     const d = dist(pd.x, pd.z, P.x, P.z);
     if (d > 160 && pd.state !== 'down') { pd.recycle(); continue; }
@@ -3224,7 +3230,7 @@ function goSleep() {
   if (W.stars) { MODAL.close(); radio('警察正在找你，現在回家睡覺會被堵在家裡！先甩掉警察。', 'warn'); return; }
   MODAL.close();
   fadeTo('😴 睡覺中…', () => {
-    const target = 7 * 60;
+    const target = 7 * 60; catTick(((target - S.time) + 1440) % 1440 || 1440);
     if (S.time >= target) {
       if (S.time < 12 * 60) S.time = 12 * 60; checkAbsent();
       S.day++; S.workedToday = false;
@@ -3233,7 +3239,7 @@ function goSleep() {
     const wrecked = PVEHS.filter(v => !v.police && !v.civ && (v.wreck || v.hp < 100)).length;
     if (wrecked) { S.money -= wrecked * 3000; setTimeout(() => radio('🔧 你的車已經送修好了，修車費 ' + fmtMoney(wrecked * 3000) + '。', 'info'), 1500); }
     respawnOwned(); for (const pv of [POLICE_CAR, POLICE_SCOOT]) if (pv.wreck || pv.hp < 100) restoreVeh(pv); POLICE_CAR.reset(); POLICE_SCOOT.reset();
-    const h = SITES.home; P.x = h.x; P.z = h.z + 1.5; P.yaw = Math.PI; P.pitch = 0;
+    const h = SITES.home; if (P.inside) { const R = myRoom(); P.x = R.x1 - 1.5; P.z = R.z0 + 3.4; P.yaw = Math.PI; } else { P.x = h.x; P.z = h.z + 1.5; P.yaw = Math.PI; } P.pitch = 0;
     saveGame();
     setTimeout(() => deliverMail(), 3600);
     setTimeout(() => { toast('rank', '☀️ 第 ' + S.day + ' 天（週' + WEEK[weekday(S.day)] + '）早上 07:00', S.job !== 'police' || S.dismissed ? '還沒有工作，可以拿手機（P）看看求職 App' : isWorkday(S.day) ? '08:00 要到大墩分局打卡上班（08:30 後算遲到）' : '今天週日放假！'); morningLife(); }, 700);
@@ -3303,10 +3309,9 @@ function initStaticInteracts() {
     }
   });
   for (const hm of Object.values(SITES.homes)) STATIC_INTERACT.push({
-    x: hm.door.x, z: hm.door.z, r: 2.6, label: () => SITES.home === hm ? '回家' : hm.short + '（別人家）', act: () => {
+    x: hm.door.x, z: hm.door.z, r: 2.6, label: () => SITES.home === hm ? '進家門' : hm.short + '（別人家）', act: () => {
       if (SITES.home !== hm) { radio('這不是你家，按門鈴沒人應。', 'info'); return; }
-      MODAL.show(`<h2>🏠 我家（${hm.short}）</h2><p>現在 ${fmtTime(S.time)}　❤️ ${Math.round(S.hp)}　⚡ ${Math.round(S.energy)}</p>${homeExtraHTML()}`,
-        [['😴 睡覺到明天早上', 'g', goSleep], ['💾 存檔', '', () => { saveGame(); MODAL.close(); toast('good', '💾 已存檔', ''); }], ['出門', 'gray', () => MODAL.close()]]);
+      enterHome();
     }
   });
   for (const s of SITES.stores) STATIC_INTERACT.push({ x: s.counter.x, z: s.counter.z, r: 2.2, label: () => '結帳櫃檯：買東西', act: () => storeMenu(s) });
@@ -5237,7 +5242,7 @@ function addCrime(code, extra, victim) {
   const prev = victim ? W.charges.find(q => q.v === victim) : null;
   if (prev) { if (CRIMES[prev.code].stars + (prev.extra || 0) >= c.stars + (extra || 0) && prev.code !== 'assault') { W.lost = 0; W.lx = P.x; W.lz = P.z; return; } prev.code = code; prev.extra = extra || 0; }
   else W.charges.push({ code, v: victim || {}, extra: extra || 0 });
-  const before = W.stars;
+  const before = W.stars; crimeNews(code);
   const top = Math.max(...W.charges.map(q => CRIMES[q.code].stars + q.extra));
   W.stars = Math.min(5, Math.max(W.stars, top + (W.charges.length >= 3 ? 1 : 0)));
   W.lost = 0; W.lx = P.x; W.lz = P.z; W.seen = true;
@@ -5565,6 +5570,8 @@ function morningLife() {
     for (const p of got) receiveItem(p.k, p.q);
     if (got.length) pushMsg('麥麥購物', '📦 你的包裹已送達：' + got.map(p => SHOP_BY[p.k].n + (p.q > 1 ? '×' + p.q : '')).join('、') + '。');
   }
+  dailyNews();
+  if (S.cat && S.cat.name && S.cat.full < 30) pushMsg('🐱 ' + S.cat.name, '喵～喵嗚～（肚子好餓，快回家倒飼料！）');
   for (const k of Object.keys(S.met || {})) if (Math.random() < 0.18) pushMsg(CHARS[k].name, pick(CHARS[k].lines));
   if (S.job !== 'police' && S.day === 2) pushMsg('麥麥人力銀行', '你的履歷還沒填完喔！打開「求職」App 看看最新職缺。');
 }
@@ -5769,7 +5776,17 @@ const SHOP = [
   { k: 'sofa', n: '🛋️ 三人座沙發', p: 8900, cat: '家具', furn: true, desc: '放在家裡' },
   { k: 'tv', n: '📺 55 吋電視', p: 15900, cat: '家具', furn: true, desc: '在家可以看新聞' },
   { k: 'bed', n: '🛏️ 獨立筒床墊', p: 12000, cat: '家具', furn: true, desc: '睡得好：起床後體力上限多 20（一天內）' },
-  { k: 'box', n: '🎒 外送保溫箱', p: 1200, cat: '工作', keep: true, desc: '當外送員要用的（之後開放）' },
+  { k: 'box', n: '🎒 外送保溫箱', p: 1200, cat: '工作', keep: true, desc: '當外送員要用的' },
+  { k: 'egg', n: '🥚 雞蛋（10 顆）', p: 75, cat: '食材', q: 10, desc: '做番茄炒蛋、蛋炒飯' },
+  { k: 'rice', n: '🍚 白米（5 份）', p: 129, cat: '食材', q: 5, desc: '做蛋炒飯、滷肉飯' },
+  { k: 'tomato', n: '🍅 牛番茄（3 顆）', p: 59, cat: '食材', q: 3, desc: '做番茄炒蛋' },
+  { k: 'veg', n: '🥬 高麗菜（2 份）', p: 49, cat: '食材', q: 2, desc: '炒青菜、蛋炒飯、牛肉麵' },
+  { k: 'pork', n: '🥩 豬五花（2 份）', p: 159, cat: '食材', q: 2, desc: '做滷肉飯、麻婆豆腐' },
+  { k: 'beef', n: '🐄 牛腱（2 份）', p: 299, cat: '食材', q: 2, desc: '做紅燒牛肉麵' },
+  { k: 'noodleR', n: '🍝 陽春麵條（4 份）', p: 45, cat: '食材', q: 4, desc: '做紅燒牛肉麵' },
+  { k: 'tofu', n: '⬜ 板豆腐（2 盒）', p: 38, cat: '食材', q: 2, desc: '做麻婆豆腐' },
+  { k: 'catfood', n: '🐟 貓飼料（10 份）', p: 299, cat: '寵物', q: 10, desc: '一天餵一次，貓咪才不會餓' },
+  { k: 'cattoy', n: '🪶 逗貓棒', p: 129, cat: '寵物', keep: true, desc: '摸貓時貓咪心情加更多' },
 ];
 const SHOP_BY = {}; SHOP.forEach(i => SHOP_BY[i.k] = i);
 function receiveItem(k, q) {
@@ -5794,19 +5811,19 @@ const APPS = [
 ];
 function openPhone(app) {
   if (!GAME.running || MODAL.open) return;
-  initMarket(); PHONE.app = app || 'home'; PHONE.msg = '';
+  initMarket(); PHONE.app = app || 'home'; PHONE.msg = ''; PHONE.pc = false;
   MODAL.custom(renderPhone); $('mbox').classList.add('phone');
 }
 function phClose() { MODAL.close(); }
 function renderPhone() {
-  const B = $('mbox'); B.className = 'box phone';
+  const B = $('mbox'); B.className = 'box phone' + (PHONE.pc ? ' pc' : '');
   const top = `<div class="phtop"><span>${fmtTime(S.time)}</span><span>📶 🔋</span></div>`;
   const back = PHONE.app !== 'home' ? `<button class="phback" id="phBack">‹ 返回</button>` : '';
   let body = '';
   const A = PHONE.app;
   if (A === 'home') {
     const unread = (S.msgs || []).filter(m => !m.read).length;
-    body = `<div class="phwall"><div class="phclock">${fmtTime(S.time)}</div><div class="phdate">第 ${S.day} 天・週${WEEK[weekday(S.day)]}</div>
+    body = `<div class="phwall">${PHONE.pc ? '<div class="pctitle">💻 我的電腦</div>' : ''}<div class="phclock">${fmtTime(S.time)}</div><div class="phdate">第 ${S.day} 天・週${WEEK[weekday(S.day)]}</div>
       <div class="phgrid">${APPS.map(a => `<button class="phapp" data-app="${a[0]}"><span>${a[1]}</span>${a[2]}${a[0] === 'msg' && unread ? `<i>${unread}</i>` : ''}</button>`).join('')}</div>
       <div class="phbal">💰 存款 ${fmtMoney(S.money)}</div></div>`;
   } else if (A === 'stock') {
@@ -5829,9 +5846,9 @@ function renderPhone() {
       <p class="phnote">${PHONE.qty} 股 ≈ ${fmtMoney(amt)}，手續費 ${fee}${s.etf ? '，賣出證交稅 0.1%' : '，賣出證交稅 0.3%'}</p>
       <div class="phbtns"><button class="btn r" id="phBuy">買進</button><button class="btn g" id="phSell">賣出</button></div>`;
   } else if (A === 'shop') {
-    const cats = [...new Set(SHOP.map(i => i.cat))];
+    const cats = [...new Set(SHOP.filter(i => !i.hidden).map(i => i.cat))];
     body = `<h3>🛒 麥麥購物 <small>今天下單、明天早上送到家</small></h3><div class="phtabs">${cats.map(c => `<button class="${c === PHONE.cat ? 'on' : ''}" data-cat="${c}">${c}</button>`).join('')}</div><div class="phlist">` +
-      SHOP.filter(i => i.cat === PHONE.cat).map(i => {
+      SHOP.filter(i => i.cat === PHONE.cat && !i.hidden).map(i => {
         const own = hasItem(i.k);
         return `<div class="phrow"><div><b>${i.n}</b><br><small>${i.desc}</small></div><div class="ar"><b>${fmtMoney(i.p)}</b><br>${own ? '<small>已擁有</small>' : `<button class="btn g sm" data-buy="${i.k}">購買</button>`}</div></div>`;
       }).join('') + `</div>${(S.parcels || []).length ? `<p class="phnote">📦 配送中：${S.parcels.map(p => SHOP_BY[p.k].n).join('、')}</p>` : ''}`;
@@ -6162,6 +6179,370 @@ function jobSpray() {
   return true;
 }
 
+/* ================= 家：室內、電腦、貓、廚房做菜 ================= */
+// 室內空間放在地圖外（南邊），進門時傳送過去
+const HOME_IN = { z: 0, rooms: {}, lights: [] };
+const HOME_SIZE = { a: { W: 16, D: 12, wall: 0xeef0ec, floor: 'wood', cat: 0xe8963a, catN: '橘貓' }, b: { W: 18, D: 14, wall: 0xf3ead8, floor: 'tile', cat: 0x2a2a2a, catN: '賓士貓', catW: true }, c: { W: 10, D: 9, wall: 0xf6e9ef, floor: 'wood2', cat: 0x9a9aa2, catN: '灰貓' } };
+const IM = {};
+function im(c, em) { const k = c + '_' + (em == null ? 0.3 : em); return IM[k] || (IM[k] = new THREE.MeshLambertMaterial({ color: c, emissive: c, emissiveIntensity: (em == null ? 0.3 : em) * 0.45 })); }
+function floorTex(kind) {
+  return canvasTex(256, 256, g => {
+    if (kind === 'tile') { g.fillStyle = '#d9d2c4'; g.fillRect(0, 0, 256, 256); g.strokeStyle = '#b8ae9c'; g.lineWidth = 3; for (let i = 0; i <= 256; i += 64) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 256); g.stroke(); g.beginPath(); g.moveTo(0, i); g.lineTo(256, i); g.stroke(); } return; }
+    const base = kind === 'wood2' ? [196, 160, 120] : [168, 118, 72];
+    for (let r = 0; r < 8; r++) { const off = (r % 2) * 64; for (let c = -1; c < 3; c++) { const v = Math.random() * 24 - 12; g.fillStyle = `rgb(${base[0] + v | 0},${base[1] + v | 0},${base[2] + v | 0})`; g.fillRect(c * 128 + off, r * 32, 128, 32); g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(c * 128 + off, r * 32, 2, 32); } g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(0, r * 32, 256, 2); }
+  });
+}
+function hb(par, w, h, d, mat, x, y, z, col) { // 盒子（y = 底部）
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y + h / 2, z); par.add(m);
+  if (col) addCol(x - w / 2, x + w / 2, z - d / 2, z + d / 2, col === true ? h : col, 'low', 0);
+  return m;
+}
+function hcyl(par, r, h, mat, x, y, z, seg) { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg || 14), mat); m.position.set(x, y + h / 2, z); par.add(m); return m; }
+
+function buildHomeInteriors() {
+  HOME_IN.z = WORLD.z1 + 400;
+  ['a', 'b', 'c'].forEach((k, n) => buildRoom(k, -500 + n * 120, HOME_IN.z));
+}
+function buildRoom(key, cx, cz) {
+  const C = HOME_SIZE[key], W = C.W, D = C.D, H = 3;
+  const x0 = cx - W / 2, x1 = cx + W / 2, z0 = cz - D / 2, z1 = cz + D / 2;
+  const g = new THREE.Group(); g.visible = false; scene.add(g);
+  const R = { key, g, x0, x1, z0, z1, cx, cz, W, D, it: [], furn: {} };
+  HOME_IN.rooms[key] = R;
+  // 地板、天花板、牆
+  const ft = floorTex(C.floor); ft.wrapS = ft.wrapT = THREE.RepeatWrapping; ft.repeat.set(W / 4, D / 4);
+  const fl = new THREE.Mesh(new THREE.PlaneGeometry(W, D), new THREE.MeshLambertMaterial({ map: ft, emissive: 0xffffff, emissiveMap: ft, emissiveIntensity: 0.12 })); fl.rotation.x = -Math.PI / 2; fl.position.set(cx, 0.01, cz); g.add(fl);
+  const ce = new THREE.Mesh(new THREE.PlaneGeometry(W, D), im(0xfafaf6, 0.45)); ce.rotation.x = Math.PI / 2; ce.position.set(cx, H, cz); g.add(ce);
+  const wm = im(C.wall, 0.42), skirt = im(0x8a6a4a, 0.3);
+  const wall = (w, d, x, z) => { hb(g, w, H, d, wm, x, 0, z); addCol(x - w / 2, x + w / 2, z - d / 2, z + d / 2, H, 'wall', 0); };
+  wall(W + 0.4, 0.2, cx, z0 - 0.1); wall(W + 0.4, 0.2, cx, z1 + 0.1); wall(0.2, D, x0 - 0.1, cz); wall(0.2, D, x1 + 0.1, cz);
+  hb(g, W, 0.12, 0.04, skirt, cx, 0, z0 + 0.02); hb(g, W, 0.12, 0.04, skirt, cx, 0, z1 - 0.02); hb(g, 0.04, 0.12, D, skirt, x0 + 0.02, 0, cz); hb(g, 0.04, 0.12, D, skirt, x1 - 0.02, 0, cz);
+  // 窗戶（白天亮、晚上暗）
+  const winMat = new THREE.MeshBasicMaterial({ color: 0x9ccbf0 }); HOME_IN.lights.push({ win: winMat });
+  const frame = im(0xf8f8f8, 0.5);
+  const win = (x, z, ry) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.4), winMat); m.position.set(x, 1.6, z); m.rotation.y = ry; g.add(m); const f = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 0.1), frame); f.position.set(x, 1.6, z); f.rotation.y = ry; g.add(f); const f2 = f.clone(); f2.scale.set(0.04, 18, 1); g.add(f2); };
+  win(x0 + W * 0.25, z0 + 0.01, 0); win(x0 + W * 0.75, z0 + 0.01, 0); win(x1 - 0.01, cz, -Math.PI / 2); win(x0 + 0.01, cz - D * 0.2, Math.PI / 2);
+  // 天花板燈
+  for (const lx of W > 12 ? [x0 + W * 0.3, x0 + W * 0.7] : [cx]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.06, 20), new THREE.MeshBasicMaterial({ color: 0xfff6dc })); l.position.set(lx, H - 0.04, cz); g.add(l); }
+  // 大門（出口）
+  hb(g, 1.2, 2.2, 0.08, im(0x6a4a2a, 0.3), cx, 0, z1 - 0.02); hcyl(g, 0.04, 0.02, im(0xd8c060, 0.5), cx + 0.45, 1.0, z1 - 0.1, 8);
+  hb(g, 1.4, 0.02, 0.8, im(0x5a7a5a, 0.3), cx, 0, z1 - 0.6); // 腳踏墊
+  R.door = { x: cx, z: z1 - 1.0 };
+  R.it.push({ x: cx, z: z1 - 0.7, r: 1.3, label: '出門', act: () => leaveHome() });
+
+  // ---------- 廚房（後牆左邊） ----------
+  const kw = Math.min(6, W * 0.4), kx0 = x0, kz = z0 + 0.35;
+  const cab = im(0xf2f2f2, 0.35), top = im(0x3a3a3a, 0.3), steel = im(0xc8ccd2, 0.4);
+  hb(g, 0.9, 1.9, 0.7, im(0xdfe6ea, 0.4), kx0 + 0.5, 0, kz, true); // 冰箱
+  hb(g, 0.04, 0.6, 0.04, steel, kx0 + 0.85, 0.9, kz + 0.37); hb(g, 0.04, 0.4, 0.04, steel, kx0 + 0.85, 1.4, kz + 0.37);
+  hb(g, kw - 1, 0.9, 0.7, cab, kx0 + 1 + (kw - 1) / 2, 0, kz, true); hb(g, kw - 1, 0.05, 0.72, top, kx0 + 1 + (kw - 1) / 2, 0.9, kz);
+  const stX = kx0 + 1 + (kw - 1) * 0.35, skX = kx0 + 1 + (kw - 1) * 0.78;
+  for (const [dx, dz] of [[-0.2, -0.12], [0.2, -0.12], [-0.2, 0.14], [0.2, 0.14]]) hcyl(g, 0.11, 0.02, im(0x111111, 0.2), stX + dx, 0.95, kz + dz, 12);
+  hcyl(g, 0.18, 0.12, steel, stX - 0.2, 0.97, kz + 0.14, 16); // 鍋子
+  hb(g, 0.6, 0.02, 0.4, steel, skX, 0.94, kz); hcyl(g, 0.02, 0.3, steel, skX, 0.95, kz - 0.25, 6); // 水槽
+  hb(g, kw - 1, 0.6, 0.35, cab, kx0 + 1 + (kw - 1) / 2, 1.8, z0 + 0.18); // 吊櫃
+  hb(g, 0.9, 0.5, 0.45, im(0x333333, 0.2), stX, 1.7, z0 + 0.25); // 抽油煙機
+  R.it.push({ x: kx0 + 0.6, z: kz + 1.1, r: 1.1, label: '打開冰箱', act: () => fridgeMenu() });
+  R.it.push({ x: stX, z: kz + 1.0, r: 1.1, label: '用瓦斯爐做菜', act: () => cookMenu() });
+  // 餐桌
+  const tX = kx0 + kw / 2 + 0.3, tZ = z0 + 3.2, wood = im(0x9a6a3a, 0.3);
+  hb(g, 1.6, 0.05, 0.9, wood, tX, 0.74, tZ, 0.78); for (const [dx, dz] of [[-0.7, -0.38], [0.7, -0.38], [-0.7, 0.38], [0.7, 0.38]]) hb(g, 0.06, 0.74, 0.06, wood, tX + dx, 0, tZ + dz);
+  for (const dx of [-0.45, 0.45]) { hb(g, 0.45, 0.05, 0.45, wood, tX + dx, 0.45, tZ + 0.75); hb(g, 0.45, 0.5, 0.05, wood, tX + dx, 0.5, tZ + 0.96); for (const [ex, ez] of [[-0.2, -0.2], [0.2, -0.2], [-0.2, 0.2], [0.2, 0.2]]) hb(g, 0.04, 0.45, 0.04, wood, tX + dx + ex, 0, tZ + 0.75 + ez); }
+  addCol(tX - 0.7, tX + 0.7, tZ + 0.5, tZ + 1.0, 0.9, 'low', 0);
+  hcyl(g, 0.12, 0.2, im(0xe0e0e0, 0.4), tX + 0.3, 0.79, tZ - 0.1, 10); // 水壺
+
+  // ---------- 臥室角（後牆右邊） ----------
+  const bX = x1 - 1.5, bZ = z0 + 1.25;
+  hb(g, 1.8, 1.0, 0.1, im(0x7a5232, 0.3), bX, 0, z0 + 0.06); // 床頭板
+  hb(g, 1.7, 0.3, 2.2, im(0x7a5232, 0.3), bX, 0, bZ, 0.6); // 床架
+  R.furn.mat0 = hb(g, 1.6, 0.12, 2.0, im(0xd8d8d0, 0.35), bX, 0.3, bZ + 0.05); // 薄床墊
+  R.furn.bed = hb(g, 1.62, 0.32, 2.05, im(0xf4f4f8, 0.4), bX, 0.3, bZ + 0.05); // 獨立筒
+  hb(g, 1.5, 0.08, 1.1, im(0x6a8ac8, 0.35), bX, 0.62, bZ + 0.45); // 被子
+  hb(g, 0.6, 0.12, 0.35, im(0xffffff, 0.5), bX - 0.4, 0.62, bZ - 0.75); hb(g, 0.6, 0.12, 0.35, im(0xffffff, 0.5), bX + 0.4, 0.62, bZ - 0.75);
+  hb(g, 0.45, 0.5, 0.4, wood, bX - 1.25, 0, z0 + 0.3, true); hcyl(g, 0.1, 0.3, im(0xfff0c0, 0.8), bX - 1.25, 0.5, z0 + 0.3, 10); // 床頭櫃＋檯燈
+  hb(g, 1.2, 2.0, 0.55, im(0xd8c8a8, 0.3), x1 - 0.3, 0, bZ + 2.3, false).rotation.y = Math.PI / 2; addCol(x1 - 0.6, x1, bZ + 1.7, bZ + 2.9, 2, 'low', 0); // 衣櫃
+  R.it.push({ x: bX, z: bZ + 1.6, r: 1.3, label: () => '床：睡覺／存檔', act: () => bedMenu() });
+
+  // ---------- 客廳（前半部左邊） ----------
+  const lz = z1 - 3.2, sx = x0 + 0.55, tvX = x0 + Math.min(4.6, W * 0.34);
+  hb(g, 3.0, 0.02, 2.2, im(0xb0485a, 0.3), (sx + tvX) / 2, 0, lz); // 地毯
+  // 舊沙發（預設）
+  const sofa0 = new THREE.Group(); g.add(sofa0); hb(sofa0, 0.8, 0.42, 1.5, im(0x8a7a5a, 0.3), sx + 0.1, 0, lz); hb(sofa0, 0.2, 0.8, 1.5, im(0x7a6a4a, 0.3), sx - 0.25, 0, lz);
+  // 新沙發
+  const sofa = new THREE.Group(); g.add(sofa); const sm = im(0x3a5a8a, 0.32);
+  hb(sofa, 0.9, 0.45, 2.3, sm, sx + 0.15, 0, lz); hb(sofa, 0.22, 0.9, 2.3, sm, sx - 0.25, 0, lz); hb(sofa, 0.9, 0.65, 0.2, sm, sx + 0.15, 0, lz - 1.15); hb(sofa, 0.9, 0.65, 0.2, sm, sx + 0.15, 0, lz + 1.15);
+  for (const dz of [-0.6, 0.15]) hb(sofa, 0.12, 0.35, 0.35, im(0xf0c040, 0.4), sx - 0.05, 0.45, lz + dz);
+  R.furn.sofa0 = sofa0; R.furn.sofa = sofa;
+  addCol(sx - 0.4, sx + 0.6, lz - 1.2, lz + 1.2, 0.6, 'low', 0);
+  hb(g, 0.6, 0.4, 1.0, wood, sx + 1.5, 0, lz, true); // 茶几
+  hb(g, 0.3, 0.02, 0.2, im(0x222222, 0.2), sx + 1.5, 0.4, lz - 0.2); // 遙控器
+  // 電視櫃＋電視
+  hb(g, 0.45, 0.5, 1.8, wood, tvX, 0, lz, true);
+  const tv = new THREE.Group(); g.add(tv); hb(tv, 0.08, 0.75, 1.3, im(0x111111, 0.1), tvX, 0.55, lz);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(1.22, 0.68), new THREE.MeshBasicMaterial({ color: 0x223344 })); scr.position.set(tvX - 0.045, 0.92, lz); scr.rotation.y = -Math.PI / 2; tv.add(scr); R.tvScreen = scr; R.furn.tv = tv;
+  R.it.push({ x: sx + 1.0, z: lz + 1.3, r: 1.2, label: () => hasItem('tv') ? '看電視（休息 30 分鐘）' : '坐沙發休息', act: () => watchTV() });
+  // 植物、書櫃
+  hcyl(g, 0.22, 0.4, im(0xb06a3a, 0.3), x0 + 0.4, 0, z1 - 0.5, 10); const lf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.45, 0), im(0x3a8a3a, 0.3)); lf.position.set(x0 + 0.4, 0.85, z1 - 0.5); g.add(lf);
+  if (W > 12) { hb(g, 1.6, 1.8, 0.35, wood, x0 + kw + 1.2, 0, z0 + 0.2, true); for (let r = 0; r < 4; r++) for (let b = 0; b < 6; b++) hb(g, 0.1, 0.32, 0.22, im([0xc04040, 0x4060c0, 0x40a060, 0xe0c040, 0x8a5ac8][(r + b) % 5], 0.35), x0 + kw + 0.55 + b * 0.22 + Math.random() * 0.05, 0.08 + r * 0.44, z0 + 0.25); }
+
+  // ---------- 電腦桌（前半部右邊） ----------
+  const dX = x1 - 0.45, dZ = z1 - 2.6;
+  hb(g, 0.75, 0.05, 1.5, im(0xeeeeee, 0.4), dX, 0.72, dZ, 0.77); hb(g, 0.7, 0.72, 0.05, im(0xcccccc, 0.3), dX, 0, dZ - 0.72); hb(g, 0.7, 0.72, 0.05, im(0xcccccc, 0.3), dX, 0, dZ + 0.72);
+  hb(g, 0.06, 0.45, 0.8, im(0x111111, 0.1), dX + 0.15, 0.85, dZ); hb(g, 0.15, 0.1, 0.2, im(0x333333, 0.2), dX + 0.2, 0.77, dZ);
+  const mon = new THREE.Mesh(new THREE.PlaneGeometry(0.74, 0.4), new THREE.MeshBasicMaterial({ map: canvasTex(128, 72, c => { const gr = c.createLinearGradient(0, 0, 128, 72); gr.addColorStop(0, '#2a4b8f'); gr.addColorStop(1, '#c0577a'); c.fillStyle = gr; c.fillRect(0, 0, 128, 72); c.fillStyle = 'rgba(255,255,255,.8)'; for (let i = 0; i < 4; i++) c.fillRect(8, 8 + i * 15, 10, 10); c.fillStyle = '#000a'; c.fillRect(0, 64, 128, 8); }) }));
+  mon.position.set(dX + 0.115, 1.075, dZ); mon.rotation.y = -Math.PI / 2; g.add(mon);
+  hb(g, 0.18, 0.02, 0.5, im(0x222222, 0.2), dX - 0.12, 0.77, dZ); hb(g, 0.1, 0.03, 0.07, im(0x222222, 0.2), dX - 0.12, 0.77, dZ + 0.4);
+  hb(g, 0.1, 0.4, 0.2, im(0x222222, 0.2), dX + 0.15, 0.77, dZ - 0.55); // 主機
+  // 椅子
+  hb(g, 0.5, 0.08, 0.5, im(0x222222, 0.2), dX - 0.75, 0.48, dZ); hb(g, 0.08, 0.6, 0.5, im(0x222222, 0.2), dX - 1.02, 0.55, dZ); hcyl(g, 0.04, 0.48, steel, dX - 0.75, 0, dZ, 6);
+  addCol(dX - 0.4, dX + 0.4, dZ - 0.75, dZ + 0.75, 0.8, 'low', 0);
+  R.it.push({ x: dX - 0.9, z: dZ, r: 1.2, label: '用電腦（購物、新聞、股票）', act: () => usePC() });
+
+  // ---------- 貓的東西 ----------
+  const bowlX = kx0 + kw + 0.5, bowlZ = z0 + 1.0;
+  hcyl(g, 0.16, 0.07, im(0xe05a7a, 0.4), bowlX, 0, bowlZ, 14); R.food = hcyl(g, 0.13, 0.02, im(0x9a6a3a, 0.3), bowlX, 0.06, bowlZ, 12);
+  hcyl(g, 0.14, 0.07, im(0x5a9ae0, 0.4), bowlX + 0.4, 0, bowlZ, 14); hcyl(g, 0.12, 0.02, new THREE.MeshBasicMaterial({ color: 0x9ad0ff }), bowlX + 0.4, 0.05, bowlZ, 12);
+  R.bowl = { x: bowlX, z: bowlZ + 0.35 };
+  const cbX = x0 + 0.5, cbZ = lz + 1.75; hcyl(g, 0.38, 0.12, im(0xc89a6a, 0.3), cbX, 0, cbZ, 16); hcyl(g, 0.3, 0.04, im(0xf0e0d0, 0.4), cbX, 0.1, cbZ, 16); R.catBed = { x: cbX, z: cbZ };
+  hb(g, 0.6, 0.18, 0.45, im(0x7aa0b0, 0.3), x1 - 0.5, 0, z1 - 0.5); hb(g, 0.52, 0.02, 0.37, im(0xd8d0b8, 0.3), x1 - 0.5, 0.17, z1 - 0.5); // 貓砂盆
+  // 貓跳台
+  hcyl(g, 0.08, 1.2, im(0xd8c09a, 0.3), x0 + kw + 0.6, 0, cz + 0.4, 8); hb(g, 0.6, 0.06, 0.6, im(0x8a6a4a, 0.3), x0 + kw + 0.6, 1.2, cz + 0.4); hb(g, 0.7, 0.06, 0.7, im(0x8a6a4a, 0.3), x0 + kw + 0.6, 0, cz + 0.4);
+  R.tower = { x: x0 + kw + 0.6, z: cz + 0.4 };
+  R.cat = makeCat(C.cat, C.catW); R.cat.g.position.set(cbX, 0, cbZ); g.add(R.cat.g);
+  Object.assign(R.cat, { x: cbX, z: cbZ, yaw: 0, st: 'sleep', t: 5, tx: cbX, tz: cbZ, meowT: 3 });
+}
+
+/* ---------- 貓 ---------- */
+function makeCat(color, white) {
+  const g = new THREE.Group(), m = im(color, 0.3), wm = im(0xffffff, 0.4), pink = im(0xf0a0b0, 0.4);
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), m); body.scale.set(1, 0.85, 1.8); body.position.set(0, 0.24, 0); g.add(body);
+  if (white) { const b2 = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 8), wm); b2.scale.set(1, 0.8, 1.6); b2.position.set(0, 0.2, -0.05); g.add(b2); }
+  const head = new THREE.Group(); head.position.set(0, 0.36, -0.28); g.add(head);
+  const hm = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 10), m); hm.scale.set(1.1, 0.95, 1); head.add(hm);
+  if (white) { const mz = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), wm); mz.position.set(0, -0.04, -0.09); head.add(mz); }
+  for (const s of [-1, 1]) {
+    const e = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.09, 4), m); e.position.set(s * 0.07, 0.11, 0); e.rotation.z = -s * 0.25; head.add(e);
+    const ei = new THREE.Mesh(new THREE.ConeGeometry(0.025, 0.05, 4), pink); ei.position.set(s * 0.07, 0.105, -0.015); ei.rotation.z = -s * 0.25; head.add(ei);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 6), new THREE.MeshBasicMaterial({ color: 0xe8d040 })); eye.position.set(s * 0.045, 0.02, -0.105); head.add(eye);
+    const pu = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 4), new THREE.MeshBasicMaterial({ color: 0x111111 })); pu.scale.set(0.5, 1.2, 1); pu.position.set(s * 0.045, 0.02, -0.124); head.add(pu);
+  }
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.014, 6, 4), pink); nose.position.set(0, -0.015, -0.12); head.add(nose);
+  const legs = []; for (const [x, z] of [[-0.08, -0.17], [0.08, -0.17], [-0.08, 0.17], [0.08, 0.17]]) { const l = new THREE.Group(); l.position.set(x, 0.18, z); const lm = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.028, 0.18, 6), white && z < 0 ? wm : m); lm.position.y = -0.09; l.add(lm); g.add(l); legs.push(l); }
+  const tail = new THREE.Group(); tail.position.set(0, 0.3, 0.27); g.add(tail); const segs = [];
+  let par = tail; for (let k = 0; k < 4; k++) { const s = new THREE.Group(); s.position.set(0, k ? 0.08 : 0, 0); const tm = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.026, 0.09, 6), white && k === 3 ? wm : m); tm.position.y = 0.045; s.add(tm); par.add(s); segs.push(s); par = s; }
+  tail.rotation.x = 0.9;
+  return { g, body, head, legs, tail, segs, ph: 0 };
+}
+AU.meow = function (sad) { if (!this.ctx) return; this.tone(sad ? 560 : 760, 0.32, 0.1, 'sine', sad ? 380 : 520); setTimeout(() => this.tone(sad ? 420 : 620, 0.22, 0.07, 'triangle', sad ? 300 : 480), 120); };
+AU.purr = function () { if (!this.ctx) return; for (let i = 0; i < 6; i++) setTimeout(() => this.noiseBurst(0.12, 0.08, 120, 2), i * 150); };
+function catName() { return (S.cat && S.cat.name) || '貓咪'; }
+function updateCat(R, dt) {
+  const c = R.cat, cs = S.cat; if (!c || !cs) return;
+  const hungry = cs.full < 30;
+  c.t -= dt; c.meowT -= dt;
+  if (c.st !== 'sleep' && c.meowT <= 0 && dist(P.x, P.z, c.x, c.z) < 6) { c.meowT = hungry ? rand(4, 7) : rand(12, 30); AU.meow(hungry); }
+  if (c.t <= 0) {
+    const r = Math.random(); c.t = rand(3, 8);
+    if (c.st === 'eat') { c.st = 'sit'; }
+    else if (hungry && r < 0.6) { c.st = 'walk'; c.tx = P.x + rand(-0.6, 0.6); c.tz = P.z + rand(-0.6, 0.6); } // 餓了會跟著你喵喵叫
+    else if (r < 0.25) { c.st = 'walk'; c.tx = R.catBed.x; c.tz = R.catBed.z; c.next = 'sleep'; }
+    else if (r < 0.4) { c.st = 'walk'; c.tx = R.tower.x; c.tz = R.tower.z; c.next = 'sit'; }
+    else if (r < 0.55 && cs.mood > 50) { c.st = 'walk'; c.tx = P.x + rand(-1, 1); c.tz = P.z + rand(-1, 1); c.next = 'sit'; }
+    else if (r < 0.85) { c.st = 'walk'; c.tx = rand(R.x0 + 0.6, R.x1 - 0.6); c.tz = rand(R.z0 + 1.2, R.z1 - 0.8); c.next = 'sit'; }
+    else { c.st = 'sit'; }
+  }
+  const k = c;
+  if (c.st === 'walk') {
+    const dx = c.tx - c.x, dz = c.tz - c.z, L = Math.hypot(dx, dz);
+    if (L < 0.25) { c.st = c.next || 'sit'; c.next = null; c.t = c.st === 'sleep' ? rand(15, 40) : rand(3, 8); }
+    else { const sp = hungry ? 1.4 : 0.9; c.x += dx / L * sp * dt; c.z += dz / L * sp * dt; c.yaw = Math.atan2(-dx, -dz); const p = { x: c.x, z: c.z }; collideCircle(p, 0.15, 0.3); c.x = p.x; c.z = p.z; c.ph += dt * 10; }
+  }
+  // 姿勢
+  const walking = c.st === 'walk', sleeping = c.st === 'sleep';
+  k.legs.forEach((l, i) => l.rotation.x = walking ? Math.sin(c.ph + (i % 2 ? 0 : Math.PI) + (i > 1 ? Math.PI / 2 : 0)) * 0.6 : 0);
+  const now = performance.now() / 1000;
+  k.segs.forEach((s, i) => { s.rotation.z = Math.sin(now * (sleeping ? 0.8 : 2.2) + i * 0.6) * (sleeping ? 0.1 : 0.3); s.rotation.x = sleeping ? 0.15 : -0.12; });
+  k.tail.rotation.x = sleeping ? 1.9 : walking ? 0.5 : 0.9;
+  k.g.scale.set(1, sleeping ? 0.7 : 1, sleeping ? 0.8 : 1);
+  k.body.position.y = sleeping ? 0.18 : c.st === 'sit' ? 0.22 : 0.24; k.body.rotation.x = c.st === 'sit' ? -0.35 : 0;
+  k.head.position.set(0, sleeping ? 0.25 : c.st === 'sit' ? 0.44 : 0.36, sleeping ? -0.22 : -0.28);
+  k.head.rotation.x = sleeping ? 0.5 : c.st === 'eat' ? 0.7 : 0; k.head.rotation.y = c.st === 'sit' ? Math.sin(now * 0.5) * 0.4 : 0;
+  k.legs.forEach(l => l.visible = !sleeping);
+  k.g.position.set(c.x, c.st === 'sit' && dist(c.x, c.z, R.tower.x, R.tower.z) < 0.4 ? 1.26 : 0, c.z); k.g.rotation.y = c.yaw;
+}
+function catAct(R) {
+  const cs = S.cat;
+  if (!cs.name) {
+    MODAL.show(`<h2>🐱 幫貓咪取名字</h2><p>這隻${HOME_SIZE[R.key].catN}是你的家人，要叫牠什麼？</p><p><input id="catNm" maxlength="8" value="${pick(['咪咪', '小橘', '麻糬', '豆花', '湯圓', '芝麻', '奶茶', '布丁'])}" style="font-size:18px;padding:6px;width:60%"></p>`,
+      [['決定', 'g', () => { const v = ($('catNm').value || '').trim(); cs.name = v || '咪咪'; MODAL.close(); AU.meow(); toast('good', '🐱 ' + cs.name, '以後要記得餵牠喔'); }]]);
+    setTimeout(() => { const el = $('catNm'); el && el.focus(); el && el.select(); }, 50); return;
+  }
+  const fullTxt = cs.full > 70 ? '吃得飽飽的' : cs.full > 30 ? '有點餓了' : '肚子很餓，一直喵喵叫';
+  const moodTxt = cs.mood > 70 ? '很開心 😸' : cs.mood > 40 ? '普通 🐱' : '不太開心 😿';
+  const food = (S.inv || {}).catfood || 0;
+  MODAL.show(`<h2>🐱 ${cs.name}</h2><p>飽足 ${'🟧'.repeat(Math.ceil(cs.full / 20))}${'⬜'.repeat(5 - Math.ceil(cs.full / 20))}　${fullTxt}<br>心情：${moodTxt}</p><p><small>貓飼料還有 ${food} 份（全聯或網購可以買）</small></p>`,
+    [['🤚 摸摸', 'g', () => { MODAL.close(); petCat(R); }], ['🍚 倒飼料', '', () => { MODAL.close(); feedCat(R); }], ['離開', 'gray', () => MODAL.close()]]);
+}
+function petCat(R) {
+  const cs = S.cat, c = R.cat;
+  if (cs.full < 20) { AU.meow(true); showBubble(cs.name + '：「喵嗚～」（餓到不想給你摸）'); return; }
+  const now = S.day * 1440 + S.time;
+  AU.purr(); c.st = 'sit'; c.t = 6; c.yaw = Math.atan2(c.x - P.x, c.z - P.z);
+  if (now - (cs.petT || -999) > 60) { cs.mood = Math.min(100, cs.mood + (hasItem('cattoy') ? 25 : 15)); S.energy = Math.min(120, S.energy + 5); cs.petT = now; showBubble(pick(['呼嚕呼嚕～', cs.name + '瞇起眼睛，好舒服的樣子', cs.name + '用頭蹭你的手', cs.name + '翻肚子給你摸'])); toast('good', '🐱 摸摸' + cs.name, '心情 +15、你的體力 +5（被療癒了）'); }
+  else showBubble(cs.name + '：「喵～」（剛剛摸過了）');
+}
+function feedCat(R) {
+  const cs = S.cat; S.inv = S.inv || {};
+  if (!S.inv.catfood) { radio('貓飼料吃完了！到全聯買，或用手機／電腦網購。', 'warn'); AU.meow(true); return; }
+  if (cs.full > 85) { showBubble(cs.name + '聞了一下就走開了（還很飽）'); return; }
+  S.inv.catfood--; if (!S.inv.catfood) delete S.inv.catfood;
+  cs.full = 100; cs.mood = Math.min(100, cs.mood + 10); R.food.visible = true;
+  const c = R.cat; c.st = 'walk'; c.tx = R.bowl.x; c.tz = R.bowl.z; c.next = 'eat'; c.t = 10;
+  AU.meow(); toast('good', '🍚 餵了' + cs.name, '飽足回滿、心情 +10');
+}
+function catTick(dtMin) { // 遊戲時間每分鐘
+  const cs = S.cat; if (!cs) return;
+  cs.full = Math.max(0, cs.full - dtMin * 0.045);
+  if (cs.full < 25) cs.mood = Math.max(0, cs.mood - dtMin * 0.03); else if (cs.full > 60) cs.mood = Math.min(100, cs.mood + dtMin * 0.004);
+}
+
+/* ---------- 進出家門 ---------- */
+function myRoom() { return HOME_IN.rooms[(SITES.home && SITES.home.key) || 'a']; }
+function enterHome() {
+  if (W.stars) { radio('警察正在找你，躲回家會被堵在家裡！先甩掉警察。', 'warn'); return; }
+  if (P.mode !== 'foot') return;
+  const R = myRoom();
+  fadeTo('🏠 回家', () => {
+    for (const r of Object.values(HOME_IN.rooms)) r.g.visible = r === R;
+    P.inside = R.key; P.x = R.door.x; P.z = R.door.z - 0.4; P.yaw = 0; P.pitch = 0;
+    refreshFurniture(); R.food.visible = S.cat.full > 60;
+    if (!S.cat.name) setTimeout(() => toast('rank', '🐱 家裡有一隻' + HOME_SIZE[R.key].catN, '走過去按 E 幫牠取名字'), 900);
+  });
+}
+function leaveHome() {
+  const h = SITES.home;
+  fadeTo('', () => { P.inside = null; for (const r of Object.values(HOME_IN.rooms)) r.g.visible = false; P.x = h.x; P.z = h.z + 1.5; P.yaw = Math.PI; P.pitch = 0; });
+}
+function refreshFurniture() {
+  const R = myRoom(); if (!R) return; const f = R.furn;
+  f.sofa.visible = hasItem('sofa'); f.sofa0.visible = !hasItem('sofa');
+  f.tv.visible = hasItem('tv'); f.bed.visible = hasItem('bed'); f.mat0.visible = !hasItem('bed');
+}
+function homeInteracts() {
+  if (!P.inside) return [];
+  const R = HOME_IN.rooms[P.inside]; const list = R.it.slice();
+  list.push({ x: R.cat.x, z: R.cat.z, r: 1.3, label: () => S.cat.name ? (S.cat.full < 30 ? '🐱 ' + S.cat.name + '（肚子餓）' : '🐱 ' + S.cat.name) : '🐱 幫貓咪取名字', act: () => catAct(R) });
+  return list;
+}
+function updateHome(dt) {
+  if (!P.inside) return;
+  const R = HOME_IN.rooms[P.inside];
+  if (P.x < R.x0 - 4 || P.x > R.x1 + 4 || P.z < R.z0 - 4 || P.z > R.z1 + 4) { P.inside = null; for (const r of Object.values(HOME_IN.rooms)) r.g.visible = false; return; } // 被傳送出去了（送醫、被捕…） updateCat(R, dt);
+  const nf = nightFactor();
+  for (const l of HOME_IN.lights) if (l.win) l.win.color.setRGB(0.61 * (1 - nf) + 0.05, 0.8 * (1 - nf) + 0.07, 0.94 * (1 - nf) + 0.14);
+  if (R.tvScreen) { const on = R.tvOn > 0; if (on) R.tvOn -= dt; R.tvScreen.material.color.setHex(on ? [0x4a8ad0, 0x6ab04a, 0xd0a040][Math.floor(performance.now() / 900) % 3] : 0x111418); }
+}
+function bedMenu() {
+  MODAL.show(`<h2>🛏️ 床</h2><p>現在 ${fmtTime(S.time)}　❤️ ${Math.round(S.hp)}　⚡ ${Math.round(S.energy)}</p>${homeExtraHTML()}<p><small>${hasItem('bed') ? '獨立筒床墊：睡飽體力上限 120' : '床墊有點薄……（網購獨立筒床墊可以睡更好）'}</small></p>`,
+    [['😴 睡覺到明天早上', 'g', goSleep], ['💾 存檔', '', () => { saveGame(); MODAL.close(); toast('good', '💾 已存檔', ''); }], ['離開', 'gray', () => MODAL.close()]]);
+}
+function watchTV() {
+  const R = myRoom();
+  if (!hasItem('tv')) { S.time += 15; S.energy = Math.min(120, S.energy + 4); toast('good', '🛋️ 在沙發上坐了一下', '體力 +4'); return; }
+  R.tvOn = 8; S.time += 30; S.energy = Math.min(120, S.energy + 10);
+  const n = (S.news || []).slice(0, 4);
+  MODAL.show(`<h2>📺 麥麥新聞台</h2>${n.length ? n.map(x => `<p>📰 ${x.t}</p>`).join('') : '<p>現在播的是綜藝節目，好好笑。</p>'}<p><small>看了 30 分鐘電視，體力 +10</small></p>`, [['關電視', 'gray', () => MODAL.close()]]);
+}
+function usePC() { if (!GAME.running || MODAL.open) return; PHONE.pc = true; initMarket(); PHONE.app = 'home'; PHONE.msg = ''; MODAL.custom(renderPhone); }
+
+/* ---------- 廚房：冰箱、做菜 ---------- */
+const RECIPES = [
+  { k: 'd_tomegg', n: '🍅 番茄炒蛋', need: { egg: 2, tomato: 1 }, use: { hp: 25, en: 30 }, steps: ['🔪 切番茄', '🥚 打蛋', '🍳 下鍋炒', '🧂 調味'] },
+  { k: 'd_friedrice', n: '🍚 蛋炒飯', need: { rice: 1, egg: 1, veg: 1 }, use: { hp: 25, en: 40 }, steps: ['🔪 切青菜', '🥚 炒蛋', '🍚 下飯', '🥢 翻炒'] },
+  { k: 'd_luroufan', n: '🍖 滷肉飯', need: { rice: 1, pork: 1 }, use: { hp: 30, en: 45 }, steps: ['🔪 切五花肉', '🍳 炒香', '🍶 加醬油滷', '🍚 淋在飯上'] },
+  { k: 'd_veg', n: '🥬 炒青菜', need: { veg: 1 }, use: { hp: 15, en: 12 }, steps: ['🚿 洗菜', '🧄 爆香蒜頭', '🥢 大火快炒'] },
+  { k: 'd_beefnoodle', n: '🍜 紅燒牛肉麵', need: { beef: 1, noodleR: 1, veg: 1 }, use: { hp: 50, en: 50 }, steps: ['🔪 切牛肉', '🍲 燉湯頭', '🍜 煮麵', '🥬 燙青菜', '🥢 盛碗'] },
+  { k: 'd_mapo', n: '🌶️ 麻婆豆腐', need: { tofu: 1, pork: 1, rice: 1 }, use: { hp: 30, en: 40 }, steps: ['🔪 切豆腐', '🍳 炒絞肉', '🌶️ 加豆瓣醬', '🥄 勾芡'] },
+];
+function fridgeMenu() {
+  const inv = S.inv || {};
+  const ing = Object.keys(inv).filter(k => SHOP_BY[k] && SHOP_BY[k].cat === '食材');
+  const eat = Object.keys(inv).filter(k => SHOP_BY[k] && SHOP_BY[k].use);
+  MODAL.show(`<h2>🧊 冰箱</h2><h3>食材</h3><p>${ing.length ? ing.map(k => SHOP_BY[k].n + ' ×' + inv[k]).join('、') : '空空的……到全聯買食材，或用電腦網購。'}</p><h3>可以吃的</h3>
+    <div class="phlist">${eat.length ? eat.map(k => `<div class="phrow"><div><b>${SHOP_BY[k].n}</b> ×${inv[k]}<br><small>${SHOP_BY[k].desc}</small></div><button class="btn g sm" data-eat="${k}">吃</button></div>`).join('') : '<p>沒有現成的食物，可以用瓦斯爐做菜。</p>'}</div>`, [['關上冰箱', 'gray', () => MODAL.close()]]);
+  $('mbox').querySelectorAll('[data-eat]').forEach(b => b.onclick = () => { useItem(b.dataset.eat); toast('good', '😋 ' + SHOP_BY[b.dataset.eat].n, SHOP_BY[b.dataset.eat].desc); MODAL.close(); fridgeMenu(); });
+}
+function canCook(r) { const inv = S.inv || {}; return Object.entries(r.need).every(([k, q]) => (inv[k] || 0) >= q); }
+function cookMenu() {
+  MODAL.show(`<h2>🍳 做菜</h2><p>選一道菜（要有食材）。做菜時看準時機按 <b>空白鍵</b> 或「現在！」按鈕。</p><div class="phlist">` + RECIPES.map((r, i) => {
+    const ok = canCook(r); return `<div class="phrow" style="opacity:${ok ? 1 : 0.55}"><div><b>${r.n}</b><br><small>${Object.entries(r.need).map(([k, q]) => SHOP_BY[k].n.replace(/（.*）/, '') + '×' + q + '（有 ' + ((S.inv || {})[k] || 0) + '）').join('、')}</small><br><small>❤️+${r.use.hp}　⚡+${r.use.en}</small></div>${ok ? `<button class="btn g sm" data-ck="${i}">做</button>` : '<small>食材不夠</small>'}</div>`;
+  }).join('') + '</div>', [['不做了', 'gray', () => MODAL.close()]]);
+  $('mbox').querySelectorAll('[data-ck]').forEach(b => b.onclick = () => { AU.click(); cookGameHome(RECIPES[+b.dataset.ck]); });
+}
+function cookGameHome(r) {
+  for (const [k, q] of Object.entries(r.need)) { S.inv[k] -= q; if (S.inv[k] <= 0) delete S.inv[k]; }
+  let step = 0, score = 0, pos = 0, dir = 1, raf = 0, lock = false;
+  const zone = () => { const w = 0.22 - step * 0.02; const c = rand(0.2 + w / 2, 0.8 - w / 2); return [c - w / 2, c + w / 2, c]; };
+  let Z = zone(); const spd = 0.9 + step * 0.15;
+  const res = [];
+  MODAL.custom(() => {
+    $('mbox').innerHTML = `<h2>🍳 ${r.n}</h2><p id="ckStep" style="font-size:20px;text-align:center"></p>
+      <div style="position:relative;height:34px;background:#2a3350;border-radius:10px;overflow:hidden;margin:14px 0"><div id="ckZone" style="position:absolute;top:0;bottom:0;background:#3ccf6e"></div><div id="ckPerf" style="position:absolute;top:0;bottom:0;width:6px;margin-left:-3px;background:#ffd84a"></div><div id="ckNeedle" style="position:absolute;top:-4px;bottom:-4px;width:5px;margin-left:-2px;background:#fff;box-shadow:0 0 8px #fff"></div></div>
+      <p id="ckRes" style="text-align:center;min-height:24px"></p><div class="btns"><button class="btn g" id="ckGo" style="font-size:20px;flex:1">現在！</button></div>`;
+  });
+  const draw = () => { $('ckStep').textContent = '第 ' + (step + 1) + ' / ' + r.steps.length + ' 步：' + r.steps[step]; $('ckZone').style.left = Z[0] * 100 + '%'; $('ckZone').style.width = (Z[1] - Z[0]) * 100 + '%'; $('ckPerf').style.left = Z[2] * 100 + '%'; };
+  draw();
+  let last = performance.now();
+  const tick = (now) => { const dt = Math.min(0.05, (now - last) / 1000); last = now; if (!lock) { pos += dir * dt * (0.9 + step * 0.18); if (pos > 1) { pos = 1; dir = -1; } if (pos < 0) { pos = 0; dir = 1; } const n = $('ckNeedle'); if (!n) return; n.style.left = pos * 100 + '%'; } raf = requestAnimationFrame(tick); };
+  raf = requestAnimationFrame(tick);
+  const hit = () => {
+    if (lock) return; lock = true;
+    let s = 0, t = '❌ 失手了'; if (pos >= Z[0] && pos <= Z[1]) { if (Math.abs(pos - Z[2]) < 0.035) { s = 2; t = '✨ 完美！'; AU.good(); } else { s = 1; t = '👍 不錯'; AU.click(); } } else AU.bad();
+    score += s; res.push(s); $('ckRes').textContent = t;
+    setTimeout(() => { step++; if (step >= r.steps.length) { done(); return; } Z = zone(); lock = false; draw(); $('ckRes').textContent = ''; }, 550);
+  };
+  const key = e => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); hit(); } };
+  addEventListener('keydown', key);
+  $('ckGo').onclick = hit;
+  const done = () => {
+    cancelAnimationFrame(raf); removeEventListener('keydown', key);
+    const max = r.steps.length * 2, q = score / max; S.time += 25;
+    const fails = res.filter(x => !x).length;
+    const burnt = fails > r.steps.length / 2;
+    const grade = burnt ? '🔥 燒焦了' : q >= 0.85 ? '🌟 大廚等級' : q >= 0.5 ? '😋 好吃' : '🙂 普通';
+    const mul = burnt ? 0.3 : q >= 0.85 ? 1.3 : q >= 0.5 ? 1 : 0.7;
+    const hp = Math.round(r.use.hp * mul), en = Math.round(r.use.en * mul);
+    const key2 = r.k + (burnt ? '_b' : q >= 0.85 ? '_p' : '');
+    if (!SHOP_BY[key2]) { const it = { k: key2, n: (burnt ? '🔥 燒焦的' : q >= 0.85 ? '🌟 大廚級' : '') + r.n, p: 0, cat: '料理', use: { hp, en }, desc: `自己做的：生命 +${hp}、體力 +${en}`, hidden: true }; SHOP.push(it); SHOP_BY[key2] = it; }
+    MODAL.show(`<h2>${grade}</h2><p>${r.n} 做好了！</p><p>吃了可以：❤️ +${hp}　⚡ +${en}</p>`,
+      [['😋 現在吃', 'g', () => { S.hp = Math.min(100, S.hp + hp); S.energy = Math.min(120, S.energy + en); AU.good(); MODAL.close(); updateHUD(true); toast('good', '😋 好吃！', '生命 +' + hp + '、體力 +' + en); }],
+       ['🧊 放冰箱', '', () => { S.inv[key2] = (S.inv[key2] || 0) + 1; MODAL.close(); toast('good', '🧊 放進冰箱了', '手機背包也可以拿出來吃'); }]]);
+    addLog('🍳 做了' + r.n);
+  };
+}
+
+/* ---------- 每日新聞 ---------- */
+const NEWS_POOL = [
+  '🌤️ 中央氣象署：台中今天多雲時晴，午後山區有雷陣雨', '🚧 文心路捷運沿線今晚進行夜間施工，請用路人改道', '🎆 台中國家歌劇院本週末有免費戶外音樂會',
+  '🍜 一中街夜市新開一家排隊美食，網友大推', '🚌 台中市公車 10 公里免費政策持續實施', '🌧️ 鋒面報到，明天氣溫下降、記得帶傘', '🏗️ 七期又有新建案開賣，每坪單價創新高',
+  '🐶 台中市動物之家舉辦認養活動，歡迎領養不棄養', '⚾ 洲際棒球場本週有職棒比賽，主場球迷熱情加油', '🌸 新社花海開幕，假日交通管制', '🚇 台中捷運綠線運量再創新高',
+  '🧋 台中是珍珠奶茶的發源地之一，觀光客最愛', '🛵 警方加強取締機車未戴安全帽', '🏥 流感高峰期，疾管署呼籲勤洗手', '📚 台中市立圖書館延長開放時間',
+];
+function dailyNews() {
+  S.news = S.news || []; const today = S.news.filter(n => n.d === S.day).length;
+  for (let i = today; i < 2; i++) { const t = pick(NEWS_POOL); if (!S.news.some(n => n.t === t && n.d > S.day - 5)) S.news.unshift({ d: S.day, t }); }
+  S.news = S.news.slice(0, 14);
+}
+function crimeNews(code) {
+  S.news = S.news || []; const c = CRIMES[code]; if (!c) return;
+  const t = '🚨 ' + districtAt(P.x, P.z) + (districtAt(P.x, P.z) === '郊區' ? '' : '區') + '今天發生' + c.n.replace(/（.*）/, '') + '案件，警方全力追緝嫌犯';
+  if (!S.news.some(n => n.t === t && n.d === S.day)) { S.news.unshift({ d: S.day, t }); S.news = S.news.slice(0, 14); }
+}
+function initHomeState() {
+  if (!S.cat) { S.cat = { name: '', full: 70, mood: 60 }; S.inv = S.inv || {}; for (const [k, q] of [['egg', 6], ['rice', 3], ['tomato', 2], ['veg', 2], ['catfood', 4]]) S.inv[k] = (S.inv[k] || 0) + q; }
+  dailyNews();
+}
+
 /* ================= 介面 ================= */
 const GAME = { running: false, tscale: 1, mapOpen: false };
 function radio(msg, type) {
@@ -6208,7 +6589,7 @@ function findInteract() {
   if (MODAL.open) return null;
   const inVeh = P.mode === 'vehicle';
   let best = null, bd = 1e9;
-  const mi = MIS.interacts(); const list = STATIC_INTERACT.concat(mi, friendInteracts(), JOB.cust ? [{ x: JOB.cust.x, z: JOB.cust.z, r: 2.8, label: '幫客人結帳', act: clerkGame }] : []);
+  const mi = MIS.interacts(); const list = STATIC_INTERACT.concat(mi, friendInteracts(), homeInteracts(), JOB.cust ? [{ x: JOB.cust.x, z: JOB.cust.z, r: 2.8, label: '幫客人結帳', act: clerkGame }] : []);
   const pri = new Set(mi); // 任務的互動優先
   for (const it of list) { if (inVeh && !it.veh) continue; const d = dist(P.x, P.z, it.x, it.z) - (pri.has(it) ? 1.5 : 0); const r = inVeh ? it.r + 8 : it.r; if (d < r && d < bd) { bd = d; best = it; } }
   if (!best && !inVeh) { const pd = nearestChatPed(); if (pd) best = { x: pd.x, z: pd.z, r: 2.1, label: '和路人聊天', act: () => chatDialog(pd) }; }
@@ -6340,6 +6721,7 @@ const ICONS = () => [
 ];
 function drawMini() {
   const c = $('mini'), g = c.getContext('2d'), W = c.width, sc = 0.62;
+  if (P.inside) { g.fillStyle = '#2a2033'; g.fillRect(0, 0, W, W); g.fillStyle = '#ffd890'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('🏠 家裡', W / 2, W / 2); return; }
   g.save(); g.fillStyle = '#1b2433'; g.fillRect(0, 0, W, W);
   g.translate(W / 2, W / 2); g.rotate(P.yaw); g.scale(sc, sc);
   g.drawImage(MAPIMG, WORLD.x0 - P.x, WORLD.z0 - P.z, MAPIMG.width / MAP_RES, MAPIMG.height / MAP_RES);
@@ -6438,9 +6820,10 @@ function updateSky() {
   sun.position.set(Math.cos(ang) * 300 + P.x, Math.max(40, Math.sin(ang) * 300), 120 + P.z); sun.target.position.set(P.x, 0, P.z); sun.target.updateMatrixWorld();
   sun.intensity = 0.85 * (1 - nf) + 0.08; sun.color.setHex(nf > 0.5 ? 0x8aa0ff : 0xfff4e0);
   hemi.intensity = 0.75 * (1 - nf) + 0.22; amb.intensity = 0.15 + nf * 0.12;
+  if (P.inside) { hemi.intensity = 0.55; sun.intensity = 0.3; sun.color.setHex(0xfff4e0); amb.intensity = 0.3; } // 室內：開燈
   for (const n of NIGHT_MATS) n.m.emissiveIntensity = n.base * nf + (n.m === MAT.signs ? 0.05 : 0);
   // 手電筒 / 車燈
-  torch.intensity = nf > 0.3 ? (P.mode === 'vehicle' ? 2.2 : (S.onDuty ? 1.4 : 0.8)) : 0;
+  torch.intensity = P.inside ? 0 : nf > 0.3 ? (P.mode === 'vehicle' ? 2.2 : (S.onDuty ? 1.4 : 0.8)) : 0;
   if (torch.intensity > 0) {
     const d = camera.getWorldDirection(new THREE.Vector3());
     if (P.mode === 'vehicle') { const v = P.veh; const fx = -Math.sin(v.yaw), fz = -Math.cos(v.yaw); torch.position.set(v.x + fx * 2.3, 0.8, v.z + fz * 2.3); torch.target.position.set(v.x + fx * 30, 0, v.z + fz * 30); torch.angle = 0.6; }
@@ -6455,7 +6838,7 @@ function updateSky() {
 /* ---------- 時間 ---------- */
 let lastHour = -1;
 function updateTime(dt) {
-  S.time += dt * GAME.tscale;
+  S.time += dt * GAME.tscale; catTick(dt * GAME.tscale);
   if (S.time >= 1440) { S.time -= 1440; S.day++; S.workedToday = S.onDuty; if (S.onDuty) S.clockIn -= 1440; toast('rank', '🌙 午夜 00:00　第 ' + S.day + ' 天', '記得回家睡覺，不然體力會不夠'); }
   if (S.time >= 12 * 60) checkAbsent();
   const hr = Math.floor(S.time / 60);
@@ -6487,7 +6870,7 @@ function loop(now) {
     for (let k = MHUMANS.length - 1; k >= 0; k--) { const h = MHUMANS[k]; if (h.role === 'robber' || h.role === 'clerk' || h.ai) continue;
       if (h.walk) { h.x += h.walk.vx * dt; h.z += h.walk.vz * dt; h.P.g.rotation.y = Math.atan2(h.walk.vx, h.walk.vz); h.walk.t -= dt; if (h.walk.t <= 0) { removeHuman(h); continue; } }
       posePerson(h.P, h.pose || 'idle', dt, 1.6); h.P.g.position.set(h.x, 0.2, h.z); }
-    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateGarbageMusic(); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); updateJobs(dt);
+    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateGarbageMusic(); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); updateJobs(dt); updateHome(dt);
   } else AU.update(false, 0, false);
   frame++;
   updateSky();
@@ -6499,12 +6882,12 @@ function loop(now) {
 }
 
 // 測試用：快速模擬（不畫圖）
-function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); updateJobs(dt); } }
+function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); updateJobs(dt); updateHome(dt); } }
 
 /* ---------- 開始 ---------- */
 function startGame(fresh) {
   SITES.home = SITES.homes[S.char || 'a'] || SITES.homes.a; S.working = false;
-  initMarket(); updatePhoneBadge();
+  initMarket(); updatePhoneBadge(); initHomeState(); P.inside = null; for (const r of Object.values(HOME_IN.rooms)) r.g.visible = false;
   $('intro').classList.add('hidden'); $('hud').classList.remove('hidden');
   if (IS_TOUCH) initTouch();
   const h = SITES.home; P.x = h.x; P.z = h.z + 1.5; P.yaw = Math.PI; P.pitch = 0; P.mode = 'foot';
@@ -6531,7 +6914,7 @@ MIS.update = function (dt) {
 function boot() {
   if (!window.THREE) { $('loading').textContent = '⚠️ 3D 引擎載入失敗，請確認網路連線後重新整理。'; return; }
   try {
-    buildCity(); buildCams(); buildCoast(); buildTransit(); buildMapImage(); initPlayerVehicles(); initStaticInteracts(); initJobInteracts();
+    buildCity(); buildCams(); buildCoast(); buildTransit(); buildHomeInteriors(); buildMapImage(); initPlayerVehicles(); initStaticInteracts(); initJobInteracts();
   } catch (e) { $('loading').textContent = '⚠️ 載入錯誤：' + e.message; console.error(e); return; }
   P.x = SITES.home.x; P.z = SITES.home.z + 1.5; P.yaw = Math.PI;
   camera.position.set(SITES.station.x - 60, 40, SITES.station.z + 80); camera.lookAt(SITES.station.x, 0, SITES.station.z);
