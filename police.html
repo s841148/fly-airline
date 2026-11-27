@@ -993,6 +993,7 @@ function buildCity() {
   setT(-730, -55, 'firest'); setT(-25, 150, 'taxico'); setT(-390, -160, 'resto');
   setT(-2185, -1865, 'jenn'); setT(-2830, -60, 'wuqi');
   for (const [x, z] of [[-730, 240], [-530, -55], [-190, 50], [75, 250], [-2280, 85], [-2410, -360], [-2270, -1930], [-245, -1805], [550, -45], [205, 580], [-560, 1000], [-1940, 1090], [-220, -1090], [-1050, -865], [1070, -2580], [690, 920]]) setT(x, z, 'store');
+  pickPxBlocks(BLOCKS);
   for (const b of BLOCKS) {
     if (b.type !== 'gen') continue;
     const x = b.cx, z = b.cz;
@@ -1017,6 +1018,7 @@ function buildCity() {
       case 'lake': buildPark(b, true); break;
       case 'bank': buildShop(b, 'bank'); break;
       case 'store': buildShop(b, 'store'); break;
+      case 'pxmart': buildPxmart(b); break;
       case 'rural': buildRural(b); break;
       case 'strip': { const n = Math.ceil(Math.max(b.w, b.d) / 90), along = b.w > b.d; for (let k = 0; k < n; k++) { const sb = along ? { x0: b.x0 + k * b.w / n, x1: b.x0 + (k + 1) * b.w / n, z0: b.z0, z1: b.z1 } : { x0: b.x0, x1: b.x1, z0: b.z0 + k * b.d / n, z1: b.z0 + (k + 1) * b.d / n }; sb.cx = (sb.x0 + sb.x1) / 2; sb.cz = (sb.z0 + sb.z1) / 2; fillBlock(sb, b.cx < -900 ? 'old' : 'mid', null); } break; }
       case 'ind': buildIndustrial(b); break;
@@ -1490,11 +1492,7 @@ function buildShop(b, kind) {
     addGeo('counter', MAT.counter, boxGeo(4.4, 1.1, 1, ctrX, 0.2, ctrZ)); addCol(ctrX - 2.2, ctrX + 2.2, ctrZ - 0.5, ctrZ + 0.5, 1.2, 'low');
     addGeo('counter', MAT.counter, boxGeo(1, 1.1, 3, x1 - 1.2, 0.2, ctrZ - 2)); addCol(x1 - 1.7, x1 - 0.7, ctrZ - 3.5, ctrZ - 0.5, 1.2, 'low');
     site.counter = { x: ctrX, z: ctrZ + 1.2 }; site.clerk = { x: ctrX, z: ctrZ - 1, yaw: 0 };
-    for (let k = 0; k < 3; k++) {
-      const sz = z0 + 2.2 + k * 2.4, sx0 = x0 + 1.5, sx1 = x0 + 7.5;
-      addGeo('shelf', MAT.shelf, boxGeo(sx1 - sx0, 1.6, 0.8, (sx0 + sx1) / 2, 0.2, sz)); addGeo('goods', MAT.goods, boxGeo(sx1 - sx0 - 0.2, 1.2, 0.9, (sx0 + sx1) / 2, 0.45, sz)); addCol(sx0, sx1, sz - 0.4, sz + 0.4, 1.8, 'low');
-    }
-    addGeo('fridge', MAT.fridge, boxGeo(W - 5, 2.2, 0.6, cx - 1.5, 0.2, z0 + 0.6)); addCol(x0, x1 - 3, z0, z0 + 0.95, 2.4, 'low');
+    stockStore(site, x0, x1, z0, z1, W);
     SITES.stores.push(site);
   } else {
     site.name = '麥麥商業銀行 台中分行';
@@ -3314,7 +3312,7 @@ function initStaticInteracts() {
       enterHome();
     }
   });
-  for (const s of SITES.stores) STATIC_INTERACT.push({ x: s.counter.x, z: s.counter.z, r: 2.2, label: () => '結帳櫃檯：買東西', act: () => storeMenu(s) });
+  for (const s of SITES.stores) STATIC_INTERACT.push({ x: s.counter.x, z: s.counter.z, r: 2.2, label: () => S.basket && S.basket.items.length && S.basket.site === s.name ? '結帳（' + S.basket.items.length + ' 件 $' + basketTotal() + '）' : '結帳櫃台', act: () => checkoutMenu(s) });
   for (const s of SITES.market.stalls) STATIC_INTERACT.push({ x: s.x, z: s.z, r: 1.8, label: () => marketOpen() ? '買' + s.food.n + '　$' + s.food.p : s.food.n + '（17:00 開賣）', act: () => stallMenu(s) });
   STATIC_INTERACT.push({ x: SITES.dealer.x, z: SITES.dealer.z, r: 3, label: () => '看車、買車', act: dealerMenu });
   STATIC_INTERACT.push({
@@ -4523,7 +4521,7 @@ function nearestChatPed() {
   for (const pd of PEDS) { if (!pd.alive || !['walk', 'idle'].includes(pd.state)) continue; const d = dist(pd.x, pd.z, P.x, P.z); if (d < bd) { bd = d; best = pd; } }
   return best;
 }
-const PLACES = () => [['大墩分局', SITES.station], ['一中街夜市', SITES.market], ['大墩醫院', SITES.hospital], ['大墩車業', SITES.dealer], ['我家（' + SITES.home.short + '）', SITES.home], ['麥麥商業銀行', { x: SITES.bank.door.x, z: SITES.bank.door.z }], ['最近的麥麥超商', (() => { const s = SITES.stores.slice().sort((a, b) => dist(a.door.x, a.door.z, P.x, P.z) - dist(b.door.x, b.door.z, P.x, P.z))[0]; return { x: s.door.x, z: s.door.z }; })()]];
+const PLACES = () => [['大墩分局', SITES.station], ['一中街夜市', SITES.market], ['大墩醫院', SITES.hospital], ['大墩車業', SITES.dealer], ['我家（' + SITES.home.short + '）', SITES.home], ['麥麥商業銀行', { x: SITES.bank.door.x, z: SITES.bank.door.z }], ['最近的麥麥超商', (() => { const s = SITES.stores.slice().sort((a, b) => dist(a.door.x, a.door.z, P.x, P.z) - dist(b.door.x, b.door.z, P.x, P.z))[0]; return { x: s.door.x, z: s.door.z }; })()], ['最近的全聯', (() => { const s = SITES.px.slice().sort((a, b) => dist(a.door.x, a.door.z, P.x, P.z) - dist(b.door.x, b.door.z, P.x, P.z))[0]; return { x: s.door.x, z: s.door.z }; })()]];
 function directionsTo(tx, tz) {
   const path = findPath(P.x, P.z, tx, tz); let acc = 0, turn = null;
   for (let s = 1; s < path.length - 1; s++) {
@@ -6464,6 +6462,13 @@ const RECIPES = [
   { k: 'd_beefnoodle', n: '🍜 紅燒牛肉麵', need: { beef: 1, noodleR: 1, veg: 1 }, use: { hp: 50, en: 50 }, steps: ['🔪 切牛肉', '🍲 燉湯頭', '🍜 煮麵', '🥬 燙青菜', '🥢 盛碗'] },
   { k: 'd_mapo', n: '🌶️ 麻婆豆腐', need: { tofu: 1, pork: 1, rice: 1 }, use: { hp: 30, en: 40 }, steps: ['🔪 切豆腐', '🍳 炒絞肉', '🌶️ 加豆瓣醬', '🥄 勾芡'] },
 ];
+// 料理道具：每道菜 4 種成品（燒焦／普通／好吃／大廚級）
+const DISH_GRADE = { b: [0.3, '🔥 燒焦的'], n: [0.7, ''], '': [1, ''], p: [1.3, '🌟 大廚級'] };
+for (const r of RECIPES) for (const [gk, [mul, pre]] of Object.entries(DISH_GRADE)) {
+  const k = r.k + (gk ? '_' + gk : ''), hp = Math.round(r.use.hp * mul), en = Math.round(r.use.en * mul);
+  const it = { k, n: (pre ? pre.split(' ')[0] + ' ' + pre.split(' ')[1] : r.n.split(' ')[0]) + ' ' + (gk === 'n' ? '普通的' : '') + r.n.split(' ')[1], p: 0, cat: '料理', use: { hp, en }, desc: `自己做的：生命 +${hp}、體力 +${en}`, hidden: true };
+  SHOP.push(it); SHOP_BY[k] = it;
+}
 function fridgeMenu() {
   const inv = S.inv || {};
   const ing = Object.keys(inv).filter(k => SHOP_BY[k] && SHOP_BY[k].cat === '食材');
@@ -6508,12 +6513,9 @@ function cookGameHome(r) {
     cancelAnimationFrame(raf); removeEventListener('keydown', key);
     const max = r.steps.length * 2, q = score / max; S.time += 25;
     const fails = res.filter(x => !x).length;
-    const burnt = fails > r.steps.length / 2;
-    const grade = burnt ? '🔥 燒焦了' : q >= 0.85 ? '🌟 大廚等級' : q >= 0.5 ? '😋 好吃' : '🙂 普通';
-    const mul = burnt ? 0.3 : q >= 0.85 ? 1.3 : q >= 0.5 ? 1 : 0.7;
-    const hp = Math.round(r.use.hp * mul), en = Math.round(r.use.en * mul);
-    const key2 = r.k + (burnt ? '_b' : q >= 0.85 ? '_p' : '');
-    if (!SHOP_BY[key2]) { const it = { k: key2, n: (burnt ? '🔥 燒焦的' : q >= 0.85 ? '🌟 大廚級' : '') + r.n, p: 0, cat: '料理', use: { hp, en }, desc: `自己做的：生命 +${hp}、體力 +${en}`, hidden: true }; SHOP.push(it); SHOP_BY[key2] = it; }
+    const gk = fails > r.steps.length / 2 ? 'b' : q >= 0.85 ? 'p' : q >= 0.5 ? '' : 'n';
+    const key2 = r.k + (gk ? '_' + gk : ''), it = SHOP_BY[key2], hp = it.use.hp, en = it.use.en;
+    const grade = { b: '🔥 燒焦了', p: '🌟 大廚等級', '': '😋 好吃', n: '🙂 普通' }[gk];
     MODAL.show(`<h2>${grade}</h2><p>${r.n} 做好了！</p><p>吃了可以：❤️ +${hp}　⚡ +${en}</p>`,
       [['😋 現在吃', 'g', () => { S.hp = Math.min(100, S.hp + hp); S.energy = Math.min(120, S.energy + en); AU.good(); MODAL.close(); updateHUD(true); toast('good', '😋 好吃！', '生命 +' + hp + '、體力 +' + en); }],
        ['🧊 放冰箱', '', () => { S.inv[key2] = (S.inv[key2] || 0) + 1; MODAL.close(); toast('good', '🧊 放進冰箱了', '手機背包也可以拿出來吃'); }]]);
@@ -6535,12 +6537,253 @@ function dailyNews() {
 }
 function crimeNews(code) {
   S.news = S.news || []; const c = CRIMES[code]; if (!c) return;
-  const t = '🚨 ' + districtAt(P.x, P.z) + (districtAt(P.x, P.z) === '郊區' ? '' : '區') + '今天發生' + c.n.replace(/（.*）/, '') + '案件，警方全力追緝嫌犯';
+  const t = '🚨 ' + districtAt(P.x, P.z) + (districtAt(P.x, P.z) === '郊區' ? '' : '區') + '今天發生' + c.n.replace(/罪.*$/, '').replace(/（.*）/, '') + '案件，警方全力追緝嫌犯';
   if (!S.news.some(n => n.t === t && n.d === S.day)) { S.news.unshift({ d: S.day, t }); S.news = S.news.slice(0, 14); }
 }
 function initHomeState() {
   if (!S.cat) { S.cat = { name: '', full: 70, mood: 60 }; S.inv = S.inv || {}; for (const [k, q] of [['egg', 6], ['rice', 3], ['tomato', 2], ['veg', 2], ['catfood', 4]]) S.inv[k] = (S.inv[k] || 0) + q; }
   dailyNews();
+}
+
+/* ================= 商店貨架：自己拿商品、購物籃、結帳、偷竊；全聯福利中心 ================= */
+// 店內商品（超商現吃的）；食材等沿用 SHOP 的品項
+const SGOODS = [
+  { k: 'onigiri', n: '🍙 鮪魚御飯糰', p: 35, c: '#2a8a4a', sh: 'box', use: { hp: 12, en: 8 } },
+  { k: 'bento', n: '🍱 排骨便當', p: 89, c: '#c0402a', sh: 'flat', use: { hp: 35, en: 20 } },
+  { k: 'sandw', n: '🥪 火腿三明治', p: 39, c: '#e8c050', sh: 'box', use: { hp: 14, en: 10 } },
+  { k: 'bread', n: '🍞 菠蘿麵包', p: 32, c: '#e0a040', sh: 'bag', use: { hp: 10, en: 10 } },
+  { k: 'cupnood', n: '🍜 牛肉杯麵', p: 35, c: '#d03030', sh: 'cup', use: { hp: 12, en: 12 } },
+  { k: 'chips', n: '🥔 洋芋片', p: 39, c: '#f0c020', sh: 'bag', use: { hp: 4, en: 8 } },
+  { k: 'choco', n: '🍫 巧克力', p: 30, c: '#6a3a1a', sh: 'box', use: { en: 12 } },
+  { k: 'coffee', n: '☕ 冰拿鐵', p: 55, c: '#8a5a3a', sh: 'bottle', use: { en: 30 } },
+  { k: 'milktea', n: '🧋 珍珠奶茶', p: 45, c: '#c8a070', sh: 'bottle', use: { hp: 5, en: 18 } },
+  { k: 'water', n: '💧 礦泉水', p: 20, c: '#60b0f0', sh: 'bottle', use: { en: 8 } },
+  { k: 'juice', n: '🧃 柳橙汁', p: 30, c: '#f08a20', sh: 'bottle', use: { hp: 4, en: 12 } },
+  { k: 'milk', n: '🥛 鮮乳', p: 45, c: '#f4f4f4', sh: 'bottle', use: { hp: 10, en: 10 } },
+  { k: 'energy1', n: '⚡ 能量飲料', p: 49, c: '#2050c0', sh: 'can', use: { en: 40 } },
+  { k: 'teaegg', n: '🥚 茶葉蛋', p: 13, c: '#6a4a2a', sh: 'box', use: { hp: 6, en: 3 } },
+  { k: 'catcan', n: '🐟 貓罐頭', p: 45, c: '#3a8ac0', sh: 'can', to: 'catfood' },
+];
+for (const g of SGOODS) { const it = { k: g.k, n: g.n, p: g.p, cat: '超商', use: g.use, desc: g.use ? Object.entries(g.use).map(([a, v]) => (a === 'hp' ? '生命 +' : '體力 +') + v).join('、') : '', hidden: true }; if (!SHOP_BY[g.k]) { SHOP.push(it); SHOP_BY[g.k] = it; } }
+const SGOOD_BY = {}; SGOODS.forEach(g => SGOOD_BY[g.k] = g);
+// SHOP 品項在貨架上的外觀
+const LOOK = { egg: ['#f4e8d0', 'flat'], rice: ['#f0f0e8', 'sack'], tomato: ['#e03a2a', 'bin'], veg: ['#6ab04a', 'bin'], pork: ['#e89a9a', 'flat'], beef: ['#b04040', 'flat'], noodleR: ['#f0e0a0', 'bag'], tofu: ['#f8f8f0', 'flat'],
+  catfood: ['#f08a20', 'sack'], cattoy: ['#c060c0', 'bag'], noodle: ['#e04a2a', 'bag'], dumpl: ['#f0f0f0', 'bag'], energy: ['#2050c0', 'can'], aid: ['#e04040', 'box'], tissue: ['#f0f0f0', 'sack'], rain: ['#60a0e0', 'bag'] };
+function goodInfo(k) { const g = SGOOD_BY[k]; if (g) return g; const it = SHOP_BY[k]; const L = LOOK[k] || ['#888', 'box']; return { k, n: it.n, p: it.p, c: L[0], sh: L[1] }; }
+const PROD_MAT = {}, TAG_MAT = {};
+function prodMat(k) {
+  if (PROD_MAT[k]) return PROD_MAT[k];
+  const g = goodInfo(k), em = g.n.split(' ')[0];
+  const t = canvasTex(64, 96, c => {
+    c.fillStyle = g.c; c.fillRect(0, 0, 64, 96); c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(0, 0, 64, 14); c.fillStyle = 'rgba(255,255,255,.85)'; c.fillRect(6, 30, 52, 44);
+    c.font = '34px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(em, 32, 53);
+  });
+  return PROD_MAT[k] = new THREE.MeshLambertMaterial({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.25 });
+}
+function tagMat(k) {
+  if (TAG_MAT[k]) return TAG_MAT[k];
+  const g = goodInfo(k); const name = g.n.split(' ').slice(1).join(' ').replace(/（.*）/, '');
+  const t = canvasTex(256, 48, c => { c.fillStyle = '#ffe04a'; c.fillRect(0, 0, 256, 48); c.fillStyle = '#111'; c.font = 'bold 26px ' + FONT; c.textBaseline = 'middle'; c.fillText(name.slice(0, 6), 8, 25); c.fillStyle = '#d00'; c.textAlign = 'right'; c.fillText('$' + g.p, 248, 25); });
+  return TAG_MAT[k] = new THREE.MeshLambertMaterial({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.4 });
+}
+// 商品盒：正面貼商品圖，其他面用主色
+function prodBox(w, h, d, x, y, z, sign) {
+  const g = new THREE.BoxGeometry(w, h, d); const a = g.attributes.uv;
+  for (let f = 0; f < 6; f++) for (let v = 0; v < 4; v++) { const i = f * 4 + v; if (f === (sign > 0 ? 4 : 5)) continue; a.setXY(i, 0.5, 0.95); }
+  g.translate(x, y + h / 2, z); return g;
+}
+const SHAPE = { box: [0.2, 0.22, 0.12, 0.24], flat: [0.24, 0.1, 0.2, 0.28], bag: [0.26, 0.32, 0.12, 0.3], cup: [0.14, 0.14, 0.14, 0.18], bottle: [0.08, 0.24, 0.08, 0.13], can: [0.08, 0.13, 0.08, 0.11], sack: [0.36, 0.4, 0.22, 0.42], bin: [0.12, 0.12, 0.12, 0.15] };
+// 貨架（沿 x 方向）：兩面都可放商品。secs = { n: [k...], s: [k...] }（n = 面向 -z、s = 面向 +z）
+function shelfRow(site, xa, xb, zc, depth, H, levels, secs) {
+  const wood = MAT.shelf, cx = (xa + xb) / 2, L = xb - xa;
+  addGeo('shelf', wood, boxGeo(L, 0.14, depth, cx, 0.2, zc)); // 底座
+  addGeo('shelf', wood, boxGeo(L, H, 0.05, cx, 0.2, zc)); // 背板
+  addGeo('shelf', wood, boxGeo(0.05, H, depth, xa, 0.2, zc)); addGeo('shelf', wood, boxGeo(0.05, H, depth, xb, 0.2, zc));
+  const ys = []; for (let l = 0; l < levels; l++) { const y = 0.34 + l * (H - 0.3) / levels; ys.push(y); addGeo('shelf', wood, boxGeo(L, 0.03, depth, cx, y, zc)); }
+  addCol(xa, xb, zc - depth / 2, zc + depth / 2, H + 0.2, 'low', 0);
+  for (const side of ['n', 's']) {
+    const list = secs[side]; if (!list || !list.length) continue; const sg = side === 's' ? 1 : -1, sw = L / list.length;
+    list.forEach((k, i) => {
+      const s0 = xa + i * sw, s1 = s0 + sw, sh = SHAPE[goodInfo(k).sh] || SHAPE.box, mat = prodMat(k);
+      for (const y of ys) { const n = Math.max(1, Math.floor((sw - 0.1) / sh[3])); for (let q = 0; q < n; q++) addGeo('p_' + k, mat, prodBox(sh[0], sh[1], sh[2], s0 + 0.05 + (q + 0.5) * (sw - 0.1) / n, y + 0.03, zc + sg * (depth / 4 + 0.02), sg)); }
+      addGeo('t_' + k, tagMat(k), quadGeo(...(sg > 0 ? [[s0 + 0.1, 0.27, zc + sg * (depth / 2 + 0.01)], [s0 + 0.1 + Math.min(0.9, sw - 0.2), 0.27, zc + sg * (depth / 2 + 0.01)], [s0 + 0.1 + Math.min(0.9, sw - 0.2), 0.44, zc + sg * (depth / 2 + 0.01)], [s0 + 0.1, 0.44, zc + sg * (depth / 2 + 0.01)]] : [[s0 + 0.1 + Math.min(0.9, sw - 0.2), 0.27, zc + sg * (depth / 2 + 0.01)], [s0 + 0.1, 0.27, zc + sg * (depth / 2 + 0.01)], [s0 + 0.1, 0.44, zc + sg * (depth / 2 + 0.01)], [s0 + 0.1 + Math.min(0.9, sw - 0.2), 0.44, zc + sg * (depth / 2 + 0.01)]])));
+      site.goods.push({ x: (s0 + s1) / 2, z: zc + sg * (depth / 2 + 0.45), r: Math.min(0.95, sw / 2 + 0.15), k });
+    });
+  }
+}
+// 冷藏櫃（靠牆，面向 +z）
+function fridgeRow(site, xa, xb, zb, list) {
+  const L = xb - xa, cx = (xa + xb) / 2, H = 2.2, d = 0.7, zc = zb + d / 2;
+  addGeo('fridge', MAT.fridge, boxGeo(L, H, 0.1, cx, 0.2, zb + 0.05)); addGeo('fridge', MAT.fridge, boxGeo(L, 0.2, d, cx, 0.2, zc)); addGeo('fridge', MAT.fridge, boxGeo(L, 0.25, d, cx, H - 0.05, zc));
+  addCol(xa, xb, zb, zb + d + 0.05, H + 0.2, 'low', 0);
+  const ys = [0.42, 0.85, 1.28, 1.7], sw = L / list.length;
+  for (const y of ys) addGeo('shelf', MAT.shelf, boxGeo(L, 0.02, d - 0.1, cx, y - 0.02, zc));
+  list.forEach((k, i) => {
+    const s0 = xa + i * sw, sh = SHAPE[goodInfo(k).sh] || SHAPE.box, mat = prodMat(k);
+    addGeo('fridge', MAT.fridge, boxGeo(0.06, H, d, s0, 0.2, zc));
+    for (const y of ys) { const n = Math.max(1, Math.floor((sw - 0.12) / sh[3])); for (let q = 0; q < n; q++) addGeo('p_' + k, mat, prodBox(sh[0], sh[1], sh[2], s0 + 0.06 + (q + 0.5) * (sw - 0.12) / n, y, zc + 0.12, 1)); }
+    addGeo('t_' + k, tagMat(k), quadGeo([s0 + 0.15, 0.22, zb + d + 0.01], [s0 + 0.15 + Math.min(0.9, sw - 0.3), 0.22, zb + d + 0.01], [s0 + 0.15 + Math.min(0.9, sw - 0.3), 0.39, zb + d + 0.01], [s0 + 0.15, 0.39, zb + d + 0.01]));
+    site.goods.push({ x: s0 + sw / 2, z: zb + d + 0.5, r: Math.min(0.95, sw / 2 + 0.1), k });
+  });
+  addGeo('glass', MAT.glass, boxGeo(L, H - 0.3, 0.03, cx, 0.4, zb + d + 0.005));
+}
+// 蔬果平台（沿 x）
+function produceTable(site, xa, xb, zc, list) {
+  const L = xb - xa, cx = (xa + xb) / 2;
+  addGeo('shelf', MAT.shelf, boxGeo(L, 0.8, 1.4, cx, 0.2, zc)); addCol(xa, xb, zc - 0.7, zc + 0.7, 1, 'low', 0);
+  const sw = L / list.length;
+  list.forEach((k, i) => {
+    const s0 = xa + i * sw, mat = prodMat(k);
+    for (let a = 0; a < Math.floor(sw / 0.16); a++) for (let b = 0; b < 8; b++) addGeo('p_' + k, mat, prodBox(0.13, 0.12, 0.13, s0 + 0.08 + a * 0.16 + (b % 2) * 0.04, 1.0, zc - 0.6 + b * 0.16, 1));
+    for (const sg of [1, -1]) {
+      const z = zc + sg * 0.71, p = sg > 0 ? [[s0 + 0.1, 0.62, z], [s0 + 0.9, 0.62, z], [s0 + 0.9, 0.8, z], [s0 + 0.1, 0.8, z]] : [[s0 + 0.9, 0.62, z], [s0 + 0.1, 0.62, z], [s0 + 0.1, 0.8, z], [s0 + 0.9, 0.8, z]];
+      addGeo('t_' + k, tagMat(k), quadGeo(...p)); site.goods.push({ x: s0 + sw / 2, z: zc + sg * 1.15, r: Math.min(0.95, sw / 2 + 0.1), k });
+    }
+  });
+}
+// 超商貨架配置（buildShop 呼叫）
+function stockStore(site, x0, x1, z0, z1, W) {
+  site.goods = [];
+  const rows = [['onigiri', 'sandw', 'bento'], ['bread', 'cupnood', 'chips'], ['choco', 'chips', 'onigiri'], ['bento', 'cupnood', 'aid'], ['catcan', 'teaegg', 'bread'], ['energy1', 'choco', 'sandw']];
+  for (let k = 0; k < 3; k++) { const sz = z0 + 2.2 + k * 2.4; shelfRow(site, x0 + 1.5, x0 + 7.5, sz, 0.8, 1.6, 3, { n: rows[k * 2], s: rows[k * 2 + 1] }); }
+  fridgeRow(site, x0 + 0.3, x1 - 3, z0 + 0.2, ['coffee', 'milktea', 'water', 'juice', 'milk']);
+}
+
+/* ---------- 全聯福利中心 ---------- */
+SITES.px = [];
+function buildPxmart(b) {
+  const lot = lotOf(b);
+  const W = 32, D = 24, H = 5.2, T = 0.25;
+  const cx = b.cx, z1 = lot.z1 + 1.2, z0 = z1 - D, x0 = cx - W / 2, x1 = cx + W / 2;
+  const floors = randi(2, 5);
+  addGeo('f_white', MAT.f_white, boxGeo(W + 0.4, floors * 3.2, D, cx, H, (z0 + z1) / 2, 'facade'));
+  const wall = (ax0, ax1, az0, az1) => { addGeo('inwall', MAT.inwall, boxGeo(ax1 - ax0, H, az1 - az0, (ax0 + ax1) / 2, 0, (az0 + az1) / 2)); addCol(ax0, ax1, az0, az1, H, 'wall', 0); };
+  wall(x0, x1, z0, z0 + T); wall(x0, x0 + T, z0, z1); wall(x1 - T, x1, z0, z1);
+  const dX = x0 + W * 0.72, dw = 4;
+  const gl = (ax0, ax1) => { addGeo('glass', MAT.glass, boxGeo(ax1 - ax0, H - 0.8, 0.12, (ax0 + ax1) / 2, 0.2, z1 - 0.06)); addCol(ax0, ax1, z1 - 0.15, z1, H, 'glass', 0); };
+  gl(x0 + T, dX - dw / 2); gl(dX + dw / 2, x1 - T);
+  addGeo('inwall', MAT.inwall, boxGeo(W, 0.8, 0.2, cx, H - 0.8, z1 - 0.1));
+  addGeo('infloor', MAT.infloor, flatQuad(x0, z0, x1, z1, 0.21, [0, 0, W / 2, D / 2]));
+  addGeo('inwall', MAT.inwall, quadGeo([x0, H - 0.01, z1], [x0, H - 0.01, z0], [x1, H - 0.01, z0], [x1, H - 0.01, z1]));
+  signBoard('全聯福利中心', { bg: '#0b4fa8', fg: '#fff', w: 1024, h: 160, stripe: '#ffd200' }, 14, 2.2, cx - 4, H + 1.2, z1 + 0.3, 0, 1.0);
+  signBoard('實在真便宜', { bg: '#ffd200', fg: '#0b4fa8', w: 512, h: 128 }, 5, 1.2, cx + 8, H + 1.0, z1 + 0.3, 0, 1.0);
+  const site = { kind: 'px', x0, x1, z0, z1, cx, door: { x: dX, z: z1 + 1.2 }, name: '全聯福利中心 ' + (districtAt(cx, z1) === '郊區' ? hName(b.jS, cx).replace('路', '') : districtAt(cx, z1)) + '店', goods: [], counters: [] };
+  // 冷藏櫃（後牆）
+  fridgeRow(site, x0 + 0.5, x1 - 0.5, z0 + 0.25, ['pork', 'beef', 'tofu', 'egg', 'milk', 'juice', 'water', 'coffee', 'milktea', 'energy', 'dumpl', 'pork', 'egg', 'tofu', 'milk']);
+  // 貨架 4 排
+  const R = [
+    [['rice', 'noodleR', 'noodle', 'cupnood', 'rice', 'noodleR', 'noodle', 'cupnood'], ['chips', 'choco', 'bread', 'chips', 'choco', 'bread', 'onigiri', 'sandw']],
+    [['water', 'juice', 'milktea', 'energy1', 'water', 'juice', 'coffee', 'energy1'], ['tissue', 'aid', 'rain', 'tissue', 'aid', 'rain', 'tissue', 'aid']],
+    [['catfood', 'catcan', 'cattoy', 'catfood', 'catcan', 'cattoy', 'catfood', 'catcan'], ['noodle', 'dumpl', 'cupnood', 'noodle', 'dumpl', 'rice', 'egg', 'tofu']],
+    [['chips', 'choco', 'bread', 'onigiri', 'sandw', 'chips', 'choco', 'bread'], ['rice', 'noodleR', 'rice', 'noodleR', 'cupnood', 'noodle', 'rice', 'noodleR']],
+  ];
+  for (let r = 0; r < 4; r++) shelfRow(site, x0 + 14, x1 - 1.5, z0 + 3.4 + r * 3.1, 0.9, 1.9, 4, { n: R[r][0], s: R[r][1] });
+  // 蔬果區
+  produceTable(site, x0 + 2.5, x0 + 10.5, z0 + 4.5, ['tomato', 'veg', 'tomato', 'veg']);
+  produceTable(site, x0 + 2.5, x0 + 10.5, z0 + 9, ['veg', 'tomato', 'veg', 'tomato']);
+  // 結帳櫃台 3 個
+  for (let k = 0; k < 3; k++) {
+    const kx = x0 + 3 + k * 3.6, kz = z1 - 5;
+    addGeo('counter', MAT.counter, boxGeo(0.9, 1.0, 3, kx, 0.2, kz)); addCol(kx - 0.45, kx + 0.45, kz - 1.5, kz + 1.5, 1.2, 'low', 0);
+    addGeo('dark', MAT.dark, boxGeo(0.4, 0.3, 0.3, kx, 1.2, kz + 0.8));
+    signBoard(String(k + 1), { bg: '#0b4fa8', fg: '#fff', w: 64, h: 64 }, 0.5, 0.5, kx, 2.4, kz - 1.4, 0, 1.0);
+    site.counters.push({ x: kx + 1.0, z: kz, clerk: { x: kx - 0.9, z: kz, yaw: -Math.PI / 2 } });
+  }
+  // 購物車
+  for (let k = 0; k < 4; k++) addGeo('pole', MAT.pole, boxGeo(0.6, 0.9, 0.9, x1 - 2 - k * 0.15, 0.2, z1 - 2.2));
+  addCol(x1 - 2.8, x1 - 1.4, z1 - 2.7, z1 - 1.7, 1, 'low', 0);
+  SITES.px.push(site);
+  fillBlock(b, b.cx > -160 || b.cx < -1100 || b.cz < -800 || b.cz > 470 ? 'old' : 'mid', { x0: x0 - 3, x1: x1 + 3, z0: z0 - 4, z1: z1 + 4 });
+}
+function pickPxBlocks(blocks, setTfn) {
+  // 每個角色的家附近、加上一中商圈各一家
+  const want = [[-500, 240], [-220, -450], [-118, 50], [-900, -300]];
+  for (const [x, z] of want) {
+    const cand = blocks.filter(b => b.type === 'gen' && (b.x1 - b.x0) > 52 && (b.z1 - b.z0) > 46 && dist(b.cx, b.cz, x, z) < 600).sort((a, b) => dist(a.cx, a.cz, x, z) - dist(b.cx, b.cz, x, z));
+    if (cand.length) cand[0].type = 'pxmart';
+  }
+}
+
+/* ---------- 購物籃、結帳、偷竊 ---------- */
+function allShops() { return [...SITES.stores, ...SITES.px]; }
+function shopAt(x, z) { for (const s of allShops()) if (x > s.x0 && x < s.x1 && z > s.z0 && z < s.z1) return s; return null; }
+function basketTotal() { return (S.basket ? S.basket.items : []).reduce((a, k) => a + goodInfo(k).p, 0); }
+function takeGood(site, k) {
+  if (!S.basket || S.basket.site !== site.name) S.basket = { site: site.name, items: [] };
+  if (S.basket.items.length >= 30) { radio('購物籃滿了，先去結帳吧。', 'info'); return; }
+  S.basket.items.push(k); AU.click(); const g = goodInfo(k);
+  showBubble('🧺 放進購物籃：' + g.n + '　$' + g.p + '（共 ' + S.basket.items.length + ' 件 $' + basketTotal() + '）');
+  updateBasketHUD();
+}
+function updateBasketHUD() {
+  let el = $('basket'); if (!el) { el = document.createElement('div'); el.id = 'basket'; el.style.cssText = 'position:fixed;right:12px;top:240px;background:rgba(10,20,40,.82);color:#ffd84a;padding:6px 10px;border-radius:10px;font-size:14px;z-index:5;pointer-events:none'; document.body.appendChild(el); }
+  const n = S.basket ? S.basket.items.length : 0;
+  el.style.display = n && GAME.running ? 'block' : 'none'; el.innerHTML = '🧺 購物籃 ' + n + ' 件　$' + basketTotal() + '<br><small style="color:#cfd8ea">到櫃台按 E 結帳</small>';
+}
+function checkoutMenu(site) {
+  if (MIS.cur && MIS.cur.type === 'robbery' && insideShop(P.x, P.z) === site) { radio('現在不是買東西的時候！', 'warn'); return; }
+  const render = () => {
+    const items = S.basket && S.basket.site === site.name ? S.basket.items : [];
+    const cnt = {}; items.forEach(k => cnt[k] = (cnt[k] || 0) + 1);
+    const tot = basketTotal();
+    $('mbox').innerHTML = `<h2>${site.kind === 'px' ? '🛒' : '🏪'} ${site.name}　結帳</h2><p>店員：「${items.length ? '您好，幫您結帳～需要袋子嗎？' : '歡迎光臨～商品在貨架上，自己拿過來結帳喔！'}」</p>` +
+      (items.length ? Object.entries(cnt).map(([k, q]) => `<div class="shopitem"><div>${goodInfo(k).n} ×${q}<small>$${goodInfo(k).p} / 個</small></div><button class="btn gray sm" data-rm="${k}">放回一個</button></div>`).join('') : '') +
+      (site.kind === 'store' ? `<div class="shopitem"><div>🥚 茶葉蛋（櫃台旁）<small>$13</small></div><button class="btn y sm" data-add="teaegg">拿一顆</button></div>` : '') +
+      `<p style="font-size:18px">合計 <b style="color:#ffd84a">${fmtMoney(tot)}</b>　（存款 ${fmtMoney(S.money)}）</p><div class="btns">${items.length ? `<button class="btn g" id="payBtn" ${S.money < tot ? 'disabled' : ''}>💳 付款</button>` : ''}<button class="btn gray" id="mclose">離開</button></div>`;
+    $('mbox').querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { const i = S.basket.items.indexOf(b.dataset.rm); if (i >= 0) S.basket.items.splice(i, 1); AU.click(); updateBasketHUD(); render(); });
+    $('mbox').querySelectorAll('[data-add]').forEach(b => b.onclick = () => { takeGood(site, b.dataset.add); render(); });
+    const pay = $('payBtn'); if (pay) pay.onclick = () => {
+      if (S.money < tot) return;
+      S.money -= tot; txn(-tot, site.name + ' 購物'); for (const k of items) receiveGood(k); const n = items.length;
+      S.basket = null; updateBasketHUD(); AU.good(); MODAL.close(); updateHUD(true);
+      toast('good', '🧾 結帳完成', n + ' 件商品 ' + fmtMoney(tot) + '，放進背包了（手機 → 背包）');
+      showBubble('店員：「謝謝光臨～」');
+    };
+    $('mclose').onclick = () => MODAL.close();
+  };
+  MODAL.custom(render);
+}
+function receiveGood(k) { const g = SGOOD_BY[k]; if (g && g.to) { S.inv[g.to] = (S.inv[g.to] || 0) + 1; return; } if (SGOOD_BY[k]) { S.inv[k] = (S.inv[k] || 0) + 1; return; } receiveItem(k, 1); }
+function shopTheft(site) {
+  const items = S.basket.items.slice(); const tot = basketTotal(); S.basket = null; updateBasketHUD();
+  for (const k of items) receiveGood(k);
+  AU.bad(); showBubble('店員：「欸！還沒結帳！小偷啊——！」');
+  if (S.onDuty) { punish('major', '執勤中在' + site.name + '偷東西（' + items.length + ' 件 ' + fmtMoney(tot) + '）'); return; }
+  CRIMES.theft.n = '竊盜罪'; addCrime('theft', 0, { shop: site.name });
+  addLog('🧺 從' + site.name + '偷走 ' + items.length + ' 件商品（' + fmtMoney(tot) + '）');
+}
+CRIMES.theft = { n: '竊盜罪', law: '刑法第 320 條第 1 項', stat: '5 年以下有期徒刑、拘役或 50 萬元以下罰金', sent: { jailDays: 40 }, conv: true, stars: 1 };
+const SHOPST = { clerks: [], site: null, wasIn: null };
+function updateShops(dt) {
+  const s = shopAt(P.x, P.z);
+  if (S.basket && S.basket.items.length) {
+    if (!s || s.name !== S.basket.site) {
+      const bs = allShops().find(q => q.name === S.basket.site);
+      if (bs && dist(P.x, P.z, bs.door.x, bs.door.z) < 25 && SHOPST.wasIn === bs) shopTheft(bs);
+      else { S.basket = null; updateBasketHUD(); }
+    }
+  }
+  if (s && s !== SHOPST.wasIn) {
+    if (!(MIS.cur && MIS.cur.type === 'robbery')) showBubble((s.kind === 'px' ? '🎵 全聯～' : '🔔 叮咚～') + '店員：「歡迎光臨～」');
+    spawnShopClerks(s);
+  }
+  if (!s && SHOPST.site && dist(P.x, P.z, SITES.px.includes(SHOPST.site) ? SHOPST.site.cx : SHOPST.site.cx, SHOPST.site.z1) > 60) clearShopClerks();
+  SHOPST.wasIn = s;
+}
+function spawnShopClerks(s) {
+  if (SHOPST.site === s) return; clearShopClerks();
+  if (MIS.cur && MIS.cur.type === 'robbery') return;
+  if (S.working && S.job === 'clerk' && S.jobSite === s.name) return;
+  SHOPST.site = s;
+  const spots = s.kind === 'px' ? s.counters.map(c => c.clerk) : [s.clerk];
+  for (const sp of spots) { const h = spawnHuman({ shirt: 0xffffff, apron: s.kind === 'px' ? 0x0b4fa8 : 0x127a3a, data: { role: 'civ', shopClerk: true } }, sp.x, sp.z, sp.yaw || 0); h.pose = 'idle'; SHOPST.clerks.push(h); }
+}
+function clearShopClerks() { for (const h of SHOPST.clerks) removeHuman(h); SHOPST.clerks = []; SHOPST.site = null; }
+function shopInteracts() {
+  const s = SHOPST.wasIn; if (!s || P.mode !== 'foot') return [];
+  const out = s.goods.map(g => ({ x: g.x, z: g.z, r: g.r, label: () => '拿：' + goodInfo(g.k).n + '　$' + goodInfo(g.k).p, act: () => takeGood(s, g.k) }));
+  if (s.kind === 'px') for (const c of s.counters) out.push({ x: c.x, z: c.z, r: 1.6, label: () => S.basket && S.basket.items.length ? '結帳（' + S.basket.items.length + ' 件 $' + basketTotal() + '）' : '結帳櫃台', act: () => checkoutMenu(s) });
+  return out;
 }
 
 /* ================= 介面 ================= */
@@ -6589,7 +6832,7 @@ function findInteract() {
   if (MODAL.open) return null;
   const inVeh = P.mode === 'vehicle';
   let best = null, bd = 1e9;
-  const mi = MIS.interacts(); const list = STATIC_INTERACT.concat(mi, friendInteracts(), homeInteracts(), JOB.cust ? [{ x: JOB.cust.x, z: JOB.cust.z, r: 2.8, label: '幫客人結帳', act: clerkGame }] : []);
+  const mi = MIS.interacts(); const list = STATIC_INTERACT.concat(mi, friendInteracts(), homeInteracts(), shopInteracts(), JOB.cust ? [{ x: JOB.cust.x, z: JOB.cust.z, r: 2.8, label: '幫客人結帳', act: clerkGame }] : []);
   const pri = new Set(mi); // 任務的互動優先
   for (const it of list) { if (inVeh && !it.veh) continue; const d = dist(P.x, P.z, it.x, it.z) - (pri.has(it) ? 1.5 : 0); const r = inVeh ? it.r + 8 : it.r; if (d < r && d < bd) { bd = d; best = it; } }
   if (!best && !inVeh) { const pd = nearestChatPed(); if (pd) best = { x: pd.x, z: pd.z, r: 2.1, label: '和路人聊天', act: () => chatDialog(pd) }; }
@@ -6716,7 +6959,7 @@ function drawMapLabels(g, X, Z, sc, big) {
 }
 const ICONS = () => [
   [SITES.station, '👮', '大墩分局'], [SITES.cga, '⚓', '海巡隊'], [SITES.tra, '🚉', '台中車站'], [SITES.hsr, '🚄', '高鐵台中站'], [SITES.home, '🏠', '我家'], [SITES.market, '🏮', '一中街夜市'], [SITES.dealer, '🚘', '車行'], [SITES.hospital, '🏥', '醫院'], [SITES.bank, '🏦', '銀行'],
-  ...SITES.stores.map(s => [s, '🏪', '超商']),
+  ...SITES.stores.map(s => [s, '🏪', '超商']), ...SITES.px.map(s => [{ x: s.cx, z: s.z1 }, '🛒', '全聯']),
   ...Object.values(RAIL).flatMap(L => L.stations.map(st => [{ x: st.ex != null ? st.ex : st.x, z: st.ez != null ? st.ez : st.z }, L.kind === 'mrt' ? 'Ⓜ️' : '🚉', st.label || st.n])),
 ];
 function drawMini() {
@@ -6870,7 +7113,7 @@ function loop(now) {
     for (let k = MHUMANS.length - 1; k >= 0; k--) { const h = MHUMANS[k]; if (h.role === 'robber' || h.role === 'clerk' || h.ai) continue;
       if (h.walk) { h.x += h.walk.vx * dt; h.z += h.walk.vz * dt; h.P.g.rotation.y = Math.atan2(h.walk.vx, h.walk.vz); h.walk.t -= dt; if (h.walk.t <= 0) { removeHuman(h); continue; } }
       posePerson(h.P, h.pose || 'idle', dt, 1.6); h.P.g.position.set(h.x, 0.2, h.z); }
-    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateGarbageMusic(); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); updateJobs(dt); updateHome(dt);
+    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateGarbageMusic(); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); updateJobs(dt); updateHome(dt); updateShops(dt);
   } else AU.update(false, 0, false);
   frame++;
   updateSky();
@@ -6882,7 +7125,7 @@ function loop(now) {
 }
 
 // 測試用：快速模擬（不畫圖）
-function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); updateJobs(dt); updateHome(dt); } }
+function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); updateJobs(dt); updateHome(dt); updateShops(dt); } }
 
 /* ---------- 開始 ---------- */
 function startGame(fresh) {
