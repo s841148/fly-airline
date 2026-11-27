@@ -3605,7 +3605,9 @@ MOBS.msoldier={n:'現代敵兵',hp:26,w:0.3,h:1.9,sp:2.5,hostile:true,dmg:0,sold
 FACE.buddy=faceCanvas((g,f)=>{f('#3d4ac8',0,0,8,3);f('#f0c8a0',0,3,8,5);f('#111',2,4);f('#111',5,4);f('#c85050',3,6,2,1);f('#fff',3,1,2,1);});
 MOBS.buddy={n:'娃況',hp:40,w:0.3,h:1.8,sp:3.4,buddy:true,tame:true,drops:[],xp:[0,0],snd:'hmm',
   parts:[['body',[8,12,4],[0,18,0],'#e82028'],['stripe',[8.4,1.6,4.4],[0,23.2,0],'#8a0020'],['head',[8,8,8],[0,28,0],'#3d4ac8','buddy'],['capH',[3,1.2,0.6],[0,32.4,4.2],'#ffffff'],['aL',[4,12,4],[-6,18,0],'#e82028'],['aR',[4,12,4],[6,18,0],'#e82028'],['l0',[4,12,4],[-2,6,0],'#2a3070'],['l1',[4,12,4],[2,6,0],'#2a3070'],['pack',[7,9,3],[0,19,-3.6],'#6a4a2a'],['packT',[7.4,2,3.4],[0,24.2,-3.6],'#8a6a3a']]};
-const BUD_MODES={follow:'跟隨',stay:'待命',wood:'採集（砍樹）',mine:'挖礦'};
+const BUD_MODES={follow:'跟隨',stay:'待命',wood:'採集（砍樹）',mine:'挖礦',farm:'種田收菜'};
+const BUD_NAMES=['小豆','阿福','奇奇','米寶','泡泡','阿虎','毛毛','小可','布丁','麥麥二號'];
+function budName(){return budSt().name||'娃況';}
 function budSt(){return W.meta.buddy||(W.meta.buddy={mode:'follow'});}
 function budBag(){return W.cont.buddy||(W.cont.buddy=Array(18).fill(null));}
 function budNet(){if(typeof netCont==='function') netCont('buddy');}
@@ -3617,7 +3619,8 @@ function budTakeLog(){const b=budBag();for(let i=0;i<b.length;i++){const s=b[i];
 function budPlanks(e,n){let g=0;while(budCnt(B.PLANKS)<n&&g++<20&&budTakeLog()) budAdd(e,B.PLANKS,4);budNet();return budCnt(B.PLANKS)>=n;}
 function budSticks(e,n){let g=0;while(budCnt(IT.I_STICK)<n&&g++<10){if(!budPlanks(e,2)) return false;budTake(B.PLANKS,2);budAdd(e,IT.I_STICK,4);}return budCnt(IT.I_STICK)>=n;}
 function budTool(type){let best=null,bi=-1,bt=-1;const b=budBag();for(let i=0;i<b.length;i++){const s=b[i];if(!s) continue;const d=DEF(s.id);if(d&&d.tool&&d.tool.type===type){const v=d.tool.tier*100+d.tool.sp;if(v>bt){bt=v;best=s;bi=i;}}}return best?{s:best,i:bi}:null;}
-function budSay(e,msg){const t=performance.now();if(t-(e.sayT||0)<25000) return;e.sayT=t;toast('娃況：'+msg);}
+function budSay(e,msg){const t=performance.now();if(t-(e.sayT||0)<25000) return;e.sayT=t;toast(budName()+'：'+msg);}
+function budRename(){const st=budSt();const n=prompt('幫你的夥伴取個名字：',st.name||budName());if(n===null) return;st.name=(n.trim()||'娃況').slice(0,10);if(typeof netMeta==='function') netMeta('buddy');const e=mobs().find(x=>x.type==='buddy');if(e) budTag(e);toast('夥伴現在叫「'+st.name+'」');if(uiOpen&&UI.key==='buddy') renderUI();}
 function budCraft(e,type){const need=type==='sword'?2:3,stk=type==='sword'?1:2;const cur=budTool(type);const ct=cur?DEF(cur.s.id).tool.tier:0;
   const opts=[['diamond',4,IT.I_DIAMOND],['iron',3,IT.I_IRON],['stone',2,B.COBBLE],['wood',1,B.PLANKS]];
   for(const [m,t,id] of opts){if(t<=ct) continue;const item=IT['T_'+type+'_'+m];if(!item) continue;
@@ -3626,28 +3629,36 @@ function budCraft(e,type){const need=type==='sword'?2:3,stk=type==='sword'?1:2;c
   return false;}
 function budWear(sl){const b=budBag();const s=b[sl.i];if(!s) return;s.d=(s.d||0)+1;if(s.d>=DEF(s.id).tool.dur){b[sl.i]=null;playSnd('pop',0.5);}budNet();}
 function callBuddy(){if(!isHost()){toast('只有房主可以召喚夥伴');return;}let e=mobs().find(m=>m.type==='buddy');
-  if(e){e.x=P.x+1;e.y=P.y;e.z=P.z+1;e.vx=e.vy=e.vz=0;puff(e.x,e.y+1,e.z,0x66aaff,10);toast('娃況來了！（右鍵他開背包、蹲下＋右鍵切換模式）');return;}
-  e=spawnMob('buddy',P.x+1,P.y,P.z+1,{tamed:myId()});if(!e) return;e.keep=true;budSt();budBag();budTag(e);puff(e.x,e.y+1,e.z,0x66aaff,14);playSnd('portal',0.5);toast('娃況加入了你的隊伍！右鍵他開背包、蹲下＋右鍵切換模式');}
-function budTag(e){e.pname='娃況·'+BUD_MODES[budSt().mode].slice(0,2);if(typeof petTag==='function') petTag(e);}
-function budMode(m){const st=budSt();const order=['follow','stay','wood','mine'];if(!m) m=order[(order.indexOf(st.mode)+1)%4];st.mode=m;if(typeof netMeta==='function') netMeta('buddy');
+  if(e){e.x=P.x+1;e.y=P.y;e.z=P.z+1;e.vx=e.vy=e.vz=0;puff(e.x,e.y+1,e.z,0x66aaff,10);toast(budName()+'來了！（右鍵他開背包、蹲下＋右鍵切換模式）');return;}
+  e=spawnMob('buddy',P.x+1,P.y,P.z+1,{tamed:myId()});if(!e) return;e.keep=true;{const st=budSt();if(!st.name){st.name=BUD_NAMES[irand(0,BUD_NAMES.length-1)];toast('夥伴自己取了名字：「'+st.name+'」（在他的背包畫面可以幫他改名）');}}budBag();budTag(e);puff(e.x,e.y+1,e.z,0x66aaff,14);playSnd('portal',0.5);toast(budName()+'加入了你的隊伍！右鍵他開背包、蹲下＋右鍵切換模式');}
+function budTag(e){e.pname=budName()+'·'+BUD_MODES[budSt().mode].slice(0,2);if(typeof petTag==='function') petTag(e);}
+function budMode(m){const st=budSt();const order=['follow','stay','wood','mine','farm'];if(!m) m=order[(order.indexOf(st.mode)+1)%5];st.mode=m;if(typeof netMeta==='function') netMeta('buddy');
   const e=mobs().find(x=>x.type==='buddy');if(e){budTag(e);e.ai.mine=null;e.ai.tg=null;}toast('娃況模式：'+BUD_MODES[m]);if(uiOpen&&UI.key==='buddy') renderUI();}
-function budUI(){const st=budSt();let h='<div class="mc-lab">娃況的背包（右鍵他打開，他挖到的東西會自動放進來）</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin:4px 0">';
+function budUI(){const st=budSt();let h='<div class="mc-lab">'+budName()+'的背包（他挖到、收成的東西會自動放進來）<button class="mcb" style="margin-left:8px" onclick="budRename()">✏️ 取名字</button></div><div style="display:flex;gap:4px;flex-wrap:wrap;margin:4px 0">';
   for(const k in BUD_MODES) h+=`<button class="mcb" style="min-width:88px;${st.mode===k?'outline:3px solid #ffe27a':''}" onclick="budMode('${k}')">${BUD_MODES[k]}</button>`;
   h+='</div><div class="mc-grid g9">'+budBag().map((s,i)=>slotHTML(s,'ch',i)).join('')+'</div>';return h;}
 function budDie(e){const b=budBag();for(let i=0;i<b.length;i++){const s=b[i];if(s){spawnDrop(s.id,s.n,e.x,e.y+0.6,e.z,s,true);b[i]=null;}}budNet();toast('娃況倒下了…背包的東西掉在地上，用召喚鈴可以再叫他回來');}
 function budStep(e,tx,tz,sp){const dx=tx-e.x,dz=tz-e.z,d=Math.hypot(dx,dz)||1;e.vx=dx/d*sp;e.vz=dz/d*sp;e.yaw=Math.atan2(dx,dz);
   if(e.onGround){const fx=e.x+dx/d*0.7,fz=e.z+dz/d*0.7;const b1=BL[getB(fx,e.y+0.2,fz)],b2=BL[getB(fx,e.y+1.2,fz)];if(b1&&b1.solid&&!(b2&&b2.solid)) e.vy=8;}
   if(e.inWater) e.vy=3;}
-function budFind(e,mode,home,pick){const r=mode==='wood'?13:10;const cx=Math.floor(home.x),cy=Math.floor(home.y),cz=Math.floor(home.z);let best=null,bd=1e9;const re=mode==='wood'?/LOG$/:/ORE$/;const skip=e.ai.skip||{};const now=performance.now();
+function budSeed(){const b=budBag();for(const s of b){if(!s) continue;if(s.id===IT.I_SEEDS) return [s.id,B.WHEAT0];const d=DEF(s.id);if(d&&d.plantB&&B[d.plantB]) return [s.id,B[d.plantB]];}return null;}
+function budFarmFind(e,home){const cx=Math.floor(home.x),cy=Math.floor(home.y),cz=Math.floor(home.z);let best=null,bd=1e9;const seed=budSeed();const skip=e.ai.skip||{};const now=performance.now();
+  for(let dx=-12;dx<=12;dx++)for(let dz=-12;dz<=12;dz++)for(let dy=-3;dy<=3;dy++){const x=cx+dx,y=cy+dy,z=cz+dz;const id=getB(x,y,z);if(!id) continue;const k=x+','+y+','+z;if(skip[k]&&skip[k]>now) continue;let kind=0;
+    if(BL[id].crop===3) kind=1;else if(seed&&(id===B.FARMLAND||id===B.FARMLAND_WET)&&!getB(x,y+1,z)) kind=2;if(!kind) continue;
+    const d=Math.hypot(x+0.5-e.x,(y+0.5-e.y)*1.3,z+0.5-e.z)+(kind===2?4:0);if(d<bd){bd=d;best=[x,y,z,id,kind===2?'plant':0];}}
+  return best;}
+function budReplant(id){const k=BL[id].key||'';let m;if(k==='WHEAT3') return [IT.I_SEEDS,B.WHEAT0];if(m=k.match(/^(CARROT|POTATO|BEET)3$/)){return m[1]==='BEET'?[IT.I_BEETSEED,B.BEET0]:[IT['I_'+m[1]],B[m[1]+'0']];}if(m=k.match(/^FC_([A-Z]+)3$/)) return [IT['I_'+m[1]+'_S'],B['FC_'+m[1]+'0']];return null;}
+function budFind(e,mode,home,pick){if(mode==='farm') return budFarmFind(e,home);const r=mode==='wood'?13:10;const cx=Math.floor(home.x),cy=Math.floor(home.y),cz=Math.floor(home.z);let best=null,bd=1e9;const re=mode==='wood'?/LOG$/:/ORE$/;const skip=e.ai.skip||{};const now=performance.now();
   const y0=mode==='wood'?-2:-9,y1=mode==='wood'?9:4;
   for(let dx=-r;dx<=r;dx++)for(let dz=-r;dz<=r;dz++)for(let dy=y0;dy<=y1;dy++){const x=cx+dx,y=cy+dy,z=cz+dz;const id=getB(x,y,z);if(!id||!BL[id]||!re.test(BL[id].key||'')) continue;
     if(mode==='mine'&&BL[id].tier&&!(pick&&DEF(pick.s.id).tool.tier>=BL[id].tier)) continue;
     const k=x+','+y+','+z;if(skip[k]&&skip[k]>now) continue;const d=Math.hypot(x+0.5-e.x,(y+0.5-e.y)*1.3,z+0.5-e.z);if(d<bd){bd=d;best=[x,y,z,id];}}
   return best;}
-function budMineDone(e,m){const id=getB(m.x,m.y,m.z);if(!id||id!==m.id){e.ai.mine=null;return;}const b=BL[id];const mode=budSt().mode;const tl=budTool(b.btool==='axe'?'axe':'pick')||(mode==='wood'?budTool('axe'):budTool('pick'));
+function budMineDone(e,m){const id=getB(m.x,m.y,m.z);if(!id||id!==m.id){e.ai.mine=null;return;}const b=BL[id];const mode=budSt().mode;const tl=b.crop!==undefined?null:(budTool(b.btool==='axe'?'axe':'pick')||(mode==='wood'?budTool('axe'):budTool('pick')));
   const tt=tl&&DEF(tl.s.id).tool;const ok=!b.tier||(tt&&tt.type==='pick'&&tt.tier>=b.tier);
   for(const [d,n] of dropOf(id,ok,tl?tl.s:null)) if(n>0) budAdd(e,d,n);
   playSnd(b.snd||'stone',0.8);if(typeof blockBits==='function') blockBits(m.x,m.y,m.z,id);setB(m.x,m.y,m.z,0);fallCheck(m.x,m.y+1,m.z);
+  if(b.crop===3){const rp=budReplant(id);if(rp&&rp[0]&&rp[1]&&budCnt(rp[0])>=1&&(getB(m.x,m.y-1,m.z)===B.FARMLAND||getB(m.x,m.y-1,m.z)===B.FARMLAND_WET)){budTake(rp[0],1);setB(m.x,m.y,m.z,rp[1]);playSnd('grass',0.5);}}
   if(tl) budWear(tl);e.ai.mine=null;if(b.xp&&ok) spawnXP(m.x+0.5,m.y+0.5,m.z+0.5,irand(b.xp[0],b.xp[1]));}
 function budStartMine(e,x,y,z,mode){const id=getB(x,y,z);const b=BL[id];if(!b||b.h<0) return false;if(id===B.BEDROCK||id===B.CHEST) return false;const tl=budTool(b.btool==='axe'?'axe':'pick');const sp=tl?DEF(tl.s.id).tool.sp:1;e.ai.mine={x,y,z,id,t:0,need:clamp(b.h*1.5/sp,0.3,6)};return true;}
 function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Math.max(0,(e.work||0)-dt);a.cool-=0;
@@ -3663,8 +3674,9 @@ function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Mat
   // 待命
   if(mode==='stay'){e.vx=e.vz=0;return true;}
   // 工作
-  if(mode==='wood'||mode==='mine'){
+  if(mode==='wood'||mode==='mine'||mode==='farm'){
     let em=mode;let pick=budTool('pick');
+    if(mode==='farm'){a.cr5=(a.cr5||0)-dt;if(a.cr5<=0){a.cr5=10;budCraft(e,'sword');}}
     if(mode==='mine'&&!pick){a.cr=(a.cr||0)-dt;if(a.cr<=0){a.cr=3;budCraft(e,'pick');pick=budTool('pick');}if(!pick){em='wood';budSay(e,'我還沒有鎬子，先去砍樹做一支！');}}
     if(em==='wood'&&!budTool('axe')){a.cr2=(a.cr2||0)-dt;if(a.cr2<=0){a.cr2=4;budCraft(e,'axe');}}
     if(mode==='mine'&&pick){a.cr3=(a.cr3||0)-dt;if(a.cr3<=0){a.cr3=8;budCraft(e,'pick');budCraft(e,'sword');}}
@@ -3676,10 +3688,11 @@ function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Mat
     a.scan=(a.scan||0)-dt;if(a.scan<=0||!a.tg){a.scan=2.5;a.tg=budFind(e,em,ow,pick);}
     if(!a.tg){ // 沒東西可做：回到主人身邊
       if(hd>4) budStep(e,ow.x,ow.z,MOBS.buddy.sp); else{e.vx=e.vz=0;}
-      budSay(e,em==='wood'?'附近沒有樹了':'附近找不到我挖得動的礦');return true;}
+      budSay(e,em==='wood'?'附近沒有樹了':em==='farm'?'附近沒有能收的作物，也沒有空的田可以種':'附近找不到我挖得動的礦');return true;}
     const [tx,ty,tz,tid]=a.tg;if(getB(tx,ty,tz)!==tid){a.tg=null;return true;}
     const dist=Math.hypot(tx+0.5-e.x,ty+0.5-(e.y+0.9),tz+0.5-e.z);
-    if(dist<=3.2){if(budStartMine(e,tx,ty,tz,em)) return true;a.tg=null;return true;}
+    if(dist<=3.2){if(a.tg[4]==='plant'){const sd=budSeed();if(sd&&!getB(tx,ty+1,tz)){budTake(sd[0],1);setB(tx,ty+1,tz,sd[1]);e.work=0.4;e.yaw=Math.atan2(tx+0.5-e.x,tz+0.5-e.z);playSnd('grass',0.5);}a.tg=null;a.scan=0.3;return true;}
+      if(budStartMine(e,tx,ty,tz,em)) return true;a.tg=null;return true;}
     // 走過去；被擋住就挖開
     const hz=Math.hypot(tx+0.5-e.x,tz+0.5-e.z);
     if(hz<1.3&&ty<Math.floor(e.y)-0.5&&em==='mine'){e.vx=e.vz=0;const by=Math.floor(e.y)-1;if(getB(Math.floor(e.x),by,Math.floor(e.z))&&budStartMine(e,Math.floor(e.x),by,Math.floor(e.z),em)) return true;}
