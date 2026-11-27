@@ -2996,7 +2996,7 @@ function bubbleSprite(text){text=String(text).slice(0,40);const c=document.creat
 const DIMN={over:'主世界',nether:'地獄',sky:'天空島'};
 function sendChat(msg){msg=clean(String(msg).slice(0,200));if(!msg.trim()) return;CHAT.sent.push(msg);if(CHAT.sent.length>30) CHAT.sent.shift();CHAT.sentI=-1;
   if(msg==='📍 我在這裡'){sendPing('');return;}if(msg[0]==='/'){chatCmd(msg);return;}
-  chatAdd({kind:'chat',name:SET.name,color:P.color,text:msg});if(NET.on) NET.bcast({t:'chat',name:SET.name,color:P.color,msg,kind:'chat'});selfBubble(msg);}
+  chatAdd({kind:'chat',name:SET.name,color:P.color,text:msg});if(NET.on) NET.bcast({t:'chat',name:SET.name,color:P.color,msg,kind:'chat'});selfBubble(msg);try{if(typeof budHear==='function') setTimeout(()=>{try{budHear(msg);}catch(e){diagLog('budHear '+e.message);}},350);}catch(e){}}
 let selfBub=null;function selfBubble(msg){if(!SET.bubble||!selfModel) return;if(selfBub) selfModel.g.remove(selfBub);selfBub=bubbleSprite(msg);selfBub.position.y=2.25;selfModel.g.add(selfBub);const b=selfBub;setTimeout(()=>{if(selfModel) selfModel.g.remove(b);},6000);}
 function sendPing(text){const x=Math.floor(P.x),y=Math.floor(P.y),z=Math.floor(P.z);const o={t:'chat',kind:'ping',name:SET.name,color:P.color,msg:text,x,y,z,dim:W.dim,dimN:DIMN[W.dim]};chatAdd({kind:'ping',name:SET.name,color:P.color,text,x,y,z,dimN:DIMN[W.dim]});addPing(x,y,z,W.dim,SET.name,P.color);if(NET.on) NET.bcast(o);}
 function sysAll(text,kind){chatAdd({kind:kind||'sys',text,name:SET.name,color:P.color});if(NET.on) NET.bcast({t:'chat',kind:kind||'sys',name:SET.name,color:P.color,msg:text});}
@@ -3620,7 +3620,8 @@ function budPlanks(e,n){let g=0;while(budCnt(B.PLANKS)<n&&g++<20&&budTakeLog()) 
 function budSticks(e,n){let g=0;while(budCnt(IT.I_STICK)<n&&g++<10){if(!budPlanks(e,2)) return false;budTake(B.PLANKS,2);budAdd(e,IT.I_STICK,4);}return budCnt(IT.I_STICK)>=n;}
 function budTool(type){let best=null,bi=-1,bt=-1;const b=budBag();for(let i=0;i<b.length;i++){const s=b[i];if(!s) continue;const d=DEF(s.id);if(d&&d.tool&&d.tool.type===type){const v=d.tool.tier*100+d.tool.sp;if(v>bt){bt=v;best=s;bi=i;}}}return best?{s:best,i:bi}:null;}
 function budSay(e,msg){const t=performance.now();if(t-(e.sayT||0)<25000) return;e.sayT=t;toast(budName()+'：'+msg);}
-function budRename(){const st=budSt();const n=prompt('幫你的夥伴取個名字：',st.name||budName());if(n===null) return;st.name=(n.trim()||'娃況').slice(0,10);if(typeof netMeta==='function') netMeta('buddy');const e=mobs().find(x=>x.type==='buddy');if(e) budTag(e);toast('夥伴現在叫「'+st.name+'」');if(uiOpen&&UI.key==='buddy') renderUI();}
+function budSetName(n){const st=budSt();st.name=(String(n).trim()||'娃況').slice(0,10);if(typeof netMeta==='function') netMeta('buddy');const e=mobs().find(x=>x.type==='buddy');if(e) budTag(e);if(uiOpen&&UI.key==='buddy') renderUI();return st.name;}
+function budRename(){const n=prompt('幫你的夥伴取個名字：',budSt().name||budName());if(n===null) return;toast('夥伴現在叫「'+budSetName(n)+'」');}
 function budCraft(e,type){const need=type==='sword'?2:3,stk=type==='sword'?1:2;const cur=budTool(type);const ct=cur?DEF(cur.s.id).tool.tier:0;
   const opts=[['diamond',4,IT.I_DIAMOND],['iron',3,IT.I_IRON],['stone',2,B.COBBLE],['wood',1,B.PLANKS]];
   for(const [m,t,id] of opts){if(t<=ct) continue;const item=IT['T_'+type+'_'+m];if(!item) continue;
@@ -3746,6 +3747,42 @@ function diagErr(err){DIAG.errN++;const now=performance.now();if(now-DIAG.errT>5
   if(DIAG.burst===200) toast('⚠️ 問題還在，請重新整理遊戲（存檔不會受影響）');}
 addEventListener('error',e=>{diagLog('window.error '+e.message);});addEventListener('unhandledrejection',e=>{diagLog('promise '+(e.reason&&e.reason.message||e.reason));});
 addEventListener('keydown',e=>{if(e.code==='F8'&&running){e.preventDefault();const f=selfCheck(true);toast(f.length?'🔧 診斷完成，已修好：'+f.join('；'):'🔧 診斷完成：沒有發現問題 ✅');}});
+
+// ---- 夥伴聽得懂人話：在聊天框跟他說話 ----
+function budReply(e,text){chatAdd({kind:'chat',name:budName(),color:'#e82028',text});if(NET.on&&NET.host) NET.bcast({t:'chat',name:budName(),color:'#e82028',msg:text,kind:'chat'});
+  try{if(e&&e.mesh&&SET.bubble&&typeof bubbleSprite==='function'){if(e._bub) e.mesh.remove(e._bub);const b=bubbleSprite(text);b.position.y=e.h/(e.mesh.scale.y||1)+0.9;e.mesh.add(b);e._bub=b;setTimeout(()=>{if(e.mesh) e.mesh.remove(b);},5000);}}catch(x){}}
+function budBagSummary(){const L=budBag().filter(q=>q);if(!L.length) return '背包是空的';return L.slice(0,6).map(q=>DEF(q.id).n+'×'+q.n).join('、')+(L.length>6?'…等':'');}
+function budHear(raw){if(!isHost()) return false;const e=mobs().find(m=>m.type==='buddy');if(!e) return false;
+  const msg=String(raw).replace(/\s+/g,'');const nm=budName();const addressed=msg.includes(nm)||/夥伴|夥計|娃況|隊友|小幫手/.test(msg);
+  if(NET.on&&!addressed) return false;
+  const R=(t)=>{budReply(e,t);return true;};
+  // 問名字
+  if(/你叫什麼|你的名字|叫什麼名字|你是誰|你叫啥/.test(msg)&&!/(叫你|改名|取名)/.test(msg)) return R('我叫「'+nm+'」！你可以說「叫你○○」幫我改名字～');
+  // 改名字
+  let m=msg.match(/(?:你叫|叫你|名字(?:叫|是|改成|換成)|改名(?:叫|成|為)?|取名(?:叫|為)?|以後叫|幫你取名(?:叫)?|你的名字改成)([一-龥A-Za-z0-9]{1,8})/);
+  if(m){let n=m[1].replace(/(吧|好了|好嗎|可以嗎|了|喔|哦|啦|好不好)$/,'');if(n&&!/什麼|誰|啥|甚麼/.test(n)){const nn=budSetName(n);return R('好耶！以後我就叫「'+nn+'」了！');}}
+  // 能力說明
+  if(/會做什麼|能做什麼|可以做什麼|你會什麼|幫助|指令|怎麼用|help/i.test(msg)) return R('你可以說：「跟我來」、「待命」、「去砍樹」、「去挖礦」、「去種田」、「把東西給我」、「做把鎬子」，或「你在做什麼」！');
+  // 狀況
+  if(/在做什麼|在做啥|在幹嘛|在忙什麼|你好嗎|狀況|進度|有什麼東西|背包有什麼|你有什麼|你有多少/.test(msg)) return R('我現在是「'+BUD_MODES[budSt().mode]+'」模式，血量 '+Math.round(e.hp)+'/'+e.maxHp+'。'+budBagSummary()+'。');
+  // 要東西
+  let gave=false;if(/(給我|拿來|交出來|交給我|倒出來|分我)/.test(msg)&&/(東西|背包|材料|收穫|成果|礦|木頭|全部|所有|戰利品)/.test(msg)||/把(?:東西|背包|材料|收穫).{0,4}(?:給我|拿來|交出來)/.test(msg)){
+    let n=0;const b=budBag();for(let i=0;i<b.length;i++){const q=b[i];if(q){const left=addItem(q.id,q.n,q);if(left>0) spawnDrop(q.id,left,P.x,P.y+1,P.z,q,true);n+=q.n;b[i]=null;}}budNet();gave=true;if(!n) return R('我的背包是空的，沒有東西可以給你耶…');}
+  // 做工具
+  m=msg.match(/做(?:一?把|個|支)?(?:新的)?(鎬|斧|劍)/);
+  if(m){const ty={鎬:'pick',斧:'axe',劍:'sword'}[m[1]];const ok=budCraft(e,ty);return R(ok?'做好了！':'材料不夠…給我一些木頭或石頭，我就能做');}
+  // 模式
+  const intents=[['stay',/待命|等我|等一下|在這(?:裡|邊)等|別動|不要動|站著|停下|不要跟|休息|坐著|守著/],['follow',/跟我|跟著我|跟隨|過來|來我|回來|一起走|走吧|集合|不用工作|別工作|不要工作|休息結束/],
+    ['farm',/種田|種菜|種地|收菜|收成|收割|農夫|種小麥|種植|耕田|顧田|去田/],['mine',/挖礦|採礦|挖煤|挖鐵|挖鑽|挖石|去挖|下去挖|找礦|礦工|挖洞/],['wood',/砍樹|伐木|採集|砍木|砍柴|蒐集木|收集木|打木|砍一些|砍點|去砍/]];
+  let best=null,bi=1e9;for(const [k,re] of intents){const mm=msg.match(re);if(mm&&mm.index<bi){bi=mm.index;best=k;}}
+  if(best){budMode(best);const ans={stay:'好，我在這裡等你，有怪物靠近我還是會打！',follow:'好～我跟著你！',farm:'沒問題！我去種田收菜，記得把種子放進我的背包喔～',mine:'收到！我去挖礦（沒有鎬子我會先去砍樹做一支）！',wood:'好的！我去砍樹、採集木頭！'}[best];
+    if(best==='follow'&&Math.hypot(P.x-e.x,P.z-e.z)>14){e.x=P.x+1;e.z=P.z+1;e.y=P.y;e.vx=e.vz=e.vy=0;puff(e.x,e.y+1,e.z,0x66aaff,8);}
+    return R(ans+(gave?'（東西也都給你了）':''));}
+  if(gave) return R('給你！我的東西都在你的背包裡了～');
+  if(/謝謝|感謝|讚|厲害|好棒|辛苦|乾杯|good|thx/i.test(msg)) return R('嘿嘿，不客氣！能幫上忙我最開心了～');
+  if(/你好|哈囉|嗨|hello|早安|午安|晚安|安安/i.test(msg)&&(addressed||!NET.on)) return R('你好呀！我是'+nm+'，今天要做什麼呢？');
+  if(addressed) return R('我聽不太懂耶…你可以說「跟我來」、「待命」、「去砍樹」、「去挖礦」、「去種田」、「把東西給我」，或問我「你在做什麼」！');
+  return false;}
 function losClear(a,b){const d=new THREE.Vector3(b[0]-a[0],b[1]-a[1],b[2]-a[2]);const L=d.length();d.normalize();const r=rayCast(new THREE.Vector3(a[0],a[1],a[2]),d,L);if(r&&r.id&&r.t<L-0.5) return false;return !smokeBlocks(a,b);}
 function soldierAI(e,dt){if(!W.war&&!e.keep){e.dead=true;return true;}const a=e.ai;a.fire=(a.fire||0)-dt;a.st=(a.st||0)-dt;e.stun=Math.max(0,(e.stun||0)-dt);
   let tgt=null,bd=46;for(const p of players()){if(p.dead||p.mode==='creative'||(p.dim||'over')!==e.dim) continue;const d=Math.hypot(p.x-e.x,p.z-e.z);if(d<bd){bd=d;tgt=p;}}
