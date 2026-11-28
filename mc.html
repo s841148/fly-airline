@@ -828,8 +828,31 @@ for(const [n,base,sp,pol] of [['granite',['#9a6b57','#a2725c','#92624e','#a87a64
 defB('GRANITE',{n:'花崗岩',h:1.5,tool:'pick',tier:1});defB('DIORITE',{n:'閃長岩',h:1.5,tool:'pick',tier:1});defB('ANDESITE',{n:'安山岩',h:1.5,tool:'pick',tier:1});
 defB('P_GRANITE',{n:'拋光花崗岩',h:1.5,tool:'pick',tier:1});defB('P_DIORITE',{n:'拋光閃長岩',h:1.5,tool:'pick',tier:1});defB('P_ANDESITE',{n:'拋光安山岩',h:1.5,tool:'pick',tier:1});
 for(const [k,n] of [['GRANITE','花崗岩'],['DIORITE','閃長岩'],['ANDESITE','安山岩']]){defB('SLAB_'+k,{n:n+'半磚',tex:tx3(k.toLowerCase()),h:2,tool:'pick',tier:1,half:0.5});defB('STAIRS_'+k,{n:n+'樓梯',tex:tx3(k.toLowerCase()),h:2,tool:'pick',tier:1,shape:'stairs',snd:'stone'});}
+// ---- 更多建材：平滑石頭、石磚變化、石牆、拋光石頭樓梯半磚、白樺與雲杉木材 ----
+tile('smooth_stone',(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++) px(g,x,y,shade('#8e8e8e',0.97+r()*0.06));g.fillStyle='#7a7a7a';g.fillRect(0,15,16,1);g.fillRect(15,0,1,16);g.fillStyle='#a2a2a2';g.fillRect(0,0,16,1);g.fillRect(0,0,1,16);});
+const sbr=(g,r,mode)=>{stoneP(g,r);g.fillStyle='#5a5a5a';g.fillRect(0,7,16,1);g.fillRect(0,15,16,1);g.fillRect(7,0,1,7);g.fillRect(3,8,1,7);g.fillRect(12,8,1,7);
+  if(mode==='crack'){g.fillStyle='#3e3e3e';for(const [x,y] of [[2,2],[3,3],[4,3],[4,4],[10,1],[10,2],[11,3],[11,4],[2,10],[3,10],[3,11],[9,11],[10,12],[10,13],[13,10],[14,11]]) px(g,x,y,'#3e3e3e');}
+  if(mode==='moss'){for(let k=0;k<34;k++){const x=Math.floor(r()*16),y=Math.floor(r()*16);px(g,x,y,['#4f7a2e','#5f9038','#3f6a24'][k%3]);if(k%3===0) px(g,Math.min(15,x+1),y,'#5f9038');}}
+  if(mode==='chis'){g.fillStyle='#4a4a4a';g.fillRect(3,3,10,10);g.fillStyle='#8a8a8a';g.fillRect(4,4,8,8);g.fillStyle='#6a6a6a';g.fillRect(5,7,6,2);g.fillRect(7,5,2,6);}};
+tile('cracked_bricks',(g,r)=>sbr(g,r,'crack'));tile('mossy_bricks',(g,r)=>sbr(g,r,'moss'));tile('chiseled_bricks',(g,r)=>sbr(g,r,'chis'));
+tile('birch_planks',(g,r)=>planksP(g,r,'#d6c488','#8e7c48'));tile('spruce_planks',(g,r)=>planksP(g,r,'#7a5a34','#432e18'));
+for(const [n,base,dk] of [['birch','#d6c488','#8e7c48'],['spruce','#7a5a34','#432e18']]){
+  tile('door_'+n,(g,r)=>{planksP(g,r,base,dk);g.fillStyle=dk;g.fillRect(0,0,16,1);g.fillRect(0,0,1,16);g.fillRect(15,0,1,16);g.clearRect(4,3,3,4);g.clearRect(9,3,3,4);g.fillStyle='#c8c8c8';g.fillRect(12,8,2,2);});
+  tile('door_'+n+'_open',(g,r)=>{g.clearRect(0,0,16,16);g.fillStyle=dk;g.fillRect(0,0,2,16);g.fillRect(14,0,2,16);});}
+defB('SMOOTH_STONE',{n:'平滑石頭',h:1.5,tool:'pick',tier:1});defB('CRACKED_BRICKS',{n:'裂石磚',h:1.5,tool:'pick',tier:1});defB('MOSSY_BRICKS',{n:'青苔石磚',h:1.5,tool:'pick',tier:1});defB('CHISELED_BRICKS',{n:'雕刻石磚',h:1.5,tool:'pick',tier:1});
+defB('COBBLE_WALL',{n:'鵝卵石牆',tex:tx3('cobble'),h:2,tool:'pick',tier:1,shape:'fence',snd:'stone'});defB('STONEB_WALL',{n:'石磚牆',tex:tx3('stone_bricks'),h:2,tool:'pick',tier:1,shape:'fence',snd:'stone'});
+for(const [k,n] of [['GRANITE','花崗岩'],['DIORITE','閃長岩'],['ANDESITE','安山岩']]){defB('SLAB_P_'+k,{n:'拋光'+n+'半磚',tex:tx3('p_'+k.toLowerCase()),h:2,tool:'pick',tier:1,half:0.5});defB('STAIRS_P_'+k,{n:'拋光'+n+'樓梯',tex:tx3('p_'+k.toLowerCase()),h:2,tool:'pick',tier:1,shape:'stairs',snd:'stone'});}
+for(const [k,n,tn] of [['BIRCH','白樺','birch'],['SPRUCE','雲杉','spruce']]){
+  defB(k+'_PLANKS',{n:n+'木板',h:2,tool:'axe',fuel:15,snd:'wood'});
+  defB('SLAB_'+k,{n:n+'木半磚',tex:tx3(tn+'_planks'),h:2,tool:'axe',half:0.5,fuel:8,snd:'wood'});
+  defB('STAIRS_'+k,{n:n+'木樓梯',tex:tx3(tn+'_planks'),h:2,tool:'axe',shape:'stairs',fuel:12,snd:'wood'});
+  defB('FENCE_'+k,{n:n+'木柵欄',tex:tx3(tn+'_planks'),h:2,tool:'axe',shape:'fence',fuel:15,snd:'wood'});
+  defB('DOOR_'+k,{n:n+'木門',tex:tx3('door_'+tn),h:3,tool:'axe',cut:true,door:true,rs:'door',snd:'wood'});
+  defB('DOOR_'+k+'_OPEN',{n:n+'木門',solid:false,tex:tx3('door_'+tn+'_open'),h:3,tool:'axe',cut:true,door:true,rs:'door',snd:'wood',isOpen:true,drop:'DOOR_'+k});
+  BL[B['DOOR_'+k]].cid=B['DOOR_'+k];BL[B['DOOR_'+k]].oid=B['DOOR_'+k+'_OPEN'];BL[B['DOOR_'+k+'_OPEN']].cid=B['DOOR_'+k];BL[B['DOOR_'+k+'_OPEN']].oid=B['DOOR_'+k+'_OPEN'];}
+BL[B.DOOR].cid=B.DOOR;BL[B.DOOR].oid=B.DOOR_OPEN;BL[B.DOOR_OPEN].cid=B.DOOR;BL[B.DOOR_OPEN].oid=B.DOOR_OPEN;BL[B.DOOR_OPEN].isOpen=true;
 // ---- 物品 ----
-const IT={};const ITL={};let NID=256;
+const IT={};const ITL={};const ITEM0=1024;let NID=ITEM0;
 function defI(key,o){const id=NID++;o.key=key;o.id=id;o.item=true;o.stack=o.stack||64;IT[key]=id;ITL[id]=o;return id;}
 defI('I_STICK',{n:'木棍',ic:T.i_stick,fuel:5});defI('I_COAL',{n:'煤炭',ic:T.i_coal,fuel:80});defI('I_CHARCOAL',{n:'木炭',ic:T.i_charcoal,fuel:80});
 icon('i_buddy',(g,r)=>{g.fillStyle='#3d4ac8';g.fillRect(4,1,8,5);g.fillStyle='#f0c8a0';g.fillRect(5,3,6,3);g.fillStyle='#111';g.fillRect(6,4,1,1);g.fillRect(9,4,1,1);g.fillStyle='#8a0020';g.fillRect(4,6,8,1);g.fillStyle='#e82028';g.fillRect(4,7,8,8);g.fillStyle='#2a3070';g.fillRect(5,13,2,2);g.fillRect(9,13,2,2);});
@@ -903,7 +926,7 @@ defI('A_PIS',{n:'手槍子彈',ic:T.a_pis,stack:64});defI('A_RIF',{n:'步槍子�
 defI('W_BAYO',{n:'刺刀',ic:T.w_bayo,stack:1,tool:{type:'sword',tier:2,sp:1.5,dmg:7,dur:400}});
 defI('T_GREN',{n:'手榴彈',ic:T.t_gren,stack:16,thr:'gren'});defI('T_SMOKE',{n:'煙霧彈',ic:T.t_smoke,stack:16,thr:'smoke'});defI('T_FLASH',{n:'閃光彈',ic:T.t_flash,stack:16,thr:'flash'});
 defI('I_JEEP',{n:'吉普車',ic:T.v_jeep,stack:1,vehicle:'jeep'});defI('I_TANK',{n:'坦克',ic:T.v_tank,stack:1,vehicle:'tank'});defI('I_HELI',{n:'防彈直升機',ic:T.v_heli,stack:1,vehicle:'heli'});defI('I_PLANE',{n:'戰鬥機',ic:T.v_plane,stack:1,vehicle:'plane'});
-const isItem=id=>id>=256;
+const isItem=id=>id>=ITEM0;
 const DEF=id=>isItem(id)?ITL[id]:BL[id];
 const nameOf=id=>{const d=DEF(id);return d?d.n:'？';};
 const iconOf=id=>isItem(id)?ITL[id].ic:(BL[id].tex[1]);
@@ -958,7 +981,7 @@ function islandH(x,z){const gx=Math.floor(x/ISC),gz=Math.floor(z/ISC);let best=1
   return Math.round(Math.max(SEA-24+(fbm(x/40,z/40)-0.5)*6,SEA-1-best*0.9));}
 const BIOME_ZH={island:'小島',sky:'天空島',ocean:'海洋',mountain:'山地',snowpeak:'雪峰',snowy:'雪原',desert:'沙漠',forest:'森林',birch:'白樺森林',plains:'平原',nether:'地獄'};
 function biomeAt(x,z){if(W.dim==='nether') return 'nether';const [t,m,c,mt]=climate(x,z);return biomeOf(t,m,c,mt);}
-function genOver(cx,cz){const data=new Uint8Array(16*16*H);const X0=cx*16,Z0=cz*16;const hs=new Int16Array(256),bs=[];
+function genOver(cx,cz){const data=new Uint16Array(16*16*H);const X0=cx*16,Z0=cz*16;const hs=new Int16Array(256),bs=[];
   for(let lz=0;lz<16;lz++)for(let lx=0;lx<16;lx++){const x=X0+lx,z=Z0+lz;const h=heightOf(x,z);const [t,m,c,mt]=climate(x,z);const bi=biomeOf(t,m,c,mt);hs[lz*16+lx]=h;bs.push(bi);
     const beach=h>=SEA-1&&h<=SEA+1&&c<0.42;const stoneTop=bi==='mountain'&&h>SEA+22&&h2(x*3,z*7)<0.6;
     for(let y=0;y<h;y++){let id;
@@ -997,7 +1020,7 @@ function genOver(cx,cz){const data=new Uint8Array(16*16*H);const X0=cx*16,Z0=cz*
     for(let y=hgt-2;y<=hgt+1;y++){const rr=y>=hgt?1:2;for(let a=-rr;a<=rr;a++)for(let b=-rr;b<=rr;b++){if(Math.abs(a)===rr&&Math.abs(b)===rr&&(y>=hgt||h2(tx+a,tz+b+y)<0.5)) continue;if(a===0&&b===0&&y<hgt) continue;put(tx+a,h+y,tz+b,lv,true);}}}
   genDungeon(data,cx,cz,hs);if(W.island) genWreck(data,cx,cz,hs);else genVillages(data,cx,cz);
   return data;}
-function genNether(cx,cz){const data=new Uint8Array(16*16*H);const X0=cx*16,Z0=cz*16;
+function genNether(cx,cz){const data=new Uint16Array(16*16*H);const X0=cx*16,Z0=cz*16;
   for(let lz=0;lz<16;lz++)for(let lx=0;lx<16;lx++){const x=X0+lx,z=Z0+lz;
     for(let y=0;y<H;y++){let id;if(y===0||y===H-1||(y<3||y>H-4)&&h3(x,y,z)<0.5) id=B.BEDROCK;
       else{const n=vn3(x/26,y/16,z/26)*0.7+vn3(x/9,y/9,z/9)*0.3;const mid=Math.abs(y-46)/46;const solid=n+mid*0.55>0.62;
@@ -1312,7 +1335,7 @@ function genWreck(data,cx,cz,hs){if(h2(cx*13+5,cz*7+11)>0.05) return;let mx=0;fo
   for(let a=0;a<L;a++)for(let b=0;b<4;b++){const side=b===0||b===3;const lx=ox+a,lz=oz+b;if(lz>15) continue;data[IDX(lx,y0,lz)]=B.PLANKS;if(side||a===0||a===L-1){data[IDX(lx,y0+1,lz)]=h2(cx+a,cz+b)<0.7?B.PLANKS:B.WATER;if(h2(cx*2+a,cz+b)<0.4) data[IDX(lx,y0+2,lz)]=B.OAK_LOG;}}
   for(let y=1;y<6;y++) data[IDX(ox+4,y0+y,oz+1)]=B.OAK_LOG;data[IDX(ox+2,y0+1,oz+1)]=B.CHEST;if(h2(cx,cz+3)<0.5) data[IDX(ox+6,y0+1,oz+2)]=B.CHEST;}
 // ---- 天空島維度 ----
-function genSky(cx,cz){const data=new Uint8Array(16*16*H);const X0=cx*16,Z0=cz*16;
+function genSky(cx,cz){const data=new Uint16Array(16*16*H);const X0=cx*16,Z0=cz*16;
   for(let lz=0;lz<16;lz++)for(let lx=0;lx<16;lx++){const x=X0+lx,z=Z0+lz;let above=0;
     for(let y=H-6;y>=12;y--){const fall=Math.abs(y-56)/34;const d=vn3(x/44,y/22,z/44)*0.68+vn3(x/14+50,y/9,z/14)*0.32-fall*0.55;let id=0;
       if(d>0.5){id=above===0?B.SKY_GRASS:above<3?B.SKY_DIRT:(h3(x,y,z)<0.012&&above>3?B.SKY_ORE:B.SKY_STONE);above++;}
@@ -1494,7 +1517,7 @@ function breakBlock(h){const id=h.id;const b=BL[id];const s=held();
 function fallCheck(x,y,z){let id=getB(x,y,z);let n=0;while(id&&BL[id].fall&&!BL[getB(x,y-1,z)].solid&&n++<40){let yy=y;while(yy>0&&!BL[getB(x,yy-1,z)].solid&&!BL[getB(x,yy-1,z)].liquid||yy>0&&BL[getB(x,yy-1,z)].liquid&&yy>1&&getB(x,yy-1,z)===B.WATER) yy--;if(yy===y) break;setB(x,y,z,0);setB(x,yy,z,id);y++;id=getB(x,y,z);}}
 function useTool(s,amt){if(!s||W.mode==='creative') return;const d=DEF(s.id);if(!d.tool&&!d.armor) return;const unb=s.ench&&s.ench.unb;if(unb&&Math.random()<unb/(unb+1)) return;s.d=(s.d||0)+(amt||1);
   if(s.d>=durOf(d)){const i=P.inv.indexOf(s);if(i>=0) P.inv[i]=null;else{const j=P.armor.indexOf(s);if(j>=0) P.armor[j]=null;}playSnd('break');toast(`${d.n} 壞掉了`);}if(typeof renderHotbar==='function') renderHotbar();}
-function pickBlock(){if(W.mode!=='creative'||!AIM.id) return;let id=AIM.id;if(id===B.FURNACE_ON) id=B.FURNACE;if(id===B.LAMP_ON) id=B.LAMP;if(id===B.WIRE_ON||id===B.WIRE) id=IT.I_REDSTONE;if(id===B.LEVER_ON) id=B.LEVER;if(id===B.DOOR_OPEN) id=B.DOOR;
+function pickBlock(){if(W.mode!=='creative'||!AIM.id) return;let id=AIM.id;if(id===B.FURNACE_ON) id=B.FURNACE;if(id===B.LAMP_ON) id=B.LAMP;if(id===B.WIRE_ON||id===B.WIRE) id=IT.I_REDSTONE;if(id===B.LEVER_ON) id=B.LEVER;if(BL[id].isOpen) id=BL[id].cid;
   const ex=P.inv.findIndex((s,i)=>i<9&&s&&s.id===id);if(ex>=0){selectSlot(ex);return;}P.inv[P.sel]={id,n:1};renderHotbar();}
 // ---- 受傷與死亡 ----
 function armorPts(){return P.armor.reduce((a,s)=>a+(s?DEF(s.id).armor.def:0),0);}
@@ -1535,7 +1558,7 @@ const RECIPES=[];const SMELT={};
 function rs(rows,key,out,n,mod){RECIPES.push({rows,key,out,n:n||1,mod});}
 function rl(list,out,n){RECIPES.push({shapeless:list,out,n:n||1});}
 function initRecipes(){const PL=B.PLANKS,ST=IT.I_STICK;
-  for(const l of [B.OAK_LOG,B.BIRCH_LOG,B.SPRUCE_LOG]) rl([l],PL,4);
+  rl([B.OAK_LOG],PL,4);rl([B.BIRCH_LOG],B.BIRCH_PLANKS,4);rl([B.SPRUCE_LOG],B.SPRUCE_PLANKS,4);
   rs(['P','P'],{P:PL},ST,4);rs(['PP','PP'],{P:PL},B.TABLE);rs(['CCC','C C','CCC'],{C:B.COBBLE},B.FURNACE);rs(['PPP','P P','PPP'],{P:PL},B.CHEST);
   rs(['C','S'],{C:IT.I_COAL,S:ST},B.TORCH,4);rs(['C','S'],{C:IT.I_CHARCOAL,S:ST},B.TORCH,4);
   const mats=[PL,B.COBBLE,IT.I_IRON,IT.I_GOLD,IT.I_DIAMOND];
@@ -1566,11 +1589,12 @@ function smelt(a,b,xp){SMELT[a]={out:b,xp:xp||0.1};}
 function initSmelt(){smelt(B.IRON_ORE,IT.I_IRON,0.7);smelt(B.GOLD_ORE,IT.I_GOLD,1);smelt(B.SAND,B.GLASS);smelt(B.COBBLE,B.STONE);for(const l of [B.OAK_LOG,B.BIRCH_LOG,B.SPRUCE_LOG]) smelt(l,IT.I_CHARCOAL,0.15);
   smelt(IT.I_BEEF,IT.I_STEAK,0.35);smelt(IT.I_CHICKEN,IT.I_CCHICKEN,0.35);smelt(IT.I_PORK,IT.I_CPORK,0.35);smelt(IT.I_MUTTON,IT.I_CMUTTON,0.35);smelt(B.CACTUS,B.WOOL_GREEN,1);smelt(B.NETHERRACK,B.NETHER_BRICKS,0.1);smelt(IT.I_POTATO,IT.I_BPOTATO,0.35);smelt(IT.I_COD,IT.I_CCOD,0.35);smelt(IT.I_SALMON,IT.I_CSALMON,0.35);smelt(B.SAND,B.GLASS);smelt(B.CLAY,B.TERRA_WHITE,0.35);smelt(B.STONE,B.STONE_BRICKS,0.1);smelt(B.QUARTZ_ORE,IT.I_QUARTZ,0.2);smelt(B.EMERALD_ORE,IT.I_EMERALD,1);smelt(B.DIAMOND_ORE,IT.I_DIAMOND,1);}
 initRecipes();initSmelt();
-function matchRecipe(grid,w){const cells=[];for(let i=0;i<grid.length;i++) if(grid[i]) cells.push(i);if(!cells.length) return null;
-  const xs=cells.map(i=>i%w),ys=cells.map(i=>Math.floor(i/w));const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);const ids=cells.map(i=>grid[i].id).sort((a,b)=>a-b);
+function matchRecipe(grid,w){return matchRecipe0(grid,w,false)||matchRecipe0(grid,w,true);}
+function matchRecipe0(grid,w,canon){const cn=canon?(i=>i===B.BIRCH_PLANKS||i===B.SPRUCE_PLANKS?B.PLANKS:i):(i=>i);const cells=[];for(let i=0;i<grid.length;i++) if(grid[i]) cells.push(i);if(!cells.length) return null;
+  const xs=cells.map(i=>i%w),ys=cells.map(i=>Math.floor(i/w));const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);const ids=cells.map(i=>cn(grid[i].id)).sort((a,b)=>a-b);
   for(const r of RECIPES){if(r.mod&&!modOn(r.mod)) continue;if(r.shapeless){if(r.shapeless.length===ids.length&&r.shapeless.slice().sort((a,b)=>a-b).every((v,i)=>v===ids[i])) return r;continue;}
     const rh=r.rows.length,rw=Math.max(...r.rows.map(s=>s.length));if(rh!==y1-y0+1||rw!==x1-x0+1) continue;
-    for(const mir of [false,true]){let ok=true;for(let y=0;y<rh&&ok;y++)for(let x=0;x<rw&&ok;x++){const ch=(r.rows[y][mir?rw-1-x:x]||' ');const want=ch===' '?0:r.key[ch];const s=grid[(y0+y)*w+x0+x];if((s?s.id:0)!==want) ok=false;}if(ok) return r;}}
+    for(const mir of [false,true]){let ok=true;for(let y=0;y<rh&&ok;y++)for(let x=0;x<rw&&ok;x++){const ch=(r.rows[y][mir?rw-1-x:x]||' ');const want=ch===' '?0:r.key[ch];const s=grid[(y0+y)*w+x0+x];if((s?cn(s.id):0)!==want) ok=false;}if(ok) return r;}}
   return null;}
 // ---- 物品欄操作 ----
 function addItem(id,n,extra){if(typeof advItem==='function') advItem(id);const inv=P.inv;const ms=maxStack(id);if(ms>1&&!(extra&&extra.ench)) for(let i=0;i<36&&n>0;i++){const s=inv[i];if(s&&s.id===id&&!s.ench&&s.n<ms){const k=Math.min(n,ms-s.n);s.n+=k;n-=k;}}
@@ -1624,7 +1648,7 @@ function craftTake(shift){const w=UI.kind==='table'?3:2;let r=matchRecipe(UI.cg,
   playSnd('click');}
 function craftHTML(w){const r=matchRecipe(UI.cg,w);return `<div class="mc-craft"><div class="mc-grid g${w}">${UI.cg.map((s,k)=>slotHTML(s,'cg',k)).join('')}</div><span class="mc-arrow"></span>${slotHTML(r?{id:r.out,n:r.n}:null,'co',0,'out')}</div>`;}
 function invGrid(){return `<div class="mc-invcol"><div class="mc-lab">物品欄</div><div class="mc-grid g9">${P.inv.slice(9).map((s,k)=>slotHTML(s,'inv',k+9)).join('')}</div><div class="mc-grid g9 hot">${P.inv.slice(0,9).map((s,k)=>slotHTML(s,'inv',k)).join('')}</div></div>`;}
-const CTABS=[['方塊',()=>BL.filter(b=>b.id&&!['WATER','LAVA','PORTAL','FURNACE_ON','LEVER_ON','WIRE','WIRE_ON','LAMP_ON','DOOR_OPEN','BEDROCK','FARMLAND','PISTON_HEAD','SKY_PORTAL','BED_FOOT'].includes(b.key)&&!/^(WHEAT|CARROT|POTATO|BEET|WATER_F|LAVA_F|FC_|FARMLAND_WET)/.test(b.key)).map(b=>b.id)],
+const CTABS=[['方塊',()=>BL.filter(b=>b.id&&!['WATER','LAVA','PORTAL','FURNACE_ON','LEVER_ON','WIRE','WIRE_ON','LAMP_ON','DOOR_OPEN','DOOR_BIRCH_OPEN','DOOR_SPRUCE_OPEN','BEDROCK','FARMLAND','PISTON_HEAD','SKY_PORTAL','BED_FOOT'].includes(b.key)&&!/^(WHEAT|CARROT|POTATO|BEET|WATER_F|LAVA_F|FC_|FARMLAND_WET)/.test(b.key)).map(b=>b.id)],
   ['工具戰鬥',()=>Object.keys(IT).filter(k=>/^(T_|A_)/.test(k)||['I_BOW','I_ARROW','I_FLINTSTEEL','I_SHEARS','I_BUCKET','I_WBUCKET','I_LBUCKET'].includes(k)).map(k=>IT[k])],
   ['材料食物',()=>Object.keys(IT).filter(k=>!/^(T_|A_)/.test(k)&&!['I_BOW','I_ARROW','I_FLINTSTEEL','I_SHEARS','I_BUCKET','I_WBUCKET','I_LBUCKET'].includes(k)).map(k=>IT[k])]];
 function recipeBook(w){const seen=new Set(),list=[];for(const r of RECIPES){if(r.mod&&!modOn(r.mod)) continue;if(seen.has(r.out)) continue;if(!r.shapeless&&(r.rows.length>w||Math.max(...r.rows.map(x=>x.length))>w)) continue;if(r.shapeless&&r.shapeless.length>w*w) continue;seen.add(r.out);list.push(r);}
@@ -1743,7 +1767,7 @@ function matTile(t){if(TILE_MAT[t]) return TILE_MAT[t];const tx=new THREE.Canvas
 // 物品 3D 模型（方塊是立方體，物品是有厚度的貼圖）
 const ITEM_GEO={};
 function itemMesh(id,size){size=size||0.25;const g=new THREE.Group();
-  if(!isItem(id)&&!BL[id].cross&&!BL[id].flat&&id!==B.DOOR){const b=BL[id];const ms=[matTile(b.tex[1]),matTile(b.tex[1]),matTile(b.tex[0]),matTile(b.tex[2]),matTile(b.tex[1]),matTile(b.tex[1])];
+  if(!isItem(id)&&!BL[id].cross&&!BL[id].flat&&!BL[id].door){const b=BL[id];const ms=[matTile(b.tex[1]),matTile(b.tex[1]),matTile(b.tex[0]),matTile(b.tex[2]),matTile(b.tex[1]),matTile(b.tex[1])];
     const m=new THREE.Mesh(new THREE.BoxGeometry(size,size*(b.half||1),size),ms);m.position.y=-size*(1-(b.half||1))/2;g.add(m);}
   else{const t=iconOf(id);const key=t;let geo=ITEM_GEO[key];if(!geo){geo=extrudeTile(t);ITEM_GEO[key]=geo;}const m=new THREE.Mesh(geo,matTile(t));m.scale.setScalar(size*1.6);g.add(m);}
   return g;}
@@ -2134,7 +2158,7 @@ function useItem(){if(P.dead||uiOpen) return;if(typeof vehUse==='function'&&vehU
   if((id===B.WIRE||id===B.PLATE||id===B.TORCH||id===B.RTORCH||id===B.LEVER||id===B.BUTTON)&&!BL[below].solid&&id!==B.TORCH) return;
   if((BL[id].cross&&[B.SAPLING,B.FLOWER_R,B.FLOWER_Y,B.TALLGRASS,B.DEADBUSH].includes(id))&&![B.GRASS,B.DIRT,B.FARMLAND,B.SNOW_GRASS].includes(below)) return;
   if(id===B.SUGARCANE&&![B.GRASS,B.DIRT,B.SAND,B.SUGARCANE].includes(below)) return;if(id===B.CACTUS&&![B.SAND,B.CACTUS].includes(below)) return;
-  if(id===B.DOOR){if(getB(px,py+1,pz)) return;setB(px,py+1,pz,B.DOOR);}
+  if(BL[id].door&&!BL[id].isOpen){if(getB(px,py+1,pz)) return;setB(px,py+1,pz,id);}
   if(id===B.BED){const v=lookDir();const dx=Math.abs(v.x)>Math.abs(v.z)?Math.sign(v.x):0,dz=dx?0:Math.sign(v.z)||1;const hx=px+dx,hz=pz+dz;const hb=getB(hx,py,hz);
     if((hb&&!BL[hb].replace&&BL[hb].solid!==false)||hb===B.BED||hb===B.BED_FOOT||!BL[getB(hx,py-1,hz)].solid||Math.floor(P.x)===hx&&Math.floor(P.z)===hz){toast('床要兩格空間：前面那一格要是空的');return;}
     setB(px,py,pz,B.BED_FOOT);setB(hx,py,hz,B.BED);consumeHeld(1);playSnd('wood',0.8);return;}
@@ -2457,14 +2481,14 @@ function rsUpdate(){if(!RS.dirty.length) return;const set=RS.set[W.dim];const pt
     else if(id===B.LAMP||id===B.LAMP_ON){const want=powered(x,y,z)?B.LAMP_ON:B.LAMP;if(want!==id) setB(x,y,z,want,{local:true});}
     else if(id===B.TNT){if(powered(x,y,z)&&isHost()){RS.busy=false;igniteTNT(x,y,z);RS.busy=true;}}
     else if(id===B.PISTON||id===B.STICKY_PISTON){pistonUpdate(x,y,z,id,powered(x,y,z));}
-    else if(id===B.DOOR||id===B.DOOR_OPEN){const below=getB(x,y-1,z);if(BL[below].door) continue;const p=powered(x,y,z)||powered(x,y+1,z);const st=RS.doorPow||(RS.doorPow=new Map());const was=st.get(W.dim+k);if(was===undefined){st.set(W.dim+k,p);continue;}if(was===p) continue;st.set(W.dim+k,p);
-      const want=p?B.DOOR_OPEN:B.DOOR;if(want!==id){setB(x,y,z,want,{local:true});if(BL[getB(x,y+1,z)].door) setB(x,y+1,z,want,{local:true});playSnd('door',0.6);}}}
+    else if(BL[id].door){const below=getB(x,y-1,z);if(BL[below].door) continue;const p=powered(x,y,z)||powered(x,y+1,z);const st=RS.doorPow||(RS.doorPow=new Map());const was=st.get(W.dim+k);if(was===undefined){st.set(W.dim+k,p);continue;}if(was===p) continue;st.set(W.dim+k,p);
+      const want=p?BL[id].oid:BL[id].cid;if(want!==id){setB(x,y,z,want,{local:true});if(BL[getB(x,y+1,z)].door) setB(x,y+1,z,want,{local:true});playSnd('door',0.6);}}}
   RS.busy=false;}
 function rsPowered(x,y,z){RS.dirty.push([x,y,z]);return false;}
 function rsUse(x,y,z,id){
   if(id===B.LEVER||id===B.LEVER_ON){setB(x,y,z,id===B.LEVER?B.LEVER_ON:B.LEVER);playSnd('lever');return true;}
   if(id===B.BUTTON){pressButton(x,y,z);if(typeof NET!=='undefined'&&NET.on) NET.bcast({t:'btn',x,y,z,dim:W.dim});return true;}
-  if(id===B.DOOR||id===B.DOOR_OPEN){const want=id===B.DOOR?B.DOOR_OPEN:B.DOOR;let by=y;if(BL[getB(x,y-1,z)].door) by=y-1;setB(x,by,z,want);if(BL[getB(x,by+1,z)].door) setB(x,by+1,z,want);playSnd('door');return true;}
+  if(BL[id].door){const want=BL[id].isOpen?BL[id].cid:BL[id].oid;let by=y;if(BL[getB(x,y-1,z)].door) by=y-1;setB(x,by,z,want);if(BL[getB(x,by+1,z)].door) setB(x,by+1,z,want);playSnd('door');return true;}
   return false;}
 function pressButton(x,y,z){RS.pulse.set(pk(x,y,z),1.0);playSnd('lever');rsDirty(x,y,z);}
 function rsTick(dt){for(const [k,t] of RS.pulse){const n=t-dt;if(n<=0){RS.pulse.delete(k);const [x,y,z]=upk(k);rsDirty(x,y,z);}else RS.pulse.set(k,n);}
@@ -2567,7 +2591,7 @@ function liquidTick(dt){if(typeof isHost==='function'&&!isHost()) {LIQ.q.clear()
 
 // ================= 多人連線（房間代碼）=================
 const DIMS=['over','nether','sky'];
-const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611281700'};
+const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611281800'};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
 function peerOpts(){const o={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
@@ -2725,15 +2749,15 @@ function saveWorld(quiet){if(!W.id||(NET.on&&!NET.host)) return;try{const s=JSON
   catch(e){toast('⚠ 儲存失敗：瀏覽器空間不夠了。可以在世界清單「匯出」備份');}}
 
 // ================= 存檔用名字記錄（不會因為新增物品而錯亂）=================
-function palNow(){const items=[];for(let id=256;id<NID;id++) items.push(ITL[id]?ITL[id].key:'');return {b:BL.map(b=>b.key),i:items};}
-function makeRemap(pal){const bm=pal.b.map(k=>B[k]!==undefined?B[k]:0);const im=pal.i.map(k=>IT[k]!==undefined?IT[k]:null);
-  return {b:id=>id<bm.length?bm[id]:0,i:id=>id>=256?(im[id-256]??null):(id<bm.length?bm[id]:0)};}
+function palNow(){const items=[];for(let id=ITEM0;id<NID;id++) items.push(ITL[id]?ITL[id].key:'');return {b:BL.map(b=>b.key),i:items,o:ITEM0};}
+function makeRemap(pal){const ob=pal.o||256;const bm=pal.b.map(k=>B[k]!==undefined?B[k]:0);const im=pal.i.map(k=>IT[k]!==undefined?IT[k]:null);
+  return {b:id=>id<bm.length?bm[id]:0,i:id=>id>=ob?(im[id-ob]??null):(id<bm.length?bm[id]:0)};}
 function remapStack(s,R){if(!s) return s;const n=R.i(s.id);if(n===null||n===undefined) return null;const o={...s,id:n};if(s.bag) o.bag=s.bag.map(x=>remapStack(x,R));return o;}
 function convertSave(sv,pal){const R=makeRemap(pal);const o=JSON.parse(JSON.stringify(sv));const st=a=>a&&a.map(x=>remapStack(x,R));
   for(const d in o.mods||{}) for(const ck in o.mods[d]) for(const i in o.mods[d][ck]) o.mods[d][ck][i]=R.b(o.mods[d][ck][i]);
   for(const k in o.cont||{}) o.cont[k]=st(o.cont[k]);for(const k in o.furn||{}){const f=o.furn[k];for(const q of ['in','fuel','out']) f[q]=remapStack(f[q],R);}
   const pk=p=>{if(!p) return;p.inv=st(p.inv);p.armor=st(p.armor);};pk(o.player);for(const n in o.pinv||{}) pk(o.pinv[n]);o.pal=palNow();return o;}
-function samePal(a,b){return a.b.length===b.b.length&&a.i.length===b.i.length&&a.b.every((k,i)=>k===b.b[i])&&a.i.every((k,i)=>k===b.i[i]);}
+function samePal(a,b){return (a.o||256)===(b.o||256)&& a.b.length===b.b.length&&a.i.length===b.i.length&&a.b.every((k,i)=>k===b.b[i])&&a.i.every((k,i)=>k===b.i[i]);}
 // 以前版本的編號表（用來修復舊存檔）
 function legacyPals(){const now=palNow();const today=['I_CARROT','I_GCARROT','I_POTATO','I_BPOTATO','I_BEET','I_BEETSEED','I_BEETSOUP','I_BOWL','I_STEW','I_MELON','I_PIE','I_CAKE','I_COOKIE','I_ROD','I_COD','I_CCOD','I_SALMON','I_CSALMON','I_PUFFER','I_COMPASS','I_CLOCK','I_SPYGLASS','I_SNOWBALL'];
   const i2=now.i.filter(k=>!today.includes(k));const i1=i2.filter(k=>k!=='I_BACKPACK'&&k!=='I_BIGPACK');const i0=i1.filter(k=>k!=='I_EMERALD');
@@ -2913,6 +2937,9 @@ let SHOT=false;
 
 // ================= 模組：交通工具（船、礦車）、電梯、漏斗、自動收成機、自動挖礦機 =================
 // ---- 合成 ----
+{const ST2=IT.I_STICK;rs(['XXX','XXX'],{X:B.COBBLE},B.COBBLE_WALL,6);rs(['XXX','XXX'],{X:B.STONE_BRICKS},B.STONEB_WALL,6);rs(['SS'],{S:B.STONE},B.SMOOTH_STONE,2);smelt(B.STONE_BRICKS,B.CRACKED_BRICKS,0.1);rl([B.STONE_BRICKS,B.OAK_LEAVES],B.MOSSY_BRICKS);rs(['S','S'],{S:B.SLAB_STONE},B.CHISELED_BRICKS);
+  for(const k of ['GRANITE','DIORITE','ANDESITE']){rs(['XXX'],{X:B['P_'+k]},B['SLAB_P_'+k],6);rs(['X  ','XX ','XXX'],{X:B['P_'+k]},B['STAIRS_P_'+k],4);}
+  for(const k of ['BIRCH','SPRUCE']){const X=B[k+'_PLANKS'];rs(['XXX'],{X},B['SLAB_'+k],6);rs(['X  ','XX ','XXX'],{X},B['STAIRS_'+k],4);rs(['XSX','XSX'],{X,S:ST2},B['FENCE_'+k],3);rs(['XX','XX','XX'],{X},B['DOOR_'+k],3);}}
 {rs(['CQ','QC'],{C:B.COBBLE,Q:IT.I_QUARTZ},B.DIORITE,2);rl([B.DIORITE,IT.I_QUARTZ],B.GRANITE);rl([B.DIORITE,B.COBBLE],B.ANDESITE,2);for(const k of ['GRANITE','DIORITE','ANDESITE']){rs(['XX','XX'],{X:B[k]},B['P_'+k],4);rs(['XXX'],{X:B[k]},B['SLAB_'+k],6);rs(['X  ','XX ','XXX'],{X:B[k]},B['STAIRS_'+k],4);}}
 {const PL=B.PLANKS,ST=IT.I_STICK,IR=IT.I_IRON;
   rs(['P P','PPP'],{P:PL},IT.I_BOAT);rs(['I I','III'],{I:IR},IT.I_MINECART);rs(['I I','ISI','I I'],{I:IR,S:ST},B.RAIL,16);rs(['G G','GSG','GRG'],{G:IT.I_GOLD,S:ST,R:IT.I_REDSTONE},B.GRAIL,6);
@@ -3807,7 +3834,7 @@ function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Mat
   return true;}
 
 // ================= 自動偵測並修復 BUG =================
-const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611281700'};
+const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611281800'};
 function diagLog(msg){try{DIAG.log.push({t:new Date().toISOString().slice(0,19),v:DIAG.ver,m:String(msg).slice(0,200)});if(DIAG.log.length>40) DIAG.log.shift();localStorage.setItem('mmvox_buglog',JSON.stringify(DIAG.log));}catch(e){}}
 function diagFree(x,y,z){return !collides(x,y,z);}
 function selfCheck(manual){const fixed=[];if(!running) return fixed;
