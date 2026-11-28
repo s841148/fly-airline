@@ -851,6 +851,10 @@ for(const [k,n,tn] of [['BIRCH','白樺','birch'],['SPRUCE','雲杉','spruce']])
   defB('DOOR_'+k+'_OPEN',{n:n+'木門',solid:false,tex:tx3('door_'+tn+'_open'),h:3,tool:'axe',cut:true,door:true,rs:'door',snd:'wood',isOpen:true,drop:'DOOR_'+k});
   BL[B['DOOR_'+k]].cid=B['DOOR_'+k];BL[B['DOOR_'+k]].oid=B['DOOR_'+k+'_OPEN'];BL[B['DOOR_'+k+'_OPEN']].cid=B['DOOR_'+k];BL[B['DOOR_'+k+'_OPEN']].oid=B['DOOR_'+k+'_OPEN'];}
 BL[B.DOOR].cid=B.DOOR;BL[B.DOOR].oid=B.DOOR_OPEN;BL[B.DOOR_OPEN].cid=B.DOOR;BL[B.DOOR_OPEN].oid=B.DOOR_OPEN;BL[B.DOOR_OPEN].isOpen=true;
+// ---- 藥水與釀造台 ----
+tile('brew_top',(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++) px(g,x,y,shade('#4a4a52',0.9+r()*0.2));g.fillStyle='#2a2a30';g.fillRect(0,0,16,1);g.fillRect(0,15,16,1);g.fillRect(0,0,1,16);g.fillRect(15,0,1,16);for(const [x,y] of [[3,3],[10,3],[6,9]]){g.fillStyle='#bfe0ea';g.fillRect(x,y,3,3);g.fillStyle='#3a6ac8';g.fillRect(x+1,y+1,1,1);}g.fillStyle='#d8a030';g.fillRect(7,6,2,2);});
+tile('brew_side',(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++) px(g,x,y,shade('#6a6a72',0.88+r()*0.18));g.fillStyle='#2a2a30';g.fillRect(0,0,16,1);g.fillRect(0,15,16,1);g.fillRect(0,0,1,16);g.fillRect(15,0,1,16);g.fillStyle='#d8a030';g.fillRect(7,3,2,10);g.fillStyle='#9a6a18';g.fillRect(8,3,1,10);g.fillStyle='#bfe0ea';g.fillRect(2,9,3,4);g.fillRect(11,9,3,4);});
+defB('BREWING',{n:'釀造台',tex:tx3('brew_top','brew_side','brew_side'),h:2.5,tool:'pick',use:'table',snd:'stone'});
 // ---- 物品 ----
 const IT={};const ITL={};const ITEM0=1024;let NID=ITEM0;
 function defI(key,o){const id=NID++;o.key=key;o.id=id;o.item=true;o.stack=o.stack||64;IT[key]=id;ITL[id]=o;return id;}
@@ -859,6 +863,13 @@ icon('i_buddy',(g,r)=>{g.fillStyle='#3d4ac8';g.fillRect(4,1,8,5);g.fillStyle='#f
 defI('I_BUDDY',{n:'娃況召喚鈴（叫夥伴／右鍵使用）',ic:T.i_buddy,stack:1});defI('I_IRON',{n:'鐵錠',ic:T.i_iron});defI('I_GOLD',{n:'金錠',ic:T.i_gold});defI('I_DIAMOND',{n:'鑽石',ic:T.i_diamond});
 defI('I_REDSTONE',{n:'紅石粉',ic:T.i_redstone,place:'WIRE'});defI('I_LAPIS',{n:'青金石',ic:T.i_lapis});defI('I_QUARTZ',{n:'地獄石英',ic:T.i_quartz});defI('I_GLOWDUST',{n:'螢石粉',ic:T.i_glowdust});
 defI('I_WHEAT',{n:'小麥',ic:T.i_wheat});defI('I_SEEDS',{n:'小麥種子',ic:T.i_seeds,plant:true});
+const BOT_ROWS=['......kkkk......','......gggg......','......gGGg......','.....gGGGGg.....','....gLLLLLLg....','...gLLllLLLLg...','...gLLllLLLLg...','...gLLLLLLLLg...','...gLLLLLLLLg...','...gLLLLLLLLg...','....gLLLLLLg....','.....gggggg.....'];
+const POTS=[['HEAL','治療藥水','#e8365a',null,'I_APPLE'],['SPEED','速度藥水','#8ad0e8','speed','I_SUGAR'],['NIGHT','夜視藥水','#3a3ab8','night','I_GCARROT'],['FIRE','抗火藥水','#ff9a2a','fire','I_GLOWDUST'],['STR','力量藥水','#a83030','str','I_POWDER'],['REGEN','回復藥水','#ff7ab8','regen','I_BEET'],['JUMP','跳躍藥水','#6ae86a','jump','I_FEATHER'],['WATER','水下呼吸藥水','#3a8ae8','water','I_COD']];
+icon('i_bottle',g=>mcPix(g,BOT_ROWS,2,{k:'#8a5a2a',g:'#cfe8f0',G:'#e8f6fa',L:'rgba(220,240,250,0.18)',l:'rgba(255,255,255,0.35)'}));
+icon('i_wbottle',g=>mcPix(g,BOT_ROWS,2,{k:'#8a5a2a',g:'#cfe8f0',G:'#e8f6fa',L:'#3a6ac8',l:'#7aa8f0'}));
+for(const [k,n,c] of POTS) icon('i_pot_'+k.toLowerCase(),g=>mcPix(g,BOT_ROWS,2,{k:'#8a5a2a',g:'#cfe8f0',G:'#e8f6fa',L:c,l:shade(c,1.4)}));
+defI('I_BOTTLE',{n:'玻璃瓶',ic:T.i_bottle});defI('I_WBOTTLE',{n:'水瓶',ic:T.i_wbottle});
+for(const [k,n,c,eff,ing] of POTS) defI('I_POT_'+k,{n,ic:T['i_pot_'+k.toLowerCase()],stack:16,food:0,sat:0,potion:true,bottle:true,hp:k==='HEAL'?10:0,eff:eff?[eff,180]:undefined});
 defI('I_BREAD',{n:'麵包',ic:T.i_bread,food:5,sat:6});defI('I_APPLE',{n:'蘋果',ic:T.i_apple,food:4,sat:2.4});defI('I_GAPPLE',{n:'金蘋果',ic:T.i_gapple,food:4,sat:9.6,heal:8});
 defI('I_BEEF',{n:'生牛肉',ic:T.i_beef,food:3,sat:1.8,cook:'I_STEAK'});defI('I_STEAK',{n:'牛排',ic:T.i_steak,food:8,sat:12.8});
 defI('I_CHICKEN',{n:'生雞肉',ic:T.i_chicken,food:2,sat:1.2,cook:'I_CCHICKEN'});defI('I_CCHICKEN',{n:'烤雞',ic:T.i_cchicken,food:6,sat:7.2});
@@ -1590,9 +1601,10 @@ function initSmelt(){smelt(B.IRON_ORE,IT.I_IRON,0.7);smelt(B.GOLD_ORE,IT.I_GOLD,
   smelt(IT.I_BEEF,IT.I_STEAK,0.35);smelt(IT.I_CHICKEN,IT.I_CCHICKEN,0.35);smelt(IT.I_PORK,IT.I_CPORK,0.35);smelt(IT.I_MUTTON,IT.I_CMUTTON,0.35);smelt(B.CACTUS,B.WOOL_GREEN,1);smelt(B.NETHERRACK,B.NETHER_BRICKS,0.1);smelt(IT.I_POTATO,IT.I_BPOTATO,0.35);smelt(IT.I_COD,IT.I_CCOD,0.35);smelt(IT.I_SALMON,IT.I_CSALMON,0.35);smelt(B.SAND,B.GLASS);smelt(B.CLAY,B.TERRA_WHITE,0.35);smelt(B.STONE,B.STONE_BRICKS,0.1);smelt(B.QUARTZ_ORE,IT.I_QUARTZ,0.2);smelt(B.EMERALD_ORE,IT.I_EMERALD,1);smelt(B.DIAMOND_ORE,IT.I_DIAMOND,1);}
 initRecipes();initSmelt();
 function matchRecipe(grid,w){return matchRecipe0(grid,w,false)||matchRecipe0(grid,w,true);}
+function isBrewKey(k){try{const [d,c]=String(k).split(':');const [x,y,z]=c.split(',').map(Number);return getB(x,y,z,d)===B.BREWING;}catch(e){return false;}}
 function matchRecipe0(grid,w,canon){const cn=canon?(i=>i===B.BIRCH_PLANKS||i===B.SPRUCE_PLANKS?B.PLANKS:i):(i=>i);const cells=[];for(let i=0;i<grid.length;i++) if(grid[i]) cells.push(i);if(!cells.length) return null;
   const xs=cells.map(i=>i%w),ys=cells.map(i=>Math.floor(i/w));const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);const ids=cells.map(i=>cn(grid[i].id)).sort((a,b)=>a-b);
-  for(const r of RECIPES){if(r.mod&&!modOn(r.mod)) continue;if(r.shapeless){if(r.shapeless.length===ids.length&&r.shapeless.slice().sort((a,b)=>a-b).every((v,i)=>v===ids[i])) return r;continue;}
+  for(const r of RECIPES){if(r.mod&&!modOn(r.mod)) continue;if(r.brew&&!(UI.kind==='table'&&isBrewKey(UI.key))) continue;if(r.shapeless){if(r.shapeless.length===ids.length&&r.shapeless.slice().sort((a,b)=>a-b).every((v,i)=>v===ids[i])) return r;continue;}
     const rh=r.rows.length,rw=Math.max(...r.rows.map(s=>s.length));if(rh!==y1-y0+1||rw!==x1-x0+1) continue;
     for(const mir of [false,true]){let ok=true;for(let y=0;y<rh&&ok;y++)for(let x=0;x<rw&&ok;x++){const ch=(r.rows[y][mir?rw-1-x:x]||' ');const want=ch===' '?0:r.key[ch];const s=grid[(y0+y)*w+x0+x];if((s?cn(s.id):0)!==want) ok=false;}if(ok) return r;}}
   return null;}
@@ -1651,7 +1663,7 @@ function invGrid(){return `<div class="mc-invcol"><div class="mc-lab">物品欄<
 const CTABS=[['方塊',()=>BL.filter(b=>b.id&&!['WATER','LAVA','PORTAL','FURNACE_ON','LEVER_ON','WIRE','WIRE_ON','LAMP_ON','DOOR_OPEN','DOOR_BIRCH_OPEN','DOOR_SPRUCE_OPEN','BEDROCK','FARMLAND','PISTON_HEAD','SKY_PORTAL','BED_FOOT'].includes(b.key)&&!/^(WHEAT|CARROT|POTATO|BEET|WATER_F|LAVA_F|FC_|FARMLAND_WET)/.test(b.key)).map(b=>b.id)],
   ['工具戰鬥',()=>Object.keys(IT).filter(k=>/^(T_|A_)/.test(k)||['I_BOW','I_ARROW','I_FLINTSTEEL','I_SHEARS','I_BUCKET','I_WBUCKET','I_LBUCKET'].includes(k)).map(k=>IT[k])],
   ['材料食物',()=>Object.keys(IT).filter(k=>!/^(T_|A_)/.test(k)&&!['I_BOW','I_ARROW','I_FLINTSTEEL','I_SHEARS','I_BUCKET','I_WBUCKET','I_LBUCKET'].includes(k)).map(k=>IT[k])]];
-function recipeBook(w){const seen=new Set(),list=[];for(const r of RECIPES){if(r.mod&&!modOn(r.mod)) continue;if(seen.has(r.out)) continue;if(!r.shapeless&&(r.rows.length>w||Math.max(...r.rows.map(x=>x.length))>w)) continue;if(r.shapeless&&r.shapeless.length>w*w) continue;seen.add(r.out);list.push(r);}
+function recipeBook(w){const seen=new Set(),list=[];for(const r of RECIPES){if(r.mod&&!modOn(r.mod)) continue;if(r.brew&&!(UI.kind==='table'&&isBrewKey(UI.key))) continue;if(seen.has(r.out)) continue;if(!r.shapeless&&(r.rows.length>w||Math.max(...r.rows.map(x=>x.length))>w)) continue;if(r.shapeless&&r.shapeless.length>w*w) continue;seen.add(r.out);list.push(r);}
   const need=r=>{const m={};if(r.shapeless) r.shapeless.forEach(id=>m[id]=(m[id]||0)+1);else r.rows.forEach(row=>[...row].forEach(ch=>{if(ch!==' '){const id=r.key[ch];m[id]=(m[id]||0)+1;}}));return m;};
   const have=r=>Object.entries(need(r)).every(([id,n])=>countItem(+id)>=n);const shown=list.filter(r=>!UI.onlyHave||have(r));
   return `<details class="mc-book" ${UI.bookOpen?'open':''}><summary>📗 合成表（${w===3?'3×3':'2×2'}）</summary><label class="mc-only"><input type="checkbox" data-only ${UI.onlyHave?'checked':''}> 只顯示做得出來的</label><div class="mc-rl">${shown.map(r=>{const m=need(r);return `<button class="mc-rec ${have(r)?'':'no'}" data-rec="${RECIPES.indexOf(r)}">${icHTML(r.out,24)}<span><b>${nameOf(r.out)}${r.n>1?' ×'+r.n:''}</b><small>${Object.entries(m).map(([id,n])=>nameOf(+id)+'×'+n).join('、')}</small></span></button>`;}).join('')}</div></details>`;}
@@ -2135,10 +2147,11 @@ function useItem(){if(P.dead||uiOpen) return;if(typeof vehUse==='function'&&vehU
   if(d.spy){USE.mode='spy';return;}
   if(d.shield){USE.mode='block';return;}
   if(d.throwS){throwSnow(lookDir());consumeHeld(1);return;}
-  if(d.food&&(P.food<20||d.heal||W.mode==='creative')){USE.mode='eat';USE.eat=0;return;}
+  if((d.food||d.potion)&&(P.food<20||d.heal||d.potion||W.mode==='creative')){USE.mode='eat';USE.eat=0;return;}
   if(d.bow){if(W.mode==='creative'||countItem(IT.I_ARROW)>0){USE.mode='bow';USE.bow=0;}return;}
   if(s.id===IT.I_MBUCKET){USE.mode='eat';USE.eat=0;return;}
   if(s.id===IT.I_EGG){const v=lookDir();throwEgg(v);consumeHeld(1);return;}
+  if(s.id===IT.I_BOTTLE){const r=rayCast(eyePos(),lookDir(),5,{liquid:true});if(r&&r.id===B.WATER){playSnd('splash');if(W.mode!=='creative') consumeHeld(1);addItem(IT.I_WBOTTLE,1);return;}}
   if(s.id===IT.I_BUCKET){const r=rayCast(eyePos(),lookDir(),5,{liquid:true});if(r.id===B.WATER||r.id===B.LAVA){setB(r.x,r.y,r.z,0);const full=r.id===B.WATER?IT.I_WBUCKET:IT.I_LBUCKET;playSnd('splash');if(W.mode==='creative') return;if(s.n===1) P.inv[P.sel]={id:full,n:1};else{s.n--;if(addItem(full,1)) spawnDrop(full,1,P.x,P.y+1,P.z);}renderHotbar();}return;}
   if(!h.id) return;
   const tx=h.x+h.nx,ty=h.y+h.ny,tz=h.z+h.nz;
@@ -2229,7 +2242,7 @@ function wakeUp(){P.sleeping=false;$('#sleep').hidden=true;$('#sleep').classList
 // 吃東西、拉弓（按住右鍵）
 function useTick(dt){const s=held();const holding=M.right||TOUCH.use;if(!USE.mode) return;if(!holding||!s){if(USE.mode==='bow'&&s&&DEF(s.id).bow&&USE.bow>0.1) fireBow(s);USE.mode=null;return;}
   if(USE.mode==='eat'){USE.eat+=dt;if(Math.floor(USE.eat*5)!==Math.floor((USE.eat-dt)*5)) playSnd('eat',0.5);
-    if(USE.eat>=1.6){const d=DEF(s.id);if(s.id===IT.I_MBUCKET){P.inv[P.sel]={id:IT.I_BUCKET,n:1};renderHotbar();}else{P.food=Math.min(20,P.food+d.food);P.sat=Math.min(P.food,P.sat+d.sat);if(d.heal){heal(d.heal);P.absorb=4;}
+    if(USE.eat>=1.6){const d=DEF(s.id);if(s.id===IT.I_MBUCKET){P.inv[P.sel]={id:IT.I_BUCKET,n:1};renderHotbar();}else{P.food=Math.min(20,P.food+d.food);P.sat=Math.min(P.food,P.sat+d.sat);if(d.heal){heal(d.heal);P.absorb=4;}if(d.hp) heal(d.hp);if(d.bottle&&W.mode!=='creative') addItem(IT.I_BOTTLE,1);
       if(d.eff) addEff(d.eff[0],d.eff[1]);if(d.sick&&Math.random()<0.8){P.exh+=10;toast(s.id===IT.I_PUFFER?'河豚有毒！肚子好痛…':'腐肉讓你肚子不太舒服…');if(s.id===IT.I_PUFFER){P.poison=6;}}consumeHeld(1);if(d.bowl&&W.mode!=='creative') addItem(IT.I_BOWL,1);}playSnd('burp');USE.mode=null;}}
   if(USE.mode==='bow'){USE.bow=Math.min(1,USE.bow+dt);}
   if(USE.mode==='spy'&&!(s&&DEF(s.id).spy)) USE.mode=null;if(USE.mode==='block'&&!(s&&DEF(s.id).shield)) USE.mode=null;}
@@ -2591,7 +2604,7 @@ function liquidTick(dt){if(typeof isHost==='function'&&!isHost()) {LIQ.q.clear()
 
 // ================= 多人連線（房間代碼）=================
 const DIMS=['over','nether','sky'];
-const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611281800'};
+const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611281900'};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
 function peerOpts(){const o={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
@@ -2937,6 +2950,8 @@ let SHOT=false;
 
 // ================= 模組：交通工具（船、礦車）、電梯、漏斗、自動收成機、自動挖礦機 =================
 // ---- 合成 ----
+{rs(['G G',' G '],{G:B.GLASS},IT.I_BOTTLE,3);rs([' B ','CCC'],{B:IT.I_BONE,C:B.COBBLE},B.BREWING);
+  for(const [k,n,c,eff,ing] of POTS){if(IT[ing]===undefined) continue;RECIPES.push({shapeless:[IT.I_WBOTTLE,IT[ing]],out:IT['I_POT_'+k],n:1,brew:true});RECIPES.push({shapeless:[IT.I_WBOTTLE,IT.I_WBOTTLE,IT.I_WBOTTLE,IT[ing]],out:IT['I_POT_'+k],n:3,brew:true});}}
 {const ST2=IT.I_STICK;rs(['XXX','XXX'],{X:B.COBBLE},B.COBBLE_WALL,6);rs(['XXX','XXX'],{X:B.STONE_BRICKS},B.STONEB_WALL,6);rs(['SS'],{S:B.STONE},B.SMOOTH_STONE,2);smelt(B.STONE_BRICKS,B.CRACKED_BRICKS,0.1);rl([B.STONE_BRICKS,B.OAK_LEAVES],B.MOSSY_BRICKS);rs(['S','S'],{S:B.SLAB_STONE},B.CHISELED_BRICKS);
   for(const k of ['GRANITE','DIORITE','ANDESITE']){rs(['XXX'],{X:B['P_'+k]},B['SLAB_P_'+k],6);rs(['X  ','XX ','XXX'],{X:B['P_'+k]},B['STAIRS_P_'+k],4);}
   for(const k of ['BIRCH','SPRUCE']){const X=B[k+'_PLANKS'];rs(['XXX'],{X},B['SLAB_'+k],6);rs(['X  ','XX ','XXX'],{X},B['STAIRS_'+k],4);rs(['XSX','XSX'],{X,S:ST2},B['FENCE_'+k],3);rs(['XX','XX','XX'],{X},B['DOOR_'+k],3);}}
@@ -3834,7 +3849,7 @@ function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Mat
   return true;}
 
 // ================= 自動偵測並修復 BUG =================
-const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611281800'};
+const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611281900'};
 function diagLog(msg){try{DIAG.log.push({t:new Date().toISOString().slice(0,19),v:DIAG.ver,m:String(msg).slice(0,200)});if(DIAG.log.length>40) DIAG.log.shift();localStorage.setItem('mmvox_buglog',JSON.stringify(DIAG.log));}catch(e){}}
 function diagFree(x,y,z){return !collides(x,y,z);}
 function selfCheck(manual){const fixed=[];if(!running) return fixed;
