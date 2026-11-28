@@ -201,6 +201,7 @@ body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;w
   <button class="tb" id="tBackup" style="left:calc(3vw + 155px);bottom:calc(5vh + 172px);background:rgba(190,40,40,.55)">🆘<small>請求支援</small></button>
   <button class="tb" id="tPunch" style="right:35vw;bottom:44vh">👊<small>揍人</small></button>
   <button class="tb" id="tRadio" style="right:25vw;bottom:26vh">📻<small>電台</small></button>
+  <button class="tb" id="tQuick" style="right:calc(10px + 286px);top:10px;width:46px;height:46px;font-size:18px;position:absolute">🚕</button>
   <button class="tb" id="tPhone" style="right:calc(10px + 236px);top:10px;width:46px;height:46px;font-size:18px;position:absolute">📱<i id="phBadge" class="phbadge" style="display:none">0</i></button>
   <button class="tb" id="tMenu" style="right:calc(10px + 180px);top:66px;width:46px;height:46px;font-size:18px">☰</button>
 </div>
@@ -1218,6 +1219,8 @@ function building(x0, x1, z0, z1, h, style, lot, signs) {
   if (h < 40 && Math.random() < 0.7) addGeo('roof', MAT.roof, boxGeo(2.2, 1.8, 2.2, cx + rand(-w / 4, w / 4), h, cz + rand(-d / 4, d / 4)));
   else if (h >= 40) addGeo('roof', MAT.roof, boxGeo(w * 0.5, 3, d * 0.5, cx, h, cz));
   addCol(x0 - (shopBase ? 0.3 : 0), x1 + (shopBase ? 0.3 : 0), z0 - (shopBase ? 0.3 : 0), z1 + (shopBase ? 0.3 : 0), h, 'bld');
+  // 屋頂廣告看板
+  if (h >= 9 && h < 45 && Math.random() < 0.07) { const sd = lot ? (z1 > lot.z1 - 3 ? 's' : z0 < lot.z0 + 3 ? 'n' : x1 > lot.x1 - 3 ? 'e' : x0 < lot.x0 + 3 ? 'w' : 's') : 's'; roofBillboard(x0, x1, z0, z1, h, sd); }
   // 直式招牌
   if (signs && lot) {
     const sides = [];
@@ -2293,6 +2296,7 @@ addEventListener('keydown', e => {
     case 'Digit4': setWeapon(3); break;
     case 'KeyM': toggleMap(); break;
     case 'KeyP': openPhone(); break;
+    case 'KeyT': quickMenu(); break;
     case 'KeyN': RADIO.cycle(); break;
     case 'KeyB': requestBackup(); break;
     case 'KeyG': warningShot(); break;
@@ -2330,7 +2334,7 @@ function initTouch() {
   tap('tFire', () => { INP.fireHeld = true; fire(); }, () => { INP.fireHeld = false; });
   tap('tAct', doInteract); tap('tCar', toggleVehicle); tap('tShout', shout); tap('tPunch', punch); tap('tSiren', toggleSiren); tap('tRel', reload);
   tap('tWeap', () => { const L = S.unit === 'swat' ? [3, 0, 1, 2] : [0, 1, 2]; setWeapon(L[(L.indexOf(S.weapon) + 1) % L.length]); }); tap('tRun', () => { INP.run = true; }, () => { INP.run = false; });
-  tap('tMap', toggleMap); tap('tPhone', () => openPhone()); tap('tMenu', openPause); tap('tRadio', () => RADIO.cycle()); tap('tBackup', requestBackup); tap('tWarn', warningShot); tap('tAim', () => { INP.aim = !INP.aim; $('tAim').style.background = INP.aim ? 'rgba(255,216,74,.7)' : ''; });
+  tap('tMap', toggleMap); tap('tPhone', () => openPhone()); tap('tQuick', quickMenu); tap('tMenu', openPause); tap('tRadio', () => RADIO.cycle()); tap('tBackup', requestBackup); tap('tWarn', warningShot); tap('tAim', () => { INP.aim = !INP.aim; $('tAim').style.background = INP.aim ? 'rgba(255,216,74,.7)' : ''; });
 }
 
 /* ---------- 第一人稱手與槍 ---------- */
@@ -2490,6 +2494,7 @@ function toggleSiren() {
 function nearestPVeh(r) { let best = null, bd = r; for (const v of PVEHS) { const d = dist(v.x, v.z, P.x, P.z); if (d < bd) { bd = d; best = v; } } return best; }
 function toggleVehicle() {
   if (!GAME.running || MODAL.open || P.anim) return;
+  if (P.mode === 'vehicle' && P.veh.auto) { if (QK.taxi && QK.taxi.state === 'ride') endRide(QK.taxi, true); return; }
   if (P.mode === 'vehicle') {
     const v = P.veh; if (Math.abs(v.speed) > 4) { radio('車速太快，先停車再下車。', 'info'); return; }
     v.speed = 0;
@@ -2501,6 +2506,8 @@ function toggleVehicle() {
     return;
   }
   const v = nearestPVeh(3.6);
+  if (v && v.npcTaxi) { taxiBoard(v); return; }
+  if (v && v.npcRider) { radio('這是外送員的機車。', 'info'); return; }
   if (!v) { const nv = TRAFFIC.find(t => t.state !== 'gone' && !t.cop && dist(t.px, t.pz, P.x, P.z) < 3.8); if (nv) commandeer(nv); return; }
   if (v.wreck) { radio('這台車已經燒毀了。', 'info'); return; }
   if (!canDrive(v)) return;
@@ -2618,6 +2625,7 @@ function updatePlayer(dt) {
 }
 function driveVehicle(dt, lookX, lookY) {
   const v = P.veh, car = v.spec.kind === 'car';
+  if (v.auto) { vehicleCamera(v, dt, lookX, lookY, Math.abs(v.speed), car); return; }
   const dmgK = v.burning != null ? 0.4 : v.hp < 30 ? 0.55 : v.hp < 60 ? 0.85 : 1; const sp = { max: v.spec.max * dmgK, acc: v.spec.acc * dmgK, kind: v.spec.kind };
   let thr = 0, st = 0;
   if (KEYS.KeyW || KEYS.ArrowUp) thr += 1; if (KEYS.KeyS || KEYS.ArrowDown) thr -= 1; if (KEYS.KeyA || KEYS.ArrowLeft) st += 1; if (KEYS.KeyD || KEYS.ArrowRight) st -= 1;
@@ -2665,6 +2673,9 @@ function driveVehicle(dt, lookX, lookY) {
   }
   for (const o of PVEHS) if (o !== v) for (const c of v.circles()) for (const q of o.circles()) { const d = dist(c[0], c[1], q[0], q[1]), r = c[2] + q[2]; if (d < r) { const k = (r - d) / (d || 1); v.x += (c[0] - q[0]) * k; v.z += (c[1] - q[1]) * k; v.speed *= 0.5; } }
   v.sync();
+  vehicleCamera(v, dt, lookX, lookY, sAbs, car);
+}
+function vehicleCamera(v, dt, lookX, lookY, sAbs, car) {
   // 鏡頭
   P.lookYaw = clamp(P.lookYaw - lookX, -2.2, 2.2); P.pitch = clamp(P.pitch - lookY, -0.8, 0.6);
   if (Math.abs(lookX) < 1e-4) { P.lookT += dt; if (P.lookT > 1.5) P.lookYaw *= Math.max(0, 1 - dt * 2.5); } else P.lookT = 0;
@@ -6786,6 +6797,290 @@ function shopInteracts() {
   return out;
 }
 
+/* ================= 廣告看板（搞笑虛構廣告＋遊戲裡的店家） ================= */
+const ADS = [
+  { bg: ['#ffcf4a', '#ff8a3a'], fg: '#4a2a00', em: '🧋', t: '麥麥珍奶', s: '一口珍珠　一口幸福', small: '台中人的下午茶' },
+  { bg: ['#1a2a4a', '#3a5a9a'], fg: '#ffd890', em: '🏙️', t: '七期豪宅 預售中', s: '頭期款只要 999 萬', small: '台中好房仲　看屋專線 0800-777-777' },
+  { bg: ['#ffffff', '#dfe6f0'], fg: '#0b2a5a', em: '⚖️', t: '大墩律師事務所', s: '撞車了嗎？打給我們！', small: '車禍・離婚・欠錢不還　0800-123-456' },
+  { bg: ['#ff4a6a', '#ff9a4a'], fg: '#fff', em: '💪', t: '胖達人健身房', s: '今年夏天　不再胖', small: '首月 $99　24 小時營業' },
+  { bg: ['#2a9a5a', '#7ad07a'], fg: '#fff', em: '📶', t: '麥麥電信', s: '5G 吃到飽 $499', small: '訊號滿格　從台中到台東' },
+  { bg: ['#f8e8b0', '#e8c070'], fg: '#7a3a0a', em: '🍍', t: '鳳梨酥王', s: '台中伴手禮第一名', small: '買十送一　機場也買得到' },
+  { bg: ['#3a2a6a', '#8a6ac8'], fg: '#fff', em: '😴', t: '好眠床墊', s: '睡不好？是床的問題', small: '獨立筒　試躺 100 天' },
+  { bg: ['#101010', '#2050c0'], fg: '#7ae0ff', em: '⚡', t: '麥麥能量飲', s: '熬夜加班的好朋友', small: '一罐抵三杯咖啡（誇張了）' },
+  { bg: ['#0b4fa8', '#2a7ad8'], fg: '#fff', em: '🛒', t: '全聯福利中心', s: '實在真便宜', small: '生鮮・食材・寵物用品　台中 4 家門市' },
+  { bg: ['#111', '#444'], fg: '#ffd84a', em: '🚘', t: '大墩車業', s: '新車・二手車　頭期 0 元', small: '機車汽車　當天交車' },
+  { bg: ['#8a2a1a', '#c0502a'], fg: '#ffe8c0', em: '🍜', t: '麥麥牛肉麵', s: '湯頭熬 12 小時', small: '一中街旁　也可以外送' },
+  { bg: ['#ffffff', '#e8f5ea'], fg: '#127a3a', em: '🏪', t: '麥麥超商 MM MART', s: '24 小時　熱騰騰便當', small: '飯糰買二送一' },
+  { bg: ['#ffffff', '#ffe8e8'], fg: '#c00', em: '🏥', t: '大墩醫院', s: '全身健康檢查 8 折', small: '急診 24 小時' },
+  { bg: ['#0a1a3a', '#1a3a7a'], fg: '#ff6a6a', em: '📈', t: '麥麥證券', s: '手續費 2.8 折', small: '投資一定有風險，請小心評估' },
+  { bg: ['#ffd84a', '#ffb02a'], fg: '#222', em: '🚕', t: '大墩計程車行', s: '招募司機　按趟領錢', small: '手機按 T 也能叫車' },
+  { bg: ['#0b2a5a', '#2a4f9a'], fg: '#fff', em: '👮', t: '台中市政府警察局', s: '警察特考招募中', small: '守護台中，從你開始' },
+  { bg: ['#ff7a9a', '#ffc0d0'], fg: '#fff', em: '🐱', t: '喵星人寵物店', s: '貓砂買一送一', small: '主子開心　你就開心' },
+  { bg: ['#2a2a2a', '#5a5a5a'], fg: '#ff4a4a', em: '🍗', t: '一中街炸雞排', s: '比臉還大！', small: '晚上 5 點開賣' },
+];
+const AD_MATS = [];
+function adMat(i) {
+  if (AD_MATS[i]) return AD_MATS[i];
+  const a = ADS[i];
+  const t = canvasTex(512, 256, g => {
+    const gr = g.createLinearGradient(0, 0, 512, 256); gr.addColorStop(0, a.bg[0]); gr.addColorStop(1, a.bg[1]); g.fillStyle = gr; g.fillRect(0, 0, 512, 256);
+    g.font = '120px ' + FONT; g.textBaseline = 'middle'; g.textAlign = 'center'; g.fillText(a.em, 92, 120);
+    g.fillStyle = a.fg; g.textAlign = 'left'; g.font = 'bold 46px ' + FONT; g.fillText(a.t, 180, 70, 320);
+    g.font = 'bold 36px ' + FONT; g.fillText(a.s, 180, 140, 320);
+    g.globalAlpha = 0.85; g.font = '20px ' + FONT; g.fillText(a.small, 20, 228, 470); g.globalAlpha = 1;
+    g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 10; g.strokeRect(5, 5, 502, 246);
+  });
+  t.anisotropy = 4;
+  return AD_MATS[i] = texMat(t, 0.9);
+}
+const BB = { list: [] };
+function bbFree(x, z, r) { return !BB.list.some(b => dist(b.x, b.z, x, z) < r); }
+// 屋頂看板（building() 呼叫）：side = 看板面向（n/s/e/w）
+function roofBillboard(x0, x1, z0, z1, h, side) {
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2; if (!bbFree(cx, cz, 70)) return;
+  const along = side === 'n' || side === 's'; const L = Math.min(12, (along ? x1 - x0 : z1 - z0) - 2); if (L < 6) return;
+  const H = L / 2, y0 = h + 1.6, i = randi(0, ADS.length - 1);
+  const ex = side === 'e' ? x1 - 1 : side === 'w' ? x0 + 1 : cx, ez = side === 's' ? z1 - 1 : side === 'n' ? z0 + 1 : cz;
+  // 支架
+  for (const o of [-L / 2 + 0.6, L / 2 - 0.6]) { const px = along ? ex + o : ex, pz = along ? ez : ez + o; addGeo('pole', MAT.pole, boxGeo(0.25, 1.7 + H, 0.25, px - (side === 'e' ? 0.6 : side === 'w' ? -0.6 : 0), h, pz - (side === 's' ? 0.6 : side === 'n' ? -0.6 : 0))); }
+  if (along) addGeo('pole', MAT.pole, boxGeo(L, 0.2, 0.3, ex, y0 - 0.25, ez)); else addGeo('pole', MAT.pole, boxGeo(0.3, 0.2, L, ex, y0 - 0.25, ez));
+  const q = side === 's' ? [[ex - L / 2, y0, ez + 0.2], [ex + L / 2, y0, ez + 0.2], [ex + L / 2, y0 + H, ez + 0.2], [ex - L / 2, y0 + H, ez + 0.2]]
+    : side === 'n' ? [[ex + L / 2, y0, ez - 0.2], [ex - L / 2, y0, ez - 0.2], [ex - L / 2, y0 + H, ez - 0.2], [ex + L / 2, y0 + H, ez - 0.2]]
+    : side === 'e' ? [[ex + 0.2, y0, ez + L / 2], [ex + 0.2, y0, ez - L / 2], [ex + 0.2, y0 + H, ez - L / 2], [ex + 0.2, y0 + H, ez + L / 2]]
+    : [[ex - 0.2, y0, ez - L / 2], [ex - 0.2, y0, ez + L / 2], [ex - 0.2, y0 + H, ez + L / 2], [ex - 0.2, y0 + H, ez - L / 2]];
+  addGeo('ad' + i, adMat(i), quadGeo(...q));
+  // 背面
+  const back = q.slice().reverse().map(p => [p[0] - (side === 'e' ? 0.25 : side === 'w' ? -0.25 : 0), p[1], p[2] - (side === 's' ? 0.25 : side === 'n' ? -0.25 : 0)]);
+  addGeo('pole', MAT.pole, quadGeo(...back));
+  BB.list.push({ x: cx, z: cz });
+}
+// 路口大型立柱看板（雙面）
+function buildBillboards() {
+  const cand = BLOCKS.filter(b => ['tower', 'mid', 'old', 'res', 'town'].includes(b.type) && b.cx > -1900 && b.cx < 700 && b.cz > -1200 && b.cz < 900);
+  let n = 0;
+  for (let tries = 0; tries < 400 && n < 34; tries++) {
+    const b = pick(cand), c = randi(0, 3);
+    const x = c % 2 ? b.x1 - 2.2 : b.x0 + 2.2, z = c < 2 ? b.z0 + 2.2 : b.z1 - 2.2;
+    if (!bbFree(x, z, 110)) continue;
+    if (colsNear(x, z, 3).some(q => x > q.x0 - 1.5 && x < q.x1 + 1.5 && z > q.z0 - 1.5 && z < q.z1 + 1.5)) continue;
+    const i = randi(0, ADS.length - 1), H = 12, L = 12, BH = 6;
+    const ang = Math.atan2(c % 2 ? 1 : -1, c < 2 ? -1 : 1); // 斜對路口
+    addGeo('pole', MAT.pole, boxGeo(0.7, H, 0.7, x, 0, z)); addColCirc(x, z, 0.45, H, 'pole');
+    const ux = Math.cos(ang), uz = -Math.sin(ang); // 看板橫向
+    const nx = Math.sin(ang), nz = Math.cos(ang); // 正面方向
+    const P0 = (s, y, o) => [x + ux * s + nx * o, y, z + uz * s + nz * o];
+    addGeo('ad' + i, adMat(i), quadGeo(P0(-L / 2, H, 0.3), P0(L / 2, H, 0.3), P0(L / 2, H + BH, 0.3), P0(-L / 2, H + BH, 0.3)));
+    const j = (i + 1 + randi(0, ADS.length - 2)) % ADS.length;
+    addGeo('ad' + j, adMat(j), quadGeo(P0(L / 2, H, -0.3), P0(-L / 2, H, -0.3), P0(-L / 2, H + BH, -0.3), P0(L / 2, H + BH, -0.3)));
+    const fr = new THREE.BoxGeometry(L + 0.4, BH + 0.4, 0.5); fr.rotateY(ang); fr.translate(x, H + BH / 2, z); addGeo('pole', MAT.pole, fr);
+    BB.list.push({ x, z }); n++;
+  }
+  flushMerges();
+}
+
+/* ================= 快捷選單（T）：叫計程車、叫外送 ================= */
+const QK = { taxi: null, deliv: null };
+// 外送菜單（成品進背包，可以在手機背包吃）
+const DELIV_MENU = [
+  { k: 'dl_beef', n: '🍜 麥麥牛肉麵', p: 160, use: { hp: 50, en: 45 }, from: '麥麥牛肉麵' },
+  { k: 'dl_lu', n: '🍖 古早味滷肉飯', p: 90, use: { hp: 30, en: 38 }, from: '阿財滷肉飯' },
+  { k: 'dl_chicken', n: '🍗 一中街炸雞排', p: 85, use: { hp: 20, en: 30 }, from: '一中街炸雞排' },
+  { k: 'dl_pizza', n: '🍕 起司披薩', p: 299, use: { hp: 45, en: 55 }, from: '大墩披薩屋' },
+  { k: 'dl_milktea', n: '🧋 麥麥珍奶（微糖）', p: 65, use: { hp: 5, en: 20 }, from: '麥麥珍奶' },
+  { k: 'dl_hotpot', n: '🍲 一人小火鍋', p: 220, use: { hp: 55, en: 50 }, from: '鍋煮意' },
+];
+for (const d of DELIV_MENU) { if (!SHOP_BY[d.k]) { const it = { k: d.k, n: d.n, p: 0, cat: '外送', use: d.use, desc: `外送餐點：生命 +${d.use.hp || 0}、體力 +${d.use.en || 0}`, hidden: true }; SHOP.push(it); SHOP_BY[d.k] = it; } }
+
+function quickMenu() {
+  if (!GAME.running || MODAL.open || P.anim) return;
+  if (P.mode === 'vehicle' && P.veh && P.veh.auto) return;
+  const tx = QK.taxi, dv = QK.deliv;
+  MODAL.show(`<h2>📱 快捷選單</h2><p><small>現在 ${fmtTime(S.time)}　現金 ${fmtMoney(S.money)}</small></p>
+    <div class="btns" style="flex-direction:column;align-items:stretch">
+    <button class="btn" id="qkTaxi" ${tx ? 'disabled' : ''}>🚕 叫計程車${tx ? '（' + (tx.state === 'wait' ? '已到你身邊' : '已出發') + '）' : ''}</button>
+    <button class="btn" id="qkFood" ${dv ? 'disabled' : ''}>🛵 叫外送${dv ? '（' + (dv.state === 'cook' ? '店家製作中' : '外送員在路上') + '）' : ''}</button>
+    <button class="btn" id="qkPhone">📱 開手機（P）</button>
+    <button class="btn gray" id="qkX">關閉</button></div>`, []);
+  $('qkTaxi').onclick = () => { MODAL.close(); callTaxi(); };
+  $('qkFood').onclick = () => orderFood();
+  $('qkPhone').onclick = () => { MODAL.close(); openPhone(); };
+  $('qkX').onclick = () => MODAL.close();
+}
+
+/* ---------- 路徑跟隨（NPC 計程車、外送機車用） ---------- */
+function roadSpotAround(x, z, dmin, dmax) {
+  for (let i = 0; i < 40; i++) {
+    const a = rand(0, Math.PI * 2), d = rand(dmin, dmax), tx = x + Math.cos(a) * d, tz = z + Math.sin(a) * d;
+    if (tx < WORLD.x0 + 20 || tx > WORLD.x1 - 20 || tz < WORLD.z0 + 20 || tz > WORLD.z1 - 20) continue;
+    const r = nearestRoad(tx, tz); if (r && r.d < 8) return r;
+  }
+  return nearestRoad(x + dmin, z);
+}
+function followPath(v, path, dt, vmax, stopAtEnd) { // 回傳 true = 抵達
+  if (v.pi == null) v.pi = 1;
+  while (v.pi < path.length - 1 && Math.hypot(path[v.pi][0] - v.x, path[v.pi][1] - v.z) < 7) v.pi++;
+  const [tx, tz] = path[v.pi], dx = tx - v.x, dz = tz - v.z, L = Math.hypot(dx, dz);
+  const want = Math.atan2(-dx, -dz); const diff = angDiff(v.yaw, want);
+  const last = v.pi >= path.length - 1;
+  const tgt = last && stopAtEnd ? clamp(L * 0.5, 0, vmax) : Math.abs(diff) > 0.6 ? Math.min(vmax, 5) : vmax;
+  v.speed += clamp(tgt - v.speed, -14 * dt, 7 * dt);
+  const rate = 2.2; v.yaw += clamp(diff, -rate * dt, rate * dt) * clamp(v.speed / 4, 0.15, 1.5);
+  v.x += -Math.sin(v.yaw) * v.speed * dt; v.z += -Math.cos(v.yaw) * v.speed * dt;
+  return last && L < (stopAtEnd ? 3.5 : 7) && (stopAtEnd ? v.speed < 1.5 : true);
+}
+// 沿路停在路邊（往右偏 2.8 公尺）
+function curbPoint(rd) {
+  const horiz = Math.abs(rd.a[1] - rd.b[1]) < 0.5 && ZR[rd.a[1]] === ZR[rd.b[1]];
+  return horiz ? { x: rd.px, z: rd.pz + 3.2 } : { x: rd.px + 3.2, z: rd.pz };
+}
+
+/* ---------- 計程車 ---------- */
+function callTaxi() {
+  if (P.mode !== 'foot' || P.inside) { radio('要站在室外，才能叫計程車。', 'info'); return; }
+  if (S.money < 85) { radio('現金不夠，計程車起跳價是 $85。', 'warn'); return; }
+  const me = nearestRoad(P.x, P.z), from = roadSpotAround(P.x, P.z, 160, 320);
+  const v = new PVeh('taxicab', from.px, from.pz, 0); v.civ = false; v.npcTaxi = true; PVEHS.push(v);
+  const path = findPath(from.px, from.pz, me.px, me.pz);
+  const car = path.length > 1 ? Math.atan2(-(path[1][0] - from.px), -(path[1][1] - from.pz)) : 0; v.yaw = car; v.sync();
+  QK.taxi = { v, state: 'come', path, me, t: 0 };
+  toast('good', '🚕 已叫車', '計程車大約 30 秒內會到你附近，請在路邊等');
+  AU.good();
+}
+function updateQuick(dt) {
+  const T = QK.taxi;
+  if (T && T.state === 'come') {
+    T.t += dt; const v = T.v;
+    if (followPath(v, T.path, dt, 15, true) || T.t > 70) {
+      if (T.t > 70) { const c = curbPoint(T.me); v.x = c.x; v.z = c.z; }
+      v.speed = 0; v.sync(); T.state = 'wait'; T.t = 0; AU.horn && AU.horn(); toast('good', '🚕 計程車到了', '走到車旁按 F 上車');
+    } else { v.sync(); }
+  } else if (T && T.state === 'wait') {
+    T.t += dt; if (T.t > 180 && dist(T.v.x, T.v.z, P.x, P.z) > 30) cancelTaxi('等太久，計程車開走了');
+  } else if (T && T.state === 'ride') rideTick(T, dt);
+  else if (T && T.state === 'leave') { T.t += dt; followPath(T.v, T.path, dt, 14, false); T.v.sync(); if (T.t > 12) cancelTaxi(); }
+  const D = QK.deliv; if (D) deliveryTick(D, dt);
+}
+function cancelTaxi(msg) { const T = QK.taxi; if (!T) return; if (P.veh === T.v) { P.mode = 'foot'; P.veh = null; } scene.remove(T.v.mesh); const i = PVEHS.indexOf(T.v); if (i >= 0) PVEHS.splice(i, 1); QK.taxi = null; if (msg) radio(msg, 'info'); }
+function taxiBoard(v) {
+  const T = QK.taxi; if (!T || T.v !== v || T.state !== 'wait') return;
+  if (P.mode !== 'foot') return;
+  const list = [['我家（' + SITES.home.short + '）', SITES.home], ['大墩分局', SITES.station], ['一中街夜市', SITES.market], ['大墩醫院', SITES.hospital], ['麥麥商業銀行', SITES.bank.door], ['台中火車站', SITES.tra], ['高鐵台中站', SITES.hsr], ['臺中公園', SITES.park], ['最近的全聯', (() => { const s = SITES.px.slice().sort((a, b) => dist(a.door.x, a.door.z, P.x, P.z) - dist(b.door.x, b.door.z, P.x, P.z))[0]; return s.door; })()]];
+  if (NAV.way) list.unshift(['📍 我的導航目的地', NAV.way]);
+  const night = S.time >= 23 * 60 || S.time < 6 * 60;
+  const rows = list.map((p, k) => { const L = pathLen(findPath(P.x, P.z, p[1].x, p[1].z)) * 7; return { n: p[0], to: p[1], fare: taxiFare(L, night), km: L / 1000, k }; });
+  MODAL.show(`<h2>🚕 計程車</h2><p>司機：「要去哪裡？」${night ? '<br><small>夜間加成 +$20</small>' : ''}</p><div class="phlist">` + rows.map(r => `<div class="phrow"><div><b>${r.n}</b><br><small>約 ${r.km.toFixed(1)} 公里　車資約 ${fmtMoney(r.fare)}</small></div><button class="btn g sm" data-d="${r.k}" ${S.money < r.fare ? 'disabled' : ''}>出發</button></div>`).join('') + '</div>', [['不搭了', 'gray', () => MODAL.close()]]);
+  $('mbox').querySelectorAll('[data-d]').forEach(b => b.onclick = () => { const r = rows[+b.dataset.d]; MODAL.close(); startRide(T, r); });
+}
+function pathLen(path) { let a = 0; for (let k = 1; k < path.length; k++) a += Math.hypot(path[k][0] - path[k - 1][0], path[k][1] - path[k - 1][1]); return a; }
+function startRide(T, r) {
+  const v = T.v, me = nearestRoad(v.x, v.z);
+  const dst = nearestRoad(r.to.x, r.to.z), cp = curbPoint(dst);
+  T.dest = r; T.dst = { x: cp.x, z: cp.z, px: dst.px, pz: dst.pz }; T.fare = r.fare; T.state = 'ride'; T.t = 0; T.stuck = 0; T.lx = v.x; T.lz = v.z; T.meter = 0;
+  T.path = findPath(v.x, v.z, dst.px, dst.pz); v.pi = 1; v.auto = true; v.speed = 0;
+  T.seat0 = v.parts.seat; v.parts.seat = { x: 0.45, z: 0.9 }; T.dur = Math.max(10, pathLen(T.path) / 11);
+  startEnter(v); showBubble('司機：「好，坐穩囉～」');
+  setTimeout(() => radio('🚕 搭乘中：按 F 可以快轉到目的地。', 'info'), 1200);
+}
+function rideTick(T, dt) {
+  const v = T.v; if (P.mode !== 'vehicle' || P.veh !== v) return; // 還在上車動畫
+  T.t += dt;
+  if (T.t > T.dur * 3 + 30) { endRide(T, true); return; } // 卡住：直接到
+  T.stuck = Math.hypot(v.x - T.lx, v.z - T.lz) < 0.3 * dt ? T.stuck + dt : 0; T.lx = v.x; T.lz = v.z;
+  if (T.stuck > 7) { endRide(T, true); return; }
+  T.arrived = followPath(v, T.path, dt, 13, true);
+  if (T.arrived) endRide(T, false);
+}
+function endRide(T, skip) {
+  const v = T.v; if (T.ending) return; T.ending = true;
+  const fare = T.fare;
+  const finish = () => {
+    v.auto = false; v.speed = 0; v.parts.seat = T.seat0;
+    S.money -= fare; txn(-fare, '計程車 → ' + T.dest.n); AU.good();
+    updateHUD(true); toast('good', '🚕 到了：' + T.dest.n, '車資 ' + fmtMoney(fare) + (skip ? '（快轉）' : ''));
+    addLog('🚕 搭計程車到' + T.dest.n + '（' + fmtMoney(fare) + '）');
+    T.state = 'leave'; T.t = 0; T.ending = false;
+    T.path = findPath(v.x, v.z, v.x + 200, v.z); v.pi = 1;
+  };
+  const leave = () => {
+    P.anim = null; P.mode = 'foot'; P.veh = null; $('speedo').classList.add('hidden'); RADIO.off();
+    const sx = -Math.cos(v.yaw), sz = Math.sin(v.yaw); let ok = [v.x - sx * 2.6, v.z - sz * 2.6];
+    for (const c of [[v.x - sx * 2.6, v.z - sz * 2.6], [v.x + sx * 2.6, v.z + sz * 2.6]]) { const p = { x: c[0], z: c[1] }; if (!collideCircle(p, 0.4)) { ok = c; break; } }
+    P.x = ok[0]; P.z = ok[1]; P.yaw = v.yaw + Math.PI / 2; P.pitch = 0; AU.door(false); AU.door(true);
+    finish();
+  };
+  if (skip) {
+    fadeTo('🚕 快轉中…', () => {
+      S.time += Math.round(T.dur / 5); while (S.time >= 1440) { S.time -= 1440; S.day++; S.workedToday = false; }
+      v.x = T.dst.x; v.z = T.dst.z; v.yaw = T.path.length > 1 ? Math.atan2(-(T.dst.px - T.path[T.path.length - 2][0]), -(T.dst.pz - T.path[T.path.length - 2][1])) : v.yaw; v.sync(); leave();
+    });
+  } else {
+    S.time += Math.round(T.dur / 5);
+    const c = T.dst; const pull = { x: c.x, z: c.z }; v.x = lerp(v.x, pull.x, 0.7); v.z = lerp(v.z, pull.z, 0.7); v.sync(); leave();
+  }
+}
+
+/* ---------- 外送 ---------- */
+function orderFood() {
+  const render = () => {
+    $('mbox').innerHTML = `<h2>🛵 叫外送</h2><p><small>外送費 $49。你在室外會送到你身邊，在家則放在門口。現金 ${fmtMoney(S.money)}</small></p><div class="phlist">` +
+      DELIV_MENU.map((d, i) => `<div class="phrow"><div><b>${d.n}</b><br><small>${d.from}　${Object.entries(d.use).map(([a, q]) => (a === 'hp' ? '生命 +' : '體力 +') + q).join('、')}</small></div><button class="btn g sm" data-o="${i}" ${S.money < d.p + 49 ? 'disabled' : ''}>$${d.p + 49}</button></div>`).join('') + '</div><div class="btns"><button class="btn gray" id="mclose">不點了</button></div>';
+    $('mbox').querySelectorAll('[data-o]').forEach(b => b.onclick = () => { const d = DELIV_MENU[+b.dataset.o]; MODAL.close(); placeDelivery(d); });
+    $('mclose').onclick = () => MODAL.close();
+  };
+  MODAL.custom(render);
+}
+function placeDelivery(d) {
+  const cost = d.p + 49; if (S.money < cost) { radio('現金不夠。', 'warn'); return; }
+  S.money -= cost; txn(-cost, '外送：' + d.n); updateHUD(true); AU.good();
+  QK.deliv = { d, state: 'cook', t: 0, wait: rand(25, 45), where: P.inside ? 'home' : 'out' };
+  toast('good', '🛵 訂單成立', d.from + '正在準備，大約 1 分鐘內送到');
+  pushMsg('外送 App', d.from + '接單了：' + d.n);
+}
+function deliveryTick(D, dt) {
+  D.t += dt;
+  if (D.state === 'cook' && D.t > D.wait) {
+    D.state = 'ride'; D.t = 0;
+    if (P.inside) { D.where = 'home'; return; }
+    const me = nearestRoad(P.x, P.z), from = roadSpotAround(P.x, P.z, 180, 340);
+    const v = new PVeh('civscoot', from.px, from.pz, 0, 0x2aa84a); v.civ = false; v.npcRider = true; PVEHS.push(v);
+    D.v = v; D.me = me; D.path = findPath(from.px, from.pz, me.px, me.pz); v.yaw = D.path.length > 1 ? Math.atan2(-(D.path[1][0] - from.px), -(D.path[1][1] - from.pz)) : 0; v.sync(); v.pi = 1;
+    D.rider = spawnHuman({ shirt: 0x2aa84a, data: { role: 'civ', riding: true } }, from.px, from.pz, 0); D.rider.pose = 'idle';
+    pushMsg('外送員', '您好，我正在送餐，快到了～');
+  } else if (D.state === 'ride') {
+    if (D.where === 'home' || P.inside) { if (D.t > 20 || (!D.v && D.t > 5)) { handOverFood(D, true); } return; }
+    if (!D.v) { D.state = 'cook'; D.t = 0; D.wait = 3; return; }
+    const v = D.v; const near = dist(v.x, v.z, P.x, P.z) < 14;
+    const arr = followPath(v, D.path, dt, 17, true) || D.t > 90;
+    v.sync(); D.rider.x = v.x; D.rider.z = v.z; D.rider.yaw = v.yaw; D.rider.P.g.position.set(v.x, 0.75, v.z); D.rider.P.g.rotation.y = v.yaw; D.rider.pose = 'idle';
+    if (arr || (near && v.speed < 2)) { v.speed = 0; D.state = 'walk'; D.t = 0; D.rider.P.g.position.y = 0.2; }
+  } else if (D.state === 'walk') {
+    const h = D.rider, dx = P.x - h.x, dz = P.z - h.z, L = Math.hypot(dx, dz);
+    if (L > 1.7 && D.t < 40) { h.x += dx / L * 3 * dt; h.z += dz / L * 3 * dt; h.P.g.position.set(h.x, 0.2, h.z); h.P.g.rotation.y = Math.atan2(dx, dz); h.pose = 'walk'; if (h.P.walk) h.P.walk(D.t * 8); }
+    else { h.pose = 'hands'; D.state = 'give'; D.t = 0; showBubble('外送員：「您的餐點，麻煩收一下～」'); }
+  } else if (D.state === 'give') {
+    if (D.t > 25) handOverFood(D, false); // 沒收就放地上，自動收
+  }
+}
+function handOverFood(D, home) {
+  S.inv[D.d.k] = (S.inv[D.d.k] || 0) + 1; AU.good();
+  toast('good', '🛵 外送到了', D.d.n + ' 已放進背包（手機 → 背包可以吃）' + (home ? '，在家門口' : ''));
+  if (D.rider) { removeHuman(D.rider); D.rider = null; }
+  if (D.v) { const v = D.v; D.leave = { v, path: findPath(v.x, v.z, v.x + 240, v.z), t: 0 }; v.pi = 1; QK.leaving = QK.leaving || []; QK.leaving.push(D.leave); }
+  QK.deliv = null;
+}
+function quickLeavers(dt) {
+  if (!QK.leaving || !QK.leaving.length) return;
+  for (const L of QK.leaving.slice()) { L.t += dt; followPath(L.v, L.path, dt, 16, false); L.v.sync(); if (L.t > 10) { scene.remove(L.v.mesh); const i = PVEHS.indexOf(L.v); if (i >= 0) PVEHS.splice(i, 1); QK.leaving.splice(QK.leaving.indexOf(L), 1); } }
+}
+function taxiInteract() {
+  const T = QK.taxi; if (!T || T.state !== 'wait' || P.mode !== 'foot') return [];
+  return [{ x: T.v.x, z: T.v.z, r: 3.6, label: () => '🚕 上車（選目的地）', act: () => taxiBoard(T.v) }];
+}
+function deliveryInteract() {
+  const D = QK.deliv; if (!D || !D.rider || (D.state !== 'give' && D.state !== 'walk')) return [];
+  return [{ x: D.rider.x, z: D.rider.z, r: 2.4, label: () => '🛵 收外送：' + D.d.n, act: () => handOverFood(D, false) }];
+}
+
 /* ================= 介面 ================= */
 const GAME = { running: false, tscale: 1, mapOpen: false };
 function radio(msg, type) {
@@ -6832,7 +7127,7 @@ function findInteract() {
   if (MODAL.open) return null;
   const inVeh = P.mode === 'vehicle';
   let best = null, bd = 1e9;
-  const mi = MIS.interacts(); const list = STATIC_INTERACT.concat(mi, friendInteracts(), homeInteracts(), shopInteracts(), JOB.cust ? [{ x: JOB.cust.x, z: JOB.cust.z, r: 2.8, label: '幫客人結帳', act: clerkGame }] : []);
+  const mi = MIS.interacts(); const list = STATIC_INTERACT.concat(mi, friendInteracts(), homeInteracts(), shopInteracts(), deliveryInteract(), taxiInteract(), JOB.cust ? [{ x: JOB.cust.x, z: JOB.cust.z, r: 2.8, label: '幫客人結帳', act: clerkGame }] : []);
   const pri = new Set(mi); // 任務的互動優先
   for (const it of list) { if (inVeh && !it.veh) continue; const d = dist(P.x, P.z, it.x, it.z) - (pri.has(it) ? 1.5 : 0); const r = inVeh ? it.r + 8 : it.r; if (d < r && d < bd) { bd = d; best = it; } }
   if (!best && !inVeh) { const pd = nearestChatPed(); if (pd) best = { x: pd.x, z: pd.z, r: 2.1, label: '和路人聊天', act: () => chatDialog(pd) }; }
@@ -7113,7 +7408,7 @@ function loop(now) {
     for (let k = MHUMANS.length - 1; k >= 0; k--) { const h = MHUMANS[k]; if (h.role === 'robber' || h.role === 'clerk' || h.ai) continue;
       if (h.walk) { h.x += h.walk.vx * dt; h.z += h.walk.vz * dt; h.P.g.rotation.y = Math.atan2(h.walk.vx, h.walk.vz); h.walk.t -= dt; if (h.walk.t <= 0) { removeHuman(h); continue; } }
       posePerson(h.P, h.pose || 'idle', dt, 1.6); h.P.g.position.set(h.x, 0.2, h.z); }
-    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateGarbageMusic(); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); updateJobs(dt); updateHome(dt); updateShops(dt);
+    updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateGarbageMusic(); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); updateJobs(dt); updateHome(dt); updateShops(dt); updateQuick(dt); quickLeavers(dt);
   } else AU.update(false, 0, false);
   frame++;
   updateSky();
@@ -7125,7 +7420,7 @@ function loop(now) {
 }
 
 // 測試用：快速模擬（不畫圖）
-function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); updateJobs(dt); updateHome(dt); updateShops(dt); } }
+function simStep(sec) { const dt = 0.05; for (let t = 0; t < sec; t += dt) { if (MODAL.open) break; updateTime(dt); updateLights(dt); updatePlayer(dt); updateTraffic(dt); updatePeds(dt); MIS.update(dt); updateFX(dt); updateVehDamage(dt); updateNav(dt); updateAim(dt); updateTrafficLaw(dt); updateTalk(dt); updateServices(dt); updateCrime(dt); updateMarket(dt); updateFriends(dt); updateTrains(dt); updateJobs(dt); updateHome(dt); updateShops(dt); updateQuick(dt); quickLeavers(dt); } }
 
 /* ---------- 開始 ---------- */
 function startGame(fresh) {
@@ -7157,7 +7452,7 @@ MIS.update = function (dt) {
 function boot() {
   if (!window.THREE) { $('loading').textContent = '⚠️ 3D 引擎載入失敗，請確認網路連線後重新整理。'; return; }
   try {
-    buildCity(); buildCams(); buildCoast(); buildTransit(); buildHomeInteriors(); buildMapImage(); initPlayerVehicles(); initStaticInteracts(); initJobInteracts();
+    buildCity(); buildCams(); buildCoast(); buildTransit(); buildHomeInteriors(); buildBillboards(); buildMapImage(); initPlayerVehicles(); initStaticInteracts(); initJobInteracts();
   } catch (e) { $('loading').textContent = '⚠️ 載入錯誤：' + e.message; console.error(e); return; }
   P.x = SITES.home.x; P.z = SITES.home.z + 1.5; P.yaw = Math.PI;
   camera.position.set(SITES.station.x - 60, 40, SITES.station.z + 80); camera.lookAt(SITES.station.x, 0, SITES.station.z);
