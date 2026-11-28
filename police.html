@@ -1269,8 +1269,8 @@ function fillBlock(b, type, reserve) {
 }
 function addTree(x, z, s) {
   s = s || 1;
-  addGeo('trunk', MAT.trunk, boxGeo(0.3 * s, 2.4 * s, 0.3 * s, x, 0, z)); addColCirc(x, z, 0.22 * s, 2.4 * s, 'tree');
-  const g = new THREE.IcosahedronGeometry(1.6 * s, 0); g.translate(x, 3.4 * s, z); addGeo(Math.random() < .5 ? 'leaf' : 'leaf2', Math.random() < .5 ? MAT.leaf : MAT.leaf2, g);
+  addGeo('trunk', MAT.trunk, boxGeo(0.36 * s, 2.6 * s, 0.36 * s, x, 0, z)); addColCirc(x, z, 0.38 * s, 4 * s, 'tree');
+  const g = new THREE.IcosahedronGeometry(1.6 * s, 0); g.translate(x, 3.9 * s, z); addGeo(Math.random() < .5 ? 'leaf' : 'leaf2', Math.random() < .5 ? MAT.leaf : MAT.leaf2, g);
 }
 
 /* ---------- 街道家具：路燈、紅綠燈、行道樹 ---------- */
@@ -1816,6 +1816,7 @@ function updateTraffic(dt) {
   if (P.inside) return;
   for (const v of TRAFFIC) {
     v.update(dt);
+    if (v.mesh && v.state !== 'gone' && v !== P.veh) v.mesh.visible = dist(v.x, v.z, P.x, P.z) < (IS_TOUCH ? 110 : 170);
     if ((v.state === 'drive' || v.state === 'broken') && !v.flag && dist(v.x, v.z, P.x, P.z) > (v.cop ? 260 : 210)) { const r = randomSegNear(P.x, P.z, 90, 190); if (r) v.place(...r); }
   }
 }
@@ -1874,12 +1875,14 @@ function initPeds() {
   const n = IS_TOUCH ? 26 : 40;
   for (let k = 0; k < n; k++) { const pd = new Ped(); PEDS.push(pd); pd.recycle(); }
 }
+const CULL_D = IS_TOUCH ? 60 : 90;
 function updatePeds(dt) {
   if (P.inside) return;
   for (const pd of PEDS) {
     const d = dist(pd.x, pd.z, P.x, P.z);
     if (d > 160 && pd.state !== 'down') { pd.recycle(); continue; }
     if (d < 120) pd.update(dt); else pd.P.g.position.set(pd.x, 0.18, pd.z);
+    pd.P.g.traverse(o => { if (o.isMesh) o.visible = d < CULL_D || pd.state === 'down' && d < 140; });
   }
 }
 function scareNear(x, z, r) { for (const pd of PEDS) if (dist(pd.x, pd.z, x, z) < r) pd.scare(x, z); }
@@ -2235,7 +2238,7 @@ function makeBoat() {
 }
 
 /* ================= 玩家：移動、開車、武器 ================= */
-const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.08, 700);
+const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.08, 520);
 camera.rotation.order = 'YXZ'; scene.add(camera);
 const P = { x: 0, z: 0, yaw: 0, pitch: 0, mode: 'foot', veh: null, lookYaw: 0, lookT: 0, bob: 0, moving: false, run: false, hurtT: 99, aim: 0 };
 const KEYS = {}; const INP = { mx: 0, my: 0, joyX: 0, joyY: 0, run: false, fireHeld: false, aim: false };
@@ -2347,6 +2350,18 @@ const gunModel = new THREE.Group();
   gunModel.add(bx(0.05, 0.07, 0.24, blk, 0, 0.02, -0.1)); gunModel.add(bx(0.045, 0.11, 0.06, blk, 0, -0.05, -0.0));
   gunModel.add(bx(0.09, 0.09, 0.12, skin, 0, -0.06, 0.04)); gunModel.add(bx(0.11, 0.11, 0.3, sleeve, 0.02, -0.08, 0.24));
 }
+const bgPistolModel = new THREE.Group(), bgShotModel = new THREE.Group();
+{
+  const blk = pm(0x1c1c1c), steel = pm(0x6a6a6a), skin = pm(0xe0b088), sleeve = pm(0x4a4a3a), wood = pm(0x6b3f1d);
+  bgPistolModel.add(bx(0.045, 0.06, 0.26, steel, 0, 0.02, -0.11)); bgPistolModel.add(bx(0.05, 0.035, 0.1, blk, 0, 0.065, -0.05)); bgPistolModel.add(bx(0.045, 0.11, 0.06, wood, 0, -0.05, 0.0));
+  bgPistolModel.add(bx(0.09, 0.09, 0.12, skin, 0, -0.06, 0.04)); bgPistolModel.add(bx(0.11, 0.11, 0.3, sleeve, 0.02, -0.08, 0.24));
+  bgShotModel.add(bx(0.035, 0.035, 0.62, steel, 0, 0.035, -0.32)); bgShotModel.add(bx(0.03, 0.03, 0.46, blk, 0, 0.0, -0.26)); bgShotModel.add(bx(0.05, 0.05, 0.2, wood, 0, -0.005, -0.3));
+  bgShotModel.add(bx(0.06, 0.08, 0.2, blk, 0, 0.01, -0.02)); bgShotModel.add(bx(0.05, 0.1, 0.3, wood, 0, -0.03, 0.2));
+  bgShotModel.add(bx(0.09, 0.09, 0.12, skin, 0, -0.05, -0.02)); bgShotModel.add(bx(0.08, 0.08, 0.1, skin, -0.02, -0.02, -0.34)); bgShotModel.add(bx(0.11, 0.11, 0.3, sleeve, 0.03, -0.07, 0.24));
+  const f1 = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffd27a })); f1.position.set(0, 0.03, -0.64); f1.visible = false; bgShotModel.add(f1); bgShotModel.flash = f1;
+  const f0 = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffd27a })); f0.position.set(0, 0.03, -0.27); f0.visible = false; bgPistolModel.add(f0); bgPistolModel.flash = f0;
+  bgShotModel.scale.setScalar(0.7); bgShotModel.position.set(-0.04, 0.02, 0);
+}
 const taserModel = new THREE.Group();
 {
   const y = pm(0xf2d21a), blk = pm(0x161616), skin = pm(0xe0b088), sleeve = pm(0x2a3d6a);
@@ -2370,7 +2385,7 @@ const rifleModel = new THREE.Group();
   rifleModel.add(bx(0.08, 0.08, 0.1, skin, -0.02, -0.03, -0.42));
 }
 const rflash = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffd27a })); rflash.position.set(0, 0.04, -0.78); rflash.visible = false; rifleModel.add(rflash); rifleModel.scale.setScalar(0.62); rifleModel.position.set(0.08, -0.05, 0.1);
-VIEW.add(gunModel, taserModel, batonModel, rifleModel); VIEW.position.set(0.22, -0.2, -0.38); VIEW.visible = false; VIEW.scale.setScalar(0.75);
+VIEW.add(bgPistolModel, bgShotModel, gunModel, taserModel, batonModel, rifleModel); VIEW.position.set(0.22, -0.2, -0.38); VIEW.visible = false; VIEW.scale.setScalar(0.75);
 let recoil = 0, fireCD = 0, reloadT = 0, shoutCD = 0, punchT = 0, punchCD = 0, punchSide = 1;
 const fistModel = new THREE.Group();
 {
@@ -2607,10 +2622,10 @@ function updatePlayer(dt) {
       fistModel.visible = true; fistModel.position.set(0.18 * punchSide * (1 - ext * 0.6), -0.22 + ext * 0.08, -0.32 - ext * 0.32); fistModel.rotation.set(0, -punchSide * ext * 0.25, 0);
     } else fistModel.visible = false;
     const bat = S.weapon === 2;
-    VIEW.visible = (S.onDuty || !!bgHeld()) && (bat || !(punchT > 0 && punchSide > 0)); gunModel.visible = S.onDuty ? S.weapon === 0 : !!bgHeld(); taserModel.visible = S.onDuty && S.weapon === 1; batonModel.visible = bat; rifleModel.visible = S.onDuty && S.weapon === 3;
+    VIEW.visible = (S.onDuty || !!bgHeld()) && (bat || !(punchT > 0 && punchSide > 0)); gunModel.visible = S.onDuty && S.weapon === 0; bgPistolModel.visible = !S.onDuty && bgHeld() === 'pistol'; bgShotModel.visible = !S.onDuty && bgHeld() === 'shotgun'; taserModel.visible = S.onDuty && S.weapon === 1; batonModel.visible = bat; rifleModel.visible = S.onDuty && S.weapon === 3;
     if (bat) { fistModel.visible = false; P.swingT = Math.max(0, (P.swingT || 0) - dt); const k = P.swingT > 0 ? Math.sin((1 - P.swingT / 0.35) * Math.PI) : 0; batonModel.rotation.set(0.75 - k * 1.7, k * 0.4, -0.25 - k * 0.3); }
-    VIEW.position.set(0.22 - P.aim * 0.22, -0.2 + P.aim * 0.06 + (reloadT > 0 ? -0.15 : 0) + Math.sin(P.bob * 2) * 0.004, -0.38 + recoil * 0.05);
-    VIEW.rotation.x = recoil * 0.25 + (reloadT > 0 ? -0.6 : 0);
+    VIEW.position.set(0.22 - P.aim * 0.22, -0.2 + P.aim * 0.06 + ((reloadT > 0 || BK.rt > 0) ? -0.15 : 0) + Math.sin(P.bob * 2) * 0.004, -0.38 + recoil * 0.05);
+    VIEW.rotation.x = recoil * 0.25 + ((reloadT > 0 || BK.rt > 0) ? -0.6 : 0);
   } else {
     driveVehicle(dt, lookX, lookY);
   }
@@ -7127,6 +7142,19 @@ function buildBlackMarket() {
   const crate = new THREE.MeshLambertMaterial({ color: 0x6b4a2a }), crate2 = new THREE.MeshLambertMaterial({ color: 0x2f4a2f });
   box(1.6, 1, 4.2, new THREE.MeshLambertMaterial({ color: 0x3a3a3a }), -2946.6, 0.5, zc); addCol(-2947.4, -2945.8, zc - 2.1, zc + 2.1, 1, 'crate');
   [[-2955, -229], [-2953, -229.5], [-2955, -226.5], [-2954.5, -216], [-2952, -214.5], [-2938, -215], [-2955, -214]].forEach(([x, z], k) => { const s = 1.6 + (k % 3) * 0.4; box(s, s, s, k % 2 ? crate : crate2, x, s / 2, z); addCol(x - s / 2, x + s / 2, z - s / 2, z + s / 2, s, 'crate'); });
+  // 貨架＋武器牆＋棧板
+  const steel = new THREE.MeshLambertMaterial({ color: 0x59616b }), gm = new THREE.MeshLambertMaterial({ color: 0x1a1a1a }), wd = new THREE.MeshLambertMaterial({ color: 0x8a6a3a }), amm = new THREE.MeshLambertMaterial({ color: 0xb08a2a }), gr = new THREE.MeshLambertMaterial({ color: 0x3d5a3d });
+  for (const zz of [-228, -216]) {                                   // 西牆兩組鐵架
+    box(1.2, 0.08, 6, steel, -2956, 0.9, zz); box(1.2, 0.08, 6, steel, -2956, 1.8, zz); box(1.2, 0.08, 6, steel, -2956, 2.7, zz);
+    for (const dz of [-3, 3]) box(0.1, 2.8, 0.1, steel, -2956.5, 1.4, zz + dz), box(0.1, 2.8, 0.1, steel, -2955.5, 1.4, zz + dz);
+    for (let k = 0; k < 5; k++) { box(0.7, 0.5, 0.9, k % 2 ? amm : gr, -2956, 1.18, zz - 2.4 + k * 1.2); box(0.7, 0.5, 0.9, k % 2 ? gr : wd, -2956, 2.08, zz - 2.4 + k * 1.2); }
+    addCol(-2956.7, -2955.3, zz - 3.1, zz + 3.1, 2.8, 'crate');
+  }
+  box(0.2, 2.6, 8, new THREE.MeshLambertMaterial({ color: 0x2a2a2a }), -2957.6, 1.8, -222);       // 武器牆（掛槍板）
+  for (let k = 0; k < 8; k++) { box(0.12, 0.1, 0.9, gm, -2957.4, 2.2 - (k % 2) * 0.7, -225.2 + k * 0.9); box(0.12, 0.35, 0.1, wd, -2957.4, 2.1 - (k % 2) * 0.7, -224.9 + k * 0.9); }
+  box(1.4, 0.15, 1.4, wd, -2940, 0.08, -228); box(1.0, 0.9, 1.0, amm, -2940, 0.6, -228); box(1.4, 0.15, 1.4, wd, -2940, 0.08, -216); box(1.0, 1.4, 1.0, gr, -2940, 0.85, -216);
+  addCol(-2940.7, -2939.3, -228.7, -227.3, 1, 'crate'); addCol(-2940.7, -2939.3, -216.7, -215.3, 1.5, 'crate');
+  box(0.6, 0.02, D - 4, new THREE.MeshLambertMaterial({ color: 0x9a8a20 }), -2950, 0.06, (z0 + z1) / 2);   // 地上黃線
   // 燈光：天花板日光燈條＋門外綠燈（營業才亮）
   const glow = new THREE.MeshBasicMaterial({ color: 0xffe9a0 }), green = new THREE.MeshBasicMaterial({ color: 0x40ff70 }), spill = new THREE.MeshBasicMaterial({ color: 0xfff0b0, transparent: true, opacity: 0.28 });
   for (let k = 0; k < 3; k++) BK.lamps.push(box(0.4, 0.15, D - 6, glow, x0 + 6 + k * 8, H - 0.3, (z0 + z1) / 2));
@@ -7199,7 +7227,7 @@ function bgFire() {
   const k = bgHeld(); if (!k || BK.fcd > 0 || BK.rt > 0) return;
   const G = S.guns[k], D = BGUNS[k];
   if (G.mag <= 0) { AU.click(); BK.fcd = 0.3; radio('沒子彈了！按 R 換彈。', 'warn'); return; }
-  G.mag--; BK.fcd = D.cd; recoil = 1; AU.shot(); flashMesh.visible = true; setTimeout(() => flashMesh.visible = false, 50);
+  G.mag--; BK.fcd = D.cd; recoil = k === 'shotgun' ? 2.2 : 1; AU.shot(); const fm = k === 'shotgun' ? bgShotModel.flash : bgPistolModel.flash; fm.visible = true; setTimeout(() => fm.visible = false, 60); P.shake = Math.max(P.shake || 0, k === 'shotgun' ? 0.35 : 0.12);
   scareNear(P.x, P.z, D.noise);
   const dm = new Map();
   for (let i = 0; i < D.pellets; i++) {
@@ -7253,14 +7281,18 @@ function bkStopTick(dt) {
     for (let t = 0; t < 12; t++) {
       const a = rand(0, 6.28), p = { x: P.x + Math.cos(a) * 16, z: P.z + Math.sin(a) * 16 };
       if (collideCircle(p, 0.6, 0)) continue;
-      BK.cop = spawnHuman({ police: true, shirt: 0x9cc3e6, pants: 0x1b2a4a, fem: false, data: { role: 'cop', ai: true } }, p.x, p.z, 0); BK.copT = 0; radio('有員警朝你走過來了……', 'info'); break;
+      BK.copPh = 0; BK.copShout = false; BK.cop = spawnHuman({ police: true, shirt: 0x9cc3e6, pants: 0x1b2a4a, fem: false, data: { role: 'cop', ai: true } }, p.x, p.z, 0); BK.copT = 0; radio('有員警朝你走過來了……', 'info'); break;
     }
     return;
   }
   const o = BK.cop; BK.copT += dt; const d = dist(o.x, o.z, P.x, P.z);
-  if (d > 2.3 && BK.copT < 40) { moveHuman(o, P.x - o.x, P.z - o.z, 1.9, dt); posePerson(o.P, 'walk', dt, 1.9); return; }
-  removeHuman(o); BK.cop = null;
-  if (d <= 2.6) bkSearchDialog('路邊盤查');
+  if (BK.copPh === 2) { o.yaw = Math.atan2(P.x - o.x, P.z - o.z); posePerson(o.P, 'idle', dt, 0); BK.copWait -= dt; if (BK.copWait <= 0) { removeHuman(o); BK.cop = null; BK.copPh = 0; if (d <= 4) bkSearchDialog('路邊盤查'); } return; }
+  if (d > 2.3 && BK.copT < 40) {
+    if (d < 11 && !BK.copShout) { BK.copShout = true; const s = pick(['那位先生，請停一下！', '前面的，警察臨檢，麻煩過來一下！', '欸，那邊的，請配合臨檢！']); say(o, s, { fem: false, h: 0.9 }); try { speak(s); } catch (e) {} radio('🚨 員警在叫你停下來！', 'warn'); }
+    const sp = d < 11 ? 2.6 : 1.9; moveHuman(o, P.x - o.x, P.z - o.z, sp, dt); posePerson(o.P, 'walk', dt, sp); return;
+  }
+  if (BK.copT >= 40) { removeHuman(o); BK.cop = null; return; }
+  BK.copPh = 2; BK.copWait = 1.6; BK.copShout = false; say(o, '你好，證件借我看一下。', { fem: false, h: 0.9 }); P.shake = Math.max(P.shake || 0, 0.05);
 }
 /* ---------- 每幀 ---------- */
 function updateBlack(dt) {
