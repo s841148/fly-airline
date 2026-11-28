@@ -227,7 +227,7 @@ body.touch #navbox{position:fixed;left:50%;transform:translateX(-50%);top:82px;w
     <div id="loading">載入中…</div>
     <div class="help">
       <b>🖥 電腦操作</b>：點畫面鎖定滑鼠 · WASD 移動 · 滑鼠看 · 左鍵開槍 · 右鍵瞄準 · Shift 跑步<br>
-      E 互動 · P 手機 · F 上下車 · Q 喊話「警察！不要動！」 · H 警笛 · R 換彈匣 · 1 手槍 / 2 電擊槍 / 3 警棍 / 4 步槍（特勤隊）· V 揍人 · M 地圖（點地圖設導航）· N 車上電台 · B 請求支援（再按一次叫特勤隊）· G 對空鳴槍 · Tab 武器輪盤 · T 快捷選單（計程車、外送）· Esc 選單<br>
+      E 互動 · P 手機 · F 上下車 · Q 喊話「警察！不要動！」 · C 切換視角 · X 貼牆掩體（越肩／第一人稱）· H 警笛 · R 換彈匣 · 1 手槍 / 2 電擊槍 / 3 警棍 / 4 步槍（特勤隊）· V 揍人 · M 地圖（點地圖設導航）· N 車上電台 · B 請求支援（再按一次叫特勤隊）· G 對空鳴槍 · Tab 武器輪盤 · T 快捷選單（計程車、外送）· Esc 選單<br>
       開車：W 油門 · S 煞車/倒車 · A D 轉彎 · 空白鍵 手煞車<br>
       <b>📱 手機</b>：橫拿手機，左邊搖桿移動 / 開車，右邊滑動看四周，按鈕操作。<br>
       <b>🗺️ 全台中地圖</b>：市區、海線（台中港、梧棲、沙鹿、清水、大甲、高美濕地）、山線（豐原、潭子、大雅、大坑、東勢）、屯區（太平、大里、霧峰、烏日、高鐵站），主要道路用真實路名，按比例縮小。按 M 開地圖，＋／－ 縮放。<br><b>🚆 台鐵、🚇 捷運</b>：走到車站入口按 E 買票，可以刷悠遊卡或買單程票，票價照現實（台鐵區間車、中捷綠線）。<br><b>💼 工作</b>：警察、外送員、計程車司機、超商店員、牛肉麵店員、消防員（含救護）。手機「求職」App 看條件和導航。<br><b>🏙️ 怎麼玩</b>：開局從三個角色選一個，一開始沒有工作。用手機（P）看求職、買股票、網購；想當警察就到「大墩分局」人事室考特考，考上後每天 8:00 打卡上班、17:00 下班。回家睡覺跳到隔天。
@@ -1641,6 +1641,9 @@ function posePerson(P, pose, dt, speed) {
   } else if (pose === 'aim') {
     P.armR.rotation.x = -Math.PI / 2; P.armL.rotation.x = -1.45; P.armL.rotation.z = -0.55; P.elbowL.rotation.x = -0.15;
     P.legL.rotation.x = -0.15; P.legR.rotation.x = 0.2; P.kneeR.rotation.x = 0.2;
+  } else if (pose === 'crouch') {
+    b.position.y = -0.38; P.legL.rotation.x = -1.2; P.legR.rotation.x = -1.0; P.kneeL.rotation.x = 1.6; P.kneeR.rotation.x = 1.4;
+    P.armR.rotation.x = -0.9; P.elbowR.rotation.x = -1.1; P.armL.rotation.x = -0.7; P.elbowL.rotation.x = -1.0; b.rotation.x = 0.08;
   } else if (pose === 'hands' || pose === 'kneel' || pose === 'cuffed') {
     if (pose === 'hands') { P.armL.rotation.x = Math.PI * 0.9; P.armR.rotation.x = Math.PI * 0.9; P.armL.rotation.z = -0.35; P.armR.rotation.z = 0.35; P.elbowL.rotation.x = -0.5; P.elbowR.rotation.x = -0.5; }
     else {
@@ -2294,6 +2297,8 @@ addEventListener('keydown', e => {
     case 'KeyV': punch(); break;
     case 'KeyH': toggleSiren(); break;
     case 'KeyR': reload(); break;
+    case 'KeyC': cycleCam(); break;
+    case 'KeyX': toggleCover(); break;
     case 'Digit1': setWeapon(0); break;
     case 'Digit2': setWeapon(1); break;
     case 'Digit3': setWeapon(2); break;
@@ -2428,7 +2433,7 @@ function setWeapon(w) { if (!S.onDuty) { bgSelect(w); return; } if (false) { rad
 function humanSpheres(h) {
   const pose = h.pose; const y0 = h.y0 || 0;
   if (pose === 'down' || pose === 'stun') return [];
-  if (pose === 'kneel' || pose === 'cuffed') return [[0.55, 0.3], [0.9, 0.28], [1.32, 0.19, 1]];
+  if (pose === 'kneel' || pose === 'cuffed' || pose === 'crouch') return [[0.55, 0.3], [0.9, 0.28], [1.32, 0.19, 1]];
   return [[0.5, 0.26], [0.95, 0.28], [1.3, 0.27], [1.75, 0.18, 1]].map(a => [a[0] + y0, a[1], a[2]]);
 }
 function raySphere(o, d, cx, cy, cz, r) {
@@ -2437,7 +2442,11 @@ function raySphere(o, d, cx, cy, cz, r) {
 }
 function castShot(maxD) {
   const o = camera.getWorldPosition(new THREE.Vector3()); const d = camera.getWorldDirection(new THREE.Vector3());
-  const spread = P.aim > 0.5 ? 0.004 : (P.moving ? 0.03 : 0.012);
+  if (P.mode === 'foot' && !camFirst()) { // 越肩：先從鏡頭找到瞄準點，再從頭部朝那裡射
+    const t0 = rayCols(o.x, o.y, o.z, d.x, d.y, d.z, maxD); const tx = o.x + d.x * t0, ty = o.y + d.y * t0, tz = o.z + d.z * t0;
+    o.set(P.x + d.x * 0.5, camHeadY() - 0.1, P.z + d.z * 0.5); d.set(tx - o.x, ty - o.y, tz - o.z).normalize();
+  }
+  const spread = P.aim > 0.5 ? 0.004 : P.cover ? 0.05 : (P.moving ? 0.03 : 0.012);
   d.x += rand(-spread, spread); d.y += rand(-spread, spread); d.z += rand(-spread, spread); d.normalize();
   let best = { t: rayCols(o.x, o.y, o.z, d.x, d.y, d.z, maxD), h: null, head: false };
   if (o.y + d.y * best.t < 0) best.t = Math.min(best.t, -o.y / d.y);
@@ -2457,6 +2466,7 @@ function updateFX(dt) { for (let k = FX.length - 1; k >= 0; k--) { const f = FX[
 function fire() {
   if (!GAME.running || MODAL.open) return;
   if (P.mode !== 'foot') return;
+  camNoteFire();
   if (typeof jobSpray === 'function' && jobSpray()) return;
   if (!S.onDuty) { if (bgHeld()) bgFire(); else punch(); return; }
   if (fireCD > 0 || reloadT > 0) return;
@@ -2512,6 +2522,7 @@ function toggleSiren() {
 function nearestPVeh(r) { let best = null, bd = r; for (const v of PVEHS) { const d = dist(v.x, v.z, P.x, P.z); if (d < bd) { bd = d; best = v; } } return best; }
 function toggleVehicle() {
   if (!GAME.running || MODAL.open || P.anim) return;
+  P.cover = null;
   if (P.mode === 'vehicle' && P.veh.auto) { if (QK.taxi && QK.taxi.state === 'ride') endRide(QK.taxi, true); return; }
   if (P.mode === 'vehicle') {
     const v = P.veh; if (Math.abs(v.speed) > 4) { radio('車速太快，先停車再下車。', 'info'); return; }
@@ -2593,7 +2604,8 @@ function updatePlayer(dt) {
     P.run = (KEYS.ShiftLeft || KEYS.ShiftRight || INP.run || (IS_TOUCH && L > 0.95)) && !tired && S.energy > 3;
     const sp = (P.run ? 6.8 : 3.8) * (tired ? 0.7 : 1) * (P.aim > 0.5 ? 0.6 : 1);
     const sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
-    const mx = (-sy * fz + cy * fx) * sp * dt, mz = (-cy * fz - sy * fx) * sp * dt;
+    let mx = (-sy * fz + cy * fx) * sp * dt, mz = (-cy * fz - sy * fx) * sp * dt;
+    if (P.cover) [mx, mz] = coverMove(mx, mz, dt);
     P.x += mx; P.z += mz; P.moving = L > 0.1;
     // 行人：互相推開（不會穿過人）
     for (const pd of PEDS) { if (!pd.alive || Math.abs(pd.x - P.x) > 1.2 || Math.abs(pd.z - P.z) > 1.2) continue; const d = dist(P.x, P.z, pd.x, pd.z), r = 0.7; if (d < r && d > 1e-4) { const k = (r - d) / d; P.x += (P.x - pd.x) * k * 0.7; P.z += (P.z - pd.z) * k * 0.7; pd.x -= (P.x - pd.x) * k * 0.3; pd.z -= (P.z - pd.z) * k * 0.3; } }
@@ -2612,17 +2624,18 @@ function updatePlayer(dt) {
     for (const v of PVEHS) for (const c of v.circles()) { const d = dist(P.x, P.z, c[0], c[1]), r = c[2] + 0.35; if (d < r) { const k = (r - d) / (d || 1); P.x += (P.x - c[0]) * k; P.z += (P.z - c[1]) * k; } }
     if (P.moving) P.bob += dt * (P.run ? 11 : 7.5);
     const onWalk = !!blockAtXZ(P.x, P.z);
-    camera.position.set(P.x, (onWalk ? 0.18 : 0) + 1.62 + Math.sin(P.bob) * (P.moving ? 0.035 : 0), P.z);
+    camera.position.set(P.x, (onWalk ? 0.18 : 0) + 1.62 - (coverHidden() ? 0.5 : 0) + Math.sin(P.bob) * (P.moving ? 0.035 : 0), P.z);
     camera.rotation.set(P.pitch + recoil * 0.04 + shakeOff(), P.yaw + shakeOff(), 0);
     // 瞄準
-    P.aim = lerp(P.aim, (INP.aim && S.onDuty) ? 1 : 0, Math.min(1, dt * 10));
-    camera.fov = 72 - P.aim * 24; camera.updateProjectionMatrix();
+    P.aim = lerp(P.aim, (INP.aim && (S.onDuty || bgHeld())) ? 1 : 0, Math.min(1, dt * 10));
+    camera.fov = CAMMODE === 'third' ? 70 - P.aim * 10 : 72 - P.aim * 24; camera.updateProjectionMatrix();
+    camThirdUpdate(dt); const FP = camFirst();
     punchCD = Math.max(0, punchCD - dt);
     if (punchT > 0) { punchT -= dt; const k = 1 - Math.max(0, punchT) / 0.32; const ext = Math.sin(Math.min(1, k) * Math.PI);
-      fistModel.visible = true; fistModel.position.set(0.18 * punchSide * (1 - ext * 0.6), -0.22 + ext * 0.08, -0.32 - ext * 0.32); fistModel.rotation.set(0, -punchSide * ext * 0.25, 0);
+      fistModel.visible = FP; fistModel.position.set(0.18 * punchSide * (1 - ext * 0.6), -0.22 + ext * 0.08, -0.32 - ext * 0.32); fistModel.rotation.set(0, -punchSide * ext * 0.25, 0);
     } else fistModel.visible = false;
     const bat = S.weapon === 2;
-    VIEW.visible = (S.onDuty || !!bgHeld()) && (bat || !(punchT > 0 && punchSide > 0)); gunModel.visible = S.onDuty && S.weapon === 0; bgPistolModel.visible = !S.onDuty && bgHeld() === 'pistol'; bgShotModel.visible = !S.onDuty && bgHeld() === 'shotgun'; taserModel.visible = S.onDuty && S.weapon === 1; batonModel.visible = bat; rifleModel.visible = S.onDuty && S.weapon === 3;
+    VIEW.visible = FP && (S.onDuty || !!bgHeld()) && (bat || !(punchT > 0 && punchSide > 0)); gunModel.visible = S.onDuty && S.weapon === 0; bgPistolModel.visible = !S.onDuty && bgHeld() === 'pistol'; bgShotModel.visible = !S.onDuty && bgHeld() === 'shotgun'; taserModel.visible = S.onDuty && S.weapon === 1; batonModel.visible = bat; rifleModel.visible = S.onDuty && S.weapon === 3;
     if (bat) { fistModel.visible = false; P.swingT = Math.max(0, (P.swingT || 0) - dt); const k = P.swingT > 0 ? Math.sin((1 - P.swingT / 0.35) * Math.PI) : 0; batonModel.rotation.set(0.75 - k * 1.7, k * 0.4, -0.25 - k * 0.3); }
     VIEW.position.set(0.22 - P.aim * 0.22, -0.2 + P.aim * 0.06 + ((reloadT > 0 || BK.rt > 0) ? -0.15 : 0) + Math.sin(P.bob * 2) * 0.004, -0.38 + recoil * 0.05);
     VIEW.rotation.x = recoil * 0.25 + ((reloadT > 0 || BK.rt > 0) ? -0.6 : 0);
@@ -2702,8 +2715,10 @@ function vehicleCamera(v, dt, lookX, lookY, sAbs, car) {
   camera.position.set(v.x + sx * cyw + sz * syw, eyeY, v.z - sx * syw + sz * cyw);
   camera.rotation.set(P.pitch + shakeOff(), v.yaw + P.lookYaw + shakeOff(), 0);
   if (camera.fov !== 72) { camera.fov = 72; camera.updateProjectionMatrix(); }
+  if (CAMST.model) CAMST.model.g.visible = false; CAMST.d = 0;
   if (v.parts.wheel) v.parts.wheel.rotation.z = v.steer * (car ? 1.6 : 0.5);
   VIEW.visible = false;
+  camVehicle(v, car);
   P.x = v.x; P.z = v.z; P.yaw = v.yaw + P.lookYaw; P.moving = sAbs > 0.5;
   $('speedo').innerHTML = Math.round(sAbs * 3.6) + '<small>km/h' + (v.police ? (v.siren ? ' · 🚨警笛開' : ' · H 警笛') : '') + '</small><small>🔧 車況 ' + Math.round(v.hp) + '%　' + (RADIO.idx ? STATIONS[RADIO.idx].name : (IS_TOUCH ? '📻 電台' : 'N 電台')) + '</small>';
 }
@@ -4633,7 +4648,7 @@ function updateResponders(dt) {
       const d = dist(c.x, c.z, tx, tz);
       R.pathT -= dt; if (R.pathT <= 0) { R.pathT = 0.8; R.path = findPath(c.x, c.z, tx, tz); }
       const p = (R.path || []).find(q => dist(q[0], q[1], c.x, c.z) > 7); let gx = tx, gz = tz; if (p && d > 25) { gx = p[0]; gz = p[1]; }
-      freeDrive(c, gx, gz, R.state === 'leave' ? 16 : (d > 30 ? 28 : clamp(d - R.arrive + 2, 0, 12)), dt);
+      freeDrive(c, gx, gz, R.state === 'leave' ? 16 : (d > 30 ? (R.vmax || 28) : clamp(d - R.arrive + 2, 0, 12)), dt);
       // 卡住（撞牆、卡在車陣）：遠離玩家就直接挪到下一個路點，否則倒車轉向
       if (R.state !== 'onscene' && d > R.arrive + 3 && Math.abs(c.speed) < 1.2) R.stuckT = (R.stuckT || 0) + dt; else R.stuckT = 0;
       if (R.stuckT > 3) {
@@ -4711,7 +4726,7 @@ function updateOfficers(dt) {
       o.t += 1.1 * dt; const [nx, nz] = rectPos(o.rect, o.t); o.yaw = Math.atan2(nx - o.x, nz - o.z) || o.yaw; o.x = nx; o.z = nz; pose = 'walk'; sp = 1.1;
       if (S.onDuty && !o.greeted && dist(o.x, o.z, P.x, P.z) < 6) { o.greeted = true; say(o, pick(['學長好！', '辛苦了！', '今天很平靜喔。', '這一帶我們巡過了。']), { fem: o.P.fem }); }
     } else if (o.kind2 === 'stopper') { pose = 'talk'; }
-    o.P.gun.visible = pose === 'aim';
+    o.P.gun.visible = pose === 'aim' || pose === 'crouch';
     posePerson(o.P, pose, dt, sp); o.P.g.rotation.y = o.yaw || 0; o.P.g.position.set(o.x, 0.2, o.z);
   }
 }
@@ -5277,24 +5292,16 @@ function addCrime(code, extra, victim) {
   W.lost = 0; W.lx = P.x; W.lz = P.z; W.seen = true;
   if (!before) { radio('📞 有民眾打 110 報案：' + nearCross(P.x, P.z) + '發生' + c.n.replace(/（.*）/, '') + '！警方出動了！', 'warn'); AU.bad(); }
   else if (W.stars > before) radio('⭐ 通緝等級提高到 ' + W.stars + ' 顆星！', 'warn');
-  if (W.stars >= 4 && !W.swat) setTimeout(() => { if (W.stars >= 4 && !W.swat) { W.swat = requestSWAT(W.lx, W.lz, 'hunt'); radio('📻 「重大治安事件，維安特勤隊出動！」', 'radio'); } }, 6000);
   dispatchHunters(); updateWantedHUD();
 }
-function dispatchHunters() {
-  const want = Math.min(3, W.stars);
-  W.cars = W.cars.filter(R => RESP.includes(R));
-  for (let k = W.cars.length; k < want; k++) {
-    const R = spawnResponder('police', W.lx, W.lz, { arrive: 12, getTarget: () => ({ x: W.lx, z: W.lz }), onArrive: (R) => { R.arrivedT = 0; } });
-    R.hunt = true; R.deployed = []; W.cars.push(R);
-  }
-}
+function dispatchHunters() { W.cars = W.cars.filter(R => RESP.includes(R)); WD.t = Math.min(WD.t, 1.5); }
 function huntUnits() { return OFFICERS.filter(o => o.kind2 === 'hunt' && o.state !== 'down'); }
 function clearWanted(msg) {
   if (msg) { radio(msg, 'info'); AU.good(); }
   W.stars = 0; W.charges = []; W.arrestT = 0;
   for (const R of W.cars) { for (const o of R.deployed || []) o.leave = R; R.hunt = false; responderLeave(R, 4000); }
   if (W.swat) { for (const o of W.swat.deployed || []) o.leave = W.swat; responderLeave(W.swat, 4000); }
-  W.cars = []; W.swat = null; updateWantedHUD();
+  W.cars = []; W.swat = null; wdClear(); updateWantedHUD();
 }
 function arrestPlayer(why) {
   if (!W.stars && !W.charges.length) return;
@@ -5316,10 +5323,17 @@ function updateWanted(dt) {
   let seen = false;
   for (const R of W.cars.concat(W.swat ? [W.swat] : [])) if (RESP.includes(R) && canSeePlayer(R.car.x, R.car.z, 55)) seen = true;
   for (const o of huntUnits()) if (canSeePlayer(o.x, o.z, 45)) seen = true;
+  if (WD.heliSees) seen = true;
+  for (const b of WD.rbs) if (canSeePlayer(b.x, b.z, 60)) seen = true;
   // 還待在案發／最後被看到的地方附近，警察會找過來，不算躲起來
-  if (seen) { W.lost = 0; W.lx = P.x; W.lz = P.z; } else if (dist(P.x, P.z, W.lx, W.lz) < 35) W.lost = Math.max(0, W.lost - dt * 0.5); else W.lost += dt;
+  if (seen) { W.lost = 0; W.lx = P.x; W.lz = P.z; W.vehAt = P.mode === 'vehicle' ? P.veh : null; WD.swapped = false; }
+  else {
+    WD.swapped = (P.mode === 'vehicle' ? P.veh : null) !== W.vehAt;       // 換了車／下了車，警察不認得
+    const inZone = dist(P.x, P.z, W.lx, W.lz) < wdCfg().zone; let k = inZone ? 0.35 : 1; if (P.inside || insideShop(P.x, P.z)) k = 3; if (WD.swapped) k += 1.2;
+    if (dist(P.x, P.z, W.lx, W.lz) < 35 && !P.inside) W.lost = Math.max(0, W.lost - dt * 0.5); else W.lost += dt * k;
+  }
   W.seen = seen;
-  const need = 14 + W.stars * 7;
+  const need = wdCfg().need;
   if (W.lost > need) { clearWanted('😮‍💨 你甩掉警察了，通緝解除。'); return; }
   // 警車：到場後放人下車追；你開車時繼續追車
   for (const R of W.cars.concat(W.swat ? [W.swat] : [])) {
@@ -5374,7 +5388,8 @@ function huntAI(o, dt) {
   const tx = sees ? P.x : W.lx, tz = sees ? P.z : W.lz;
   let pose = 'idle', sp = 0;
   // 3 星以上（殺人、襲警）可以開槍；特勤隊 4 星以上
-  const shooter = W.stars >= 4 || W.charges.some(q => q.code === 'obstruct' || q.code === 'murder');
+  const shooter = W.stars >= 3 || W.charges.some(q => q.code === 'obstruct' || q.code === 'murder') || (W.stars >= 2 && typeof bgHeld === 'function' && !!bgHeld());
+  if (shooter && (sees || o.cv) && d < 45 && d > 4) { const cv = copCoverAI(o, dt, d, sees); if (cv) return cv; }
   if (shooter && sees && d < 30 && d > 3) {
     o.yaw = Math.atan2(P.x - o.x, P.z - o.z); pose = 'aim';
     if (d > 9) { officerGo(o, P.x, P.z, 2.6, dt); pose = 'aim'; sp = 2.6; }
@@ -5382,7 +5397,7 @@ function huntAI(o, dt) {
     if (o.shootT <= 0) {
       o.shootT = o.swat ? rand(1.0, 1.6) : rand(1.6, 2.6);
       AU.shot(d); spawnFX(new THREE.Vector3(o.x + Math.sin(o.yaw) * 0.6, 1.45, o.z + Math.cos(o.yaw) * 0.6), 0xffd27a, 0.1, 0.08);
-      const hitP = (o.swat ? 0.2 : 0.13) * D.acc * (P.mode === 'vehicle' ? 0.6 : 1) * (P.run ? 0.7 : 1);
+      const hitP = (o.swat ? 0.2 : 0.13) * D.acc * (wdCfg().shoot || 1) * (P.mode === 'vehicle' ? 0.6 : 1) * (P.run ? 0.7 : 1);
       if (Math.random() < hitP) hurtPlayer(Math.round(D.dmg * (o.swat ? 0.9 : 0.7)), o.x, o.z);
     }
   } else if (P.mode === 'foot' || !sees) {
@@ -5406,7 +5421,7 @@ function updateWantedHUD() {
   if (!W.stars) { el.classList.add('hidden'); return; }
   el.classList.remove('hidden');
   let s = ''; for (let k = 1; k <= 5; k++) s += k <= W.stars ? '★' : '☆';
-  el.innerHTML = s + '<small>' + (W.seen ? '被警察發現' : '躲起來… ' + Math.max(0, Math.ceil(14 + W.stars * 7 - W.lost)) + 's') + '</small>';
+  el.innerHTML = s + '<small>' + (W.seen ? '被警察發現' : '躲起來… ' + Math.max(0, Math.ceil(wdCfg().need - W.lost)) + 's') + '</small>';
   el.style.opacity = W.seen ? 1 : (Math.floor(W.flash * 3) % 2 ? 0.45 : 1);
 }
 
@@ -5477,7 +5492,7 @@ function rejoinMenu() {
     [['報考（$3,000 報名費與訓練）', 'g', () => { if (S.money < 3000) { radio('錢不夠喔。', 'warn'); return; } S.money -= 3000; S.dismissed = false; S.job = 'police'; MODAL.close(); addLog('重新考上警察'); toast('rank', '👮 重新考上警察！', '從警員開始，好好幹'); updateHUD(true); }], ['算了', 'gray', () => MODAL.close()]]);
 }
 
-function updateCrime(dt) { updateBodies(dt); updateWanted(dt); updateCourt(); }
+function updateCrime(dt) { updateBodies(dt); updateWanted(dt); wantedDirector(dt); updateCourt(); }
 
 /* ---------- 對空鳴槍（警械使用條例） ---------- */
 // 合法：依法應逮捕之人拒捕、脫逃（第 4 條第 1 項第 3 款）、持槍歹徒危害他人（第 4、5 款）
@@ -5523,6 +5538,182 @@ function warningShot() {
     if (typeof AIM !== 'undefined' && AIM.complain) AIM.complain('民眾投訴：警察在' + nearCross(P.x, P.z) + '無故開槍，嚇到路人');
   }
   updateHUD(true);
+}
+
+/* ---------- GTA5 式通緝導演：星級決定警力、距離、強度 ---------- */
+const WSTAR = [null,
+  { cars: 2, gap: 10, dmin: 120, dmax: 190, vmax: 26, ram: 0.0, shoot: 0.0, rb: 0, heli: 0, swat: 0, arm: 0, zone: 90, need: 20 },
+  { cars: 3, gap: 8, dmin: 110, dmax: 180, vmax: 29, ram: 0.4, shoot: 0.6, rb: 0, heli: 0, swat: 0, arm: 0, zone: 120, need: 28 },
+  { cars: 5, gap: 6, dmin: 100, dmax: 170, vmax: 32, ram: 0.8, shoot: 1.0, rb: 1, heli: 1, swat: 0, arm: 0, zone: 150, need: 36 },
+  { cars: 6, gap: 5, dmin: 90, dmax: 160, vmax: 34, ram: 1.0, shoot: 1.3, rb: 2, heli: 1, swat: 2, arm: 0, zone: 190, need: 44 },
+  { cars: 8, gap: 4, dmin: 80, dmax: 150, vmax: 36, ram: 1.4, shoot: 1.6, rb: 3, heli: 2, swat: 3, arm: 1, zone: 240, need: 52 },
+];
+const WD = { t: 0, rbT: 15, rbs: [], helis: [], armT: 8, swatT: 6, ramCD: 0, swapped: false, shotT: 0 };
+function wdCfg() { return WSTAR[Math.max(1, Math.min(5, W.stars))]; }
+/* 挑一個生成點：盡量在你視線外；高星有時從前方迎面來 */
+function hunterSpot(C) {
+  const yaw = P.mode === 'vehicle' ? P.veh.yaw : P.yaw, fx = -Math.sin(yaw), fz = -Math.cos(yaw);
+  const ahead = W.stars >= 4 && Math.random() < 0.4;
+  let best = null, bs = -1e9;
+  for (let k = 0; k < 8; k++) {
+    const r = randomSegNear(P.x, P.z, C.dmin, C.dmax); if (!r) continue;
+    const g = segInfo(r[0], r[1], r[2], r[3]), x = g.x0 + g.dx * r[4], z = g.z0 + g.dz * r[4], d = Math.hypot(x - P.x, z - P.z) || 1;
+    const dot = ((x - P.x) * fx + (z - P.z) * fz) / d;
+    let sc = (ahead ? dot : -dot) + rand(0, 0.5); if (losClear(x, 1.5, z, P.x, 1.4, P.z)) sc -= 1.6;
+    if (sc > bs) { bs = sc; best = r; }
+  }
+  return best;
+}
+function placeCar(R, r) { if (!r) return; const c = R.car; c.place(...r); c.x = c.px; c.z = c.pz; c.speed = 8; c.state = 'respond'; R.state = 'respond'; R.stuckT = 0; R.path = null; }
+function spawnHunterCar(kind) {
+  const C = wdCfg(); const r = hunterSpot(C);
+  const R = kind === 'swat' ? requestSWAT(W.lx, W.lz, 'hunt') : spawnResponder('police', W.lx, W.lz, { arrive: 12, getTarget: () => ({ x: W.lx, z: W.lz }), onArrive: (R) => { R.arrivedT = 0; } });
+  placeCar(R, r); R.hunt = true; R.deployed = R.deployed || []; R.vmax = C.vmax; R.kind = kind; W.cars.push(R); return R;
+}
+function spawnArmored() {
+  const R = spawnHunterCar('swat'); if (!R) return;
+  R.armored = true; R.car.mesh.scale.set(1.18, 1.3, 1.18); R.car.hp = 700; R.vmax = 27; R.car.len *= 1.18;
+  radio('🛡️ 警方出動裝甲特勤車！', 'warn'); AU.bad();
+}
+/* ---------- 路障 ---------- */
+function spawnRoadblock() {
+  const yaw = P.mode === 'vehicle' ? P.veh.yaw : P.yaw, fx = -Math.sin(yaw), fz = -Math.cos(yaw), dd = rand(170, 230);
+  const r = nearestRoad(P.x + fx * dd, P.z + fz * dd); if (!r || r.d > 14) return;
+  if (dist(r.px, r.pz, P.x, P.z) < 90 || WD.rbs.some(b => dist(b.x, b.z, r.px, r.pz) < 80)) return;
+  const g = segInfo(r.a[0], r.a[1], r.b[0], r.b[1]); const alongX = r.a[1] === r.b[1];
+  const cars = [], offs = g.w > 14 ? [-g.w * 0.28, 0, g.w * 0.28] : [-g.w * 0.22, g.w * 0.22];
+  for (const o of offs) {
+    const c = new NPCVeh('car', 'sedan', true); c.x = alongX ? r.px : r.px + o; c.z = alongX ? r.pz + o : r.pz;
+    c.yaw = (alongX ? 0 : Math.PI / 2) + rand(-0.12, 0.12); c.state = 'parked'; c.flag = true; c.speed = 0; c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.yaw; TRAFFIC.push(c); cars.push(c);
+  }
+  const sx = alongX ? Math.sign(P.x - r.px) || 1 : 0, sz = alongX ? 0 : Math.sign(P.z - r.pz) || 1;
+  const offc = [];
+  for (let k = 0; k < 2; k++) {
+    const lat = (k ? 1 : -1) * g.w * 0.2;
+    const o = spawnOfficer(alongX ? r.px - sx * 3.5 : r.px + lat, alongX ? r.pz + lat : r.pz - sz * 3.5, { role: 'cop' }, false); o.kind2 = 'hunt'; o.R = { car: cars[0] }; o.closeT = 0; offc.push(o);
+  }
+  WD.rbs.push({ x: r.px, z: r.pz, cars, offs: offc, t: 0 });
+  radio('🚧 前方有警方設的路障！', 'warn');
+}
+function updateRoadblocks(dt) {
+  for (let k = WD.rbs.length - 1; k >= 0; k--) {
+    const b = WD.rbs[k]; b.t += dt; const d = dist(b.x, b.z, P.x, P.z);
+    for (const c of b.cars) flashLights(c, b.t);
+    if (b.t > 90 || d > 330 || !W.stars) { removeRoadblock(b); WD.rbs.splice(k, 1); }
+  }
+}
+function removeRoadblock(b) {
+  for (const c of b.cars) { const j = TRAFFIC.indexOf(c); if (j >= 0) TRAFFIC.splice(j, 1); scene.remove(c.mesh); }
+  for (const o of b.offs) { if (OFFICERS.includes(o)) removeOfficer(o); }
+}
+/* ---------- 警用直升機 ---------- */
+function makeHeli() {
+  const g = new THREE.Group(), dk = new THREE.MeshLambertMaterial({ color: 0x1b2a4a }), wh = new THREE.MeshLambertMaterial({ color: 0xe8ecf0 });
+  const body = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 8), dk); body.scale.set(1.5, 1.4, 3.0); g.add(body);
+  const stripe = new THREE.Mesh(new THREE.BoxGeometry(3.05, 0.3, 2.4), wh); stripe.position.y = -0.05; g.add(stripe);
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.5, 5.2), dk); tail.position.set(0, 0.3, -4.6); g.add(tail);
+  const fin = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.5, 0.9), dk); fin.position.set(0, 1.0, -7); g.add(fin);
+  const tr = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.5, 0.15), wh); tr.position.set(0.25, 1.0, -7); g.add(tr);
+  const rotor = new THREE.Group(); rotor.position.y = 1.5; const bm = new THREE.MeshBasicMaterial({ color: 0x222222, transparent: true, opacity: 0.55 });
+  for (let k = 0; k < 2; k++) { const b = new THREE.Mesh(new THREE.BoxGeometry(11, 0.05, 0.35), bm); b.rotation.y = k * Math.PI / 2; rotor.add(b); } g.add(rotor);
+  for (const s of [-1, 1]) { const sk = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 3.4), dk); sk.position.set(s * 1.1, -1.5, 0); g.add(sk); const st = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.6, 0.1), dk); st.position.set(s * 1.0, -1.2, 0.8); g.add(st); }
+  const red = new THREE.Mesh(new THREE.SphereGeometry(0.18, 6, 4), new THREE.MeshBasicMaterial({ color: 0xff2020 })), blue = new THREE.Mesh(new THREE.SphereGeometry(0.18, 6, 4), new THREE.MeshBasicMaterial({ color: 0x2060ff }));
+  red.position.set(-0.5, 1.5, 0); blue.position.set(0.5, 1.5, 0); g.add(red, blue);
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 6, 1, 14, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff6c8, transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
+  const spot = new THREE.Mesh(new THREE.CircleGeometry(5, 20), new THREE.MeshBasicMaterial({ color: 0xfff6c8, transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending })); spot.rotation.x = -Math.PI / 2;
+  scene.add(g, beam, spot);
+  return { g, rotor, red, blue, beam, spot, a: rand(0, 6.28), t: 0, x: 0, z: 0, y: 40, shootT: rand(1, 2.5), seen: false };
+}
+function spawnHeli() {
+  const h = makeHeli(), a = rand(0, 6.28); h.x = P.x + Math.cos(a) * 320; h.z = P.z + Math.sin(a) * 320; h.g.position.set(h.x, h.y, h.z); WD.helis.push(h);
+  radio('🚁 警方出動直升機！躲到室內或蓋住的地方才能擺脫。', 'warn');
+}
+function removeHeli(h) { scene.remove(h.g, h.beam, h.spot); const k = WD.helis.indexOf(h); if (k >= 0) WD.helis.splice(k, 1); }
+function heliCanSee(h) { return !P.inside && !insideShop(P.x, P.z) && dist(h.x, h.z, P.x, P.z) < 190 && !(P.mode === 'vehicle' && P.veh.parts && P.veh.parts.tunnel); }
+function updateHelis(dt) {
+  const want = W.stars ? wdCfg().heli : 0;
+  while (WD.helis.filter(h => !h.leave).length < want) spawnHeli();
+  const act = WD.helis.filter(h => !h.leave); while (act.length > want) { const h = act.pop(); h.leave = true; }
+  WD.heliSees = false;
+  for (let k = WD.helis.length - 1; k >= 0; k--) {
+    const h = WD.helis[k]; h.t += dt; h.a += dt * (0.45 + 0.1 * k);
+    let tx, tz;
+    if (h.leave) { tx = h.x + Math.cos(h.a) * 400; tz = h.z + Math.sin(h.a) * 400; h.y += dt * 6; if (dist(h.x, h.z, P.x, P.z) > 420 || h.t > 600) { removeHeli(h); continue; } }
+    else { const cx = h.seen ? P.x : W.lx, cz = h.seen ? P.z : W.lz; tx = cx + Math.cos(h.a + k * 3) * 32; tz = cz + Math.sin(h.a + k * 3) * 32; }
+    const dx = tx - h.x, dz = tz - h.z, L = Math.hypot(dx, dz) || 1, sp = Math.min(34, L * 0.9 + 4);
+    h.x += dx / L * sp * dt; h.z += dz / L * sp * dt; h.y = h.leave ? h.y : 38 + Math.sin(h.t * 0.7) * 2;
+    h.g.position.set(h.x, h.y, h.z); h.g.rotation.y = Math.atan2(dx, dz) + Math.PI; h.rotor.rotation.y += dt * 40;
+    h.g.rotation.z = clamp(dx / L * 0.12, -0.15, 0.15); const ph = Math.floor(h.t * 4) % 2; h.red.visible = !!ph; h.blue.visible = !ph;
+    h.seen = !h.leave && heliCanSee(h); if (h.seen) WD.heliSees = true;
+    // 探照燈：照向你（看到）或照向最後位置
+    const gx = h.seen ? P.x : (h.leave ? h.x : W.lx), gz = h.seen ? P.z : (h.leave ? h.z : W.lz);
+    h.spot.visible = h.beam.visible = !h.leave; h.spot.position.set(gx, 0.15, gz);
+    const from = new THREE.Vector3(h.x, h.y - 1.2, h.z), to = new THREE.Vector3(gx, 0.1, gz), mid = from.clone().add(to).multiplyScalar(0.5), len = from.distanceTo(to);
+    h.beam.position.copy(mid); h.beam.scale.set(1, len, 1); h.beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), from.clone().sub(to).normalize());
+    // 4 星以上：直升機上的狙擊手開槍
+    if (h.seen && W.stars >= 4 && !h.leave) {
+      h.shootT -= dt;
+      if (h.shootT <= 0) {
+        h.shootT = rand(1.1, 1.9) / (W.stars >= 5 ? 1.4 : 1); const d = dist(h.x, h.z, P.x, P.z);
+        AU.shot(d); lineFX(new THREE.Vector3(h.x, h.y - 1, h.z), new THREE.Vector3(P.x + rand(-1.2, 1.2), 1.2, P.z + rand(-1.2, 1.2)), 0xffe08a, 0.12);
+        const D = DIFF[S.diff]; if (Math.random() < 0.2 * D.acc * (P.mode === 'vehicle' ? 0.7 : 1) * (P.run ? 0.8 : 1)) hurtPlayer(Math.round(D.dmg * 0.6), h.x, h.z);
+      }
+    }
+  }
+}
+/* ---------- 撞車 ---------- */
+function wdRam(dt) {
+  WD.ramCD -= dt; if (P.mode !== 'vehicle' || WD.ramCD > 0 || !W.stars) return;
+  const C = wdCfg(); if (!C.ram) return; const v = P.veh;
+  for (const R of W.cars) {
+    if (!RESP.includes(R) || R.state === 'disabled') continue; const c = R.car, d = dist(c.x, c.z, v.x, v.z);
+    if (d < (R.armored ? 4.4 : 3.5) && Math.abs(c.speed) > 3.5) {
+      WD.ramCD = 0.9; const f = R.armored ? 2.2 : 1;
+      damageVeh(v, Math.round(7 * C.ram * f), c.x, c.z); v.speed *= 0.86; P.shake = Math.max(P.shake || 0, 0.45); AU.punchHit();
+      c.hp -= R.armored ? 5 : 9; const k = Math.max(1, d); v.x += (v.x - c.x) / k * 0.35; v.z += (v.z - c.z) / k * 0.35;
+      if (c.hp <= 0) { R.state = 'disabled'; c.speed = 0; R.siren = false; lightsOff(c); radio('一台警車被撞壞，冒煙停下來了。', 'info'); setTimeout(() => { if (RESP.includes(R)) removeResponder(R); }, 12000); }
+      break;
+    }
+  }
+}
+/* ---------- 導演主迴圈 ---------- */
+function wdClear() {
+  for (const b of WD.rbs) removeRoadblock(b); WD.rbs = [];
+  for (const h of WD.helis) h.leave = true;
+  WD.swapped = false; WD.rbT = 15; WD.armT = 8; WD.swatT = 6;
+}
+function wantedDirector(dt) {
+  updateHelis(dt); updateRoadblocks(dt);
+  if (!W.stars) return;
+  const C = wdCfg(); W.cars = W.cars.filter(R => RESP.includes(R));
+  const live = W.cars.filter(R => R.state !== 'disabled'), nSwat = live.filter(R => R.kind === 'swat' && !R.armored).length, nArm = live.filter(R => R.armored).length, nPol = live.filter(R => R.kind !== 'swat').length;
+  WD.t -= dt; WD.swatT -= dt; WD.armT -= dt;
+  if (!P.inside) {
+    if (nPol < C.cars && WD.t <= 0) { WD.t = C.gap * rand(0.8, 1.2); spawnHunterCar('police'); }
+    if (nSwat < C.swat && WD.swatT <= 0) { WD.swatT = 14; spawnHunterCar('swat'); radio('📻 「維安特勤隊出動！」', 'radio'); }
+    if (nArm < C.arm && WD.armT <= 0) { WD.armT = 40; spawnArmored(); }
+  }
+  // 路障：開車逃跑時在前方設
+  WD.rbT -= dt;
+  if (C.rb && WD.rbT <= 0 && P.mode === 'vehicle' && Math.abs(P.veh.speed) > 7 && WD.rbs.length < C.rb) { WD.rbT = 22 / C.rb; spawnRoadblock(); }
+  // 強度：車速、撞擊、太遠的警車重新生成在附近
+  for (const R of W.cars) {
+    if (!RESP.includes(R) || R.state === 'disabled') continue; R.vmax = C.vmax;
+    if (P.mode === 'vehicle') R.arrive = R.armored ? 2 : Math.max(2.5, 6 - C.ram * 3);
+    if (dist(R.car.x, R.car.z, P.x, P.z) > 340 && !P.inside) placeCar(R, hunterSpot(C));
+  }
+  wdRam(dt);
+}
+/* 小地圖：藍色搜索圈＋警車 */
+function wdMini(g) {
+  if (!W.stars) return;
+  const C = wdCfg(), fl = Math.floor(W.flash * 2) % 2;
+  g.save(); g.fillStyle = W.seen ? 'rgba(60,110,255,0.10)' : 'rgba(60,110,255,0.20)'; g.strokeStyle = (W.seen || fl) ? 'rgba(90,150,255,0.9)' : 'rgba(255,60,60,0.9)'; g.lineWidth = 5;
+  g.beginPath(); g.arc(W.lx - P.x, W.lz - P.z, C.zone, 0, 7); g.fill(); g.stroke();
+  for (const R of W.cars) if (RESP.includes(R)) { g.fillStyle = fl ? '#ff3a3a' : '#3a6bff'; g.beginPath(); g.arc(R.car.x - P.x, R.car.z - P.z, 7, 0, 7); g.fill(); }
+  for (const h of WD.helis) { g.fillStyle = '#fff'; g.beginPath(); g.arc(h.x - P.x, h.z - P.z, 9, 0, 7); g.fill(); }
+  for (const b of WD.rbs) { g.fillStyle = '#ffb020'; g.fillRect(b.x - P.x - 7, b.z - P.z - 7, 14, 14); }
+  g.restore();
 }
 
 /* ================= 台中日常生活：角色、無業開局、警察特考 ================= */
@@ -7101,6 +7292,179 @@ function deliveryInteract() {
   return [{ x: D.rider.x, z: D.rider.z, r: 2.4, label: () => '🛵 收外送：' + D.d.n, act: () => handOverFood(D, false) }];
 }
 
+/* ---------- 視角：越肩第三人稱／第一人稱 ＋ 玩家全身模型 ---------- */
+const CAMS = { over: '越肩（瞄準時第一人稱）', first: '全程第一人稱', third: '全程越肩（瞄準不切換）' };
+let CAMMODE = safeGet('tcdl_cam') || 'over'; if (!CAMS[CAMMODE]) CAMMODE = 'over';
+function setCamMode(m) { CAMMODE = m; try { localStorage.setItem('tcdl_cam', m); } catch (e) { } }
+function cycleCam() { const k = Object.keys(CAMS); setCamMode(k[(k.indexOf(CAMMODE) + 1) % k.length]); toast('good', '📷 視角', CAMS[CAMMODE]); }
+const CAMST = { d: 0, px: 0, pz: 0, hd: 0, model: null, key: '', fireT: 0, wp: 0 };
+// 現在是不是第一人稱（含室內、瞄準切換）
+function camFirst() {
+  if (P.inside || P.mode !== 'foot') return true;
+  if (CAMMODE === 'first') return true;
+  if (CAMMODE === 'over') return P.aim > 0.6;
+  return false;
+}
+function playerModelBuild() {
+  const c = myChar(), L = c.look || {};
+  const o = { fem: c.sex === '女', shirt: L.shirt, pants: L.pants, skin: L.skin, police: isCop() && S.onDuty };
+  if (CAMST.model) scene.remove(CAMST.model.g);
+  const m = makePerson(o); m.g.visible = false; scene.add(m.g); m.body.scale.set(1, 1, 1);
+  CAMST.model = m; CAMST.key = (S.char || 'a') + (o.police ? 'p' : '');
+}
+function camHeadY() { return (blockAtXZ(P.x, P.z) ? 0.18 : 0) + 1.55 - (coverHidden() ? 0.5 : 0); }
+// 取代第一人稱的鏡頭位置（在 updatePlayer 設完第一人稱鏡頭後呼叫）
+function camThirdUpdate(dt) {
+  const key = (S.char || 'a') + (isCop() && S.onDuty ? 'p' : '');
+  if (!CAMST.model || CAMST.key !== key) playerModelBuild();
+  const m = CAMST.model;
+  const first = camFirst(); const aim = P.aim;
+  // 鏡頭距離：越肩 3.1m；瞄準時縮到 0（越肩模式）或 2m（全程越肩）
+  const full = CAMMODE === 'third' ? 2.1 : 0;
+  const want = P.inside || CAMMODE === 'first' ? 0 : (aim > 0.02 ? lerp(3.1, full, aim) : (P.run ? 3.5 : 3.1));
+  CAMST.d = lerp(CAMST.d, want, Math.min(1, dt * 12));
+  const f = camera.getWorldDirection(new THREE.Vector3()); const hy = camHeadY();
+  let D = CAMST.d;
+  if (D > 0.05) {
+    const hl = Math.hypot(f.x, f.z) || 1, rx = -f.z / hl, rz = f.x / hl;
+    const sh = (CAMMODE === 'third' ? 0.55 : 0.6) * Math.min(1, D / 2.2);
+    const hx = P.x, hz = P.z;
+    let tx = hx + rx * sh - f.x * D, ty = hy + 0.15 - f.y * D, tz = hz + rz * sh - f.z * D;
+    const dx = tx - hx, dy = ty - hy, dz = tz - hz, L = Math.hypot(dx, dy, dz) || 1;
+    const t = rayCols(hx, hy, hz, dx / L, dy / L, dz / L, L);
+    if (t < L) { const k = Math.max(0.5, t - 0.3) / L; tx = hx + dx * k; ty = hy + dy * k; tz = hz + dz * k; }
+    if (ty < 0.3) ty = 0.3;
+    camera.position.set(tx, ty, tz);
+  }
+  // 玩家模型
+  const show = !first && CAMST.d > 0.9 && S.hp > 0;
+  m.g.visible = show;
+  if (!show) { CAMST.px = P.x; CAMST.pz = P.z; return; }
+  const vx = P.x - CAMST.px, vz = P.z - CAMST.pz; CAMST.px = P.x; CAMST.pz = P.z;
+  const spd = Math.hypot(vx, vz) / Math.max(dt, 1e-3);
+  const armed = S.onDuty ? (S.weapon === 0 || S.weapon === 1 || S.weapon === 3) : !!bgHeld();
+  CAMST.fireT = Math.max(0, CAMST.fireT - dt);
+  const aiming = armed && (INP.aim || CAMST.fireT > 0);
+  let face = P.yaw + Math.PI;
+  if (!aiming && spd > 0.4) face = Math.atan2(vx, vz);
+  if (P.cover && !aiming) face = Math.atan2(P.cover.nx, P.cover.nz);
+  CAMST.hd = CAMST.hd + angDiff(CAMST.hd, face) * Math.min(1, dt * (aiming ? 18 : 10));
+  m.g.position.set(P.x, blockAtXZ(P.x, P.z) ? 0.18 : 0, P.z); m.g.rotation.y = CAMST.hd;
+  const pose = (P.cover && !aiming) ? 'crouch' : aiming ? 'aim' : spd > 5.2 ? 'run' : spd > 0.4 ? 'walk' : 'idle';
+  posePerson(m, pose, dt, spd * 0.5);
+  if (typeof punchT !== 'undefined' && punchT > 0) { const k = Math.sin(Math.min(1, 1 - punchT / 0.32) * Math.PI); m.armR.rotation.x = -1.5 * k; m.elbowR.rotation.x = -0.2; }
+  m.gun.visible = armed;
+  const long = S.onDuty ? S.weapon === 3 : bgHeld() === 'shotgun'; m.gun.scale.set(1.5, 1.5, long ? 3.2 : 1.6);
+  if (!aiming && armed && !P.cover) { m.armR.rotation.x = -0.45; m.elbowR.rotation.x = -0.6; }
+  // 身體朝向與鏡頭差太多時上半身不轉（簡化）：略微傾斜頭看向前方
+  m.head.rotation.y = clamp(angDiff(CAMST.hd, P.yaw + Math.PI) * -0.6, -0.8, 0.8);
+}
+// 開槍時玩家模型舉槍一下
+function camNoteFire() { CAMST.fireT = 1.6; }
+// 開車：追尾鏡頭
+function camVehicle(v, car) {
+  if (CAMMODE === 'first') return false;
+  const yaw = v.yaw + P.lookYaw, D = car ? (v.big ? 10 : 7.2) : 5, H = car ? 2.7 : 2.1;
+  const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
+  let tx = v.x - fx * D, tz = v.z - fz * D, ty = H;
+  const dx = tx - v.x, dz = tz - v.z, L = Math.hypot(dx, dz);
+  const t = rayCols(v.x, 1.4, v.z, dx / L, (ty - 1.4) / L, dz / L, L);
+  if (t < L) { const k = Math.max(1.5, t - 0.3) / L; tx = v.x + dx * k; tz = v.z + dz * k; }
+  camera.position.set(tx, ty, tz); camera.rotation.set(P.pitch - 0.12 + shakeOff(), yaw + shakeOff(), 0);
+  return true;
+}
+
+/* ---------- 掩體：玩家貼牆（X）＋ 警察找掩體射擊 ---------- */
+// 回傳最近的牆面法線（指向開放那一側），沒有就 null
+function wallNormalAt(x, z, reach, minH) {
+  let best = null, bd = 1e9;
+  for (let k = 0; k < 8; k++) {
+    const a = k * Math.PI / 4, dx = Math.cos(a), dz = Math.sin(a);
+    for (const r of [0.35, 0.55, 0.75, 0.95, reach]) {
+      const p = { x: x + dx * r, z: z + dz * r };
+      if (collideCircle(p, 0.12, minH || 1.1)) { if (r < bd || (r === bd && false)) { bd = r; best = { nx: -dx, nz: -dz, d: r }; } break; }
+    }
+  }
+  return best;
+}
+function toggleCover() {
+  if (!GAME.running || MODAL.open || P.mode !== 'foot' || P.inside) return;
+  if (P.cover) { leaveCover(); return; }
+  const w = wallNormalAt(P.x, P.z, 1.1, 1.1);
+  if (!w) { radio('旁邊沒有可以躲的牆或障礙物（要靠近牆邊）。', 'info'); return; }
+  P.cover = { nx: w.nx, nz: w.nz, t: 0, away: 0 };
+  // 吸附到牆邊
+  P.x -= w.nx * Math.max(0, w.d - 0.45) * 0.9; P.z -= w.nz * Math.max(0, w.d - 0.45) * 0.9;
+  radio('🧱 躲進掩體：A/D 沿牆移動，按住右鍵探頭射擊，X 離開。', 'info'); AU.click();
+}
+function leaveCover() { P.cover = null; }
+function coverHidden() { return !!P.cover && P.aim < 0.5; }
+// 在 updatePlayer 的移動前呼叫：把移動限制成沿牆
+function coverMove(mx, mz, dt) {
+  const C = P.cover; if (!C) return [mx, mz];
+  const w = wallNormalAt(P.x, P.z, 0.95, 1.1);
+  if (!w || P.run || P.mode !== 'foot') { leaveCover(); return [mx, mz]; }
+  C.nx = w.nx; C.nz = w.nz;
+  const tx = -C.nz, tz = C.nx, al = mx * tx + mz * tz, away = mx * C.nx + mz * C.nz;
+  if (away > Math.hypot(mx, mz) * 0.75 && Math.hypot(mx, mz) > 0.01) { C.away += dt; if (C.away > 0.35) { leaveCover(); return [mx, mz]; } } else C.away = 0;
+  const k = 0.65; return [tx * al * k, tz * al * k];
+}
+/* ---------- 警察 AI：找掩體、躲、探頭射擊 ---------- */
+// 掩體 = 靠牆的躲藏點 hide ＋ 沿牆走幾步就能看到你的探頭點 peek
+function findCoverFor(o, tx, tz) {
+  let best = null, bs = 1e9;
+  for (const c of colsNear(o.x, o.z, 12)) {
+    if (c.h < 1.1 || c.tag === 'road') continue;
+    const sides = [[0, -1, c.x0, c.x1, c.z0, 'x'], [0, 1, c.x0, c.x1, c.z1, 'x'], [-1, 0, c.z0, c.z1, c.x0, 'z'], [1, 0, c.z0, c.z1, c.x1, 'z']];
+    for (const [nx, nz, a0, a1, fix, ax] of sides) {
+      const len = a1 - a0, n = Math.min(5, Math.max(1, Math.round(len / 3)));
+      for (let k = 0; k <= n; k++) {
+        const t = a0 + (len * k) / n, hx = ax === 'x' ? t : fix + nx * 0.6, hz = ax === 'x' ? fix + nz * 0.6 : t;
+        if (Math.hypot(hx - o.x, hz - o.z) > 11) continue;
+        const p = { x: hx, z: hz }; if (collideCircle(p, 0.4, 0)) continue;
+        const px = tx - hx, pz = tz - hz, pl = Math.hypot(px, pz) || 1;
+        if ((nx * px + nz * pz) / pl > 0.1) continue;                      // 牆要在我和玩家之間（至少不能正對著我）
+        if (losClear(hx, 1.5, hz, tx, 1.4, tz)) continue;                  // 躲著時要看不到玩家
+        const tx2 = -nz, tz2 = nx; let pk = null;
+        for (const s2 of [1.3, 2.2, 3.2, 4.6, 6.5]) { for (const sg of [1, -1]) { const qx = hx + tx2 * s2 * sg, qz = hz + tz2 * s2 * sg, q = { x: qx, z: qz }; if (collideCircle(q, 0.4, 0)) continue; if (losClear(qx, 1.5, qz, tx, 1.4, tz)) { pk = { x: qx, z: qz }; break; } } if (pk) break; }
+        if (!pk) continue;
+        const d = Math.hypot(hx - o.x, hz - o.z) + Math.hypot(pk.x - hx, pk.z - hz) * 0.5 + Math.abs(pl - 14) * 0.15;
+        if (d < bs) { bs = d; best = { x: hx, z: hz, nx, nz, pk }; }
+      }
+    }
+  }
+  return best;
+}
+function copCoverAI(o, dt, d, sees) {
+  const C = wdCfg();
+  o.cvT = (o.cvT || 0) - dt; o.cvRe = (o.cvRe || 0) - dt;
+  if (o.cv && Math.hypot(P.x - o.cv.px, P.z - o.cv.pz) > 9) o.cv = null;   // 你跑遠了才換掩體
+  if (!o.cv && o.cvRe <= 0 && d > 5 && sees) { o.cvRe = 2.5; const c = findCoverFor(o, P.x, P.z); if (c) { c.px = P.x; c.pz = P.z; o.cv = c; o.cvPh = 'go'; } }
+  if (!o.cv) return null;
+  const goto = (q, sp) => { const dd = Math.hypot(o.x - q.x, o.z - q.z); if (dd > 0.5) { officerGo(o, q.x, q.z, sp, dt); return true; } return false; };
+  if (o.cvPh === 'go') { if (goto(o.cv, 6.2)) return ['run', 6.2]; o.cvPh = 'hide'; o.cvT = rand(1.0, 2.2); }
+  if (o.cvPh === 'hide') {
+    if (goto(o.cv, 3.5)) return ['crouch', 3.5];
+    o.yaw = Math.atan2(o.cv.nx, o.cv.nz);
+    if (o.cvT <= 0) { o.cvPh = 'peek'; o.cvT = rand(1.8, 2.8); o.burst = o.swat ? 4 : 3; o.shootT = 0.25; }
+    return ['crouch', 0];
+  }
+  if (o.cvPh === 'peek') {
+    if (goto(o.cv.pk, 3.2)) { o.yaw = Math.atan2(P.x - o.x, P.z - o.z); return ['aim', 3.2]; }
+    o.yaw = Math.atan2(P.x - o.x, P.z - o.z);
+    o.shootT -= dt;
+    if (o.shootT <= 0 && o.burst > 0 && canSeePlayer(o.x, o.z, 60)) {
+      o.burst--; o.shootT = o.swat ? 0.35 : 0.5; const D = DIFF[S.diff];
+      AU.shot(d); spawnFX(new THREE.Vector3(o.x + Math.sin(o.yaw) * 0.6, 1.45, o.z + Math.cos(o.yaw) * 0.6), 0xffd27a, 0.1, 0.08);
+      const hitP = (o.swat ? 0.22 : 0.14) * D.acc * (C.shoot || 1) * (P.mode === 'vehicle' ? 0.6 : 1) * (P.run ? 0.7 : 1) * (coverHidden() ? 0.25 : 1);
+      if (Math.random() < hitP) hurtPlayer(Math.round(D.dmg * (o.swat ? 0.9 : 0.7)), o.x, o.z);
+    }
+    if (o.cvT <= 0 || o.burst <= 0 && o.cvT < 1) { o.cvPh = 'hide'; o.cvT = rand(1.4, 2.6); }
+    return ['aim', 0];
+  }
+  return null;
+}
+
 /* ---------- 黑市（台中港 3 號倉庫）＋ 武器輪盤 ---------- */
 const BGUNS = {
   pistol: { n: '黑星改造手槍', icon: '🔫', cap: 8, cd: 0.28, pellets: 1, dmg: 48, range: 150, noise: 80, price: 38000 },
@@ -7391,6 +7755,7 @@ function openPause() {
     ['▶ 繼續', 'g', () => { MODAL.close(); }],
     ['📋 考績與紀錄', '', showRecord],
     ...(MIS.cur ? [['❌ 放棄目前勤務（考績 -5）', 'r', () => { MIS.cancel(); MODAL.close(); }]] : []),
+    ['📷 視角：' + CAMS[CAMMODE], '', () => { cycleCam(); MODAL.close(); openPause(); }],
     ['⚙️ 難度：' + DIFF[S.diff].name, '', () => { S.diff = (S.diff + 1) % 3; MODAL.close(); openPause(); }],
     ['💾 存檔', '', () => { saveGame(); MODAL.close(); toast('good', '💾 已存檔', ''); }],
     ['❓ 操作說明', '', showHelp],
@@ -7498,6 +7863,7 @@ function drawMini() {
   for (const [s, ic] of ICONS()) if (s) drawIcon(s.x != null ? s.x : s.cx, s.z != null ? s.z : (s.z1 + 2), ic);
   drawRoute(g, P.x, P.z, 7);
   const tg = navTarget();
+  wdMini(g);
   if (PURSUIT.car) { g.fillStyle = '#ff3030'; g.beginPath(); g.arc(PURSUIT.car.px - P.x, PURSUIT.car.pz - P.z, 9, 0, 7); g.fill(); }
   g.restore();
   if (tg) { // 目標（超出範圍就畫在邊緣）
