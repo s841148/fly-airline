@@ -870,6 +870,10 @@ icon('i_wbottle',g=>mcPix(g,BOT_ROWS,2,{k:'#8a5a2a',g:'#cfe8f0',G:'#e8f6fa',L:'#
 for(const [k,n,c] of POTS) icon('i_pot_'+k.toLowerCase(),g=>mcPix(g,BOT_ROWS,2,{k:'#8a5a2a',g:'#cfe8f0',G:'#e8f6fa',L:c,l:shade(c,1.4)}));
 defI('I_BOTTLE',{n:'玻璃瓶',ic:T.i_bottle});defI('I_WBOTTLE',{n:'水瓶',ic:T.i_wbottle});
 for(const [k,n,c,eff,ing] of POTS) defI('I_POT_'+k,{n,ic:T['i_pot_'+k.toLowerCase()],stack:16,food:0,sat:0,potion:true,bottle:true,hp:k==='HEAL'?10:0,eff:eff?[eff,180]:undefined});
+const WB_ROWS=['....hhhhhhhh....','...h........h...','..bbbbbbbbbbbb..','..bIIIIIIIIIIb..','..sSsSsSsSsSsS..','..gggggggggggg..','..sSsSsSsSsSsS..','..sSsSsSsSsSsS..','..sSsSsSsSsSsS..','..gggggggggggg..','..sSsSsSsSsSsS..','...sSsSsSsSsS...'];
+const WB_PAL={h:'#d8c8a0',b:'#c29a5e',s:'#7a5a34',S:'#a07a46',g:'#8a8a8a'};
+icon('i_woodb',g=>mcPix(g,WB_ROWS,3,Object.assign({I:'#3a2a18'},WB_PAL)));icon('i_woodbw',g=>mcPix(g,WB_ROWS,3,Object.assign({I:'#3a6ac8'},WB_PAL)));
+defI('I_WOODB',{n:'木桶',ic:T.i_woodb,stack:16,fuel:15});defI('I_WOODBW',{n:'木桶（裝水）',ic:T.i_woodbw,stack:1});
 defI('I_BREAD',{n:'麵包',ic:T.i_bread,food:5,sat:6});defI('I_APPLE',{n:'蘋果',ic:T.i_apple,food:4,sat:2.4});defI('I_GAPPLE',{n:'金蘋果',ic:T.i_gapple,food:4,sat:9.6,heal:8});
 defI('I_BEEF',{n:'生牛肉',ic:T.i_beef,food:3,sat:1.8,cook:'I_STEAK'});defI('I_STEAK',{n:'牛排',ic:T.i_steak,food:8,sat:12.8});
 defI('I_CHICKEN',{n:'生雞肉',ic:T.i_chicken,food:2,sat:1.2,cook:'I_CCHICKEN'});defI('I_CCHICKEN',{n:'烤雞',ic:T.i_cchicken,food:6,sat:7.2});
@@ -2155,10 +2159,12 @@ function useItem(){if(P.dead||uiOpen) return;if(typeof vehUse==='function'&&vehU
   if(s.id===IT.I_MBUCKET){USE.mode='eat';USE.eat=0;return;}
   if(s.id===IT.I_EGG){const v=lookDir();throwEgg(v);consumeHeld(1);return;}
   if(s.id===IT.I_BOTTLE){const r=rayCast(eyePos(),lookDir(),5,{liquid:true});if(r&&r.id===B.WATER){playSnd('splash');if(W.mode!=='creative') consumeHeld(1);addItem(IT.I_WBOTTLE,1);return;}}
+  if(s.id===IT.I_WOODB){const r=rayCast(eyePos(),lookDir(),5,{liquid:true});if(r&&r.id===B.WATER){setB(r.x,r.y,r.z,0);playSnd('splash');if(W.mode==='creative') return;if(s.n===1) P.inv[P.sel]={id:IT.I_WOODBW,n:1};else{s.n--;if(addItem(IT.I_WOODBW,1)) spawnDrop(IT.I_WOODBW,1,P.x,P.y+1,P.z);}renderHotbar();}else if(r&&r.id===B.LAVA) toast('木桶會被熔岩燒掉，只能裝水');return;}
   if(s.id===IT.I_BUCKET){const r=rayCast(eyePos(),lookDir(),5,{liquid:true});if(r.id===B.WATER||r.id===B.LAVA){setB(r.x,r.y,r.z,0);const full=r.id===B.WATER?IT.I_WBUCKET:IT.I_LBUCKET;playSnd('splash');if(W.mode==='creative') return;if(s.n===1) P.inv[P.sel]={id:full,n:1};else{s.n--;if(addItem(full,1)) spawnDrop(full,1,P.x,P.y+1,P.z);}renderHotbar();}return;}
   if(!h.id) return;
   const tx=h.x+h.nx,ty=h.y+h.ny,tz=h.z+h.nz;
   if(s.id===IT.I_WBUCKET&&tryPortal(tx,ty,tz,'sky')){if(W.mode!=='creative'){P.inv[P.sel]={id:IT.I_BUCKET,n:1};renderHotbar();}playSnd('portal');return;}
+  if(s.id===IT.I_WOODBW){if(placeOK(tx,ty,tz,true)){if(W.dim==='nether'){puff(tx+0.5,ty+0.5,tz+0.5,0xffffff,8);playSnd('hiss');}else setB(tx,ty,tz,B.WATER);if(W.mode!=='creative'){P.inv[P.sel]={id:IT.I_WOODB,n:1};renderHotbar();}playSnd('splash');}return;}
   if(s.id===IT.I_WBUCKET||s.id===IT.I_LBUCKET){if(placeOK(tx,ty,tz,true)){if(W.dim==='nether'&&s.id===IT.I_WBUCKET){puff(tx+0.5,ty+0.5,tz+0.5,0xffffff,8);playSnd('hiss');}else setB(tx,ty,tz,s.id===IT.I_WBUCKET?B.WATER:B.LAVA);if(W.mode!=='creative'){P.inv[P.sel]={id:IT.I_BUCKET,n:1};renderHotbar();}playSnd('splash');}return;}
   if(s.id===IT.I_FLINTSTEEL){if(typeof tryPortal==='function'&&tryPortal(tx,ty,tz)){useTool(s);playSnd('portal');return;}if(h.id===B.TNT){igniteTNT(h.x,h.y,h.z);useTool(s);}return;}
   if(d.tool&&d.tool.type==='hoe'){if((h.id===B.GRASS||h.id===B.DIRT)&&h.ny>=0&&!getB(h.x,h.y+1,h.z)){setB(h.x,h.y,h.z,B.FARMLAND);useTool(s);playSnd('grass');}return;}
@@ -2609,7 +2615,7 @@ function liquidTick(dt){if(typeof isHost==='function'&&!isHost()) {LIQ.q.clear()
 
 // ================= 多人連線（房間代碼）=================
 const DIMS=['over','nether','sky'];
-const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611282100'};
+const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611282200'};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
 function peerOpts(){const o={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
@@ -2955,7 +2961,7 @@ let SHOT=false;
 
 // ================= 模組：交通工具（船、礦車）、電梯、漏斗、自動收成機、自動挖礦機 =================
 // ---- 合成 ----
-{rs(['G G',' G '],{G:B.GLASS},IT.I_BOTTLE,3);rs([' B ','CCC'],{B:IT.I_BONE,C:B.COBBLE},B.BREWING);
+{rs(['G G',' G '],{G:B.GLASS},IT.I_BOTTLE,3);rs(['P P','PPP'],{P:B.PLANKS},IT.I_WOODB);rs([' B ','CCC'],{B:IT.I_BONE,C:B.COBBLE},B.BREWING);
   for(const [k,n,c,eff,ing] of POTS){if(IT[ing]===undefined) continue;RECIPES.push({shapeless:[IT.I_WBOTTLE,IT[ing]],out:IT['I_POT_'+k],n:1,brew:true});RECIPES.push({shapeless:[IT.I_WBOTTLE,IT.I_WBOTTLE,IT.I_WBOTTLE,IT[ing]],out:IT['I_POT_'+k],n:3,brew:true});}}
 {const ST2=IT.I_STICK;rs(['XXX','XXX'],{X:B.COBBLE},B.COBBLE_WALL,6);rs(['XXX','XXX'],{X:B.STONE_BRICKS},B.STONEB_WALL,6);rs(['SS'],{S:B.STONE},B.SMOOTH_STONE,2);smelt(B.STONE_BRICKS,B.CRACKED_BRICKS,0.1);rl([B.STONE_BRICKS,B.OAK_LEAVES],B.MOSSY_BRICKS);rs(['S','S'],{S:B.SLAB_STONE},B.CHISELED_BRICKS);
   for(const k of ['GRANITE','DIORITE','ANDESITE']){rs(['XXX'],{X:B['P_'+k]},B['SLAB_P_'+k],6);rs(['X  ','XX ','XXX'],{X:B['P_'+k]},B['STAIRS_P_'+k],4);}
@@ -3854,7 +3860,7 @@ function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Mat
   return true;}
 
 // ================= 自動偵測並修復 BUG =================
-const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611282100'};
+const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611282200'};
 function diagLog(msg){try{DIAG.log.push({t:new Date().toISOString().slice(0,19),v:DIAG.ver,m:String(msg).slice(0,200)});if(DIAG.log.length>40) DIAG.log.shift();localStorage.setItem('mmvox_buglog',JSON.stringify(DIAG.log));}catch(e){}}
 function diagFree(x,y,z){return !collides(x,y,z);}
 function selfCheck(manual){const fixed=[];if(!running) return fixed;
