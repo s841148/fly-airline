@@ -15,6 +15,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#fff;font-f
 #cross:before,#cross:after{content:"";position:absolute;background:#fff}#cross:before{left:8px;top:0;width:2px;height:18px}#cross:after{top:8px;left:0;height:2px;width:18px}
 #bottom{position:absolute;left:50%;bottom:max(6px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;flex-direction:column;align-items:center}
 #hotbar{display:flex;background:rgba(0,0,0,.35);border:3px solid #111;outline:2px solid #555;pointer-events:auto}
+#hotbar{position:relative}.hs.off{position:absolute;right:calc(100% + 10px);top:-3px;border-radius:6px;border-color:#6a6a8a;background:rgba(40,40,70,.45)}
 .hs{width:44px;height:44px;border:2px solid #8a8a8a;position:relative;display:flex;align-items:center;justify-content:center;background:rgba(80,80,80,.35)}
 .hs.on{border:3px solid #fff;outline:2px solid #000;z-index:1}
 .hs b,.sl b{position:absolute;right:2px;bottom:0;font-size:14px;font-weight:700;text-shadow:2px 2px 0 #3f3f3f;color:#fff}
@@ -1405,8 +1406,8 @@ const clouds=new THREE.Group();{const m=new THREE.MeshBasicMaterial({color:0xfff
 const SKY={day:[new THREE.Color(0x78a7ff),new THREE.Color(0xc0d8ff)],night:[new THREE.Color(0x02030a),new THREE.Color(0x0a1028)],set:[new THREE.Color(0x4a5a9a),new THREE.Color(0xf0904a)],nether:[new THREE.Color(0x3a0a0a),new THREE.Color(0x5a1a10)]};
 function dayLight(){const t=(W.time%24000)/24000;const a=t*Math.PI*2;return clamp(0.5+Math.cos(a-Math.PI*0.5+Math.PI)*-0.9,0,1);}
 function updateSky(){const t=(W.time%24000)/24000;const sunA=t*Math.PI*2-Math.PI/2;
-  if(W.dim==='nether'){skyMat.uniforms.top.value.copy(SKY.nether[0]);skyMat.uniforms.hor.value.copy(SKY.nether[1]);scene.fog.color.copy(SKY.nether[1]);LIGHT.sky.value=1;LIGHT.skyCol.value.set(1,0.7,0.6);LIGHT.minL.value=0.25;sunM.visible=moonM.visible=false;stars.material.opacity=0;clouds.visible=false;hemi.intensity=0.5;sunL.intensity=0.2;return;}
-  sunM.visible=moonM.visible=true;clouds.visible=true;LIGHT.minL.value=0.05;
+  if(W.dim==='nether'){skyMat.uniforms.top.value.copy(SKY.nether[0]);skyMat.uniforms.hor.value.copy(SKY.nether[1]);scene.fog.color.copy(SKY.nether[1]);LIGHT.sky.value=1;LIGHT.skyCol.value.set(1,0.7,0.6);LIGHT.minL.value=carryLight(0.25);sunM.visible=moonM.visible=false;stars.material.opacity=0;clouds.visible=false;hemi.intensity=0.5;sunL.intensity=0.2;return;}
+  sunM.visible=moonM.visible=true;clouds.visible=true;LIGHT.minL.value=carryLight(0.05);
   const sy=Math.sin(sunA+Math.PI/2*0)  ;const sunUp=Math.sin(t*Math.PI*2+Math.PI/2*0);
   // t=0 日出(6:00) t=0.25 正午 t=0.5 日落 t=0.75 午夜（跟原版一樣：0=早上6點）
   const el=Math.sin(t*Math.PI*2);const day=clamp(el*2.2+0.35,0,1);const set=clamp(1-Math.abs(el)*4,0,1)*(Math.cos(t*Math.PI*2)>-2?1:0);
@@ -1423,7 +1424,7 @@ function updateSky(){const t=(W.time%24000)/24000;const sunA=t*Math.PI*2-Math.PI
   clouds.position.set(cp.x-((performance.now()/400)%400)+200*0,  110, cp.z);{const dl=dayLight();const c0=new THREE.Color(0x3a4258).lerp(new THREE.Color(0xffffff),clamp(dl*1.2,0,1));cloudMats[0].color.copy(c0);cloudMats[1].color.copy(c0).multiplyScalar(0.86);}}
 const WX={rain:false,next:12000};
 // ---- 玩家 ----
-const P={x:0.5,y:80,z:0.5,vx:0,vy:0,vz:0,yaw:0,pitch:0,onGround:false,fly:false,hp:20,food:20,sat:5,exh:0,xp:0,level:0,xpTot:0,air:300,fire:0,fallStart:null,inv:Array(36).fill(null),armor:Array(4).fill(null),sel:0,dead:false,regenT:0,hurtT:0,sprint:false,sneak:false,inWater:false,inLava:false,name:'玩家',color:'#3d8b6b',portalT:0,spawn:null,third:false,invul:0};
+const P={x:0.5,y:80,z:0.5,vx:0,vy:0,vz:0,yaw:0,pitch:0,onGround:false,fly:false,hp:20,food:20,sat:5,exh:0,xp:0,level:0,xpTot:0,air:300,fire:0,fallStart:null,off:null,inv:Array(36).fill(null),armor:Array(4).fill(null),sel:0,dead:false,regenT:0,hurtT:0,sprint:false,sneak:false,inWater:false,inLava:false,name:'玩家',color:'#3d8b6b',portalT:0,spawn:null,third:false,invul:0};
 const PW=0.3,PH=1.8,EYE=1.62;
 const keys={};let pointerLocked=false,uiOpen=null,paused=true,running=false;
 const held=()=>P.inv[P.sel];
@@ -1468,6 +1469,7 @@ addEventListener('keydown',e=>{if(typeof onKey==='function'&&onKey(e)) return;if
   if(e.code==='KeyW'){const now=performance.now();if(now-(P.lastW||0)<280) P.sprint=true;P.lastW=now;}
   if(e.code==='ControlLeft') P.sprint=true;
   if(e.code==='KeyQ') dropHeld(e.ctrlKey);
+  if(e.code==='KeyF'&&!e.ctrlKey&&!e.metaKey&&!e.altKey) swapHands();
   if(e.code==='F5'){e.preventDefault();P.third=!P.third;}
   if(e.code==='F3'){e.preventDefault();const d=$('#debug');d.hidden=!d.hidden;}});
 addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyW'||e.code==='ControlLeft') if(e.code==='KeyW') P.sprint=false;});
@@ -1532,20 +1534,20 @@ function breakBlock(h){const id=h.id;const b=BL[id];const s=held();
   fallCheck(h.x,h.y+1,h.z);}
 function fallCheck(x,y,z){let id=getB(x,y,z);let n=0;while(id&&BL[id].fall&&!BL[getB(x,y-1,z)].solid&&n++<40){let yy=y;while(yy>0&&!BL[getB(x,yy-1,z)].solid&&!BL[getB(x,yy-1,z)].liquid||yy>0&&BL[getB(x,yy-1,z)].liquid&&yy>1&&getB(x,yy-1,z)===B.WATER) yy--;if(yy===y) break;setB(x,y,z,0);setB(x,yy,z,id);y++;id=getB(x,y,z);}}
 function useTool(s,amt){if(!s||W.mode==='creative') return;const d=DEF(s.id);if(!d.tool&&!d.armor) return;const unb=s.ench&&s.ench.unb;if(unb&&Math.random()<unb/(unb+1)) return;s.d=(s.d||0)+(amt||1);
-  if(s.d>=durOf(d)){const i=P.inv.indexOf(s);if(i>=0) P.inv[i]=null;else{const j=P.armor.indexOf(s);if(j>=0) P.armor[j]=null;}playSnd('break');toast(`${d.n} 壞掉了`);}if(typeof renderHotbar==='function') renderHotbar();}
+  if(s.d>=durOf(d)){const i=P.inv.indexOf(s);if(i>=0) P.inv[i]=null;else if(P.off===s) P.off=null;else{const j=P.armor.indexOf(s);if(j>=0) P.armor[j]=null;}playSnd('break');toast(`${d.n} 壞掉了`);}if(typeof renderHotbar==='function') renderHotbar();}
 function pickBlock(){if(W.mode!=='creative'||!AIM.id) return;let id=AIM.id;if(id===B.FURNACE_ON) id=B.FURNACE;if(id===B.LAMP_ON) id=B.LAMP;if(id===B.WIRE_ON||id===B.WIRE) id=IT.I_REDSTONE;if(id===B.LEVER_ON) id=B.LEVER;if(BL[id].isOpen) id=BL[id].cid;
   const ex=P.inv.findIndex((s,i)=>i<9&&s&&s.id===id);if(ex>=0){selectSlot(ex);return;}P.inv[P.sel]={id,n:1};renderHotbar();}
 // ---- 受傷與死亡 ----
 function armorPts(){return P.armor.reduce((a,s)=>a+(s?DEF(s.id).armor.def:0),0);}
 function hurt(dmg,why,ignoreArmor,src){if(P.dead||W.mode==='creative'||P.invul>0) return;if(W.diff===0&&src==='mob') return;
-  if(typeof USE!=='undefined'&&USE.mode==='block'&&(src==='mob'||src==='boom')){const s=held();if(s&&DEF(s.id).shield){useTool(s,Math.ceil(dmg));playSnd('shield');dmg*=src==='boom'?0.3:0;if(dmg<=0){P.invul=0.4;return;}}}
+  if(typeof USE!=='undefined'&&USE.mode==='block'&&(src==='mob'||src==='boom')){const s=shieldStack();if(s){useTool(s,Math.ceil(dmg));playSnd('shield');dmg*=src==='boom'?0.3:0;if(dmg<=0){P.invul=0.4;return;}}}
   if(src==='mob') dmg*=[0,0.5,1,1.5][W.diff];
   if(!ignoreArmor){const ap=armorPts();dmg*=1-Math.min(20,ap)/25;let prot=0;for(const a of P.armor) if(a&&a.ench&&a.ench.prot) prot+=a.ench.prot;dmg*=1-Math.min(0.64,prot*0.04);for(const a of P.armor) if(a) useTool(a,1);}
   P.hp=Math.max(0,P.hp-dmg);P.hurtT=0.5;P.invul=0.45;playSnd('hurt');const f=$('#hurtFlash');if(f){f.style.opacity=0.45;setTimeout(()=>f.style.opacity=0,120);}
   if(P.hp<=0) die(why);}
 function heal(n){P.hp=Math.min(20,P.hp+n);}
 function die(why){P.dead=true;P.deathMsg=why;if(typeof sysAll==='function') sysAll(SET.name+' '+why,'death');if(document.pointerLockElement) document.exitPointerLock();
-  if(!(typeof shareDeathDrops==='function'&&shareDeathDrops())) for(const s of P.inv.concat(P.armor)) if(s) spawnDrop(s.id,s.n,P.x,P.y+1,P.z,s,true);P.inv=Array(36).fill(null);P.armor=Array(4).fill(null);
+  if(!(typeof shareDeathDrops==='function'&&shareDeathDrops())) for(const s of P.inv.concat(P.armor,[P.off])) if(s) spawnDrop(s.id,s.n,P.x,P.y+1,P.z,s,true);P.off=null;P.inv=Array(36).fill(null);P.armor=Array(4).fill(null);
   if(P.xpTot>0) spawnXP(P.x,P.y+1,P.z,Math.min(100,P.level*7));P.xp=0;P.level=0;P.xpTot=0;renderHotbar();if(typeof showDeath==='function') showDeath(why);}
 function respawn(){P.dead=false;P.hp=20;P.food=20;P.sat=5;P.air=300;P.fire=0;P.vy=0;P.fallStart=null;
   let sp=P.spawn;if(sp&&sp.dim!==W.dim) switchDim(sp.dim,true);if(sp&&![B.BED,B.BED_FOOT].includes(getB(sp.x,sp.y,sp.z,sp.dim))){toast('你的床不見了，回到世界重生點');sp=null;P.spawn=null;}
@@ -1626,11 +1628,15 @@ function icHTML(id,size){const t=iconOf(id);const col=t%32,row=Math.floor(t/32);
 function tipOf(s){if(!s) return '';const d=DEF(s.id);const L=[nameOf(s.id)];for(const e of enchList(s)) L.push('§'+e);if(d.armor) L.push('防禦 +'+d.armor.def);if(d.tool&&d.tool.dmg>1&&d.tool.type!=='bow') L.push('攻擊 '+d.tool.dmg);const du=durOf(d);if(du&&s.d) L.push(`耐久 ${du-s.d}/${du}`);if(d.food) L.push('飽食 +'+d.food);return L.join('\n');}
 function slotHTML(s,c,i,extra){const d=s&&DEF(s.id);const du=d?durOf(d):0;const f=s&&du&&s.d?1-s.d/du:null;
   return `<div class="sl ${extra||''} ${s&&s.ench?'glint':''}" data-c="${c}" data-i="${i}" data-tip="${s?tipOf(s).replace(/"/g,'&quot;'):''}">${s?icHTML(s.id):''}${s&&s.n>1?`<b>${s.n}</b>`:''}${f!==null?`<u style="width:${Math.max(6,f*84)}%;background:hsl(${f*120},90%,45%)"></u>`:''}</div>`;}
-function renderHotbar(){const el=$('#hotbar');if(!el) return;el.innerHTML=P.inv.slice(0,9).map((s,i)=>`<div class="hs ${i===P.sel?'on':''} ${s&&s.ench?'glint':''}" data-h="${i}">${s?icHTML(s.id,isTouch?22:30):''}${s&&s.n>1?`<b>${s.n}</b>`:''}${s&&DEF(s.id)&&durOf(DEF(s.id))&&s.d?`<u style="width:${Math.max(6,(1-s.d/durOf(DEF(s.id)))*84)}%;background:hsl(${(1-s.d/durOf(DEF(s.id)))*120},90%,45%)"></u>`:''}</div>`).join('');}
-$('#hotbar').addEventListener('click',e=>{const h=e.target.closest('[data-h]');if(h) selectSlot(+h.dataset.h);});
-function slotGet(c,i){if(c==='inv') return P.inv[i];if(c==='arm') return P.armor[i];if(c==='cg') return UI.cg[i];if(c==='ch') return W.cont[UI.key][i];
+function renderHotbar(){const el=$('#hotbar');if(!el) return;const o=P.off;const offH=`<div class="hs off ${o&&o.ench?'glint':''}" data-off="1" title="副手（按 F 與主手互換）">${o?icHTML(o.id,isTouch?22:30):'<span style="opacity:.35;font-size:11px">F</span>'}${o&&o.n>1?`<b>${o.n}</b>`:''}${o&&DEF(o.id)&&durOf(DEF(o.id))&&o.d?`<u style="width:${Math.max(6,(1-o.d/durOf(DEF(o.id)))*84)}%;background:hsl(${(1-o.d/durOf(DEF(o.id)))*120},90%,45%)"></u>`:''}</div>`;el.innerHTML=offH+P.inv.slice(0,9).map((s,i)=>`<div class="hs ${i===P.sel?'on':''} ${s&&s.ench?'glint':''}" data-h="${i}">${s?icHTML(s.id,isTouch?22:30):''}${s&&s.n>1?`<b>${s.n}</b>`:''}${s&&DEF(s.id)&&durOf(DEF(s.id))&&s.d?`<u style="width:${Math.max(6,(1-s.d/durOf(DEF(s.id)))*84)}%;background:hsl(${(1-s.d/durOf(DEF(s.id)))*120},90%,45%)"></u>`:''}</div>`).join('');}
+$('#hotbar').addEventListener('click',e=>{if(e.target.closest('[data-off]')){swapHands();return;}const h=e.target.closest('[data-h]');if(h) selectSlot(+h.dataset.h);});
+function carryLight(b){const h=held(),o=P.off;const t=x=>x&&(x.id===B.TORCH||x.id===B.LANTERN||x.id===B.GLOWSTONE||x.id===B.JACK);return (t(h)||t(o))?Math.max(b,0.22):b;}
+function swapHands(){if(P.dead||uiOpen) return;const t=P.off;P.off=P.inv[P.sel];P.inv[P.sel]=t||null;if(USE.mode) USE.mode=null;renderHotbar();playSnd('equip');}
+function shieldStack(){const h=held();if(h&&DEF(h.id).shield) return h;if(P.off&&DEF(P.off.id).shield) return P.off;return null;}
+function offShield(){return !!(P.off&&DEF(P.off.id).shield);}
+function slotGet(c,i){if(c==='of') return P.off;if(c==='inv') return P.inv[i];if(c==='arm') return P.armor[i];if(c==='cg') return UI.cg[i];if(c==='ch') return W.cont[UI.key][i];
   if(c==='fi'||c==='ff'||c==='fo') return W.furn[UI.key][{fi:'in',ff:'fuel',fo:'out'}[c]];if(c==='bp') return UI.bag[i];if(c==='tm') return TR.mine[i];if(c==='tt') return null;if(c==='co2') return W.cont[UI.key][6];if(c==='ei') return UI.ench.item;if(c==='el') return UI.ench.lapis;if(c==='a0'||c==='a1') return UI.anvil[c==='a0'?0:1];return null;}
-function slotSet(c,i,s){if(s&&!s.n) s=null;if(c==='inv') P.inv[i]=s;else if(c==='arm') P.armor[i]=s;else if(c==='cg') UI.cg[i]=s;else if(c==='ch'){W.cont[UI.key][i]=s;netCont(UI.key);}
+function slotSet(c,i,s){if(s&&!s.n) s=null;if(c==='of'){P.off=s;renderHotbar();return;}if(c==='inv') P.inv[i]=s;else if(c==='arm') P.armor[i]=s;else if(c==='cg') UI.cg[i]=s;else if(c==='ch'){W.cont[UI.key][i]=s;netCont(UI.key);}
   else if(c==='fi'||c==='ff'||c==='fo'){W.furn[UI.key][{fi:'in',ff:'fuel',fo:'out'}[c]]=s;netFurn(UI.key);}else if(c==='bp') UI.bag[i]=s;else if(c==='tm'){TR.mine[i]=s;trChanged();}else if(c==='co2'){W.cont[UI.key][6]=s;netCont(UI.key);}else if(c==='ei') UI.ench.item=s;else if(c==='el') UI.ench.lapis=s;else if(c==='a0'||c==='a1') UI.anvil[c==='a0'?0:1]=s;}
 const sameStack=(a,b)=>a&&b&&a.id===b.id&&!a.ench&&!b.ench&&!a.d&&!b.d;
 function canPut(c,i,s){if(c==='tt'||c==='co2') return false;if((c==='bp'||c==='ch')&&DEF(s.id).bag) return false;if(c==='arm') return DEF(s.id).armor&&DEF(s.id).armor.slot===i;if(c==='fo'||c==='co'||c==='ao') return false;if(c==='el') return s.id===IT.I_LAPIS;if(c==='ei') return !!enchKind(s.id)&&!s.ench;return true;}
@@ -1686,7 +1692,7 @@ function dollCanvas(){const c=document.createElement('canvas');c.width=16;c.heig
   const ac=s=>s?{leather:'#8a5a32',iron:'#cfcfcf',gold:'#f0c93a',diamond:'#5fd6d0',copper:'#d8824a'}[DEF(s.id).key.split('_').pop()]:null;const a=P.armor;
   if(ac(a[0])){f(ac(a[0]),3,0,10,3);f(ac(a[0]),3,3,1,3);f(ac(a[0]),12,3,1,3);}if(ac(a[1])){f(ac(a[1]),4,8,8,10);f(ac(a[1]),0,8,4,5);f(ac(a[1]),12,8,4,5);}if(ac(a[2])) f(ac(a[2]),4,18,8,8);if(ac(a[3])) f(ac(a[3]),4,28,8,4);return c;}
 function renderUI(){if(!UI.kind) return;const k=UI.kind;let h='';
-  if(k==='inv'||k==='table'){h+=`<div class="mc-top">${k==='inv'?`<div class="mc-grid g1">${P.armor.map((s,i)=>slotHTML(s,'arm',i,'arm'+i)).join('')}</div><div class="mc-doll" id="mcDoll"></div>`:''}<div><div class="mc-lab">${k==='table'?'合成':'合成'}</div>${craftHTML(k==='table'?3:2)}</div></div>${recipeBook(k==='table'?3:2)}`;}
+  if(k==='inv'||k==='table'){h+=`<div class="mc-top">${k==='inv'?`<div class="mc-grid g1">${P.armor.map((s,i)=>slotHTML(s,'arm',i,'arm'+i)).join('')}</div><div class="mc-doll" id="mcDoll"></div><div class="mc-grid g1" title="副手">${slotHTML(P.off,'of',0,'off')}</div>`:''}<div><div class="mc-lab">${k==='table'?'合成':'合成'}</div>${craftHTML(k==='table'?3:2)}</div></div>${recipeBook(k==='table'?3:2)}`;}
   else if(k==='creative'){const ids=CTABS[UI.ctab][1]();h+=`<div class="tabs">${CTABS.map(([n],i)=>`<button class="tab" data-ct="${i}" aria-pressed="${i===UI.ctab}">${n}</button>`).join('')}<button class="tab" data-ct="inv">生存物品欄</button></div><div class="mc-grid g9 pal">${ids.map(id=>`<div class="sl" data-c="cr" data-i="${id}" data-tip="${nameOf(id)}">${icHTML(id)}</div>`).join('')}</div><div class="mc-row"><div class="sl trash" data-c="trash" data-i="0">🗑</div></div>`;}
   else if(k==='furnace'){const f=W.furn[UI.key];h+=`<div class="mc-lab">熔爐</div><div class="mc-furn"><div class="fcol">${slotHTML(f.in,'fi',0)}<div class="mc-fire"><i style="height:${f.burn>0&&f.in?Math.round(f.burn/(f.burnMax||1)*100):0}%"></i></div>${slotHTML(f.fuel,'ff',0)}</div><span class="mc-arrow big"><i style="width:${Math.round((f.prog||0)/10*100)}%"></i></span>${slotHTML(f.out,'fo',0,'out')}</div>`;}
   else if(k==='bag') h+=`<div class="mc-lab">${nameOf(UI.bagItem.id)}</div><div class="mc-grid g9">${UI.bag.map((s,i)=>slotHTML(s,'bp',i)).join('')}</div>`;
@@ -2143,7 +2149,7 @@ function useItem(){if(P.dead||uiOpen) return;if(typeof vehUse==='function'&&vehU
     if(b.use==='jukebox'){jukeUse(h,s);return;}
     if(b.rs&&typeof rsUse==='function'&&rsUse(h.x,h.y,h.z,h.id)) return;
     if(b.tnt&&s&&(s.id===IT.I_FLINTSTEEL)){igniteTNT(h.x,h.y,h.z);useTool(s);return;}}
-  if(!s) return;
+  if(!s){if(offShield()) USE.mode='block';return;}
   if(d.gun||d.thr){if(!W.guns){toast(isMember()?'創作者沒有開槍械模組':'槍械模組沒有開（設定 → 🧩 模組，或建立世界時打開）');return;}if(d.gun){if(isTouch) gunTrigger();return;}throwWar(d.thr);consumeHeld(1);return;}
   if(d.bag){openBag(s);return;}
   if(d.vehicle){if(typeof placeVehicle==='function'&&placeVehicle(d.vehicle,h)){consumeHeld(1);}return;}
@@ -2158,6 +2164,7 @@ function useItem(){if(P.dead||uiOpen) return;if(typeof vehUse==='function'&&vehU
   if(d.bow){if(W.mode==='creative'||countItem(IT.I_ARROW)>0){USE.mode='bow';USE.bow=0;}return;}
   if(s.id===IT.I_MBUCKET){USE.mode='eat';USE.eat=0;return;}
   if(s.id===IT.I_EGG){const v=lookDir();throwEgg(v);consumeHeld(1);return;}
+  if(d.tool&&!['hoe','rod'].includes(d.tool.type)&&s.id!==IT.I_FLINTSTEEL&&s.id!==IT.I_SHEARS&&offShield()){USE.mode='block';return;}
   if(s.id===IT.I_BOTTLE){const r=rayCast(eyePos(),lookDir(),5,{liquid:true});if(r&&r.id===B.WATER){playSnd('splash');if(W.mode!=='creative') consumeHeld(1);addItem(IT.I_WBOTTLE,1);return;}}
   if(s.id===IT.I_WOODB){const r=rayCast(eyePos(),lookDir(),5,{liquid:true});if(r&&r.id===B.WATER){setB(r.x,r.y,r.z,0);playSnd('splash');if(W.mode==='creative') return;if(s.n===1) P.inv[P.sel]={id:IT.I_WOODBW,n:1};else{s.n--;if(addItem(IT.I_WOODBW,1)) spawnDrop(IT.I_WOODBW,1,P.x,P.y+1,P.z);}renderHotbar();}else if(r&&r.id===B.LAVA) toast('木桶會被熔岩燒掉，只能裝水');return;}
   if(s.id===IT.I_BUCKET){const r=rayCast(eyePos(),lookDir(),5,{liquid:true});if(r.id===B.WATER||r.id===B.LAVA){setB(r.x,r.y,r.z,0);const full=r.id===B.WATER?IT.I_WBUCKET:IT.I_LBUCKET;playSnd('splash');if(W.mode==='creative') return;if(s.n===1) P.inv[P.sel]={id:full,n:1};else{s.n--;if(addItem(full,1)) spawnDrop(full,1,P.x,P.y+1,P.z);}renderHotbar();}return;}
@@ -2170,7 +2177,7 @@ function useItem(){if(P.dead||uiOpen) return;if(typeof vehUse==='function'&&vehU
   if(d.tool&&d.tool.type==='hoe'){if((h.id===B.GRASS||h.id===B.DIRT)&&h.ny>=0&&!getB(h.x,h.y+1,h.z)){setB(h.x,h.y,h.z,B.FARMLAND);useTool(s);playSnd('grass');}return;}
   if(s.id===IT.I_SEEDS){if(h.id===B.FARMLAND&&!getB(h.x,h.y+1,h.z)){setB(h.x,h.y+1,h.z,B.WHEAT0);consumeHeld(1);playSnd('grass');}return;}
   if(s.id===IT.I_BONEMEAL){if(boneMeal(h)){consumeHeld(1);puff(h.x+0.5,h.y+1,h.z+0.5,0x7aff7a,6);}return;}
-  if(d.food||d.tool) return;
+  if(d.food||d.tool){if(d.tool&&d.tool.type!=='hoe'&&offShield()) USE.mode='block';return;}
   if(d.armor){const sl=d.armor.slot;const old=P.armor[sl];P.armor[sl]=s;P.inv[P.sel]=old||null;renderHotbar();playSnd('equip');return;}
   // 放方塊
   let id=isItem(s.id)?(d.place?B[d.place]:0):s.id;if(!id) return;
@@ -2250,12 +2257,12 @@ function sleepCheck(){const all=[P.sleeping].concat(typeof NET!=='undefined'&&NE
   else toast(`等待其他玩家睡覺…（${all.filter(Boolean).length}/${all.length}）`);}
 function wakeUp(){P.sleeping=false;$('#sleep').hidden=true;$('#sleep').classList.remove('on');}
 // 吃東西、拉弓（按住右鍵）
-function useTick(dt){const s=held();const holding=M.right||TOUCH.use;if(!USE.mode) return;if(!holding||!s){if(USE.mode==='bow'&&s&&DEF(s.id).bow&&USE.bow>0.1) fireBow(s);USE.mode=null;return;}
+function useTick(dt){const s=held();const holding=M.right||TOUCH.use;if(!USE.mode) return;if(!holding||(!s&&USE.mode!=='block')){if(USE.mode==='bow'&&s&&DEF(s.id).bow&&USE.bow>0.1) fireBow(s);USE.mode=null;return;}
   if(USE.mode==='eat'){USE.eat+=dt;if(Math.floor(USE.eat*5)!==Math.floor((USE.eat-dt)*5)) playSnd('eat',0.5);
     if(USE.eat>=1.6){const d=DEF(s.id);if(s.id===IT.I_MBUCKET){P.inv[P.sel]={id:IT.I_BUCKET,n:1};renderHotbar();}else{P.food=Math.min(20,P.food+d.food);P.sat=Math.min(P.food,P.sat+d.sat);if(d.heal){heal(d.heal);P.absorb=4;}if(d.hp) heal(d.hp);if(d.bottle&&W.mode!=='creative') addItem(IT.I_BOTTLE,1);
       if(d.eff) addEff(d.eff[0],d.eff[1]);if(d.sick&&Math.random()<0.8){P.exh+=10;toast(s.id===IT.I_PUFFER?'河豚有毒！肚子好痛…':'腐肉讓你肚子不太舒服…');if(s.id===IT.I_PUFFER){P.poison=6;}}consumeHeld(1);if(d.bowl&&W.mode!=='creative') addItem(IT.I_BOWL,1);}playSnd('burp');USE.mode=null;}}
   if(USE.mode==='bow'){USE.bow=Math.min(1,USE.bow+dt);}
-  if(USE.mode==='spy'&&!(s&&DEF(s.id).spy)) USE.mode=null;if(USE.mode==='block'&&!(s&&DEF(s.id).shield)) USE.mode=null;}
+  if(USE.mode==='spy'&&!(s&&DEF(s.id).spy)) USE.mode=null;if(USE.mode==='block'&&!shieldStack()) USE.mode=null;}
 function releaseUse(){const s=held();if(USE.mode==='bow'&&s&&DEF(s.id).bow&&USE.bow>0.1) fireBow(s);USE.mode=null;}
 function fireBow(s){const f=USE.bow;USE.mode=null;USE.bow=0;const cr=W.mode==='creative';if(!cr&&!countItem(IT.I_ARROW)) return;if(!cr) takeItem(IT.I_ARROW,1);
   const v=lookDir();const o=eyePos();const pw=s.ench&&s.ench.power?1+0.25*(s.ench.power+1):1;const a=shootArrow(o.x+v.x*0.3,o.y+v.y*0.3-0.1,o.z+v.z*0.3,v,50*f,Math.round(6*f*pw),myId());a.creative=cr;if(f>0.95) a.dmg+=1;useTool(s);}
@@ -2615,7 +2622,7 @@ function liquidTick(dt){if(typeof isHost==='function'&&!isHost()) {LIQ.q.clear()
 
 // ================= 多人連線（房間代碼）=================
 const DIMS=['over','nether','sky'];
-const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611282300'};
+const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611290000'};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
 function peerOpts(){const o={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
@@ -2673,7 +2680,7 @@ function netLeave(quiet){if(NET.on&&!NET.host&&NET.hc){try{NET.hc.send({t:'pinv'
   NET.conns.clear();NET.hc=null;NET.on=false;NET.host=false;NET.myId='me';NET.status='';
   for(const e of ENTS) if(e.remote) e.dead=true;netUI();}
 addEventListener('beforeunload',()=>{if(NET.on) netLeave(true);});
-function myPack(){return {frel:P.frel||{},adv:P.adv||{},inv:P.inv,armor:P.armor,x:P.x,y:P.y,z:P.z,xp:P.xp,level:P.level,xpTot:P.xpTot,hp:P.hp,food:P.food,dim:W.dim,spawn:P.spawn};}
+function myPack(){return {frel:P.frel||{},adv:P.adv||{},off:P.off||null,inv:P.inv,armor:P.armor,x:P.x,y:P.y,z:P.z,xp:P.xp,level:P.level,xpTot:P.xpTot,hp:P.hp,food:P.food,dim:W.dim,spawn:P.spawn};}
 // ---- 客人收到的訊息 ----
 function clientRecv(o){switch(o.t){
   case 'p':{let p=NET.peers.get(o.id);if(!p){p={name:o.name||'玩家',color:'#3a6aa8'};NET.peers.set(o.id,p);}p.st=o.st;if(o.st.sw) p.swing=1;if(o.name) p.name=o.name;if(o.color) p.color=o.color;break;}
@@ -2797,7 +2804,7 @@ function loadSave(id){let sv;try{sv=JSON.parse(localStorage.getItem('mmvox_w_'+i
 // ---- 開始世界 ----
 function resetWorld(){for(const d of ['over','nether','sky']){clearMeshes(d);W.chunks[d].clear();}if(typeof vehReset==='function') vehReset();for(const e of ENTS){if(e.mesh) scene.remove(e.mesh);}ENTS.length=0;for(const p of PARTS) scene.remove(p.m);PARTS.length=0;
   RS.pulse.clear();RS.plates.clear();LIQ.q.clear();RS.dirty.length=0;if(RS.doorPow) RS.doorPow.clear();W.dim='over';W.mods={over:{},nether:{},sky:{}};W.cont={};W.furn={};W.pinv={};W.meta={};W.island=false;W.farm=false;W.fm=null;W.rules=null;W.guns=false;W.war=false;W.pvp=false;W.wd=null;W.spawn=null;
-  Object.assign(P,{vx:0,vy:0,vz:0,mvx:0,mvz:0,hp:20,food:20,sat:5,exh:0,xp:0,level:0,xpTot:0,air:300,fire:0,fallStart:null,inv:Array(36).fill(null),armor:Array(4).fill(null),sel:0,dead:false,fly:false,sprint:false,sneak:false,spawn:null,portalT:0,invul:2,sleeping:false,kbT:0});USE.mode=null;}
+  Object.assign(P,{vx:0,vy:0,vz:0,mvx:0,mvz:0,hp:20,food:20,sat:5,exh:0,xp:0,level:0,xpTot:0,air:300,fire:0,fallStart:null,off:null,inv:Array(36).fill(null),armor:Array(4).fill(null),sel:0,dead:false,fly:false,sprint:false,sneak:false,spawn:null,portalT:0,invul:2,sleeping:false,kbT:0});USE.mode=null;}
 function islandKit(){const [sx,sy,sz]=W.spawn;let cx=sx+2,cz=sz+1;const cy=surfaceY(cx,cz);setB(cx,cy,cz,B.CHEST,{local:true});
   W.cont['over:'+cx+','+cy+','+cz]=[{id:IT.I_BREAD,n:3},{id:IT.I_APPLE,n:2},{id:B.SAPLING,n:2},{id:IT.I_SEEDS,n:4},{id:IT.I_STRING,n:3},{id:IT.I_BUCKET,n:1},null,null,null].concat(Array(18).fill(null));
   toast('🏝 荒島求生：你被困在小島上了！箱子裡有一點點補給。砍樹做木船，出海去找別的島吧');toast('海上會漂來木頭和補給箱，要記得撿');}
@@ -2816,7 +2823,7 @@ function startWorld(save,opts){resetWorld();if(save){W.id=save.id;W.name=save.na
   if(save&&save.mobs) for(const [t,x,y,z,dim,ex] of save.mobs) if(dim===W.dim) spawnMob(t,x,y,z,Object.assign({dim},ex||{}));
   if(save&&W.farm&&typeof townSpawn==='function'){townSpawn();townUpgrade();}
   beginPlay();saveWorld(true);}
-function applyPack(pl){P.adv=pl.adv||{};P.frel=pl.frel||{};P.inv=(pl.inv||[]).slice(0,36);while(P.inv.length<36) P.inv.push(null);P.armor=(pl.armor||[null,null,null,null]).slice(0,4);P.xp=pl.xp||0;P.level=pl.level||0;P.xpTot=pl.xpTot||0;P.hp=pl.hp||20;P.food=pl.food===undefined?20:pl.food;P.spawn=pl.spawn||null;
+function applyPack(pl){P.off=pl.off||null;P.adv=pl.adv||{};P.frel=pl.frel||{};P.inv=(pl.inv||[]).slice(0,36);while(P.inv.length<36) P.inv.push(null);P.armor=(pl.armor||[null,null,null,null]).slice(0,4);P.xp=pl.xp||0;P.level=pl.level||0;P.xpTot=pl.xpTot||0;P.hp=pl.hp||20;P.food=pl.food===undefined?20:pl.food;P.spawn=pl.spawn||null;
   if(pl.dim&&pl.dim!==W.dim){W.dim=pl.dim;}P.x=pl.x;P.y=pl.y;P.z=pl.z;scene.fog.near=W.dim==='nether'?10:40;}
 function startFromNet(m){resetWorld();W.id='';W.name=m.wname;W.seed=m.seed;SEED=m.seed;W.mode=m.mode;W.diff=m.diff;W.cheats=false;W.time=m.time;W.day=m.day;WX.rain=m.rain;W.spawn=m.spawn;W.mods=m.mods;if(!W.mods.sky) W.mods.sky={};W.cont=m.cont||{};W.furn=m.furn||{};W.meta=m.meta||{};W.island=!!m.island;W.farm=!!m.farm;W.fm=m.fm||null;W.rules=m.rules||null;NET.hostName=m.host&&m.host.name;W.guns=!!(m.rules&&m.rules.guns);W.war=!!(m.rules&&m.rules.war);W.pvp=!!(m.rules&&m.rules.pvp);W.wd=m.wd||null;rsRebuild();setTimeout(()=>{if(typeof modSummary==='function') toast(`🧩 房主開的模組：${modSummary()}（成員會自動跟房主一樣）`);},2500);
   NET.peers.set('H',{name:m.host.name,color:m.host.color,st:null});for(const p of m.players) NET.peers.set(p.id,{name:p.name,color:p.color,st:p.st});
@@ -3860,7 +3867,7 @@ function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Mat
   return true;}
 
 // ================= 自動偵測並修復 BUG =================
-const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611282300'};
+const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611290000'};
 function diagLog(msg){try{DIAG.log.push({t:new Date().toISOString().slice(0,19),v:DIAG.ver,m:String(msg).slice(0,200)});if(DIAG.log.length>40) DIAG.log.shift();localStorage.setItem('mmvox_buglog',JSON.stringify(DIAG.log));}catch(e){}}
 function diagFree(x,y,z){return !collides(x,y,z);}
 function selfCheck(manual){const fixed=[];if(!running) return fixed;
