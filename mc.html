@@ -827,6 +827,7 @@ for(const [n,base,sp,pol] of [['granite',['#9a6b57','#a2725c','#92624e','#a87a64
   tile('p_'+n,(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++) px(g,x,y,shade(pol,0.96+r()*0.08));g.fillStyle=shade(pol,1.12);g.fillRect(0,0,16,1);g.fillRect(0,0,1,16);g.fillStyle=shade(pol,0.78);g.fillRect(0,15,16,1);g.fillRect(15,0,1,16);});}
 defB('GRANITE',{n:'花崗岩',h:1.5,tool:'pick',tier:1});defB('DIORITE',{n:'閃長岩',h:1.5,tool:'pick',tier:1});defB('ANDESITE',{n:'安山岩',h:1.5,tool:'pick',tier:1});
 defB('P_GRANITE',{n:'拋光花崗岩',h:1.5,tool:'pick',tier:1});defB('P_DIORITE',{n:'拋光閃長岩',h:1.5,tool:'pick',tier:1});defB('P_ANDESITE',{n:'拋光安山岩',h:1.5,tool:'pick',tier:1});
+for(const [k,n] of [['GRANITE','花崗岩'],['DIORITE','閃長岩'],['ANDESITE','安山岩']]){defB('SLAB_'+k,{n:n+'半磚',tex:tx3(k.toLowerCase()),h:2,tool:'pick',tier:1,half:0.5});defB('STAIRS_'+k,{n:n+'樓梯',tex:tx3(k.toLowerCase()),h:2,tool:'pick',tier:1,shape:'stairs',snd:'stone'});}
 // ---- 物品 ----
 const IT={};const ITL={};let NID=256;
 function defI(key,o){const id=NID++;o.key=key;o.id=id;o.item=true;o.stack=o.stack||64;IT[key]=id;ITL[id]=o;return id;}
@@ -2566,7 +2567,7 @@ function liquidTick(dt){if(typeof isHost==='function'&&!isHost()) {LIQ.q.clear()
 
 // ================= 多人連線（房間代碼）=================
 const DIMS=['over','nether','sky'];
-const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611281600'};
+const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611281700'};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
 function peerOpts(){const o={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
@@ -2912,7 +2913,7 @@ let SHOT=false;
 
 // ================= 模組：交通工具（船、礦車）、電梯、漏斗、自動收成機、自動挖礦機 =================
 // ---- 合成 ----
-{rs(['CQ','QC'],{C:B.COBBLE,Q:IT.I_QUARTZ},B.DIORITE,2);rl([B.DIORITE,IT.I_QUARTZ],B.GRANITE);rl([B.DIORITE,B.COBBLE],B.ANDESITE,2);for(const k of ['GRANITE','DIORITE','ANDESITE']) rs(['XX','XX'],{X:B[k]},B['P_'+k],4);}
+{rs(['CQ','QC'],{C:B.COBBLE,Q:IT.I_QUARTZ},B.DIORITE,2);rl([B.DIORITE,IT.I_QUARTZ],B.GRANITE);rl([B.DIORITE,B.COBBLE],B.ANDESITE,2);for(const k of ['GRANITE','DIORITE','ANDESITE']){rs(['XX','XX'],{X:B[k]},B['P_'+k],4);rs(['XXX'],{X:B[k]},B['SLAB_'+k],6);rs(['X  ','XX ','XXX'],{X:B[k]},B['STAIRS_'+k],4);}}
 {const PL=B.PLANKS,ST=IT.I_STICK,IR=IT.I_IRON;
   rs(['P P','PPP'],{P:PL},IT.I_BOAT);rs(['I I','III'],{I:IR},IT.I_MINECART);rs(['I I','ISI','I I'],{I:IR,S:ST},B.RAIL,16);rs(['G G','GSG','GRG'],{G:IT.I_GOLD,S:ST,R:IT.I_REDSTONE},B.GRAIL,6);
   rs(['I I','ICI',' I '],{I:IR,C:B.CHEST},B.HOPPER);rs(['PPP','CIC','CRC'],{P:PL,C:B.COBBLE,I:IR,R:IT.I_REDSTONE},B.PISTON);rl([B.PISTON,IT.I_SLIMEBALL],B.STICKY_PISTON);
@@ -3806,7 +3807,7 @@ function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Mat
   return true;}
 
 // ================= 自動偵測並修復 BUG =================
-const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611281600'};
+const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611281700'};
 function diagLog(msg){try{DIAG.log.push({t:new Date().toISOString().slice(0,19),v:DIAG.ver,m:String(msg).slice(0,200)});if(DIAG.log.length>40) DIAG.log.shift();localStorage.setItem('mmvox_buglog',JSON.stringify(DIAG.log));}catch(e){}}
 function diagFree(x,y,z){return !collides(x,y,z);}
 function selfCheck(manual){const fixed=[];if(!running) return fixed;
