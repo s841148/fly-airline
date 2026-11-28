@@ -1246,7 +1246,8 @@ function meshChunk(c){const dim=c.dim;const A={o:[[],[],[],[]],c:[[],[],[],[]],w
       else if(at(lx-1,y,lz)&&BL[at(lx-1,y,lz)].solid) q=[[e,0,0],[e,1,0],[e,1,1],[e,0,1]];else q=[[1-e,0,1],[1-e,1,1],[1-e,1,0],[1-e,0,0]];
       const base=arr[0].length/3;for(let k=0;k<4;k++){arr[0].push(x+q[k][0],y+q[k][1],z+q[k][2]);arr[1].push(UVC[k][0]?uv[1]:uv[0],UVC[k][1]?uv[3]:uv[2]);arr[2].push(s*0.9,bl*0.9,0.9);}(arr.i=arr.i||[]).push(base,base+1,base+2,base,base+2,base+3);continue;}
     if(b.cross||b.flat){const arr=b.glow?A.g:A.c;const uv=UVT[b.tex[1]];const [s,bl]=light(lx,y,lz);
-      const quads=b.flat?[[[0,0.03,1],[0,0.03,0],[1,0.03,0],[1,0.03,1]]]:[[[0.15,0,0.15],[0.15,1,0.15],[0.85,1,0.85],[0.85,0,0.85]],[[0.15,0,0.85],[0.15,1,0.85],[0.85,1,0.15],[0.85,0,0.15]]];
+      let quads=b.flat?[[[0,0.03,1],[0,0.03,0],[1,0.03,0],[1,0.03,1]]]:[[[0.15,0,0.15],[0.15,1,0.15],[0.85,1,0.85],[0.85,0,0.85]],[[0.15,0,0.85],[0.15,1,0.85],[0.85,1,0.15],[0.85,0,0.15]]];
+      if(id===B.TORCH){const tm=W.meta[dim+':'+x+','+y+','+z];if(tm&&tm.f!==undefined){const TD=[[0,-1],[0,1],[-1,0],[1,0]][tm.f];const ww=at(lx+TD[0],y,lz+TD[1]);if(ww&&BL[ww].solid){quads=quads.map(q=>q.map(([a,b2,c])=>{const sh=0.36*(1-b2)-0.06*b2;return [a+TD[0]*sh,0.16+b2*0.8,c+TD[1]*sh];}));}}}
       const rot=b.rail&&(BL[at(lx+1,y,lz)].rail||BL[at(lx-1,y,lz)].rail)&&!(BL[at(lx,y,lz+1)].rail||BL[at(lx,y,lz-1)].rail)?1:0;
       for(const q of quads){const base=arr[0].length/3;for(let k=0;k<4;k++){const kk=(k+rot)%4;arr[0].push(x+q[k][0],y+q[k][1],z+q[k][2]);arr[1].push(UVC[kk][0]?uv[1]:uv[0],UVC[kk][1]?uv[3]:uv[2]);arr[2].push(s,bl,1);}(arr.i=arr.i||[]).push(base,base+1,base+2,base,base+2,base+3);}
       continue;}
@@ -2183,6 +2184,7 @@ function useItem(){if(P.dead||uiOpen) return;if(typeof vehUse==='function'&&vehU
     const mk=W.dim+':'+px+','+py+','+pz;W.meta[mk]={f};if(typeof netMeta==='function') netMeta(mk);}
   if(BL[id].shape==='stairs'){const v=lookDir();const f=Math.abs(v.x)>Math.abs(v.z)?(v.x>0?1:3):(v.z>0?2:0);const mk=W.dim+':'+px+','+py+','+pz;W.meta[mk]={f};if(typeof netMeta==='function') netMeta(mk);}
   if(id===B.PISTON||id===B.STICKY_PISTON){const v=lookDir();const ax=Math.abs(v.x),ay=Math.abs(v.y),az=Math.abs(v.z);const f=ay>ax&&ay>az?(v.y>0?3:2):ax>az?(v.x>0?1:0):(v.z>0?5:4);const mk=W.dim+':'+px+','+py+','+pz;W.meta[mk]={f,ext:false};if(typeof netMeta==='function') netMeta(mk);}
+  if(id===B.TORCH){const mk=W.dim+':'+px+','+py+','+pz;delete W.meta[mk];if(h&&h.ny===0&&(h.nx||h.nz)){const LD=[[0,-1],[0,1],[-1,0],[1,0]];const k=LD.findIndex(([a,c])=>a===-h.nx&&c===-h.nz);const wq=k>=0?getB(px+LD[k][0],py,pz+LD[k][1]):0;if(wq&&BL[wq].solid&&!BL[wq].panel&&!BL[wq].cross){W.meta[mk]={f:k};if(typeof netMeta==='function') netMeta(mk);}}}
   setB(px,py,pz,id);consumeHeld(1);playSnd(BL[id].snd||'stone',0.8);
   if(BL[id].fall) fallCheck(px,py,pz);
   if(id===B.TNT&&typeof rsPowered==='function'&&rsPowered(px,py,pz)) igniteTNT(px,py,pz);}
@@ -2471,6 +2473,7 @@ function onBlockChanged(x,y,z,old,id,dim){dim=dim||W.dim;if(dim===W.dim&&!LIQ.bu
   if((old===B.OBSIDIAN||old===B.PORTAL||old===B.GLOWSTONE||old===B.SKY_PORTAL)&&id!==old) for(const [a,b,c] of N6){const q=getB(x+a,y+b,z+c);if(q===B.PORTAL||q===B.SKY_PORTAL) breakPortal(x+a,y+b,z+c,q);}
   // 水碰到熔岩變黑曜石
   // 下面的支撐不見了
+  if(!BL[id].solid&&old&&BL[old].solid){const LDT=[[0,-1],[0,1],[-1,0],[1,0]];for(const [a2,c2] of LDT){if(getB(x+a2,y,z+c2,dim)!==B.TORCH) continue;const tmk=dim+':'+(x+a2)+','+y+','+(z+c2);const tm2=W.meta[tmk];if(tm2&&tm2.f!==undefined&&LDT[tm2.f][0]===-a2&&LDT[tm2.f][1]===-c2){delete W.meta[tmk];setB(x+a2,y,z+c2,0,{dim});if(W.mode!=='creative') spawnDrop(B.TORCH,1,x+a2+0.5,y+0.5,z+c2+0.5);}}}
   if(!BL[id].solid&&old&&BL[old].solid){const a=getB(x,y+1,z);if(a&&(BL[a].rs==='wire'||a===B.PLATE||a===B.LEVER||a===B.LEVER_ON||a===B.BUTTON||(BL[a].crop!==undefined))){if(!RS.busy) setB(x,y+1,z,0,{local:true});}}}
 function rsDirty(x,y,z){if(RS.busy) return;RS.dirty.push([x,y,z]);}
 const isSrc=(k,id)=>id===B.LEVER_ON||id===B.RTORCH||id===B.RS_BLOCK||((id===B.BUTTON)&&RS.pulse.has(k))||(id===B.PLATE&&RS.plates.get(k));
@@ -2604,7 +2607,7 @@ function liquidTick(dt){if(typeof isHost==='function'&&!isHost()) {LIQ.q.clear()
 
 // ================= 多人連線（房間代碼）=================
 const DIMS=['over','nether','sky'];
-const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611281900'};
+const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611282000'};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
 function peerOpts(){const o={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
@@ -3849,7 +3852,7 @@ function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Mat
   return true;}
 
 // ================= 自動偵測並修復 BUG =================
-const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611281900'};
+const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611282000'};
 function diagLog(msg){try{DIAG.log.push({t:new Date().toISOString().slice(0,19),v:DIAG.ver,m:String(msg).slice(0,200)});if(DIAG.log.length>40) DIAG.log.shift();localStorage.setItem('mmvox_buglog',JSON.stringify(DIAG.log));}catch(e){}}
 function diagFree(x,y,z){return !collides(x,y,z);}
 function selfCheck(manual){const fixed=[];if(!running) return fixed;
