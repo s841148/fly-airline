@@ -2631,7 +2631,7 @@ function liquidTick(dt){if(typeof isHost==='function'&&!isHost()) {LIQ.q.clear()
 
 // ================= 多人連線（房間代碼）=================
 const DIMS=['over','nether','sky'];
-const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611290100'};
+const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611290200'};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
 function peerOpts(){const o={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
@@ -2995,7 +2995,7 @@ let SHOT=false;
   rs(['B B',' B '],{B:B.BRICKS},B.FLOWERPOT);rs(['SSS','SGS','SGS'],{S:ST,G:IT.I_GOLD},B.BELL);rs(['PPP','PDP','PPP'],{P:PL,D:IT.I_DIAMOND},B.JUKEBOX);rs(['SSS','SWS','SSS'],{S:ST,W:B.WOOL_WHITE},B.PAINTING);
   rs(['CCC','CCC','CCC'],{C:IT.I_COPPER},B.COPPER_BLOCK);rl([B.COPPER_BLOCK],IT.I_COPPER,9);rs(['AA','AA'],{A:IT.I_AMETHYST},B.AMETHYST_BLOCK);
   rs(['PIP','PPP',' P '],{P:PL,I:IT.I_IRON},IT.I_SHIELD);rl([IT.I_COPPER,IT.I_AMETHYST,IT.I_COPPER],IT.I_SPYGLASS);
-  smelt(B.COPPER_ORE,IT.I_COPPER,0.7);rs(['CEC','CCC'],{C:B.CHEST,E:IT.I_EMERALD},B.SHARE_CHEST);rs(['I I','ICI','III'],{I:IT.I_IRON,C:B.CAMPFIRE},B.COOKPOT);rs(['III','I I'],{I:IT.I_COPPER},B.COOKPOT);
+  smelt(B.COPPER_ORE,IT.I_COPPER,0.7);rs(['CEC','CCC'],{C:B.CHEST,E:IT.I_EMERALD},B.SHARE_CHEST);rs(['I I','ICI','III'],{I:IT.I_IRON,C:B.CAMPFIRE},B.COOKPOT);
   rs(['LLL','LIL'],{L:IT.I_LEATHER,I:IT.I_IRON},IT.I_SADDLE);rl([IT.I_PAPER,IT.I_STRING],IT.I_NAMETAG,2);rs(['SFS','FFF','F F'],{S:ST,F:IT.I_FEATHER},IT.I_GLIDER);rs(['WWW','W W','PSP'],{W:B.WOOL_RED,P:PL,S:IT.I_STRING},IT.I_BALLOON);
   const X=IT.I_COPPER;rs(['XXX',' S ',' S '],{X,S:ST},IT.T_pick_copper);rs(['XX','XS',' S'],{X,S:ST},IT.T_axe_copper);rs(['XX','SX','S '],{X,S:ST},IT.T_axe_copper);rs(['X','S','S'],{X,S:ST},IT.T_shovel_copper);rs(['X','X','S'],{X,S:ST},IT.T_sword_copper);rs(['XX',' S',' S'],{X,S:ST},IT.T_hoe_copper);rs(['XX','S ','S '],{X,S:ST},IT.T_hoe_copper);
   rs(['XXX','X X'],{X},IT.A_helmet_copper);rs(['X X','XXX','XXX'],{X},IT.A_chest_copper);rs(['XXX','X X','X X'],{X},IT.A_legs_copper);rs(['X X','X X'],{X},IT.A_boots_copper);}
@@ -3876,7 +3876,7 @@ function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Mat
   return true;}
 
 // ================= 自動偵測並修復 BUG =================
-const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611290100'};
+const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611290200'};
 function diagLog(msg){try{DIAG.log.push({t:new Date().toISOString().slice(0,19),v:DIAG.ver,m:String(msg).slice(0,200)});if(DIAG.log.length>40) DIAG.log.shift();localStorage.setItem('mmvox_buglog',JSON.stringify(DIAG.log));}catch(e){}}
 function diagFree(x,y,z){return !collides(x,y,z);}
 function selfCheck(manual){const fixed=[];if(!running) return fixed;
