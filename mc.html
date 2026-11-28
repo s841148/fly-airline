@@ -1066,7 +1066,86 @@ function animTiles(dt){ANIM_ACC+=dt;if(ANIM_ACC<0.22) return;ANIM_T+=ANIM_ACC*3.
   for(const [n,f] of [['water',g=>drawWater(g,ANIM_T)],['lava',g=>drawLava(g,ANIM_T)],['portal',g=>drawPortal(g,ANIM_T,false)],['sky_portal',g=>drawPortal(g,ANIM_T,true)]]){if(T[n]===undefined) continue;const i=T[n];const x=(i%32)*16,y=Math.floor(i/32)*16;AG.save();AG.translate(x,y);AG.beginPath();AG.rect(0,0,16,16);AG.clip();AG.clearRect(0,0,16,16);f(AG);AG.restore();}
   atlasTex.needsUpdate=true;}
 // 開機時：重畫、再精修一次所有材質
-fineTextures();
+
+// ======== 更像原版 Minecraft：自己重畫的像素圖（工具、盔甲、礦物、食物、方塊）========
+function mcShape(g,pts,pal){const S=new Set(pts.map(p=>p[0]+','+p[1]));const on=(x,y)=>S.has(x+','+y);
+  for(const [x,y,ch] of pts){let c=pal[1];if(ch==='d') c=pal[0];else if(ch==='l') c=pal[2];else{const up=!on(x,y-1),lf=!on(x-1,y),dn=!on(x,y+1),rt=!on(x+1,y);
+    if(up||lf) c=pal[2];else if(dn||rt) c=pal[0];else if(((x*3+y*5)%7)===0) c=pal[2];}px(g,x,y,c);}}
+function mcRows(rows,y0){const o=[];rows.forEach((r,j)=>{for(let x=0;x<16;x++){const ch=r[x];if(ch&&ch!=='.') o.push([x,y0+j,ch]);}});return o;}
+function mcPix(g,rows,y0,pal){rows.forEach((r,j)=>{for(let x=0;x<16;x++){const ch=r[x];if(ch&&ch!=='.'&&pal[ch]) px(g,x,y0+j,pal[ch]);}});}
+const MC_MAT={wood:['#5e4424','#9c7a45','#c29a5e'],stone:['#555','#8a8a8a','#b4b4b4'],iron:['#8a8f96','#d8d8d8','#fafafa'],gold:['#b88a08','#f6d33a','#fff6a8'],diamond:['#17909a','#4fe0e0','#c0fffa'],copper:['#8a4624','#d8824a','#f6b890'],leather:['#5e3010','#9a5a2a','#c47e44']};
+const MC_HANDLE=['#3e2a12','#6b4a26','#8e6a3a'];
+const MC_HEAD={
+ pick:['......XXXXX.....','....XXXXXXXXXX..','...XXX...XXXXXX.','..XXX.....XXXXX.','..XX........XXX.','..X..........XX.','..............X.'],
+ axe:['.......XXXX.....','......XXXXXXX...','......XXXXXXXX..','.....XXXXXXXXX..','.....XXXXXXXX...','......XXXXX.....'],
+ shovel:['..........XXX...','.........XXXXX..','.........XXXXXX.','.........XXXXXX.','..........XXXX..','...........XX...'],
+ hoe:['.......XXXXXX...','......XXXXXXXX..','......XX....XX..','......XX........']};
+const MC_HEAD_Y={pick:1,axe:1,shovel:0,hoe:2};
+function mcTool(g,tp,mat){const hp=MC_HANDLE;
+  if(tp==='sword'){const bl=[];for(let i=1;i<=9;i++){bl.push([4+i,11-i],[5+i,11-i]);}bl.push([14,1]);
+    mcShape(g,bl,mat);
+    mcShape(g,[[2,10],[3,11],[4,12],[5,13],[6,14],[3,10],[4,11],[5,12],[6,13]],hp);
+    mcShape(g,[[3,13],[2,14],[3,12],[2,13],[1,15],[1,14]],['#3e2a12','#6b4a26','#8e6a3a']);return;}
+  const hs=[];for(let i=0;i<=9;i++){hs.push([1+i,14-i],[2+i,14-i]);}
+  mcShape(g,hs.filter(p=>p[0]<16),hp);
+  mcShape(g,mcRows(MC_HEAD[tp],MC_HEAD_Y[tp]),mat);}
+function mcArmor(g,sl,mat){const R={
+ helmet:[4,['....XXXXXXXX....','...XXXXXXXXXX...','...XXXXXXXXXX...','...XXXXXXXXXX...','...XXX....XXX...','...XXX....XXX...']],
+ chest:[2,['..XXXX....XXXX..','.XXXXXX..XXXXXX.','.XXXXXXXXXXXXXX.','.XXXXXXXXXXXXXX.','.XXXXXXXXXXXXXX.','..XXXXXXXXXXXX..','..XXXXXXXXXXXX..','..XXXXXXXXXXXX..','..XXXXXXXXXXXX..','...XXXXXXXXXX...','...XXXXXXXXXX...']],
+ legs:[2,['...XXXXXXXXXX...','...XXXXXXXXXX...','...XXXXXXXXXX...','...XXXXXXXXXX...','...XXXX..XXXX...','...XXXX..XXXX...','...XXXX..XXXX...','...XXXX..XXXX...','...XXXX..XXXX...','...XXXX..XXXX...']],
+ boots:[5,['..XXXX....XXXX..','..XXXX....XXXX..','..XXXX....XXXX..','..XXXX....XXXX..','..XXXX....XXXX..','.XXXXX....XXXXX.','.XXXXX....XXXXX.','.XXXXX....XXXXX.']]}[sl];
+ mcShape(g,mcRows(R[1],R[0]),mat);
+ if(sl==='helmet'){mcShape(g,mcRows(['....dddddddd....'],R[0]+0),mat.map(c=>c));}
+ if(sl==='chest'){for(let y=R[0]+4;y<R[0]+6;y++) for(let x=4;x<12;x++) if((x+y)%4===0) px(g,x,y,mat[0]);}}
+function mcIngot(g,mat){mcShape(g,mcRows(['........XXXXXX..','.......XXXXXXX..','......XXXXXXX...','.....XXXXXXX....','....XXXXXXX.....','...XXXXXXX......','..XXXXXXX.......'],4),mat);}
+function mcGem(g,rows,y0,pal,fac){mcPix(g,rows,y0,{a:pal[0],b:pal[1],c:pal[2],d:fac||'#ffffff'});}
+function mcMeat(g,m,bone){const rows=['....XXXXXX......','...XXXXXXXXX....','..XXXXXXXXXXX...','..XXXXXXXXXXXX..','..XXXXXXXXXXXX..','..XXXXXXXXXXX...','...XXXXXXXXXX...','....XXXXXXXX....','.....XXXXXX.....'];
+  mcShape(g,mcRows(rows,3),m);if(m[3]){for(const [x,y] of m[3]) px(g,x,y,m[4]||'#fff0e0');}}
+function mcStyle(){const R=(n,f)=>{if(T[n]!==undefined) repaint(n,f);};
+  // 工具
+  const TIERMAP={wood:'wood',stone:'stone',iron:'iron',gold:'gold',diamond:'diamond',copper:'copper'};
+  for(const tp of ['pick','axe','shovel','sword','hoe']) for(const k in TIERMAP) R(`i_${tp}_${k}`,g=>mcTool(g,tp,MC_MAT[TIERMAP[k]]));
+  for(const sl of ['helmet','chest','legs','boots']) for(const k of ['leather','iron','gold','diamond','copper']) R(`i_${sl}_${k}`,g=>mcArmor(g,sl,MC_MAT[k]));
+  R('i_stick',g=>mcShape(g,[...Array(11).keys()].flatMap(i=>[[2+i,13-i],[3+i,13-i]]),MC_HANDLE));
+  // 錠、寶石、煤
+  R('i_iron',g=>mcIngot(g,MC_MAT.iron));R('i_gold',g=>mcIngot(g,MC_MAT.gold));R('i_copper',g=>mcIngot(g,MC_MAT.copper));
+  const gem=['....aaaaaa......','...abbbbbba.....','..abbccbbbba....','..abccbbbbba....','...abbbbbba.....','....abbbba......','.....abba.......','......aa........'];
+  R('i_diamond',g=>mcGem(g,gem,3,['#139098','#4fe0e0','#d0fffc']));R('i_emerald',g=>mcGem(g,gem,3,['#0a7a2a','#2ae86a','#c0ffd0']));
+  R('i_lapis',g=>mcGem(g,gem,3,['#1c2f9a','#2a4ac8','#6a8aff']));R('i_quartz',g=>mcGem(g,gem,3,['#b8b0a0','#f0ebe2','#ffffff']));
+  R('i_amethyst',g=>mcGem(g,gem,3,['#6a3aa8','#9a6ae8','#e0c8ff']));
+  const coal=['.....XXXX.......','....XXXXXXX.....','...XXXXXXXXX....','...XXXXXXXXXX...','..XXXXXXXXXXX...','...XXXXXXXXX....','....XXXXXXXX....','.....XXXXX......'];
+  R('i_coal',g=>{mcShape(g,mcRows(coal,4),['#1a1a1a','#2e2e2e','#5a5a5a']);px(g,6,7,'#6a6a6a');px(g,9,9,'#555');});
+  R('i_charcoal',g=>{mcShape(g,mcRows(coal,4),['#2a1e14','#3e2e20','#6a5442']);});
+  R('i_redstone',g=>{const c=['#8a0808','#e01010','#ff6a5a'];for(const [x,y] of [[5,5],[9,4],[7,8],[11,8],[4,10],[8,11],[12,11],[6,6]]){px(g,x,y,c[1]);px(g,x+1,y,c[0]);px(g,x,y+1,c[0]);px(g,x,y-1,c[2]);}});
+  // 蘋果與肉
+  R('i_apple',g=>mcPix(g,['.......s........','......s...gg....','....rrrsrrgg....','...rRRrrrrrrr...','..rRRrrrrrrrrD..','..rRrrrrrrrrrD..','..rrrrrrrrrrrD..','..rrrrrrrrrrDD..','...rrrrrrrrDD...','....rrrrrDD.....','.....DD..DD.....'],2,{s:'#5a3a18',g:'#4aa832',r:'#c8201a',R:'#ff6a58',D:'#8a1010'}));
+  R('i_gapple',g=>mcPix(g,['.......s........','......s...gg....','....rrrsrrgg....','...rRRrrrrrrr...','..rRRrrrrrrrrD..','..rRrrrrrrrrrD..','..rrrrrrrrrrrD..','..rrrrrrrrrrDD..','...rrrrrrrrDD...','....rrrrrDD.....','.....DD..DD.....'],2,{s:'#5a3a18',g:'#4aa832',r:'#e8b820',R:'#fff2a0',D:'#a87a08'}));
+  const MEAT={i_beef:['#8a2418','#c8463a','#f08a7a',[[5,6],[6,6],[9,8],[10,8]],'#fff0e8'],i_steak:['#4a2210','#7a3f22','#b0743e',[[5,6],[6,7],[9,8],[8,9]],'#3a1a0c'],
+   i_pork:['#c26a6a','#f0a0a0','#ffd8d8',[[5,6],[6,6],[9,8]],'#fff4f0'],i_cpork:['#7a4a22','#b0783a','#e0a860',[[5,6],[6,7],[9,8]],'#5a3416'],
+   i_mutton:['#9a3030','#d05a52','#f89a8a',[[5,6],[9,8],[10,8]],'#fff0e8'],i_cmutton:['#5a3418','#8a5a2e','#bc8a54',[[5,6],[6,7],[9,8]],'#3a2210'],
+   i_flesh:['#4a6a2a','#7a9a4a','#b0c880',[[5,6],[8,7],[9,9]],'#8a2a2a']};
+  for(const n in MEAT) R(n,g=>mcMeat(g,MEAT[n]));
+  const leg=(m,bn)=>g=>{mcShape(g,mcRows(['.......XXXX.....','......XXXXXXX...','......XXXXXXXX..','......XXXXXXXX..','.....XXXXXXXX...','....XXXXXXX.....','....XXXX........'],2),m);mcShape(g,[[5,9],[4,10],[3,11],[2,12],[1,12],[2,13],[1,13],[2,11]],bn);};
+  R('i_chicken',leg(['#c88a6a','#f0c8b0','#fff0e0'],['#c8c0b0','#f0ece0','#ffffff']));R('i_cchicken',leg(['#8a5418','#c9883a','#eab868'],['#c8c0b0','#f0ece0','#ffffff']));
+  R('i_bone',g=>{mcShape(g,[[4,11],[5,10],[6,9],[7,8],[8,7],[9,6],[10,5],[5,11],[6,10],[7,9],[8,8],[9,7],[10,6],[11,5]],['#bcb8a4','#ece8d8','#ffffff']);mcShape(g,[[2,11],[3,11],[2,12],[3,12],[3,13],[4,12],[11,3],[12,3],[12,4],[13,4],[13,3],[11,4]],['#bcb8a4','#ece8d8','#ffffff']);});
+  R('i_bread',g=>mcPix(g,['................','....bbbbbbbb....','..bbBBBBBBBBbb..','.bBBBBBlBBBlBBb.','.bBBBBBBBBBBBBb.','.bBBllBBBBllBBb.','..bBBBBBBBBBBb..','...bbbbbbbbbb...'],4,{b:'#8a5018',B:'#c98a3a',l:'#e8b868'}));
+  // 方塊
+  const wr=(x)=>(x+16)%16;
+  R('cobble',(g,r)=>{const sd=[[2,2],[9,1],[13,6],[5,7],[11,11],[2,12],[8,14],[14,14],[8,9],[0,7],[5,3]];const col=['#7c7c7c','#8c8c8c','#6e6e6e','#969696','#808080','#767676','#9a9a9a'];const cell=(x,y)=>{let b=0,bd=1e9;sd.forEach((q,i)=>{let dx=Math.abs(x-q[0]);dx=Math.min(dx,16-dx);let dy=Math.abs(y-q[1]);dy=Math.min(dy,16-dy);const d=dx*dx+dy*dy;if(d<bd){bd=d;b=i;}});return b;};
+    for(let y=0;y<16;y++)for(let x=0;x<16;x++){const c=cell(x,y);let v=col[(c*3)%col.length];if(cell(wr(x+1),y)!==c||cell(x,wr(y+1))!==c) v='#626262';let k2=0.94+r()*0.1;if(v!=='#626262'&&(cell(wr(x-1),y)!==c||cell(x,wr(y-1))!==c)) k2*=1.12;px(g,x,y,shade(v,k2));}});
+  const logSide=(g,r,cols,mark)=>{for(let x=0;x<16;x++){const c=cols[Math.floor(r()*cols.length)];for(let y=0;y<16;y++) px(g,x,y,r()<0.22?cols[Math.floor(r()*cols.length)]:c);}if(mark){for(let k=0;k<7;k++){const x=Math.floor(r()*13),y=Math.floor(r()*15);g.fillStyle=mark;g.fillRect(x,y,2+Math.floor(r()*2),1);}}};
+  R('oak_log',(g,r)=>{logSide(g,r,['#6b5230','#5b4326','#7a5e38','#4e3a20']);for(const x of [3,8,13]) for(let y=0;y<16;y++) if(r()<0.7) px(g,x,y,'#3e2c16');});
+  R('birch_log',(g,r)=>{logSide(g,r,['#d8d4c8','#cfcabd','#e4e0d4'],null);for(let k=0;k<9;k++){const x=Math.floor(r()*12),y=Math.floor(r()*15);g.fillStyle='#3a3a3a';g.fillRect(x,y,1+Math.floor(r()*2),1);}});
+  R('spruce_log',(g,r)=>{logSide(g,r,['#4a3418','#3d2a14','#563e20','#352410']);for(const x of [2,7,12]) for(let y=0;y<16;y++) if(r()<0.7) px(g,x,y,'#24180a');});
+  const ring=(bark,a,b,c)=>(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++){const d=Math.max(Math.abs(x-7.5),Math.abs(y-7.5));let v;if(d>=7) v=bark;else if(d>=5.5) v=a;else if(d>=4.5) v=b;else if(d>=3.5) v=a;else if(d>=2.5) v=b;else v=c;px(g,x,y,shade(v,0.95+r()*0.1));}};
+  R('oak_top',ring('#5b4326','#b08a52','#8e6c3c','#a07a46'));R('birch_top',ring('#cfcabd','#d8bc84','#bd9f66','#d0b078'));R('spruce_top',ring('#3d2a14','#7a5a34','#5e4424','#6e5030'));
+  const OREC={coal_ore:['#1e1e1e','#2e2e2e','#4a4a4a'],iron_ore:['#d8af93','#c49a7c','#ecd0b8'],gold_ore:['#fcee4b','#e0b820','#fff8a8'],diamond_ore:['#5decf5','#2fc4cc','#d0ffff'],redstone_ore:['#ff1a1a','#c01010','#ff7a6a'],lapis_ore:['#2a4ac8','#1c3590','#6a8aff'],emerald_ore:['#2ad45a','#127a2a','#a0ffc0'],copper_ore:['#e0804a','#b05a2a','#40c0a0']};
+  const BLOB=[[[0,0],[1,0],[0,1],[1,1],[2,1],[2,2]],[[0,0],[1,0],[0,1],[1,1],[1,2],[2,0]],[[0,0],[1,0],[0,1],[1,1],[2,1],[0,2]],[[1,0],[0,1],[1,1],[2,1],[1,2],[2,2],[0,2]],[[0,0],[1,0],[0,1],[1,1],[2,1],[3,1],[1,2]]];
+  for(const n in OREC) R(n,(g,r)=>{stoneP(g,r);const cs=OREC[n];const spots=[[1,1],[9,1],[5,6],[11,8],[1,10],[8,11]];spots.forEach(([bx,by],i)=>{if(i>=5&&r()<0.35) return;const sh=BLOB[Math.floor(r()*BLOB.length)];for(const [dx,dy] of sh){const x=bx+dx,y=by+dy;if(x>15||y>15) continue;px(g,x,y,cs[Math.floor(r()*3)]);}});});
+  R('bricks',(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++){const row=Math.floor(y/4);const mort=(y%4===3)||(((x+(row%2)*4)%8)===7);if(mort) px(g,x,y,shade('#b8b0a2',0.92+r()*0.1));else px(g,x,y,shade(['#96493b','#a4543f','#8a4034','#9c4e3a'][(Math.floor((x+(row%2)*4)/8)+row*3)%4],0.94+r()*0.1));}});
+  R('gravel',(g,r)=>{noiseFill(g,r,['#857f7e','#9a9594','#706c6b','#a7a3a2','#8b8685']);for(let k=0;k<9;k++){const x=Math.floor(r()*14),y=Math.floor(r()*14);g.fillStyle=['#5e5a59','#b4b0ae','#6e625a'][k%3];g.fillRect(x,y,2,2);}});
+}
+fineTextures();mcStyle();
 for(let n of Object.keys(T)) refineByName(n);
 for(const n of ['water','lava','portal','sky_portal']) if(T[n]!==undefined){const i=T[n];const x=(i%32)*16,y=Math.floor(i/32)*16;AG.save();AG.translate(x,y);AG.beginPath();AG.rect(0,0,16,16);AG.clip();AG.clearRect(0,0,16,16);({water:drawWater,lava:drawLava,portal:(g,t)=>drawPortal(g,t,false),sky_portal:(g,t)=>drawPortal(g,t,true)})[n](AG,0);AG.restore();}
 
@@ -1699,7 +1778,7 @@ const FACE={
   sheep:faceCanvas((g,f)=>{f('#d8c8b0',0,0,8,8);f('#eee',0,0,8,1);f('#111',1,3);f('#fff',2,3);f('#fff',5,3);f('#111',6,3);f('#e8a8a8',3,5,2,1);}),
   wolf:faceCanvas((g,f)=>{f('#c8c8c8',0,0,8,8);f('#222',1,3);f('#222',6,3);f('#eee',2,4,4,4);f('#111',3,5,2,1);}),
   wolft:faceCanvas((g,f)=>{f('#c8c8c8',0,0,8,8);f('#222',1,3);f('#222',6,3);f('#eee',2,4,4,4);f('#111',3,5,2,1);f('#d02020',0,7,8,1);}),
-  zombie:faceCanvas((g,f)=>{f('#5a9a4a',0,0,8,8);f('#3a7a2a',0,0,8,2);f('#111',1,3,2,1);f('#111',5,3,2,1);f('#2a5a1a',3,5,2,1);f('#2a4a1a',2,6,4,1);}),
+  zombie:faceCanvas((g,f)=>{f('#3f7d30',0,0,8,8);f('#3a7a2a',0,0,8,2);f('#111',1,3,2,1);f('#111',5,3,2,1);f('#2a5a1a',3,5,2,1);f('#2a4a1a',2,6,4,1);}),
   husk:faceCanvas((g,f)=>{f('#9a8a5a',0,0,8,8);f('#7a6a3a',0,0,8,2);f('#111',1,3,2,1);f('#111',5,3,2,1);f('#5a4a2a',2,6,4,1);}),
   skel:faceCanvas((g,f)=>{f('#c8c8c8',0,0,8,8);f('#222',1,3,2,2);f('#222',5,3,2,2);f('#444',3,5,2,1);f('#555',1,6,6,1);}),
   stray:faceCanvas((g,f)=>{f('#a8b8c0',0,0,8,8);f('#123',1,3,2,2);f('#123',5,3,2,2);f('#567',1,6,6,1);}),
@@ -1733,7 +1812,7 @@ const MOBS={
   bat:{n:'蝙蝠',hp:6,w:0.25,h:0.5,sp:3,amb:true,fly:true,drops:[],xp:[0,0],snd:'squeak',
     parts:[['body',[3,5,3],[0,6,0],'#3a2a1a'],['head',[4,4,4],[0,10,0],'#4a3a2a'],['wL',[8,4,1],[-6,7,0],'#2a1a10'],['wR',[8,4,1],[6,7,0],'#2a1a10']]},
   zombie:{n:'殭屍',hp:20,w:0.3,h:1.9,sp:1.6,hostile:true,dmg:3,burn:true,drops:[['I_FLESH',0,2],['I_IRON',0,0,0.025],['I_CARROT',0,0,0.03],['I_POTATO',0,0,0.03]],xp:[5,5],snd:'groan',
-    parts:[['body',[8,12,4],[0,18,0],'#2a9aa0'],['head',[8,8,8],[0,28,0],'#5a9a4a','zombie'],['aL',[4,4,12],[-6,22,5],'#5a9a4a'],['aR',[4,4,12],[6,22,5],'#5a9a4a'],['l0',[4,12,4],[-2,6,0],'#3a3a8a'],['l1',[4,12,4],[2,6,0],'#3a3a8a']]},
+    parts:[['body',[8,12,4],[0,18,0],'#2a9aa0'],['head',[8,8,8],[0,28,0],'#3f7d30','zombie'],['aL',[4,4,12],[-6,22,5],'#3f7d30'],['aR',[4,4,12],[6,22,5],'#3f7d30'],['l0',[4,12,4],[-2,6,0],'#3a3a8a'],['l1',[4,12,4],[2,6,0],'#3a3a8a']]},
   husk:{n:'屍殼',hp:20,w:0.3,h:1.9,sp:1.6,hostile:true,dmg:3,drops:[['I_FLESH',0,2]],xp:[5,5],snd:'groan',
     parts:[['body',[8,12,4],[0,18,0],'#7a6a4a'],['head',[8,8,8],[0,28,0],'#9a8a5a','husk'],['aL',[4,4,12],[-6,22,5],'#9a8a5a'],['aR',[4,4,12],[6,22,5],'#9a8a5a'],['l0',[4,12,4],[-2,6,0],'#5a4a2a'],['l1',[4,12,4],[2,6,0],'#5a4a2a']]},
   skel:{n:'骷髏',hp:20,w:0.3,h:1.9,sp:1.4,hostile:true,dmg:2,burn:true,ranged:true,drops:[['I_BONE',0,2],['I_ARROW',0,2]],xp:[5,5],snd:'rattle',
@@ -2480,7 +2559,7 @@ function liquidTick(dt){if(typeof isHost==='function'&&!isHost()) {LIQ.q.clear()
 
 // ================= 多人連線（房間代碼）=================
 const DIMS=['over','nether','sky'];
-const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611271200'};
+const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611281400'};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
 function peerOpts(){const o={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
@@ -3719,7 +3798,7 @@ function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Mat
   return true;}
 
 // ================= 自動偵測並修復 BUG =================
-const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611271200'};
+const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611281400'};
 function diagLog(msg){try{DIAG.log.push({t:new Date().toISOString().slice(0,19),v:DIAG.ver,m:String(msg).slice(0,200)});if(DIAG.log.length>40) DIAG.log.shift();localStorage.setItem('mmvox_buglog',JSON.stringify(DIAG.log));}catch(e){}}
 function diagFree(x,y,z){return !collides(x,y,z);}
 function selfCheck(manual){const fixed=[];if(!running) return fixed;
@@ -4159,7 +4238,7 @@ function toolInfoTick(){const s=held();const el=$('#heldName');if(!s||!running) 
   else if(d.clock){const t=W.time%24000;const h=Math.floor(t/1000+6)%24,m=Math.floor((t%1000)/1000*60);el.textContent=W.dim==='nether'?'時鐘：指針亂轉…':`時鐘：第 ${W.day} 天 ${h}:${String(m).padStart(2,'0')}`;el.style.opacity=1;}}
 let lookT=0,lookKey='';
 const TOOLZH={pick:'鎬',axe:'斧頭',shovel:'鏟子',sword:'劍',hoe:'鋤頭'},TIERZH=['','木','石','鐵','鐵','鑽石'];
-const MOBDOT={cow:'#4b3621',pig:'#f0a0a0',chicken:'#f4f4f4',sheep:'#eaeaea',wolf:'#c8c8c8',bat:'#3a2a1a',zombie:'#5a9a4a',husk:'#9a8a5a',skel:'#c8c8c8',stray:'#a8b8c0',spider:'#2a2420',boomer:'#d02a2a',slime:'#6ec85a',magma:'#5a1a08',jelly:'#ff9a3c',zpig:'#e89a9a'};
+const MOBDOT={cow:'#4b3621',pig:'#f0a0a0',chicken:'#f4f4f4',sheep:'#eaeaea',wolf:'#c8c8c8',bat:'#3a2a1a',zombie:'#3f7d30',husk:'#9a8a5a',skel:'#c8c8c8',stray:'#a8b8c0',spider:'#2a2420',boomer:'#d02a2a',slime:'#6ec85a',magma:'#5a1a08',jelly:'#ff9a3c',zpig:'#e89a9a'};
 function lookTick(dt){lookT+=dt;if(lookT<0.1) return;lookT=0;const el=$('#look');if(!SET.look||P.dead||uiOpen||paused){el.hidden=true;lookKey='';return;}
   const hm=rayMob(5);let h='';
   if(hm&&(!AIM.id||hm.t<AIM.t)){const m=hm.m,T2=MOBS[m.type];const kind=m.tamed?(m.tamed===myId()?'你馴服的':'別人馴服的'):T2.hostile?'敵對':T2.neutral?'中立（打牠會生氣）':'友善';
