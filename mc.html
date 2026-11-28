@@ -636,6 +636,17 @@ IC('i_bouquet',P=>{P(7,8,'#4a9a3a',2,7);P(5,10,'#4a9a3a',6,1);for(const [x,y,c] 
 IC('i_pendant',P=>{for(let k=0;k<6;k++){P(2+k,1+k,'#c8c8d8');P(13-k,1+k,'#c8c8d8');}P(6,7,'#40a8f0',4,5);P(7,12,'#40a8f0',2,2);P(7,8,'#c0f0ff',2,2);});
 IC('i_fegg',P=>{P(5,3,'#f86aa0',6,11);P(4,5,'#f86aa0',8,8);P(4,8,'#fff',8,1);P(4,10,'#5ac8f8',8,1);P(6,2,'#f86aa0',4,1);});
 tile('bed_foot',(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++) px(g,x,y,shade('#b8302a',0.92+r()*0.1));g.fillStyle='#7a1a14';g.fillRect(0,15,16,1);});
+{const WOOD='#b98b4c',RED='#b8302a',WHT='#f2efe6';
+ const rot=(k,draw)=>(g,r)=>{g.save();g.translate(8,8);g.rotate(k*Math.PI/2);g.translate(-8,-8);draw(g,r);g.restore();};
+ const headTop=(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++){const pill=y<9&&x>0&&x<15&&y>0;px(g,x,y,shade(pill?WHT:RED,0.93+r()*0.09));}g.fillStyle='#cfcbbf';for(let x=1;x<15;x++){g.fillRect(x,8,1,1);}g.fillRect(1,1,1,7);g.fillRect(14,1,1,7);g.fillRect(1,1,14,1);g.fillStyle='#8e2420';g.fillRect(0,9,16,1);};
+ const footTop=(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++) px(g,x,y,shade(y>=14?WHT:RED,0.93+r()*0.09));g.fillStyle='#8e2420';g.fillRect(0,13,16,1);g.fillStyle='#d44a40';g.fillRect(2,3,12,1);};
+ for(let k=0;k<4;k++){tile('bedHt'+k,rot(k,headTop));tile('bedFt'+k,rot(k,footTop));}
+ const band=(g,r,x0,x1,upper)=>{for(let y=7;y<=13;y++)for(let x=0;x<16;x++){let c;if(y>=11) c=WOOD;else if(upper&&x>=x0&&x<=x1) c=y===10?'#cfcbbf':WHT;else c=y===10?'#8e2420':RED;px(g,x,y,shade(c,0.92+r()*0.1));}};
+ tile('bedSideF',(g,r)=>band(g,r,0,0,false));tile('bedSideHlo',(g,r)=>band(g,r,0,8,true));tile('bedSideHhi',(g,r)=>band(g,r,7,15,true));
+ tile('bedEndH',(g,r)=>band(g,r,0,15,true));tile('bedEndF',(g,r)=>band(g,r,0,0,false));
+ icon('bed_icon',(g,r)=>{const F=(c,x,y,w,h)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  F('#7a5a30',1,13,2,3);F('#7a5a30',12,13,2,3);F('#9a6f3e',3,12,9,2);F('#c79a58',1,10,14,3);
+  F('#9c2420',1,8,14,3);F('#c63a32',2,5,12,4);F('#d9534a',3,5,10,1);F('#e8e4d8',9,3,5,4);F('#fff',10,3,3,1);F('#bdb8aa',9,6,5,1);F('#8e2420',2,8,12,1);});}
 
 // ---- 槍械與戰鬥模組：圖示、材質 ----
 {const WD='#8a5a2a',DW='#5a3a1a',MT='#3a3a40',ML='#7a7a84',BK='#1c1c20',OL='#5a6a3a',TN='#b8a070',BR='#d8a840';
@@ -718,7 +729,7 @@ defB('GLOWSTONE',{n:'螢石',h:0.3,glow:true,light:15,drop:'_glow',snd:'glass'})
 defB('PORTAL',{n:'地獄傳送門',solid:false,cut:true,glow:true,portal:true,tex:tx3('portal'),h:-1,light:11});
 defB('QUARTZ_ORE',{n:'石英礦',h:3,tool:'pick',tier:1,drop:'I_QUARTZ',xp:[2,5]});
 for(const [n,c] of WOOLC) defB('WOOL_'+n.toUpperCase(),{n:{gray:'灰色羊毛',lgray:'淺灰色羊毛',brown:'棕色羊毛',white:'白色羊毛',red:'紅色羊毛',yellow:'黃色羊毛',blue:'藍色羊毛',green:'綠色羊毛',black:'黑色羊毛',orange:'橘色羊毛',pink:'粉紅色羊毛'}[n],tex:tx3('wool_'+n),h:0.8,snd:'grass'});
-defB('BED',{n:'床',tex:tx3('bed_top','bed_side','planks'),h:0.6,tool:'axe',use:'bed',half:0.56,snd:'wood'});
+defB('BED',{n:'床',bed:true,tex:tx3('bed_top','bed_icon','planks'),h:0.6,tool:'axe',use:'bed',half:0.56,snd:'wood'});
 defB('ENCH',{n:'附魔台',tex:tx3('ench_top','ench_side','obsidian'),h:5,tool:'pick',tier:1,use:'ench',half:0.75});
 defB('ANVIL',{n:'鐵砧',tex:tx3('anvil_top','anvil_side','anvil_top'),h:5,tool:'pick',tier:1,use:'anvil',cut:true});
 defB('TNT',{n:'TNT 炸藥',tex:tx3('tnt_top','tnt_side','tnt_top'),h:0,tnt:true,snd:'grass'});
@@ -821,7 +832,7 @@ defB('SHIPBIN',{n:'出貨箱',tex:tx3('ship_top','ship_side','ship_side'),h:2,to
 defB('MAYO_M',{n:'美乃滋機',tex:tx3('mayo_top','mayo_side','mayo_side'),h:2,tool:'pick',fm:'mayo'});
 defB('CHEESE_M',{n:'起司機',tex:tx3('cheese_top','cheese_side','cheese_side'),h:2,tool:'axe',fm:'cheese'});
 defB('JAR_M',{n:'醃漬罐',tex:tx3('jar_top','jar_side','jar_top'),h:1,tool:'pick',fm:'jar',cut:true});
-defB('BED_FOOT',{n:'床',tex:tx3('bed_foot','bed_side','planks'),h:0.6,tool:'axe',use:'bed',half:0.56,snd:'wood',drop:'BED'});
+defB('BED_FOOT',{n:'床',bed:true,tex:tx3('bed_foot','bed_icon','planks'),h:0.6,tool:'axe',use:'bed',half:0.56,snd:'wood',drop:'BED'});
 defB('SANDBAG',{n:'沙包',tex:tx3('sandbag'),h:1.2,tool:'shovel',snd:'grass'});
 defB('ARMORY',{n:'軍火箱',tex:tx3('armory_top','armory_side','armory_side'),h:2.5,tool:'axe',use:'armory',snd:'wood'});
 // ---- 花崗岩、閃長岩、安山岩與拋光版 ----
@@ -1258,6 +1269,7 @@ function meshChunk(c){const dim=c.dim;const A={o:[[],[],[],[]],c:[[],[],[],[]],w
       const rot=b.rail&&(BL[at(lx+1,y,lz)].rail||BL[at(lx-1,y,lz)].rail)&&!(BL[at(lx,y,lz+1)].rail||BL[at(lx,y,lz-1)].rail)?1:0;
       for(const q of quads){const base=arr[0].length/3;for(let k=0;k<4;k++){const kk=(k+rot)%4;arr[0].push(x+q[k][0],y+q[k][1],z+q[k][2]);arr[1].push(UVC[kk][0]?uv[1]:uv[0],UVC[kk][1]?uv[3]:uv[2]);arr[2].push(s,bl,1);}(arr.i=arr.i||[]).push(base,base+1,base+2,base,base+2,base+3);}
       continue;}
+    if(b.bed){const [s,bl]=light(lx,y,lz);emitBed(A.o,id,x,y,z,lx,lz,at,s,bl,(dx,dy,dz)=>{const n=at(lx+dx,y+dy,lz+dz);const nb=BL[n];return n&&nb.solid&&!nb.cut&&!nb.half&&!nb.shape;});continue;}
     if(b.shape){const arr=b.cut?A.c:A.o;const [s,bl]=light(lx,y,lz);for(const bx of shapeBoxes(id,x,y,z,(a,b2,c)=>at(a-X0,b2,c-Z0),dim,false)) emitBox(arr,bx,x,y,z,b,s,bl,(dx,dy,dz)=>{const n=at(lx+dx,y+dy,lz+dz);const nb=BL[n];return n&&nb.solid&&!nb.cut&&!nb.half&&!nb.shape;});continue;}
     const arr=b.liquid&&!b.glow?A.w:b.glow&&!b.liquid?A.g:b.liquid?A.g:b.cut?A.c:A.o;const ht=b.half||1;const lh=b.liquid?liqH(id,at(lx,y+1,lz)):1;
     for(let f=0;f<6;f++){const F=FACES[f];const nid=at(lx+F.d[0],y+F.d[1],lz+F.d[2]);
@@ -1388,6 +1400,25 @@ function emitBox(arr,bx,x,y,z,b,s,bl,occluded){const [x0,y0,z0,x1,y1,z1]=bx;
       arr[1].push(uv[0]+(uv[1]-uv[0])*a,uv[2]+(uv[3]-uv[2])*c);arr[2].push(s*m,bl*m,m);}
     (arr.i=arr.i||[]).push(base,base+1,base+2,base,base+2,base+3);}}
 
+const BEDDIR=[[0,1],[0,-1],[1,0],[-1,0]];const BEDF=(dx,dz)=>dx>0?0:dx<0?1:dz>0?4:5;const BEDK={'0,-1':0,'1,0':1,'0,1':2,'-1,0':3};
+function emitBoxT(arr,bx,x,y,z,tiles,s,bl,occ,skip){const [x0,y0,z0,x1,y1,z1]=bx;
+  for(let f=0;f<6;f++){if(skip&&skip[f]) continue;const F=FACES[f];const atEdge=(f===0&&x1>=1)||(f===1&&x0<=0)||(f===2&&y1>=1)||(f===3&&y0<=0)||(f===4&&z1>=1)||(f===5&&z0<=0);if(atEdge&&occ(F.d[0],F.d[1],F.d[2])) continue;
+    const uv=UVT[tiles[f]];const base=arr[0].length/3;const m=F.s;
+    for(let k=0;k<4;k++){const cc=F.c[k];const X=cc[0]?x1:x0,Y=cc[1]?y1:y0,Z=cc[2]?z1:z0;arr[0].push(x+X,y+Y,z+Z);
+      let a,c;if(F.d[0]){a=F.d[0]>0?1-Z:Z;c=Y;}else if(F.d[1]){a=X;c=Z;}else{a=F.d[2]>0?X:1-X;c=Y;}
+      arr[1].push(uv[0]+(uv[1]-uv[0])*a,uv[2]+(uv[3]-uv[2])*c);arr[2].push(s*m,bl*m,m);}
+    (arr.i=arr.i||[]).push(base,base+1,base+2,base,base+2,base+3);}}
+function emitBed(arr,id,x,y,z,lx,lz,at,s,bl,occ){const head=id===B.BED;const partner=head?B.BED_FOOT:B.BED;let pd=null;for(const d of BEDDIR){if(at(lx+d[0],y,lz+d[1])===partner){pd=d;break;}}
+  let H=pd?(head?[-pd[0],-pd[1]]:[pd[0],pd[1]]):[0,1];const k=BEDK[H[0]+','+H[1]];
+  const none=[0,0,0,0,0,0],tl=[0,0,0,0,0,0];const outer=head?H:[-H[0],-H[1]];const inner=[-outer[0],-outer[1]];
+  const T0=T.bedHt0;const topT=head?T['bedHt'+k]:T['bedFt'+k];
+  const tiles=[0,0,topT,T.planks,0,0];const skip=[0,0,0,0,0,0];
+  for(const f of [0,1,4,5]){tiles[f]=T.bedSideF;}
+  const fo=BEDF(outer[0],outer[1]),fi=BEDF(inner[0],inner[1]);tiles[fo]=head?T.bedEndH:T.bedEndF;skip[fi]=pd?1:0;
+  if(head){for(const f of [0,1,4,5]){if(f===fo||f===fi) continue;const dz=f===4?1:f===5?-1:0,dx=f===0?1:f===1?-1:0;let hi;if(dx){hi=dx>0?(H[1]<0):(H[1]>0);}else{hi=dz>0?(H[0]>0):(H[0]<0);}tiles[f]=hi?T.bedSideHhi:T.bedSideHlo;}}
+  emitBoxT(arr,[0,0.1875,0,1,0.5625,1],x,y,z,tiles,s,bl,occ,skip);
+  const lt=[T.planks,T.planks,T.planks,T.planks,T.planks,T.planks];const lw=0.1875;
+  for(const sx of [0,1]) {const ox=outer[0]?(outer[0]>0?1-lw:0):(sx?1-lw:0),oz=outer[1]?(outer[1]>0?1-lw:0):(sx?1-lw:0);emitBoxT(arr,[ox,0,oz,ox+lw,0.1875,oz+lw],x,y,z,lt,s,bl,occ);}}
 // ================= 畫面、玩家、操作、物理 =================
 const canvas=$('#c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:!isTouch,powerPreference:'high-performance'});
@@ -2656,7 +2687,7 @@ function liquidTick(dt){if(typeof isHost==='function'&&!isHost()) {LIQ.q.clear()
 
 // ================= 多人連線（房間代碼）=================
 const DIMS=['over','nether','sky'];
-const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611290500'};
+const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611290600'};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
 function peerOpts(){const o={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
@@ -3901,7 +3932,7 @@ function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Mat
   return true;}
 
 // ================= 自動偵測並修復 BUG =================
-const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611290500'};
+const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611290600'};
 function diagLog(msg){try{DIAG.log.push({t:new Date().toISOString().slice(0,19),v:DIAG.ver,m:String(msg).slice(0,200)});if(DIAG.log.length>40) DIAG.log.shift();localStorage.setItem('mmvox_buglog',JSON.stringify(DIAG.log));}catch(e){}}
 function diagFree(x,y,z){return !collides(x,y,z);}
 function selfCheck(manual){const fixed=[];if(!running) return fixed;
