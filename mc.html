@@ -16,6 +16,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#fff;font-f
 #bottom{position:absolute;left:50%;bottom:max(6px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;flex-direction:column;align-items:center}
 #hotbar{display:flex;background:rgba(0,0,0,.35);border:3px solid #111;outline:2px solid #555;pointer-events:auto}
 #hotbar{position:relative}.hs.off{position:absolute;right:calc(100% + 10px);top:-3px;border-radius:6px;border-color:#6a6a8a;background:rgba(40,40,70,.45)}
+.mc-sort{font-size:12px;padding:1px 8px;margin-left:8px;border:2px solid #555;background:#8b8b8b;color:#222;cursor:pointer;border-radius:4px;font-weight:700}.mc-sort:hover{background:#a8a8a8}
 .hs{width:44px;height:44px;border:2px solid #8a8a8a;position:relative;display:flex;align-items:center;justify-content:center;background:rgba(80,80,80,.35)}
 .hs.on{border:3px solid #fff;outline:2px solid #000;z-index:1}
 .hs b,.sl b{position:absolute;right:2px;bottom:0;font-size:14px;font-weight:700;text-shadow:2px 2px 0 #3f3f3f;color:#fff}
@@ -1671,7 +1672,7 @@ function craftTake(shift){const w=UI.kind==='table'?3:2;let r=matchRecipe(UI.cg,
     if(UI.lastRec&&r===UI.lastRec&&UI.cg.every(s=>!s)&&!matchRecipe(UI.cg,w)) autoFill(UI.lastRec,true);}
   playSnd('click');}
 function craftHTML(w){const r=matchRecipe(UI.cg,w);return `<div class="mc-craft"><div class="mc-grid g${w}">${UI.cg.map((s,k)=>slotHTML(s,'cg',k)).join('')}</div><span class="mc-arrow"></span>${slotHTML(r?{id:r.out,n:r.n}:null,'co',0,'out')}</div>`;}
-function invGrid(){return `<div class="mc-invcol"><div class="mc-lab">物品欄</div><div class="mc-grid g9">${P.inv.slice(9).map((s,k)=>slotHTML(s,'inv',k+9)).join('')}</div><div class="mc-grid g9 hot">${P.inv.slice(0,9).map((s,k)=>slotHTML(s,'inv',k)).join('')}</div></div>`;}
+function invGrid(){return `<div class="mc-invcol"><div class="mc-lab">物品欄 <button class="mc-sort" data-sort="inv">🧹 整理</button></div><div class="mc-grid g9">${P.inv.slice(9).map((s,k)=>slotHTML(s,'inv',k+9)).join('')}</div><div class="mc-grid g9 hot">${P.inv.slice(0,9).map((s,k)=>slotHTML(s,'inv',k)).join('')}</div></div>`;}
 const CTABS=[['方塊',()=>BL.filter(b=>b.id&&!['WATER','LAVA','PORTAL','FURNACE_ON','LEVER_ON','WIRE','WIRE_ON','LAMP_ON','DOOR_OPEN','DOOR_BIRCH_OPEN','DOOR_SPRUCE_OPEN','BEDROCK','FARMLAND','PISTON_HEAD','SKY_PORTAL','BED_FOOT'].includes(b.key)&&!/^(WHEAT|CARROT|POTATO|BEET|WATER_F|LAVA_F|FC_|FARMLAND_WET)/.test(b.key)).map(b=>b.id)],
   ['工具戰鬥',()=>Object.keys(IT).filter(k=>/^(T_|A_)/.test(k)||['I_BOW','I_ARROW','I_FLINTSTEEL','I_SHEARS','I_BUCKET','I_WBUCKET','I_LBUCKET'].includes(k)).map(k=>IT[k])],
   ['材料食物',()=>Object.keys(IT).filter(k=>!/^(T_|A_)/.test(k)&&!['I_BOW','I_ARROW','I_FLINTSTEEL','I_SHEARS','I_BUCKET','I_WBUCKET','I_LBUCKET'].includes(k)).map(k=>IT[k])]];
@@ -1691,6 +1692,13 @@ function dollCanvas(){const c=document.createElement('canvas');c.width=16;c.heig
   f(P.color,4,8,8,12);f(P.color,0,8,4,8);f(P.color,12,8,4,8);f('#e3b58c',0,16,4,4);f('#e3b58c',12,16,4,4);f('#3a3f5a',4,20,8,10);f('#2a2a3a',4,30,8,2);
   const ac=s=>s?{leather:'#8a5a32',iron:'#cfcfcf',gold:'#f0c93a',diamond:'#5fd6d0',copper:'#d8824a'}[DEF(s.id).key.split('_').pop()]:null;const a=P.armor;
   if(ac(a[0])){f(ac(a[0]),3,0,10,3);f(ac(a[0]),3,3,1,3);f(ac(a[0]),12,3,1,3);}if(ac(a[1])){f(ac(a[1]),4,8,8,10);f(ac(a[1]),0,8,4,5);f(ac(a[1]),12,8,4,5);}if(ac(a[2])) f(ac(a[2]),4,18,8,8);if(ac(a[3])) f(ac(a[3]),4,28,8,4);return c;}
+function sortStacks(which){let arr,from,to;if(which==='ch'){if(!W.cont[UI.key]) return;arr=W.cont[UI.key];from=0;to=arr.length;}else{arr=P.inv;from=9;to=36;}
+  const items=[];for(let i=from;i<to;i++) if(arr[i]) items.push(arr[i]);
+  const merged=[];for(const s of items){const d=DEF(s.id);const ms=maxStack(s.id);let left=s.n;if(ms>1&&!s.ench&&!s.d&&!s.bag){for(const m of merged){if(m.id===s.id&&!m.ench&&!m.d&&!m.bag&&m.n<ms){const k=Math.min(left,ms-m.n);m.n+=k;left-=k;if(!left) break;}}}if(left>0){s.n=left;merged.push(s);}}
+  const rank=s=>{const d=DEF(s.id);if(!d) return 9;if(d.tool&&d.tool.type!=='shield') return 0;if(d.armor||d.shield) return 1;if(d.food||d.potion) return 2;if(!isItem(s.id)) return 3;return 4;};
+  merged.sort((a,b)=>rank(a)-rank(b)||a.id-b.id||(b.n-a.n));
+  for(let i=from;i<to;i++) arr[i]=merged[i-from]||null;
+  if(which==='ch') netCont(UI.key);else renderHotbar();}
 function renderUI(){if(!UI.kind) return;const k=UI.kind;let h='';
   if(k==='inv'||k==='table'){h+=`<div class="mc-top">${k==='inv'?`<div class="mc-grid g1">${P.armor.map((s,i)=>slotHTML(s,'arm',i,'arm'+i)).join('')}</div><div class="mc-doll" id="mcDoll"></div><div class="mc-grid g1" title="副手">${slotHTML(P.off,'of',0,'off')}</div>`:''}<div><div class="mc-lab">${k==='table'?'合成':'合成'}</div>${craftHTML(k==='table'?3:2)}</div></div>${recipeBook(k==='table'?3:2)}`;}
   else if(k==='creative'){const ids=CTABS[UI.ctab][1]();h+=`<div class="tabs">${CTABS.map(([n],i)=>`<button class="tab" data-ct="${i}" aria-pressed="${i===UI.ctab}">${n}</button>`).join('')}<button class="tab" data-ct="inv">生存物品欄</button></div><div class="mc-grid g9 pal">${ids.map(id=>`<div class="sl" data-c="cr" data-i="${id}" data-tip="${nameOf(id)}">${icHTML(id)}</div>`).join('')}</div><div class="mc-row"><div class="sl trash" data-c="trash" data-i="0">🗑</div></div>`;}
@@ -1701,7 +1709,7 @@ function renderUI(){if(!UI.kind) return;const k=UI.kind;let h='';
   else if(k==='ptrade') h+=tradeHTML();
   else if(k==='hopper') h+=`<div class="mc-lab">漏斗（上面的箱子、掉在上面的東西會被吸進來，再送到下面或旁邊的箱子、熔爐）</div><div class="mc-grid g9" style="grid-template-columns:repeat(5,40px)">${W.cont[UI.key].map((s,i)=>slotHTML(s,'ch',i)).join('')}</div>`;
   else if(k==='chest'&&UI.key==='buddy') h+=budUI();
-  else if(k==='chest') h+=`<div class="mc-lab">${typeof shipLabel==='function'?shipLabel():'箱子'}</div><div class="mc-grid g9">${W.cont[UI.key].map((s,i)=>slotHTML(s,'ch',i)).join('')}</div>`;
+  else if(k==='chest') h+=`<div class="mc-lab">${typeof shipLabel==='function'?shipLabel():'箱子'} <button class="mc-sort" data-sort="ch">🧹 整理箱子</button></div><div class="mc-grid g9">${W.cont[UI.key].map((s,i)=>slotHTML(s,'ch',i)).join('')}</div>`;
   else if(k==='ench') h+=enchHTML();else if(k==='anvil') h+=anvilHTML();
   else if(k==='trade'){const T3=TRADES[UI.trade.prof]||TRADES[0];h+=`<div class="mc-lab">${PROFS[UI.trade.prof][0]}想跟你交易：</div><div class="trades">${T3.map((t,i)=>{const g=tid(t[0]),o=tid(t[2]);const can=W.mode==='creative'||countItem(g)>=t[1];
     return `<button class="trd ${can?'':'no'}" data-tr="${i}"><span class="ti">${icHTML(g,28)}<b>${t[1]}</b></span><small>${nameOf(g)}</small><span class="tarr">➜</span><span class="ti">${icHTML(o,28)}${t[3]>1?`<b>${t[3]}</b>`:''}</span><small>${nameOf(o)}</small></button>`;}).join('')}</div><p class="muted">點一下就交易。綠寶石可以挖礦（山裡）或賣東西給村民賺。</p>`;}
@@ -1713,6 +1721,7 @@ function renderCursor(e){const el=$('#mcCursor');if(!UI.cursor){el.hidden=true;r
 addEventListener('pointermove',e=>{if(UI.kind&&UI.cursor){const el=$('#mcCursor');el.style.left=(e.clientX-16)+'px';el.style.top=(e.clientY-16)+'px';}const t=$('#mcTip');if(t&&!t.hidden){t.style.left=Math.min(innerWidth-t.offsetWidth-4,e.clientX+14)+'px';t.style.top=Math.max(4,e.clientY-34)+'px';}});
 addEventListener('pointerover',e=>{const t=$('#mcTip');if(!t) return;const sl=e.target.closest&&e.target.closest('#mcui [data-tip]');if(!sl||!sl.dataset.tip||UI.cursor){t.hidden=true;return;}const L=sl.dataset.tip.split('\n');t.innerHTML=L.map((x,i)=>i?`<small class="${x[0]==='§'?'en':''}">${x.replace('§','')}</small>`:`<b>${x}</b>`).join('');t.hidden=false;});
 $('#mcBody').addEventListener('pointerdown',e=>{const ct=e.target.closest('[data-ct]');if(ct){if(ct.dataset.ct==='inv'){UI.kind='inv';UI.cg=Array(4).fill(null);}else UI.ctab=+ct.dataset.ct;renderUI();return;}
+  const so=e.target.closest('[data-sort]');if(so){sortStacks(so.dataset.sort);playSnd('click');renderUI();return;}
   if(e.target.closest('[data-only]')){UI.onlyHave=!UI.onlyHave;UI.bookOpen=true;setTimeout(renderUI,0);return;}
   const rec=e.target.closest('[data-rec]');if(rec){autoFill(RECIPES[+rec.dataset.rec]);renderUI();return;}
   const fmb=e.target.closest('[data-fm]');if(fmb){if(!fmb.disabled) farmClick(fmb.dataset.fm);return;}
@@ -2622,7 +2631,7 @@ function liquidTick(dt){if(typeof isHost==='function'&&!isHost()) {LIQ.q.clear()
 
 // ================= 多人連線（房間代碼）=================
 const DIMS=['over','nether','sky'];
-const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611290000'};
+const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611290100'};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
 function peerOpts(){const o={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
@@ -3867,7 +3876,7 @@ function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Mat
   return true;}
 
 // ================= 自動偵測並修復 BUG =================
-const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611290000'};
+const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611290100'};
 function diagLog(msg){try{DIAG.log.push({t:new Date().toISOString().slice(0,19),v:DIAG.ver,m:String(msg).slice(0,200)});if(DIAG.log.length>40) DIAG.log.shift();localStorage.setItem('mmvox_buglog',JSON.stringify(DIAG.log));}catch(e){}}
 function diagFree(x,y,z){return !collides(x,y,z);}
 function selfCheck(manual){const fixed=[];if(!running) return fixed;
