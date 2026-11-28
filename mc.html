@@ -1657,7 +1657,8 @@ function quickMove(c,i){const s=slotGet(c,i);if(!s) return;let left;
 function craftTake(shift){const w=UI.kind==='table'?3:2;let r=matchRecipe(UI.cg,w);if(!r) return;
   const one=()=>{for(let i=0;i<UI.cg.length;i++) if(UI.cg[i]){const id=UI.cg[i].id;UI.cg[i].n--;if(!UI.cg[i].n) UI.cg[i]=null;if(id===IT.I_MBUCKET&&r.out!==IT.I_MBUCKET) addItem(IT.I_BUCKET,1);}};
   if(shift){let g=0;while(r&&g++<64){if(addItem(r.out,r.n)) break;one();r=matchRecipe(UI.cg,w);}}
-  else{if(!UI.cursor) UI.cursor={id:r.out,n:r.n};else if(UI.cursor.id===r.out&&!UI.cursor.ench&&UI.cursor.n+r.n<=maxStack(r.out)) UI.cursor.n+=r.n;else return;one();}
+  else{if(!UI.cursor) UI.cursor={id:r.out,n:r.n};else if(UI.cursor.id===r.out&&!UI.cursor.ench&&UI.cursor.n+r.n<=maxStack(r.out)) UI.cursor.n+=r.n;else return;one();
+    if(UI.lastRec&&r===UI.lastRec&&UI.cg.every(s=>!s)&&!matchRecipe(UI.cg,w)) autoFill(UI.lastRec,true);}
   playSnd('click');}
 function craftHTML(w){const r=matchRecipe(UI.cg,w);return `<div class="mc-craft"><div class="mc-grid g${w}">${UI.cg.map((s,k)=>slotHTML(s,'cg',k)).join('')}</div><span class="mc-arrow"></span>${slotHTML(r?{id:r.out,n:r.n}:null,'co',0,'out')}</div>`;}
 function invGrid(){return `<div class="mc-invcol"><div class="mc-lab">物品欄</div><div class="mc-grid g9">${P.inv.slice(9).map((s,k)=>slotHTML(s,'inv',k+9)).join('')}</div><div class="mc-grid g9 hot">${P.inv.slice(0,9).map((s,k)=>slotHTML(s,'inv',k)).join('')}</div></div>`;}
@@ -1668,10 +1669,11 @@ function recipeBook(w){const seen=new Set(),list=[];for(const r of RECIPES){if(r
   const need=r=>{const m={};if(r.shapeless) r.shapeless.forEach(id=>m[id]=(m[id]||0)+1);else r.rows.forEach(row=>[...row].forEach(ch=>{if(ch!==' '){const id=r.key[ch];m[id]=(m[id]||0)+1;}}));return m;};
   const have=r=>Object.entries(need(r)).every(([id,n])=>countItem(+id)>=n);const shown=list.filter(r=>!UI.onlyHave||have(r));
   return `<details class="mc-book" ${UI.bookOpen?'open':''}><summary>📗 合成表（${w===3?'3×3':'2×2'}）</summary><label class="mc-only"><input type="checkbox" data-only ${UI.onlyHave?'checked':''}> 只顯示做得出來的</label><div class="mc-rl">${shown.map(r=>{const m=need(r);return `<button class="mc-rec ${have(r)?'':'no'}" data-rec="${RECIPES.indexOf(r)}">${icHTML(r.out,24)}<span><b>${nameOf(r.out)}${r.n>1?' ×'+r.n:''}</b><small>${Object.entries(m).map(([id,n])=>nameOf(+id)+'×'+n).join('、')}</small></span></button>`;}).join('')}</div></details>`;}
-function autoFill(r){const w=UI.kind==='table'?3:2;for(const s of UI.cg) if(s) addItem(s.id,s.n,s);UI.cg=Array(w*w).fill(null);
+function autoFill(r,quiet){const w=UI.kind==='table'?3:2;for(const s of UI.cg) if(s) addItem(s.id,s.n,s);UI.cg=Array(w*w).fill(null);
   const cells=[];if(r.shapeless) r.shapeless.forEach((id,k)=>cells.push([k,id]));else r.rows.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch!==' ') cells.push([y*w+x,r.key[ch]]);}));
-  const need={};cells.forEach(([,id])=>need[id]=(need[id]||0)+1);if(W.mode!=='creative'&&!Object.entries(need).every(([id,n])=>countItem(+id)>=n)){uiMsg('材料不夠：'+Object.entries(need).map(([id,n])=>nameOf(+id)+'×'+n).join('、'));return;}
-  for(const [i,id] of cells){if(W.mode!=='creative') takeItem(id,1);UI.cg[i]={id,n:1};}}
+  const need={};cells.forEach(([,id])=>need[id]=(need[id]||0)+1);if(W.mode!=='creative'&&!Object.entries(need).every(([id,n])=>countItem(+id)>=n)){if(!quiet) uiMsg('材料不夠：'+Object.entries(need).map(([id,n])=>nameOf(+id)+'×'+n).join('、'));return false;}
+  let sets=1;if(W.mode!=='creative'){sets=64;for(const [id,n] of Object.entries(need)) sets=Math.min(sets,Math.floor(countItem(+id)/n),maxStack(+id)>1?maxStack(+id):1);sets=Math.max(1,sets);}
+  for(const [i,id] of cells){if(W.mode!=='creative') takeItem(id,sets);UI.cg[i]={id,n:sets};}UI.lastRec=r;return true;}
 function uiMsg(t){const el=$('#mcMsg');el.textContent=t;el.hidden=false;clearTimeout(el._t);el._t=setTimeout(()=>el.hidden=true,3000);}
 // 小人
 function dollCanvas(){const c=document.createElement('canvas');c.width=16;c.height=32;const g=c.getContext('2d');const f=(col,x,y,w,h)=>{g.fillStyle=col;g.fillRect(x,y,w,h);};
@@ -1724,7 +1726,7 @@ function ensureLoot(key){if(W.cont[key]) return;const [dim,pos]=key.split(':');c
     let slot=Math.floor(r()*27);while(inv[slot]) slot=(slot+1)%27;inv[slot]={id,n:cnt};if(id===IT.I_EBOOK){const ks=Object.keys(ENCH);const kk=ks[Math.floor(r()*ks.length)];inv[slot].ench={[kk]:1+Math.floor(r()*ENCH[kk].max)};}}
   W.cont[key]=inv;if(typeof netCont==='function') netCont(key);}
 function openUI(kind,key){if(kind==='share'){key='shared';if(!W.cont.shared) W.cont.shared=Array(54).fill(null);}if(kind==='cook'&&!W.cont[key]) W.cont[key]=Array(7).fill(null);if(kind==='chest') ensureLoot(key);if(kind==='hopper'&&!W.cont[key]) W.cont[key]=Array(5).fill(null);if(kind==='chest'&&!W.cont[key]) W.cont[key]=Array(27).fill(null);if(kind==='furnace'&&!W.furn[key]) W.furn[key]={in:null,fuel:null,out:null,burn:0,prog:0};
-  UI.kind=kind;UI.key=key;UI.cg=Array(kind==='table'?9:4).fill(null);if(kind==='ench') UI.ench={item:null,lapis:null,opts:null};if(kind==='anvil') UI.anvil=[null,null];
+  UI.lastRec=null;UI.kind=kind;UI.key=key;UI.cg=Array(kind==='table'?9:4).fill(null);if(kind==='ench') UI.ench={item:null,lapis:null,opts:null};if(kind==='anvil') UI.anvil=[null,null];
   uiOpen=kind;if(document.pointerLockElement) document.exitPointerLock();$('#mcui').hidden=false;$('#mcOne').hidden=!isTouch;renderUI();for(const k in keys) keys[k]=false;M.left=false;}
 function closeUI(){if(!UI.kind) return;if(UI.kind==='ptrade'&&!TR.done){closeTrade(false);return;}for(const s of UI.cg||[]) if(s) addOrDrop(s);UI.cg=null;if(UI.ench){for(const s of [UI.ench.item,UI.ench.lapis]) if(s) addOrDrop(s);UI.ench=null;}if(UI.anvil){for(const s of UI.anvil) if(s) addOrDrop(s);UI.anvil=null;}
   if(UI.cursor){addOrDrop(UI.cursor);UI.cursor=null;}UI.kind=null;uiOpen=null;$('#mcui').hidden=true;$('#mcCursor').hidden=true;$('#mcTip').hidden=true;renderHotbar();
@@ -2607,7 +2609,7 @@ function liquidTick(dt){if(typeof isHost==='function'&&!isHost()) {LIQ.q.clear()
 
 // ================= 多人連線（房間代碼）=================
 const DIMS=['over','nether','sky'];
-const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611282000'};
+const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611282100'};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
 function peerOpts(){const o={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
@@ -3852,7 +3854,7 @@ function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Mat
   return true;}
 
 // ================= 自動偵測並修復 BUG =================
-const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611282000'};
+const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611282100'};
 function diagLog(msg){try{DIAG.log.push({t:new Date().toISOString().slice(0,19),v:DIAG.ver,m:String(msg).slice(0,200)});if(DIAG.log.length>40) DIAG.log.shift();localStorage.setItem('mmvox_buglog',JSON.stringify(DIAG.log));}catch(e){}}
 function diagFree(x,y,z){return !collides(x,y,z);}
 function selfCheck(manual){const fixed=[];if(!running) return fixed;
