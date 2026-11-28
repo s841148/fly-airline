@@ -1981,7 +1981,7 @@ function mobAnim(e,dt){const T2=MOBS[e.type];const p=e.model.parts;const spd=Mat
   for(const k of ['l0','l3']) if(p[k]) p[k].rotation.x=sw;for(const k of ['l1','l2']) if(p[k]) p[k].rotation.x=-sw;
   if(p.aL&&(e.type==='zombie'||e.type==='husk')){p.aL.rotation.x=-0.1+Math.sin(e.anim*0.5)*0.05;p.aR.rotation.x=-0.1-Math.sin(e.anim*0.5)*0.05;}
   else if(p.aL&&!(e.type==='skel'||e.type==='stray'||e.type==='zpig')){p.aL.rotation.x=-sw;if(p.aR) p.aR.rotation.x=sw;}else if(p.aL) p.aL.rotation.x=-sw;
-  for(let k=0;k<4;k++){if(p['sL'+k]){const s2=Math.sin(e.anim*2+k)*0.3;p['sL'+k].rotation.z=-0.35+s2;p['sR'+k].rotation.z=0.35-s2;p['sL'+k].rotation.y=(k-1.5)*0.35;p['sR'+k].rotation.y=-(k-1.5)*0.35;}}
+  for(let k=0;k<4;k++){if(p['sL'+k]){const s2=Math.sin(e.anim*2+k)*0.3;p['sL'+k].rotation.z=0.25+s2;p['sR'+k].rotation.z=-0.25-s2;p['sL'+k].rotation.y=(k-1.5)*0.35;p['sR'+k].rotation.y=-(k-1.5)*0.35;}}
   if(p.wL){const f=e.type==='bat'?Math.sin(performance.now()/60)*0.9:(e.onGround?0:Math.sin(performance.now()/50)*0.8);p.wL.rotation.z=f;p.wR.rotation.z=-f;}
   if(p.tail) p.tail.rotation.x=e.tamed?-0.6:0.3;
   if(e.type==='jelly') for(let k=0;k<6;k++) if(p['t'+k]) p['t'+k].rotation.x=Math.sin(performance.now()/300+k)*0.3;
@@ -2559,7 +2559,7 @@ function liquidTick(dt){if(typeof isHost==='function'&&!isHost()) {LIQ.q.clear()
 
 // ================= 多人連線（房間代碼）=================
 const DIMS=['over','nether','sky'];
-const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611281400'};
+const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611281500'};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
 function peerOpts(){const o={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
@@ -3798,7 +3798,7 @@ function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Mat
   return true;}
 
 // ================= 自動偵測並修復 BUG =================
-const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611281400'};
+const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611281500'};
 function diagLog(msg){try{DIAG.log.push({t:new Date().toISOString().slice(0,19),v:DIAG.ver,m:String(msg).slice(0,200)});if(DIAG.log.length>40) DIAG.log.shift();localStorage.setItem('mmvox_buglog',JSON.stringify(DIAG.log));}catch(e){}}
 function diagFree(x,y,z){return !collides(x,y,z);}
 function selfCheck(manual){const fixed=[];if(!running) return fixed;
