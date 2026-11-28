@@ -644,6 +644,15 @@ tile('bed_foot',(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++) px(g,x,y,shad
  const band=(g,r,x0,x1,upper)=>{for(let y=7;y<=13;y++)for(let x=0;x<16;x++){let c;if(y>=11) c=WOOD;else if(upper&&x>=x0&&x<=x1) c=y===10?'#cfcbbf':WHT;else c=y===10?'#8e2420':RED;px(g,x,y,shade(c,0.92+r()*0.1));}};
  tile('bedSideF',(g,r)=>band(g,r,0,0,false));tile('bedSideHlo',(g,r)=>band(g,r,0,8,true));tile('bedSideHhi',(g,r)=>band(g,r,7,15,true));
  tile('bedEndH',(g,r)=>band(g,r,0,15,true));tile('bedEndF',(g,r)=>band(g,r,0,0,false));
+ {const WD='#b78638',FR='#2e1f0d';
+  const wood=(g,r)=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++) px(g,x,y,shade(WD,(y%5===2?0.86:0.94)+r()*0.12));};
+  // 側面/正面：lo/hi = 該側是連接面（不畫外框）；latch: 0無 1中間 2靠高端 3靠低端
+  const faceT=(lo,hi,latch)=>(g,r)=>{wood(g,r);g.fillStyle=FR;g.fillRect(0,15,16,1);g.fillRect(0,2,16,1);g.fillRect(0,6,16,1);if(!lo){g.fillRect(0,2,2,14);}if(!hi){g.fillRect(14,2,2,14);}
+    if(latch){g.fillStyle='#d2d2d2';const lx=latch===1?7:latch===2?15:0,lw=latch===1?2:1;g.fillRect(lx,5,lw,5);g.fillStyle='#7d7d7d';g.fillRect(lx,9,lw,1);}};
+  tile('chSide',faceT(0,0,0));tile('chFront',faceT(0,0,1));tile('chFrontHi',faceT(0,1,2));tile('chFrontLo',faceT(1,0,3));tile('chBackHi',faceT(0,1,0));tile('chBackLo',faceT(1,0,0));
+  const topT=(l,rr,u,d)=>(g,r)=>{wood(g,r);g.fillStyle=FR;if(!l) g.fillRect(0,0,2,16);if(!rr) g.fillRect(14,0,2,16);if(!u) g.fillRect(0,0,16,2);if(!d) g.fillRect(0,14,16,2);};
+  tile('chTop',topT(0,0,0,0));tile('chTopXp',topT(0,1,0,0));tile('chTopXn',topT(1,0,0,0));tile('chTopZp',topT(0,0,1,0));tile('chTopZn',topT(0,0,0,1));
+  icon('chest_icon',(g,r)=>{const F=(c,x,y,w,h)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};F(FR,1,4,14,11);F('#c99a48',2,5,12,3);F(WD,2,9,12,5);F('#5a3a18',2,8,12,1);F('#d2d2d2',7,7,2,4);F('#7d7d7d',7,10,2,1);F('#d9ab5a',3,5,10,1);});}
  icon('bed_icon',(g,r)=>{const F=(c,x,y,w,h)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
   F('#7a5a30',1,13,2,3);F('#7a5a30',12,13,2,3);F('#9a6f3e',3,12,9,2);F('#c79a58',1,10,14,3);
   F('#9c2420',1,8,14,3);F('#c63a32',2,5,12,4);F('#d9534a',3,5,10,1);F('#e8e4d8',9,3,5,4);F('#fff',10,3,3,1);F('#bdb8aa',9,6,5,1);F('#8e2420',2,8,12,1);});}
@@ -703,7 +712,7 @@ defB('GLASS',{n:'玻璃',h:0.3,cut:true,drop:'_none',snd:'glass'});
 defB('TABLE',{n:'工作台',tex:tx3('table_top','table_side','planks'),h:2.5,tool:'axe',use:'table',fuel:15,snd:'wood'});
 defB('FURNACE',{n:'熔爐',tex:[T.furnace_side,T.furnace_front,T.furnace_side],h:3.5,tool:'pick',tier:1,use:'furnace',face:true});
 defB('FURNACE_ON',{n:'熔爐',tex:[T.furnace_side,T.furnace_on,T.furnace_side],h:3.5,tool:'pick',tier:1,use:'furnace',drop:'FURNACE',face:true,glow2:true});
-defB('CHEST',{n:'箱子',tex:[T.chest_side,T.chest_front,T.chest_side],h:2.5,tool:'axe',use:'chest',face:true,snd:'wood'});
+defB('CHEST',{n:'箱子',chest:true,half:0.875,tex:[T.chTop,T.chest_icon,T.chSide],h:2.5,tool:'axe',use:'chest',face:true,snd:'wood'});
 defB('TORCH',{n:'火把',solid:false,cross:true,glow:true,tex:tx3('torch'),h:0,light:14});
 defB('TALLGRASS',{n:'草叢',solid:false,cross:true,tex:tx3('tallgrass'),h:0,drop:'_grass',replace:true});
 defB('FLOWER_R',{n:'罌粟花',solid:false,cross:true,tex:tx3('flower_r'),h:0});
@@ -1073,7 +1082,7 @@ function setB(x,y,z,id,opts){x=Math.floor(x);y=Math.floor(y);z=Math.floor(z);if(
   const lx=x&15,lz=z&15;c.top[lz*16+lx]=topOf(c.data,lx,lz);
   const lightChange=(BL[old].light||0)!==(BL[id].light||0);if(lightChange) scanLights(c);
   markDirty(cx,cz,dim);if(lightChange){for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++) markDirty(cx+a,cz+b,dim);}else{if(lx===0) markDirty(cx-1,cz,dim);if(lx===15) markDirty(cx+1,cz,dim);if(lz===0) markDirty(cx,cz-1,dim);if(lz===15) markDirty(cx,cz+1,dim);if((lx===0||lx===15)&&(lz===0||lz===15)) markDirty(cx+(lx?1:-1),cz+(lz?1:-1),dim);}
-  if(old===B.CHEST||old===B.FURNACE||old===B.FURNACE_ON){const k=dim+':'+x+','+y+','+z;if(!(opts&&opts.keepCont)){delete W.cont[k];if(id!==B.FURNACE&&id!==B.FURNACE_ON) delete W.furn[k];}}
+  if(old===B.CHEST||old===B.FURNACE||old===B.FURNACE_ON){const k=dim+':'+x+','+y+','+z;if(old===B.CHEST&&!(opts&&opts.keepCont)) chestUnpair(k);if(!(opts&&opts.keepCont)){delete W.cont[k];if(id!==B.FURNACE&&id!==B.FURNACE_ON) delete W.furn[k];}}
   if(!(opts&&opts.local)&&typeof netSetBlock==='function') netSetBlock(x,y,z,id,dim);
   if(typeof rsDirty==='function'&&(BL[id].rs||BL[old].rs||BL[id].tnt)) rsDirty(x,y,z,dim);
   if(typeof onBlockChanged==='function') onBlockChanged(x,y,z,old,id,dim);}
@@ -1269,6 +1278,7 @@ function meshChunk(c){const dim=c.dim;const A={o:[[],[],[],[]],c:[[],[],[],[]],w
       const rot=b.rail&&(BL[at(lx+1,y,lz)].rail||BL[at(lx-1,y,lz)].rail)&&!(BL[at(lx,y,lz+1)].rail||BL[at(lx,y,lz-1)].rail)?1:0;
       for(const q of quads){const base=arr[0].length/3;for(let k=0;k<4;k++){const kk=(k+rot)%4;arr[0].push(x+q[k][0],y+q[k][1],z+q[k][2]);arr[1].push(UVC[kk][0]?uv[1]:uv[0],UVC[kk][1]?uv[3]:uv[2]);arr[2].push(s,bl,1);}(arr.i=arr.i||[]).push(base,base+1,base+2,base,base+2,base+3);}
       continue;}
+    if(b.chest){const [s,bl]=light(lx,y,lz);emitChest(A.o,x,y,z,dim,s,bl,(dx,dy,dz)=>{const n=at(lx+dx,y+dy,lz+dz);const nb=BL[n];return n&&nb.solid&&!nb.cut&&!nb.half&&!nb.shape;});continue;}
     if(b.bed){const [s,bl]=light(lx,y,lz);emitBed(A.o,id,x,y,z,lx,lz,at,s,bl,(dx,dy,dz)=>{const n=at(lx+dx,y+dy,lz+dz);const nb=BL[n];return n&&nb.solid&&!nb.cut&&!nb.half&&!nb.shape;});continue;}
     if(b.shape){const arr=b.cut?A.c:A.o;const [s,bl]=light(lx,y,lz);for(const bx of shapeBoxes(id,x,y,z,(a,b2,c)=>at(a-X0,b2,c-Z0),dim,false)) emitBox(arr,bx,x,y,z,b,s,bl,(dx,dy,dz)=>{const n=at(lx+dx,y+dy,lz+dz);const nb=BL[n];return n&&nb.solid&&!nb.cut&&!nb.half&&!nb.shape;});continue;}
     const arr=b.liquid&&!b.glow?A.w:b.glow&&!b.liquid?A.g:b.liquid?A.g:b.cut?A.c:A.o;const ht=b.half||1;const lh=b.liquid?liqH(id,at(lx,y+1,lz)):1;
@@ -1419,6 +1429,24 @@ function emitBed(arr,id,x,y,z,lx,lz,at,s,bl,occ){const head=id===B.BED;const par
   emitBoxT(arr,[0,0.1875,0,1,0.5625,1],x,y,z,tiles,s,bl,occ,skip);
   const lt=[T.planks,T.planks,T.planks,T.planks,T.planks,T.planks];const lw=0.1875;
   for(const sx of [0,1]) {const ox=outer[0]?(outer[0]>0?1-lw:0):(sx?1-lw:0),oz=outer[1]?(outer[1]>0?1-lw:0):(sx?1-lw:0);emitBoxT(arr,[ox,0,oz,ox+lw,0.1875,oz+lw],x,y,z,lt,s,bl,occ);}}
+const CLD=[[0,-1],[0,1],[-1,0],[1,0]];
+function emitChest(arr,x,y,z,dim,s,bl,occ){const m=W.meta[dim+':'+x+','+y+','+z]||{};const f=m.f!==undefined?m.f:1;const fr=CLD[f];const d=m.p?m.d:null;
+  const fF=BEDF(fr[0],fr[1]),fB=BEDF(-fr[0],-fr[1]);const tiles=[T.chSide,T.chSide,T.chTop,T.chSide,T.chSide,T.chSide];const skip=[0,0,0,0,0,0];
+  let x0=0.0625,x1=0.9375,z0=0.0625,z1=0.9375;
+  const hiOf=(face)=>{if(!d) return false;if(face===4) return d[0]>0;if(face===5) return d[0]<0;if(face===0) return d[1]<0;return d[1]>0;};
+  if(d){if(d[0]>0) x1=1;else if(d[0]<0) x0=0;else if(d[1]>0) z1=1;else z0=0;skip[BEDF(d[0],d[1])]=1;tiles[2]=d[0]>0?T.chTopXp:d[0]<0?T.chTopXn:d[1]>0?T.chTopZp:T.chTopZn;}
+  tiles[fF]=d?(hiOf(fF)?T.chFrontHi:T.chFrontLo):T.chFront;tiles[fB]=d?(hiOf(fB)?T.chBackHi:T.chBackLo):T.chSide;
+  emitBoxT(arr,[x0,0,z0,x1,0.875,z1],x,y,z,tiles,s,bl,occ,skip);}
+function chestKey(k){const m=W.meta[k];return m&&m.p?m.p:k;}
+function chestUnpair(k){const m=W.meta[k];if(!m||!m.p) return;const P=m.p,dir=m.d;const [dim,pos]=k.split(':');const [x,y,z]=pos.split(',').map(Number);const O=dim+':'+(x+dir[0])+','+y+','+(z+dir[1]);
+  const arr=W.cont[P]||Array(54).fill(null);const isP=(k===P);const mine=isP?arr.slice(0,27):arr.slice(27),other=isP?arr.slice(27):arr.slice(0,27);
+  W.cont[O]=other;W.meta[O]={f:m.f};W.cont[k]=mine;delete W.meta[k];
+  try{netMeta(O);netMeta(k);netCont(O);netCont(k);}catch(e){}markDirty((x+dir[0])>>4,(z+dir[1])>>4,dim);markDirty(x>>4,z>>4,dim);}
+function chestPlace(px,py,pz){const v=lookDir();let fx=0,fz=0;if(Math.abs(v.x)>Math.abs(v.z)) fx=v.x>0?-1:1;else fz=v.z>0?-1:1;const f=CLD.findIndex(a=>a[0]===fx&&a[1]===fz);const dim=W.dim;const k=dim+':'+px+','+py+','+pz;W.meta[k]={f};
+  if(!P.sneak){const dirs=fz?[[1,0],[-1,0]]:[[0,1],[0,-1]];for(const d of dirs){const nx=px+d[0],nz=pz+d[1];if(getB(nx,py,nz)!==B.CHEST) continue;const nk=dim+':'+nx+','+py+','+nz;const nm=W.meta[nk];if(nm&&nm.p) continue;if((nm?nm.f:1)!==f) continue;
+    ensureLoot(nk);const arr=(W.cont[nk]||Array(27).fill(null)).slice(0,27);W.cont[nk]=arr.concat(Array(27).fill(null));delete W.cont[k];
+    W.meta[nk]={f,p:nk,d:[-d[0],-d[1]]};W.meta[k]={f,p:nk,d:[d[0],d[1]]};markDirty(nx>>4,nz>>4,dim);try{netMeta(nk);netMeta(k);netCont(nk);}catch(e){}toast('連成大箱子了（54 格）');break;}}
+  else try{netMeta(k);}catch(e){}}
 // ================= 畫面、玩家、操作、物理 =================
 const canvas=$('#c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:!isTouch,powerPreference:'high-performance'});
@@ -1554,7 +1582,7 @@ function breakBlock(h){const id=h.id;const b=BL[id];const s=held();
   if(W.mode!=='creative'){const ok=canHarvest(id,s);let drops=(s&&s.id===IT.I_SHEARS&&(b.drop==='_leaves'||id===B.TALLGRASS))?[[id,1]]:dropOf(id,ok,s);
     for(const [d,n] of drops) if(n>0) spawnDrop(d,n,h.x+0.5,h.y+0.5,h.z+0.5);if(b.xp&&ok) spawnXP(h.x+0.5,h.y+0.5,h.z+0.5,irand(b.xp[0],b.xp[1]));
     useTool(s);P.exh+=0.005;}
-  const k=W.dim+':'+h.x+','+h.y+','+h.z;if(id===B.CHEST) ensureLoot(k);if(W.cont[k]&&W.mode!=='creative'){for(const it of W.cont[k]) if(it) spawnDrop(it.id,it.n,h.x+0.5,h.y+0.5,h.z+0.5,it);}
+  const k=W.dim+':'+h.x+','+h.y+','+h.z;if(id===B.CHEST){chestUnpair(k);ensureLoot(k);}if(W.cont[k]&&W.mode!=='creative'){for(const it of W.cont[k]) if(it) spawnDrop(it.id,it.n,h.x+0.5,h.y+0.5,h.z+0.5,it);}
   if(id===B.JUKEBOX&&W.meta[k]&&W.meta[k].disc!==undefined){if(typeof stopSong==='function') stopSong(k);spawnDrop(IT['I_DISC'+W.meta[k].disc],1,h.x+0.5,h.y+0.5,h.z+0.5);delete W.meta[k];}
   if(W.furn[k]){const f=W.furn[k];for(const it of [f.in,f.fuel,f.out]) if(it&&W.mode!=='creative') spawnDrop(it.id,it.n,h.x+0.5,h.y+0.5,h.z+0.5);}
   if(typeof farmBreak==='function') farmBreak(h,b);
@@ -1743,7 +1771,7 @@ function renderUI(){if(!UI.kind) return;const k=UI.kind;let h='';
   else if(k==='ptrade') h+=tradeHTML();
   else if(k==='hopper') h+=`<div class="mc-lab">漏斗（上面的箱子、掉在上面的東西會被吸進來，再送到下面或旁邊的箱子、熔爐）</div><div class="mc-grid g9" style="grid-template-columns:repeat(5,40px)">${W.cont[UI.key].map((s,i)=>slotHTML(s,'ch',i)).join('')}</div>`;
   else if(k==='chest'&&UI.key==='buddy') h+=budUI();
-  else if(k==='chest') h+=`<div class="mc-lab">${typeof shipLabel==='function'?shipLabel():'箱子'} <button class="mc-sort" data-sort="ch">🧹 整理箱子</button></div><div class="mc-grid g9">${W.cont[UI.key].map((s,i)=>slotHTML(s,'ch',i)).join('')}</div>`;
+  else if(k==='chest') h+=`<div class="mc-lab">${typeof shipLabel==='function'?shipLabel():(UI.key!=='buddy'&&W.cont[UI.key].length===54?'大箱子（54 格）':'箱子')} <button class="mc-sort" data-sort="ch">🧹 整理箱子</button></div><div class="mc-grid g9">${W.cont[UI.key].map((s,i)=>slotHTML(s,'ch',i)).join('')}</div>`;
   else if(k==='ench') h+=enchHTML();else if(k==='anvil') h+=anvilHTML();
   else if(k==='trade'){const T3=TRADES[UI.trade.prof]||TRADES[0];h+=`<div class="mc-lab">${PROFS[UI.trade.prof][0]}想跟你交易：</div><div class="trades">${T3.map((t,i)=>{const g=tid(t[0]),o=tid(t[2]);const can=W.mode==='creative'||countItem(g)>=t[1];
     return `<button class="trd ${can?'':'no'}" data-tr="${i}"><span class="ti">${icHTML(g,28)}<b>${t[1]}</b></span><small>${nameOf(g)}</small><span class="tarr">➜</span><span class="ti">${icHTML(o,28)}${t[3]>1?`<b>${t[3]}</b>`:''}</span><small>${nameOf(o)}</small></button>`;}).join('')}</div><p class="muted">點一下就交易。綠寶石可以挖礦（山裡）或賣東西給村民賺。</p>`;}
@@ -1778,7 +1806,7 @@ function ensureLoot(key){if(W.cont[key]) return;const [dim,pos]=key.split(':');c
   for(let k=0;k<n;k++){let q=r()*tot;let p2=pool[0];for(const p of pool){q-=p[3];if(q<=0){p2=p;break;}}const id=tid(p2[0]);const cnt=p2[1]+Math.floor(r()*(p2[2]-p2[1]+1));
     let slot=Math.floor(r()*27);while(inv[slot]) slot=(slot+1)%27;inv[slot]={id,n:cnt};if(id===IT.I_EBOOK){const ks=Object.keys(ENCH);const kk=ks[Math.floor(r()*ks.length)];inv[slot].ench={[kk]:1+Math.floor(r()*ENCH[kk].max)};}}
   W.cont[key]=inv;if(typeof netCont==='function') netCont(key);}
-function openUI(kind,key){if(kind==='share'){key='shared';if(!W.cont.shared) W.cont.shared=Array(54).fill(null);}if(kind==='cook'&&!W.cont[key]) W.cont[key]=Array(7).fill(null);if(kind==='chest') ensureLoot(key);if(kind==='hopper'&&!W.cont[key]) W.cont[key]=Array(5).fill(null);if(kind==='chest'&&!W.cont[key]) W.cont[key]=Array(27).fill(null);if(kind==='furnace'&&!W.furn[key]) W.furn[key]={in:null,fuel:null,out:null,burn:0,prog:0};
+function openUI(kind,key){if(kind==='chest'&&key!=='buddy') key=chestKey(key);if(kind==='share'){key='shared';if(!W.cont.shared) W.cont.shared=Array(54).fill(null);}if(kind==='cook'&&!W.cont[key]) W.cont[key]=Array(7).fill(null);if(kind==='chest') ensureLoot(key);if(kind==='hopper'&&!W.cont[key]) W.cont[key]=Array(5).fill(null);if(kind==='chest'&&!W.cont[key]) W.cont[key]=Array(27).fill(null);if(kind==='furnace'&&!W.furn[key]) W.furn[key]={in:null,fuel:null,out:null,burn:0,prog:0};
   UI.lastRec=null;UI.kind=kind;UI.key=key;UI.cg=Array(kind==='table'?9:4).fill(null);if(kind==='ench') UI.ench={item:null,lapis:null,opts:null};if(kind==='anvil') UI.anvil=[null,null];
   uiOpen=kind;if(document.pointerLockElement) document.exitPointerLock();$('#mcui').hidden=false;$('#mcOne').hidden=!isTouch;renderUI();for(const k in keys) keys[k]=false;M.left=false;}
 function closeUI(){if(!UI.kind) return;if(UI.kind==='ptrade'&&!TR.done){closeTrade(false);return;}for(const s of UI.cg||[]) if(s) addOrDrop(s);UI.cg=null;if(UI.ench){for(const s of [UI.ench.item,UI.ench.lapis]) if(s) addOrDrop(s);UI.ench=null;}if(UI.anvil){for(const s of UI.anvil) if(s) addOrDrop(s);UI.anvil=null;}
@@ -2168,7 +2196,7 @@ function explode(x,y,z,pow,orig,list){const dim=W.dim;
   const chain=[];
   for(let i=0;i<list.length;i+=3){const bx=list[i],by=list[i+1],bz=list[i+2];const id=getB(bx,by,bz);if(!id) continue;if(id===B.TNT&&orig){chain.push([bx,by,bz]);continue;}
     if(orig&&Math.random()<1/pow&&W.mode!=='creative'){for(const [d2,n] of dropOf(id,true,null)) if(n) spawnDrop(d2,n,bx+0.5,by+0.5,bz+0.5);}
-    const k=dim+':'+bx+','+by+','+bz;if(orig&&W.cont[k]){for(const it of W.cont[k]) if(it) spawnDrop(it.id,it.n,bx+0.5,by+0.5,bz+0.5,it);}
+    const k=dim+':'+bx+','+by+','+bz;if(id===B.CHEST) chestUnpair(k);if(orig&&W.cont[k]){for(const it of W.cont[k]) if(it) spawnDrop(it.id,it.n,bx+0.5,by+0.5,bz+0.5,it);}
     setB(bx,by,bz,0,{local:true});}
   for(const [a,b,c] of chain){setB(a,b,c,0,{local:true});igniteTNT(a,b,c,rand(0.5,1.5));}
   if(orig&&typeof NET!=='undefined'&&NET.on) NET.bcast({t:'boom',x,y,z,p:pow,list,dim});
@@ -2260,6 +2288,7 @@ function useItem(){if(P.dead||uiOpen) return;if(typeof vehUse==='function'&&vehU
   if(BL[id].shape==='stairs'){const v=lookDir();const f=Math.abs(v.x)>Math.abs(v.z)?(v.x>0?1:3):(v.z>0?2:0);const mk=W.dim+':'+px+','+py+','+pz;W.meta[mk]={f};if(typeof netMeta==='function') netMeta(mk);}
   if(id===B.PISTON||id===B.STICKY_PISTON){const v=lookDir();const ax=Math.abs(v.x),ay=Math.abs(v.y),az=Math.abs(v.z);const f=ay>ax&&ay>az?(v.y>0?3:2):ax>az?(v.x>0?1:0):(v.z>0?5:4);const mk=W.dim+':'+px+','+py+','+pz;W.meta[mk]={f,ext:false};if(typeof netMeta==='function') netMeta(mk);}
   if(id===B.TORCH){const mk=W.dim+':'+px+','+py+','+pz;delete W.meta[mk];if(h&&h.ny===0&&(h.nx||h.nz)){const LD=[[0,-1],[0,1],[-1,0],[1,0]];const k=LD.findIndex(([a,c])=>a===-h.nx&&c===-h.nz);const wq=k>=0?getB(px+LD[k][0],py,pz+LD[k][1]):0;if(wq&&BL[wq].solid&&!BL[wq].panel&&!BL[wq].cross){W.meta[mk]={f:k};if(typeof netMeta==='function') netMeta(mk);}}}
+  if(id===B.CHEST) chestPlace(px,py,pz);
   setB(px,py,pz,id);consumeHeld(1);playSnd(BL[id].snd||'stone',0.8);
   if(BL[id].fall) fallCheck(px,py,pz);
   if(id===B.TNT&&typeof rsPowered==='function'&&rsPowered(px,py,pz)) igniteTNT(px,py,pz);}
@@ -2687,7 +2716,7 @@ function liquidTick(dt){if(typeof isHost==='function'&&!isHost()) {LIQ.q.clear()
 
 // ================= 多人連線（房間代碼）=================
 const DIMS=['over','nether','sky'];
-const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611290600'};
+const NET={on:false,host:false,myId:'me',code:'',peers:new Map(),conns:new Map(),hc:null,peer:null,bc:null,n:0,outSets:[],tP:0,tMob:0,tTime:0,tFurn:0,furnSnap:{},tInv:0,status:'',ver:'202611290700'};
 const QS=new URLSearchParams(location.search);
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];return s;}
 function peerOpts(){const o={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
@@ -3135,7 +3164,7 @@ function elevatorTick(){if(P.dead||P.ride||uiOpen) return;const ey=getB(P.x,P.y-
   ELV.jump=j;ELV.sneak=sn;}
 // ---- 機器（主機才跑）----
 const CONT_IDS=()=>new Set([B.CHEST,B.HOPPER]);
-function contAt(x,y,z){const id=getB(x,y,z);const k=W.dim+':'+x+','+y+','+z;if(id===B.CHEST){ensureLoot(k);if(!W.cont[k]) W.cont[k]=Array(27).fill(null);return {k,a:W.cont[k],t:'chest'};}
+function contAt(x,y,z){const id=getB(x,y,z);const k=W.dim+':'+x+','+y+','+z;if(id===B.CHEST){const kk=chestKey(k);ensureLoot(kk);if(!W.cont[kk]) W.cont[kk]=Array(W.meta[kk]&&W.meta[kk].p?54:27).fill(null);return {k:kk,a:W.cont[kk],t:'chest'};}
   if(id===B.HOPPER){if(!W.cont[k]) W.cont[k]=Array(5).fill(null);return {k,a:W.cont[k],t:'hopper'};}if(id===B.FURNACE||id===B.FURNACE_ON){if(!W.furn[k]) W.furn[k]={in:null,fuel:null,out:null,burn:0,prog:0};return {k,f:W.furn[k],t:'furn'};}return null;}
 function putStack(c,s,side){// 放一個進去，成功回傳 true
   if(c.t==='furn'){const slot=side==='side'&&fuelOf(s.id)?'fuel':'in';const cur=c.f[slot];if(!cur){c.f[slot]={id:s.id,n:1};}else if(cur.id===s.id&&cur.n<maxStack(s.id)&&!cur.ench) cur.n++;else return false;netFurn(c.k);return true;}
@@ -3932,7 +3961,7 @@ function buddyAI(e,dt){const a=e.ai;const st=budSt();let mode=st.mode;e.work=Mat
   return true;}
 
 // ================= 自動偵測並修復 BUG =================
-const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611290600'};
+const DIAG={log:[],safe:null,errT:0,errN:0,t:0,st:0,nFix:0,ver:'202611290700'};
 function diagLog(msg){try{DIAG.log.push({t:new Date().toISOString().slice(0,19),v:DIAG.ver,m:String(msg).slice(0,200)});if(DIAG.log.length>40) DIAG.log.shift();localStorage.setItem('mmvox_buglog',JSON.stringify(DIAG.log));}catch(e){}}
 function diagFree(x,y,z){return !collides(x,y,z);}
 function selfCheck(manual){const fixed=[];if(!running) return fixed;
@@ -4389,7 +4418,7 @@ function lookTick(dt){lookT+=dt;if(lookT<0.1) return;lookT=0;const el=$('#look')
     else{const ok=canHarvest(id,s);const need=b.tier?`需要${TIERZH[b.tier]}${TOOLZH.pick}以上`:b.btool?`適合用${TOOLZH[b.btool]}`:'空手就能挖';
       const fast=t&&t.type===b.btool;line=`<small class="${ok?'ok':'no'}">${ok?'✔':'✘'} ${need}${ok&&!fast&&b.btool?'（用對工具會更快）':''}${!ok?'，現在挖不會掉東西':''}</small>`;}
     let extra='';if(b.crop!==undefined) extra=`<small>成長：${Math.round(b.crop/3*100)}%${b.crop===3?'（可以收成了）':''}</small>`;
-    const k=W.dim+':'+AIM.x+','+AIM.y+','+AIM.z;if(W.cont[k]) extra=`<small>裡面有 ${W.cont[k].filter(Boolean).length} 格東西</small>`;
+    const k=chestKey(W.dim+':'+AIM.x+','+AIM.y+','+AIM.z);if(W.cont[k]) extra=`<small>裡面有 ${W.cont[k].filter(Boolean).length} 格東西</small>`;
     if(W.furn[k]){const f=W.furn[k];extra=`<small>${f.burn>0?'🔥 燒著':'沒在燒'}${f.in?'・正在燒：'+nameOf(f.in.id):''}${f.out?'・成品：'+nameOf(f.out.id)+'×'+f.out.n:''}</small>`;}
     if(b.rs) extra+=`<small>紅石元件${b.power||id===B.LAMP_ON||id===B.WIRE_ON?'（有電）':''}</small>`;
     const prog=MINE.key&&MINE.need>0&&MINE.need<Infinity?Math.min(1,MINE.t/MINE.need):0;
